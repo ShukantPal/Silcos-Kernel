@@ -2,8 +2,8 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 
-#ifndef UTIL_LINKED_LIST_H
-#define UTIL_LINKED_LIST_H
+#ifndef __UTIL_LINKED_LIST_H__
+#define __UTIL_LINKED_LIST_H__
 
 #include <Types.h>
 
@@ -12,9 +12,9 @@
 #define PreviousElement(E) (E -> Previous)
 
 typedef
-struct _LINODE {
-	struct _LINODE *Next;
-	struct _LINODE *Previous;
+struct LinkedListNode {
+	struct LinkedListNode *Next;
+	struct LinkedListNode *Previous;
 } LINODE;
 
 typedef LINODE LIST_ELEMENT;
@@ -25,48 +25,20 @@ typedef LINODE LIST_ELEMENT;
 #define Count(L) (L -> Count)
 
 typedef
-struct _LINKED_LIST {
+struct LinkedList {
 	SIZE_T Count;
-	LIST_ELEMENT *Head;
-	LIST_ELEMENT *Tail;
+	struct LinkedListNode *Head;
+	struct LinkedListNode*Tail;
 } LINKED_LIST;
 
-/**
- * AddElement() - 
- *
- * Summary:
- * This function adds the list node to the given list, assuming that it is
- * non-NULL and is isolated. If not, the owner list and this list, both may
- * get corruption.
- *
- * Args:
- * newNode - Node to be added
- * list - List on which the operation is being done
- *
- * Returns: VOID
- *
- * @Version 1
- * @Since Circuit 2.03
- */
 VOID AddElement(
-	LINODE *newNode,
-	LINKED_LIST *List
+		struct LinkedListNode *newNode,
+		struct LinkedList *List
 );
 
-/**
- * RemoveElement() - 
- *
- * Summary:
- * This function remove the list from the given list, assuming that it belongs
- * to it. If not, then the list will become corrupted.
- *
- * Args:
- * newNode - Node to be added
- * list - List is on which the operation is being done
- */
 VOID RemoveElement(
-	LINODE *newNode,
-	LINKED_LIST *list
+		struct LinkedListNode *newNode,
+		struct LinkedList *list
 );
 
 /**
@@ -135,10 +107,9 @@ LINODE *PullTail(
 );
 
 static inline
-VOID ShiftElement(LINODE *Elem, LINKED_LIST *OldList, LINKED_LIST *NewList)
-{
+VOID ShiftElement(LINODE *Elem, LINKED_LIST *OldList, LINKED_LIST *NewList){
 	RemoveElement(Elem, OldList);
 	AddElement(Elem, NewList);
 }
 
-#endif /* Util/LinkedList.h */
+#endif/* Util/LinkedList.h */

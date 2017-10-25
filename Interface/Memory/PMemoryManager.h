@@ -89,6 +89,8 @@ struct _PSMM_MANAGER {
 	ULONG DLLCount;
 } PSMM_MANAGER;
 
+#define convert_psmm PSMM_MANAGER*
+
 /**
  * PMgrCreate() -
  *

@@ -44,7 +44,7 @@ SECTION .data
 		DW GDT_SIZE - 1
 		DD (defaultBootGDT - KERNEL_OFFSET)	
 
-SECTION .text
+SECTION .BsTransferCtl
 
 	ALIGN 0x8
 	MultibootHeaderStart:
@@ -106,6 +106,8 @@ SECTION .text
 	MOV ESI, 0								; ESI = NULL; // curTag = NULL		;
 	JMP EDX									; return;							;
 	;=========================================================================;
+
+SECTION .text
 
 	global InitRuntime
 	InitRuntime equ (InitRuntime_ )

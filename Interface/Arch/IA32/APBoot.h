@@ -21,20 +21,24 @@
 #define AP_STATUS_ERR 	0xFF
 #define AP_STATUS_DONE	0x4
 
-extern VOID APBoot
+extern "C" {
+
+import_asm void APBoot
 ();/* Only a exported symbol */
 
-extern VOID APBootSequenceStart
+import_asm void APBootSequenceStart
 ();/* Only a exported symbol */
 
-extern ULONG APBootSequenceEnd
+import_asm ULONG APBootSequenceEnd
 ();/* Only a exported symbol */
 
-extern VOID apSetupInfo
+import_asm void apSetupInfo
 ();/* Only a exported symbol */
 
-extern VOID APInvokeMain32
+import_asm void APInvokeMain32
 ();/* Only a exported symbol */
+
+};
 
 #ifdef CONFIG_APBOOT
 	#define ADM_APBOOT

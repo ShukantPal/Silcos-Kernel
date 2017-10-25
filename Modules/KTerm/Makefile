@@ -16,5 +16,5 @@ Main.o: Main.c
 	$(CC) $(CFLAGS) Main.c -o Compile/Main.o -L../../circuitk-1.02
 
 KTerm_Make: Main.o
-	ld -m elf_i386 -shared -T linker.ld Compile/Main.o -o com.silcos.circuit.kterm.110
+	ld -m elf_i386 -shared --strip-all -T linker.ld Compile/Main.o -o com.silcos.circuit.kterm.110
 	cp com.silcos.circuit.kterm.110 ../Builtin/

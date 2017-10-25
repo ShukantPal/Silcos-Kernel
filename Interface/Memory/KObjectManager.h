@@ -22,8 +22,8 @@
  * (CacheRegister) per-CPU lists. It allows better TLB usage. The allocation and deallocation
  * operations required only two TLB entries - the SLAB, and the Object-type info.
  */
-#ifndef MEMORY_KOBJECT_MANAGER_H
-#define MEMORY_KOBJECT_MANAGER_H
+#ifndef __MEMORY_KOBJECT_MANAGER_H__
+#define __MEMORY_KOBJECT_MANAGER_H__
 
 #include "Pager.h"
 #include <Synch/Spinlock.h>
@@ -58,7 +58,7 @@
  * @Since Circuit 2.03
  */
 typedef
-struct _OBSLAB {
+struct Slab {
 	LIST_ELEMENT LiLinker;
 	STACK ObStack;
 	ULONG ObColor;
@@ -94,7 +94,7 @@ struct _OBSLAB {
  * @Since Circuit 2.03
  */
 typedef
-struct _OBINFO {
+struct ObjectInfo {
 	LIST_ELEMENT LiLinker;
 	CHAR *ObName;
 	ULONG ObSize;
@@ -103,12 +103,12 @@ struct _OBINFO {
 	ULONG BufferSize;
 	ULONG BufferPerSlab;
 	ULONG BufferMargin;
-	VOID (*ObConstruct) (VOID *);
-	VOID (*ObDestruct) (VOID *);
+	void (*ObConstruct) (Void *);
+	void (*ObDestruct) (Void *);
 	ULONG ObAllocated;
 	ULONG ObFree;
 	ULONG CallCount;
-	OBSLAB *EmptySlab;
+	struct Slab *EmptySlab;
 	CLIST PartialList;
 	CLIST FullList;
 	SPIN_LOCK ObLock;
@@ -132,27 +132,21 @@ struct _OBINFO {
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-OBINFO *KiCreateType(
-	CHAR *tName,
-	ULONG tSize,
-	ULONG tAlign,
-	VOID (*tConstruct) (VOID *),
-	VOID (*tDestruct) (VOID *)
+struct ObjectInfo *KiCreateType(CHAR *tName,
+								ULONG tSize,
+								ULONG tAlign,
+								void (*tConstruct) (Void *),
+								void (*tDestruct) (Void *)
 );
 
-VOID *KNew(
-	OBINFO *typeInfo,
-	ULONG kmSleep
-);
+VOID *KNew(struct ObjectInfo *typeInfo, ULONG kmSleep);
 
-VOID KDelete(
-	VOID *object,
-	OBINFO *objectInfo
-);
+VOID KDelete(Void *object, struct ObjectInfo *objectInfo);
 
-ULONG KDestroyType(
-	OBINFO *typeInfo
-);	
-	
+ULONG KDestroyType(struct ObjectInfo *);
 
-#endif /* Memory/KObjectManager.h */
+#define SETUP_OBJECT(typeName) KiCreateType("typeName", sizeof(typeName), sizeof(ULONG), NULL, NULL)
+
+void obSetupAllocator(Void);
+
+#endif/* Memory/KObjectManager.h */

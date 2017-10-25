@@ -1,7 +1,13 @@
-#define AI_VMM
+#define NS_PMFLGS
+
+#include <Memory/KMemoryManager.h>
+#include <Memory/KMemorySpace.h>
+#include <Memory/KObjectManager.h>
 #include <Module/ELF.h>
 #include <Module/ModuleRecord.h>
 #include <KERNEL.h>
+
+struct ObjectInfo *tELF_PHDR;
 
 BOOL MdCheckELFCompat(ELF32_EHDR *eHeader){
 	if(eHeader->Identifier[EI_MAG0] != ELFMAG0) return (FALSE);
@@ -21,18 +27,21 @@ return (TRUE);
 
 static inline
 CHAR *EFindSectionNames(ELF_EHDR *eHeader){
-	ELF_SHDR *eSectionHeader = (ELF_SHDR *) ((ADDRESS) eHeader + eHeader->SectionHeaderOffset);
+	struct ElfSectionHeader *eSectionHeader = (ELF_SHDR *) ((ADDRESS) eHeader + eHeader->SectionHeaderOffset);
 	eSectionHeader += eHeader->SectionStringIndex;
 	
 	CHAR *eSectionNames = (CHAR *) ((ADDRESS) eHeader + eSectionHeader->Offset);
 	return (eSectionNames);
 }
 
-static inline ELF_SHDR *EFindSectionByIndex(ULONG eRequiredSectionIndex, ELF_EHDR *eHeader){
+static inline
+struct ElfSectionHeader *
+EFindSectionByIndex(ULONG eRequiredSectionIndex, ELF_EHDR *eHeader){
 	return ((ELF_SHDR *) ((ADDRESS) eHeader + eHeader->SectionHeaderOffset)) + eRequiredSectionIndex;
 }
 
-static ELF_SHDR *EFindSectionByName(CHAR *eSectionName, ELF_EHDR *eHeader){
+ELF_SHDR *
+EFindSectionByName(CHAR *eSectionName, ELF_EHDR *eHeader){
 	CHAR *eSectionNames = EFindSectionNames(eHeader);
 
 	ULONG eSectionIndex = 0;
@@ -48,7 +57,8 @@ static ELF_SHDR *EFindSectionByName(CHAR *eSectionName, ELF_EHDR *eHeader){
 	return (NULL);
 }
 
-static ELF_SHDR *EFindSectionHeaderByType(ELF_SHT eRequiredSectionType, ELF_SHDR *eSectionHeader, ELF_EHDR *eHeader){
+struct ElfSectionHeader *
+EFindSectionHeaderByType(enum ElfSectionType eRequiredSectionType, ELF_SHDR *eSectionHeader, ELF_EHDR *eHeader){
 	ULONG eSectionHeaderIndex;
 	ULONG eSectionHeaderCount = eHeader->SectionHeaderEntryCount;
 
@@ -72,7 +82,12 @@ static ELF_SHDR *EFindSectionHeaderByType(ELF_SHT eRequiredSectionType, ELF_SHDR
 
 // -- ELF Program Header===========================================================================================
 
-static ELF_PHDR *EFindProgramHeaderByType(ELF_PT eRequiredProgramHeaderType, ELF_PHDR *eProgramHeader, ELF_EHDR *eHeader){
+struct ElfProgramHeader *
+EFindProgramHeaderByType(
+			enum ElfProgramHdrType eRequiredProgramHeaderType,
+			struct ElfProgramHeader *eProgramHeader,
+			struct ElfHeader *eHeader
+){
 	ULONG eProgramHeaderIndex;
 	ULONG eProgramHeaderCount = eHeader->ProgramHeaderEntryCount;
 	
@@ -96,32 +111,12 @@ static ELF_PHDR *EFindProgramHeaderByType(ELF_PT eRequiredProgramHeaderType, ELF
 
 //=================================================== ELF Symbols ======================================================
 
-static ELF_SYM *EFindSymbolByName(CHAR *eRequiredSymbolName, KMOD_ECACHE *eCache){
-	ULONG eSymbolIndex = 0;
-	ULONG eSymbolCount = eCache->eSymbolTableLength;
-	ELF_SYM *eSymbol = eCache->eSymbolTable;
-	CHAR *eSymbolNames = eCache->eSymbolNames;
-
-	while(eSymbolIndex < eSymbolCount){
-		if(strcmp(eRequiredSymbolName, eSymbolNames + eSymbol->Name))
-			return (eSymbol);
-
-		++(eSymbolIndex);
-		++(eSymbol);
-	}
-
-	return (NULL);
-}
-
-static inline ELF_SYM *EFindSymbolByIndex(ULONG eRequiredSymbolIndex, KMOD_ECACHE *eCache){
-	return (eCache->eSymbolTable + eRequiredSymbolIndex);
-}
-
-static ELF_SHDR *EFillSymbolTable(ELF_EHDR *eHeader){	
+struct ElfSectionHeader *
+EFillSymbolTable(ELF_EHDR *eHeader){
 	CHAR *eSymbolNames = (CHAR *) ((ADDRESS) eHeader + EFindSectionByName(".strtab", eHeader)->Offset);
 	if(eSymbolNames == NULL) return (NULL);
 
-	ELF_SHDR *eDynamicSymbolTable = EFindSectionHeaderByType(SHT_SYMTAB, NULL, eHeader);
+	struct ElfSectionHeader *eDynamicSymbolTable = EFindSectionHeaderByType(SHT_SYMTAB, NULL, eHeader);
 	ULONG eSymbolIndex = 0;
 	ULONG eSymbolCount = eDynamicSymbolTable->Size / sizeof(ELF_SYM);
 	ELF_SYM *eSymbol = (ELF_SYM *) ((ADDRESS) eHeader + eDynamicSymbolTable->Offset);
@@ -135,175 +130,234 @@ static ELF_SHDR *EFillSymbolTable(ELF_EHDR *eHeader){
 	return (NULL);
 }
 
-//================================================= DYNAMIC Section ====================================================
+ULONG EHashSymbolName(CHAR *eSymbolName){
+	ULONG hashValue = 0, testHolder;
+	while(*eSymbolName){
+		hashValue = (hashValue << 4) + *eSymbolName++;
+		testHolder = hashValue & 0xF0000000;
+		if(testHolder)
+			hashValue ^= testHolder >> 24;
+		hashValue &= ~testHolder;
+	}
 
-static ELF_DYN *EFindDyn(DTAG requiredDynTag, KMOD_ECACHE *eCache){
-	ULONG eDynIndex = 0;
-	ULONG eDynCount = eCache->eDynTableLength;
-	ELF_DYN *eDyn = eCache->_DYNAMIC;
-	
-	while(eDynIndex < eDynCount){
-	DbgInt(eDyn->Tag); Dbg(" ");
-		if(eDyn->Tag == requiredDynTag)
-			return (eDyn);
-		++(eDynIndex);
-		++(eDyn);
+	return (hashValue);
+}
+
+/**
+ * Function: ESearchForSymbol
+ *
+ * Summary:
+ * This function searches for a symbol with the given name. It takes a symbol
+ * table and its corresponding hash table and uses the bucket-chain algorithm
+ * for finding the symbol.
+ */
+struct ElfSymbol *
+ESearchForSymbol(CHAR *eRequiredSymbolNme, struct ElfSymbolTable *eSymbolTbl, struct ElfHashTable *eHashTbl){
+	ULONG eSymbolHsh = EHashSymbolName(eRequiredSymbolNme);
+	ULONG eBucketEnt = eSymbolHsh % eHashTbl->BucketEntries;
+
+	ULONG eChainEnt = eHashTbl->BucketTable[eBucketEnt];
+	ULONG *eChainPtr;
+	struct ElfSymbol *eRelevantSymbol;
+	do {
+		eChainPtr = eHashTbl->ChainTable + eChainEnt;
+	//	eRelevantSymbol = EFindSymbolByIndex(eChainEnt, eSymbolTbl);
+		if(strcmp(eRequiredSymbolNme, eSymbolTbl->Names + eRelevantSymbol->Name))
+			return (eRelevantSymbol);
+
+		eChainEnt = *eChainPtr;
+	} while(eChainEnt != STN_UNDEF);
+
+	return (NULL);
+}
+
+/**
+ * Function: ESearchForSymbolGlobally
+ *
+ * Summary:
+ * This function searches for the symbol in all modules except the current one (thisModule)
+ * of course.
+ *
+ */
+struct ElfSymbol *
+ESearchForSymbolGlobally(CHAR *eRequiredSymbolNm, struct ModuleRecord *thisModule){
+	struct ModuleRecord *testModule = (struct ModuleRecord *) LoadedModules.Head;
+	struct ElfCache *testCache;
+	struct ElfSymbol *relevantSymbol;
+
+	while(testModule != NULL){
+		if(testModule != thisModule){
+			testCache = &testModule->ECache;
+			relevantSymbol = ESearchForSymbol(eRequiredSymbolNm, &testCache->dsmTable, &testCache->dsmHash);
+			if(relevantSymbol != NULL)
+				return (relevantSymbol);
+		}
+
+		testModule = testModule->NextModule;
 	}
 
 	return (NULL);
 }
 
-//=============================================== ELF Relocation =======================================================
+//================================================= DYNAMIC Section ====================================================
 
-static VOID EPerformRel(ELF_REL *eRel, KMOD_ECACHE *eCache){
-	ELF_EHDR *eHeader = eCache->eHeader;
-	ELF_SYM *eRelSymbol = EFindSymbolByIndex(ELF32_R_SYM(eRel->Info), eCache);
-	ULONG *eRelLocation; extern void elf_dbg();
-	switch(ELF32_R_TYPE(eRel->Info)){
-		case R_386_JMP_SLOT:
-			Dbg("REL_FOUND _JMP");
-			eRelLocation = ((ADDRESS) eHeader + eRel->Offset);
-			if(ELF32_ST_TYPE(eRelSymbol->Info) == STT_SECTION){
-				ELF_SHDR *eRelSection = EFindSectionByIndex(eRelSymbol->SectionIndex, eCache->eHeader);
-				eRelLocation += eRelSection->Offset/4;
-				DbgInt(eRel->Offset + eRelSection->Offset); Dbg(" "); Dbg(eCache->eSectionNames + eRelSection->Name);
-			}
-			*eRelLocation = &elf_dbg;
-			Dbg("__write_over");
-			eRelSymbol->Value = &elf_dbg;
-			break;
-		default:
-			Dbg("NO_REL FOUND");
-			break;
+struct ElfDynamicEntry *
+EFindDynamicEntry(enum DynamicTag requiredDTag, struct ElfCache *eCache){
+	struct ElfDynamicTable *dynamicTbl = &eCache->ProgramHdrCache.DynamicTable;
+	
+	struct ElfDynamicEntry *dTag = dynamicTbl->EntryTable;
+	ULONG dIndex = 0;
+	ULONG dCount = dynamicTbl->EntryCount;
+	while(dIndex < dCount){
+		if(dTag->Tag == requiredDTag)
+			return (dTag);
+
+		++(dIndex);
+		++(dTag);
 	}
-}
 
-static VOID EPerformRela(ELF_RELA *eRela, KMOD_ECACHE *eCache){
-	Dbg("__rela");
-}
-
-static VOID EFillRelocations(KMOD_ECACHE *eCache){
-	ELF_EHDR *eHeader = eCache->eHeader;
-	ELF_SHDR *eRelocationSection = EFindSectionHeaderByType(SHT_REL, NULL, eHeader);
-	extern void elf_dbg();
-	ULONG eRelIndex;
-	ULONG eRelCount;
-	ELF_REL *eRel;
-	Dbg("_D");
-	while(eRelocationSection != NULL){
-		eRelIndex = 0;
-		eRelCount = eRelocationSection->Size / sizeof(ELF_REL);
-		DbgInt(eRelCount);
-		eRel = (ELF_REL *) ((ADDRESS) eHeader + eRelocationSection->Offset);
-		while(eRelIndex < eRelCount){
-		Dbg("__D");
-			EPerformRel(eRel, eCache);
-			++(eRelIndex);
-			++(eRel);
-		}
-		eRelocationSection = EFindSectionHeaderByType(SHT_REL, eRelocationSection, eHeader);
-	}
-}
-
-static VOID EParseRela(KMOD_ECACHE *eCache){
-	ELF_SHDR *eRelaSection = EFindSectionHeaderByType(SHT_RELA, NULL, eCache->eHeader);
-	extern void elf_dbg();
-	ULONG eRelaIndex;
-	ULONG eRelaCount;
-	ELF_RELA *eRela;
-	while(eRelaSection != NULL){
-		eRelaIndex = 0;
-		eRelaCount = eRelaSection->Size / sizeof(ELF_RELA);
-		eRela = (ELF_RELA *) ((ADDRESS) eCache->eHeader + eRelaSection->Offset);
-		while(eRelaIndex < eRelaCount){
-			Dbg("_rela");
-			EPerformRela(eRela, eCache);
-			++(eRelaIndex);
-			++(eRela);
-		}
-
-		eRelaSection = EFindSectionHeaderByType(SHT_RELA, eRelaSection, eCache->eHeader);
-	}
+	return (NULL);
 }
 
 //=================================================== ELF CACHE ========================================================
 
-VOID ELoadCache(KMOD_ECACHE *kmCache, ELF_EHDR *eHeader){
-	kmCache->eSectionNames = EFindSectionNames(eHeader);
+void
+ELoadProgramCache(struct ElfProgramCache *pgmCache, struct ElfHeader *moduleHeader)
+{
+	ULONG phdrIndex = 0;
+	ULONG phdrCount = moduleHeader->ProgramHeaderEntryCount;
+	struct ElfProgramHeader *phdr = PROGRAM_HEADER(moduleHeader);
+	DbgInt(moduleHeader->ProgramHeaderOffset);
 
-	ELF_SHDR *eSymtabSection = EFindSectionHeaderByType(SHT_SYMTAB, NULL, eHeader);
+	ULONG pgmMemorySize = 0;
+	while(phdrIndex < phdrCount)
+	{
+		switch(phdr->Type)
+		{
+		case PT_LOAD:
+			Dbg("Phdr "); DbgInt(phdr->VAddr); Dbg(" size: "); DbgInt(phdr->MemorySize); Dbg(" align:"); DbgInt(phdr->Align); DbgLine(";");
+			pgmMemorySize += phdr->MemorySize;
+			break;
+		case PT_DYNAMIC:
+			pgmCache->Dynamic = phdr;
+			pgmCache->DynamicTable.EntryTable = phdr->VAddr;
+			pgmCache->DynamicTable.EntryCount = phdr->FileSize / sizeof(struct ElfDynamicEntry);
+		}
+
+		++(phdrIndex);
+		++(phdr);
+	}
+	DbgLine("e_load_pgm_cache done");
+	pgmCache->PageCount = NextPowerOf2(pgmMemorySize >> KPGOFFSET);
+}
+
+/**
+ * Function: ELoadModule
+ *
+ * Summary:
+ * This function loads the module segments into ZONE_KMODULE kernel memory and
+ * copies the file segments to the module memory. This allows virtual addresses
+ * to be used in the file.
+ *
+ * @Since Circuit 2.03
+ * @Author Shukant Pal
+ */
+void
+ELoadModule(struct ModuleRecord *elfModule)
+{
+	struct ElfHeader *moduleHeader = elfModule->ECache.eHeader;
+	struct ElfProgramCache *modulePhdrCache = &elfModule->ECache.ProgramHdrCache;
+	Void *moduleMemory = (Void *) KiPagesAllocate(HighestBitSet(modulePhdrCache->PageCount), ZONE_KMODULE, FLG_NONE);
+	Void *moduleSegment;
+
+	ULONG phdrIndex = 0;
+	ULONG phdrCount = moduleHeader->ProgramHeaderEntryCount;
+	struct ElfProgramHeader *phdr = PROGRAM_HEADER(moduleHeader);
+	while(phdrIndex < phdrCount)
+	{
+		if(phdr->Type == PT_LOAD)
+		{
+			moduleSegment = (Void *) ((ADDRESS) moduleMemory + phdr->VAddr);
+			EnsureUsability((ADDRESS) moduleSegment, NULL, FLG_NONE, KERNEL_DATA);
+			memcpy((Void*) ((UBYTE *) moduleHeader + phdr->Offset), moduleSegment, 0);
+		}
+	}
+
+	elfModule->BaseAddr = (ADDRESS) moduleMemory;
+}
+
+void
+ELoadCache(struct ElfHeader *eHeader, struct ModuleRecord *mRecord){
+	struct ElfCache *mCache = &mRecord->ECache;
+	mCache->eHeader = eHeader;
+//	kmCache->eSectionNames = EFindSectionNames(eHeader);
+	ELoadProgramCache(&mCache->ProgramHdrCache, mCache->eHeader);
+	ELoadModule(mRecord);
+
+/*
+	struct ElfSectionHeader *eSymtabSection = EFindSectionHeaderByType(SHT_SYMTAB, NULL, eHeader);
 	kmCache->eSymbolNames = (CHAR *) ((ADDRESS) eHeader + EFindSectionByName(".strtab", eHeader)->Offset);
 	kmCache->eSymbolTable = (ELF_SYM *) ((ADDRESS) eHeader + eSymtabSection->Offset);
 	kmCache->eSymbolTableLength = eSymtabSection->Size / sizeof(ELF_SYM);
 
-	ELF_SHDR *eDynsymSection = EFindSectionHeaderByType(SHT_DYNSYM, NULL, eHeader);
-	kmCache->eDynamicSymbolNames = (CHAR *) ((ADDRESS) eHeader + EFindSectionByName(".dynstr", eHeader));
-	kmCache->eDynamicSymbolTable = (ELF_SYM *) ((ADDRESS) eHeader + eDynsymSection->Offset);
-	kmCache->eDynamicSymbolTableLength = eDynsymSection->Size / sizeof(ELF_SYM);
+	struct ElfSectionHeader *dsmShdr = EFindSectionHeaderByType(SHT_DYNSYM, NULL, eHeader);
+	kmCache->eDynamicSymbolNames = (CHAR *) ((ADDRESS) eHeader + EFindSectionByName(".dynstr", eHeader)->Offset);
+	kmCache->eDynamicSymbolTable = (ELF_SYM *) ((ADDRESS) eHeader + dsmShdr->Offset);
+	kmCache->eDynamicSymbolTableLength = dsmShdr->Size / sizeof(ELF_SYM);
 
-	ELF_SHDR *eDynamicSection = EFindSectionHeaderByType(SHT_DYNAMIC, NULL, eHeader);
-	kmCache->_DYNAMIC = (ELF32_DYN *) ((ADDRESS) eHeader + eDynamicSection->Offset);
-	kmCache->eDynTableLength = eDynamicSection->Size / sizeof(DTAG);
+	struct ElfSectionHeader *dynShdr = EFindSectionHeaderByType(SHT_DYNAMIC, NULL, eHeader);
+	kmCache->_DYNAMIC = (ELF32_DYN *) ((ADDRESS) eHeader + dynShdr->Offset);
+	kmCache->eDynTableLength = dynShdr->Size / sizeof(DTAG);
 	
-	kmCache->eRelaTable = NULL;
-	kmCache->eRelaCount = 0;
-	kmCache->eRelTable = NULL;
-	kmCache->eRelCount = 0;
+	struct ElfSectionHeader *dsmHashShdr = EFindSectionHeaderByType(SHT_HASH, NULL, eHeader);
+	struct ElfHashTable *dsmHashTbl = &kmCache->DynamicSymbolHashTbl;
+	ULONG *dsmHashContents = (ULONG *) ((ADDRESS) eHeader + dsmHashShdr->Offset);
+	dsmHashTbl->HashSectionHdr = dsmHashShdr;
+	dsmHashTbl->BucketEntries = *dsmHashContents;
+	dsmHashTbl->ChainEntries = *(dsmHashContents + 1);
+	dsmHashTbl->BucketTable = dsmHashContents + 2;
+	dsmHashTbl->ChainTable = dsmHashContents + 2 + dsmHashTbl->BucketEntries;
+*/
 
-	kmCache->eHeader = eHeader;
+	struct ElfDynamicEntry *dsmEntry = EFindDynamicEntry(DT_SYMTAB, mCache);
+	struct ElfDynamicEntry *dsmCountEntry = EFindDynamicEntry(DT_SYMENT, mCache);
+	struct ElfDynamicEntry *dsmNamesEntry = EFindDynamicEntry(DT_STRTAB, mCache);
+	struct ElfDynamicEntry *dsmHashEntry = EFindDynamicEntry(DT_HASH, mCache);
+	if(dsmEntry == NULL || dsmCountEntry == NULL
+			|| dsmNamesEntry == NULL || dsmHashEntry == NULL)
+	{// Load Dynamic Symbol Table
+		struct ElfSymbolTable *dynamicSymbols = &mCache->dsmTable;
+		dynamicSymbols->Names = (CHAR *) mRecord->BaseAddr + dsmNamesEntry->Pointer;
+		dynamicSymbols->EntryTable = (struct ElfSymbol *) (mRecord->BaseAddr + dsmEntry->Pointer);
+		dynamicSymbols->EntryCount = dsmCountEntry->Value;
+
+		struct ElfHashTable *dSymbolHash = &mCache->dsmHash;
+		ULONG *dSymbolHashContents = (ULONG *) (mRecord->BaseAddr + dsmHashEntry->Pointer);
+		dSymbolHash->BucketEntries = dSymbolHashContents[0];
+		dSymbolHash->ChainEntries = dSymbolHashContents[1];
+		dSymbolHash->BucketTable = dSymbolHashContents + 2;
+		dSymbolHash->ChainTable = dSymbolHashContents + 2 + dSymbolHash->BucketEntries;
+	} else
+		Dbg("_err dsmEntry null");
+
+	return;
 }
 
-static
-void __show_all_sections(ELF_EHDR *eHeader, KMOD_ECACHE *eCache){
-	ULONG index = 0;
-	ULONG count = eHeader->SectionHeaderEntryCount;
-	ELF_SHDR *section = (ULONG) eHeader + eHeader->SectionHeaderOffset;
-	while(index < count){
-		Dbg("section: "); Dbg(eCache->eSectionNames + section->Name); DbgLine(" ; ");
-		++index;++section;
-	}
-}
+void
+MdLoadELF(struct ElfHeader *eHeader, struct ModuleRecord *kmRecord)
+{
+	ELoadCache(eHeader, kmRecord);
+	DbgLine("Module::ELF - @TransferControl");
 
-static
-void __show_all_reltypes(KMOD_ECACHE *e_cache){
-	ULONG index = 0;
-	ULONG count = e_cache->eRelCount;
-	ELF_REL *e_rel = e_cache->eRelTable;
-	while(index < count){
-		Dbg("_rel: "); DbgInt(ELF32_R_TYPE(e_rel->Info)); DbgLine(" ;");
-		++index; ++e_rel;
-	}
-}
-
-static
-void __show_all_relatypes(KMOD_ECACHE *e_cache){
-	ULONG index = 0;
-	ULONG count = e_cache->eRelaCount;
-	ELF_REL *e_rela = e_cache->eRelaTable;
-	while(index < count){
-		Dbg("_rel: "); DbgInt(ELF32_R_TYPE(e_rela->Info)); DbgLine(" ;");
-		++index; ++e_rela;
-	}
-}
-
-VOID MdLoadELF(ELF_EHDR *eHeader, KMOD_RECORD *kmRecord){
-	ELoadCache(&kmRecord->ECache, eHeader);
-	Dbg("kmod-load -verbose");
-	EFillRelocations(&kmRecord->ECache);
-	EParseRela(&kmRecord->ECache);
-	
-	ELF_SYM *e_elf_dbg = EFindSymbolByName("elf_dbg", &kmRecord->ECache);
-	if(
-	e_elf_dbg){
-		Dbg("_found");
-		extern void elf_dbg();
-
-		VOID (*ent)() = (VOID (*) ()) ((ULONG)eHeader + 4096);
-		ent();
-	}
+	ELoadModule(kmRecord);
 	
 	//__show_all_reltypes(&kmRecord->ECache);
 	//EFillSymbolTable(eHeader);// Link the sym-tab
 
-	DbgLine(" __elf_discoverd");
+	DbgLine("__success endfordbg");
+}
+
+void
+ESetupLoader(){
+	tELF_PHDR = SETUP_OBJECT(ELF_PHDR);
 }

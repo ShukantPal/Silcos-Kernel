@@ -19,7 +19,8 @@ enum GateType
 };
 
 typedef
-struct _IDT_ENTRY {
+struct IDTEntry
+{
 	USHORT LowOffset;	
 	USHORT Selector;
 	UCHAR ReservedSpace;

@@ -124,7 +124,7 @@ struct _BDINFO {
  * @Since Circuit 2.03
  */
 typedef
-struct _BDSYS {
+struct BuddyAllocator {
 	ULONG DescriptorSize; /* Size of memory descriptor */
 	UBYTE *DescriptorTable; /* Table of memory descriptors */
 	ULONG HighestOrder; /* Max-block allocation order of this allocator */

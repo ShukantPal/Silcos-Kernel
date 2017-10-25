@@ -43,7 +43,7 @@ VOID MxConstructTopology(
  * contains the platform-specific data structures.
  ******************************************************************************/
 typedef
-struct _PROCESSOR_INFO {
+struct ProcessorInfo {
 	UINT APICID;
 	UINT ACPIID;
 	UINT ClusterID;
@@ -73,8 +73,7 @@ struct {
 
 #endif
 
-extern
-VOID CPUID(U32 EAX, U32 ECX, U32 *registerBuffer);
+extern void CPUID(U32 EAX, U32 ECX, U32 *registerBuffer);
 
 /******************************************************************************
  * Function: SetupDefaultBootGDT()
@@ -86,21 +85,13 @@ VOID CPUID(U32 EAX, U32 ECX, U32 *registerBuffer);
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-VOID SetupDefaultBootGDT(
-	VOID
-);
+decl_c void SetupDefaultBootGDT(Void);
 
-VOID SetupGDT(
-	PROCESSOR_INFO *
-);
+decl_c void SetupGDT(struct ProcessorInfo *);
 
-VOID SetupTSS(
-	PROCESSOR_INFO *
-);
+decl_c void SetupTSS(struct ProcessorInfo *);
 
-VOID SetupIDT(
-	VOID
-);
+decl_c void SetupIDT(Void);
 
 /******************************************************************************
  * Function: SetupBSP()
@@ -112,9 +103,9 @@ VOID SetupIDT(
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-VOID SetupBSP(
-	VOID
-);
+decl_c void SetupBSP(Void);
+
+decl_c void SetupAPs(Void);
 
 /******************************************************************************
  * Function: SetupProcessor()
@@ -126,8 +117,6 @@ VOID SetupBSP(
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-PROCESSOR_INFO *SetupProcessor(
-	VOID
-);
+struct ProcessorInfo *SetupProcessor(Void);
 
 #endif /* IA32/Processor.h */

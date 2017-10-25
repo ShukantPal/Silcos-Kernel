@@ -59,15 +59,16 @@
  * @Since Circuit 2.03
  */
 typedef
-struct _ZNINFO {
+struct Zone
+{
 	union {
 		CLNODE LiLinker;
 		struct {
-			struct _ZNINFO *RightLinker;
-			struct _ZNINFO *LeftLinker;
+			struct Zone *RightLinker;
+			struct Zone *LeftLinker;
 		};
 	};
-	BDSYS MmManager;
+	struct BuddyAllocator MmManager;
 	ULONG ZnPref;
 	ULONG MmSize;
 	ULONG MmReserved;
@@ -98,7 +99,8 @@ typedef ULONG ZNPNO;
  * @Since Circuit 2.03
  */
 typedef
-struct _ZNPREF {
+struct ZonePreference
+{
 	LIST_ELEMENT LiLinker;
 	ZNPNO ZnPref;
 	CLIST ZoneList;
@@ -119,7 +121,8 @@ struct _ZNPREF {
  * @Since Circuit 2.03
  */
 typedef
-struct _ZNSYS {
+struct ZoneAllocator
+{
 	BDINFO *BdITable;
 	ZNPREF *ZnPref;
 	ZNINFO *ZnSet;

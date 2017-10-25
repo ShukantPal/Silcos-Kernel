@@ -6,14 +6,14 @@
 # Run: b [bochs]
 #
 # Note:
-# Latest build structure is done bya ABCM-scripting.
+# Latest build structure is done bya AutoBuild/AutoRun (by Silca) Script (by fuctoria kernel)
 #
 # Copyright (C) - Shukant Pal
 
 ArchDir = Arch/IA32
 
-CC = gcc # C Compiler
-CFLAGS = -m32 -I"." -I"./Interface" -I"./Interface/Arch" -c -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC # -fno-strict-aliasing
+CC = g++ # C Compiler
+CFLAGS = -m32 -I"." -I"./Interface" -I"./Interface/Arch" -c -fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC -fpermissive # -fno-strict-aliasing
 
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
@@ -248,7 +248,7 @@ Compile/MSI.o: CoreX/ModuleLoader/MSI.c
 BuildModuleLoader: $(moduleLoaderObjects)
 
 Link: Compile/IO.o
-	ld -m elf_i386 -T linker.ld --export-dynamic Compile/IO.o $(InitObjects) $(ConfigObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) $(InterProcessObjects) $(MemoryObjects) $(ProcessObjects) $(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) -o circuitk-1.02
+	ld -m elf_i386 -T linker.ld --export-dynamic -pie Compile/IO.o $(InitObjects) $(ConfigObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) $(InterProcessObjects) $(MemoryObjects) $(ProcessObjects) $(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) -o circuitk-1.02
 	make -C ./Modules
 	cp circuitk-1.02 ../circuit-iso/boot/
 	cp -a Modules/Builtin/* ../circuit-iso/boot/

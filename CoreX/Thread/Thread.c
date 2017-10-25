@@ -140,7 +140,7 @@ VOID SetupRunqueue(){
 	EnsureUsability(ssb, NULL, FLG_ATOMIC, KernelData);
 	
 	processor->PoExT = idlerThread;
-	idlerThread->Gate.RightLinker = setupThread;
+	idlerThread->Gate.RightLinker = (EXEC *) setupThread;
 	
 	KSCHEDINFO *apSched = &processor->SchedulerInfo;
 	apSched->CurrentQuanta = 10;

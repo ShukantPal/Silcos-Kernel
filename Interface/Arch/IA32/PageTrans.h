@@ -7,13 +7,13 @@
 
 #include <Types.h>
 
-#define PagePresent (1 << 0)
-#define PageReadWrite (1 << 1)
-#define PageUserland (1 << 2)
-#define PageCacheDisable (1 << 3)
+#define PagePresent 		(1 << 0)
+#define PageReadWrite 		(1 << 1)
+#define PageUserland 		(1 << 2)
+#define PageCacheDisable	(1 << 3)
 
 #ifdef NS_PMFLGS
-	#define PRESENT		(1 << 0)
+	#define PRESENT			(1 << 0)
 	#define READ_WRITE		(1 << 1)
 	#define USER_MODE		(1 << 2)
 	#define CACHE_DISABLE	(1 << 3)
@@ -38,5 +38,7 @@ struct PageTrans {
 	UINT Padding[6]; /* Provide 32-byte padding for PDPT. */
 	ULONGLONG PDPT[4];
 } PAGE_TRANSALATOR;
+
+import_asm void EraseIdentityPage(Void);
 
 #endif/* Memory/PageTrans.h */

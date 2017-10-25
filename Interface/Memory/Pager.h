@@ -36,6 +36,10 @@
 /* Unified attributes */
 #define KernelData (PagePresent | PageReadWrite)
 
+#ifdef NS_PMFLGS
+	#define KERNEL_DATA (PRESENT | READ_WRITE)
+#endif
+
 /* Helper macros */
 #define OwnerID(pc) (pc -> OwnerId)
 #define ContextFlags(pc) (pc -> Flags)

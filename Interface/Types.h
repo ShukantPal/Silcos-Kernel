@@ -5,7 +5,16 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define import_asm extern // compile-time specifier
+#ifndef FBUILD_C
+	#define import_asm extern "C" // compile-time specifier
+	#define export_asm extern "C"
+	#define decl_c extern "C"
+#else
+	#define import_asm extern
+	#define export_asm extern
+	#define decl_c extern
+#endif
+
 #define returnv_if(boolCondition) if(boolCondition) return;
 #define return_if(boolCondition, retValue) if(boolCondition) return (retValue);
 
@@ -92,6 +101,7 @@ typedef unsigned long ULONG;
 typedef unsigned long long ULONGLONG;
 typedef unsigned long SIZE;
 typedef UCHAR BOOL;
+typedef void Void;
 
 extern UINT KernelStart;
 extern UINT KernelEnd;

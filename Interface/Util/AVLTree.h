@@ -20,9 +20,10 @@
 #define AVLReferer(N) (N -> Referer)
 
 typedef
-struct _AVL_LINKER {
-	struct _AVL_LINKER *Left;
-	struct _AVL_LINKER *Right;
+struct AvlLinker
+{
+	struct AvlLinker *Left;
+	struct AvlLinker *Right;
 	ULONG Height;
 } AVL_LINKER;
 
@@ -43,9 +44,10 @@ struct _AVL_LINKER {
  * @Since Circuit 2.01
  */
 typedef
-struct _AVLNODE {
-	struct _AVLNODE *Left;
-	struct _AVLNODE *Right;
+struct AvlNode
+{
+	struct AvlNode *Left;
+	struct AvlNode *Right;
 	ULONG Height;
 	ULONG Indicator;
 } AVLNODE;

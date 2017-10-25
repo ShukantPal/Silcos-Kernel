@@ -34,7 +34,8 @@ typedef ELF_SHDR MSI_SHDR;
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-typedef struct {
+typedef
+struct MultibootElfCache {
 	U32 SectionHeaderCount;
 	U32 SectionHeaderEntrySize;
 	U32 SectionNameIndex;
@@ -45,11 +46,8 @@ typedef struct {
 		ELF_SYM *DynamicSymbolTable;
 		ULONG DynamicSymbolCount;
 	};
-	struct {
-		CHAR *SymbolNames;
-		ELF_SYM *SymbolTable;
-		ULONG SymbolCount;
-	};
+	ELF_SYMTAB eSymbolTbl;
+	EHASH_CACHE eSymbolHashTbl;
 } KCOR_MSICACHE;
 
 extern KCOR_MSICACHE msiKernelSections;
@@ -72,7 +70,7 @@ ELF_SYM *MsiFindSymbolByName(
 );
 
 VOID MsiSetupKernelForLinking(
-		VOID
+		struct ElfCache *coreCache
 );
   
 #endif/* Module/MSI.h */

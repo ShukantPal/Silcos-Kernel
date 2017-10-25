@@ -93,8 +93,8 @@ SECTION .text
 
 		LGDT [ADM_PADDR_DEFAULT_BOOT_GDT_POINTER & 0xFF]
 
-		MOV DWORD EAX, CR0								; Load CR0
-		OR  	DWORD EAX, 0x1								; Set PM-bit
+		MOV DWORD EAX, CR0							; Load CR0
+		OR  DWORD EAX, 0x1					; Set PM-bit
 		MOV DWORD CR0, EAX								; Enable Protected-Mode	
 		JMP	DWORD 0x8:AP_MAIN32_INVOKER		; Invoke APMain32
 		

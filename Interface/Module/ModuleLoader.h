@@ -11,12 +11,14 @@
 #ifndef __MODULE_MODULE_LOADER_H__
 #define __MODULE_MODULE_LOADER_H__
 
+#include "ModuleRecord.h"
 #include <Memory/Pager.h> // For PADDRESS type
 
 BOOL MdLoadFile(
-	PADDRESS moduleAddress,
-	ULONG moduleSize,
-	CHAR *cmdLine
+		PADDRESS moduleAddress,
+		ULONG moduleSize,
+		CHAR *cmdLine,
+		KMOD_RECORD *kmRecord
 );
 
 VOID MdSetupLoader(

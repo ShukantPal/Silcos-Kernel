@@ -10,8 +10,7 @@
 typedef volatile UINT Spinlock;
 typedef volatile UINT SPIN_LOCK;
 
-extern VOID SpinLock(volatile SPIN_LOCK *);
-extern VOID SpinUnlock(volatile SPIN_LOCK *);
-
+import_asm void SpinLock(volatile SPIN_LOCK *);
+import_asm void SpinUnlock(volatile SPIN_LOCK *);
 
 #endif /* Synch/Spinlock.h */

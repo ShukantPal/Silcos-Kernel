@@ -10,35 +10,55 @@
 OUTPUT_FORMAT("elf32-i386")
 ENTRY(InitRuntime)
 
+KERNEL_OFFSET = 0xC0000000;
+KERNEL_START = 0xC0100000;
+
+PHDRS {
+	kernel PT_LOAD FILEHDR;
+	dynamic PT_DYNAMIC;
+}
+
 SECTIONS {
-	. = 0xc0100000 + SIZEOF_HEADERS;
+	. = KERNEL_START + SIZEOF_HEADERS;
 	KernelStart = .;
+	
+	.BsTransferCtl : AT(ADDR(.BsTransferCtl) - KERNEL_OFFSET){
+		*(.BsTransferCtl)
+	} :kernel
 
 	KernelCodeStart = .;
-	.text ALIGN (0x1000) : AT(ADDR(.text) - 0xC0000000)
-	{
+	.text ALIGN (0x1000) : AT(ADDR(.text) - KERNEL_OFFSET){
 		*(.text)
+		*(.text.*)
 		*(.rdata)
-		*(.rodata)
-	}
+		*(.rodata*)
+		*(.gnu.linkonce.t.*)
+		*(.gnu.linkonce.r.*)
+	} 
 	KernelCodeEnd = .;
 
-
 	KernelDataStart = .;
-	.data ALIGN (0x1000) : AT(ADDR(.data) - 0xC0000000)
-	{
+	.data ALIGN (0x1000) : AT(ADDR(.data) - KERNEL_OFFSET){
 		*(.data)
+		*(.gnu.linkonce.d.*)
 	}
 	KernelDataEnd = .;
 
 	KernelBSSStart = .;
-	.bss ALIGN (0x1000) : AT(ADDR(.bss) - 0xC0000000)
+	.bss ALIGN (0x1000) : AT(ADDR(.bss) - KERNEL_OFFSET)
 	{
 		*(COMMON)
 		*(.bss)
+		*(.gnu.linkonce.b.*)
 	}
 	KernelBSSEnd = .;
+
+	.dynamic ALIGN(0x1000) : AT(ADDR(.dynamic) - KERNEL_OFFSET)
+	{
+		*(.dynamic)
+	} :dynamic
 
 	KernelEnd = .;
 	HALData = .;
 }
+
