@@ -12,8 +12,8 @@
 
 ArchDir = Arch/IA32
 
-CC = g++ # C Compiler
-CFLAGS = -m32 -I"." -I"./Interface" -I"./Interface/Arch" -c -fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC -fpermissive # -fno-strict-aliasing
+CC = g++ -std=c++1z# C Compiler
+CFLAGS = -m32 -I"." -I"./Interface" -I"./Interface/Arch" -c -fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC -fpermissive -fno-rtti -fno-exceptions# -fno-strict-aliasing
 
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
@@ -47,7 +47,7 @@ InterProcessObjects =
 KernelRoutineObjects = Compile/Init.o
 
 # Memory Subsystems + Algorithms
-MemoryObjects = Compile/BuddyManager.o Compile/CacheRegister.o \
+MemoryObjects = Compile/BuddyAllocator.o Compile/CacheRegister.o \
 Compile/KFrameManager.o Compile/KMemoryManager.o  Compile/KObjectManager.o \
 Compile/PMemoryManager.o Compile/Structure.o Compile/ZoneManager.o
 
@@ -73,58 +73,58 @@ $(IfcHAL)/Processor.h: $(IfcMemory)/CacheRegister.h $(IfcUtil)/AVLTree.h $(IfcUt
 Compile/86InitPaging.o: $(ArchDir)/Paging/86InitPaging.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/Paging/86InitPaging.asm -o Compile/86InitPaging.o
 
-Compile/InitADM.o: $(IfcMemory)/KMemorySpace.h Interface/Multiboot2.h $(ArchDir)/Boot/InitADM.c
-	$(CC) $(CFLAGS) $(ArchDir)/Boot/InitADM.c -o Compile/InitADM.o
+Compile/InitADM.o: $(IfcMemory)/KMemorySpace.h Interface/Multiboot2.h $(ArchDir)/Boot/InitADM.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Boot/InitADM.cpp -o Compile/InitADM.o
 
-Compile/BlockPager.o: $(ArchDir)/Paging/BlockPager.c
-	$(CC) $(CFLAGS) $(ArchDir)/Paging/BlockPager.c -o Compile/BlockPager.o
+Compile/BlockPager.o: $(ArchDir)/Paging/BlockPager.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Paging/BlockPager.cpp -o Compile/BlockPager.o
 
 Compile/InitRuntime.o: $(ArchDir)/Boot/InitRuntime.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/Boot/InitRuntime.asm -o Compile/InitRuntime.o
 
-Compile/Main.o: $(ArchDir)/Boot/Main.c
-	$(CC) $(CFLAGS) $(ArchDir)/Boot/Main.c -o Compile/Main.o
+Compile/Main.o: $(ArchDir)/Boot/Main.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Boot/Main.cpp -o Compile/Main.o
 
-Compile/Multiboot.o: $(ArchDir)/Boot/Multiboot.c
-	$(CC) $(CFLAGS) $(ArchDir)/Boot/Multiboot.c -o Compile/Multiboot.o
+Compile/Multiboot.o: $(ArchDir)/Boot/Multiboot.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Boot/Multiboot.cpp -o Compile/Multiboot.o
 
 BuildInit : $(InitObjects)
 
 Compile/APBoot.o: $(ArchDir)/HAL/APBoot.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/HAL/APBoot.asm -o Compile/APBoot.o
 
-Compile/CMOS.o: $(ArchDir)/HAL/CMOS.c
-	$(CC) $(CFLAGS) $(ArchDir)/HAL/CMOS.c -o Compile/CMOS.o
+Compile/CMOS.o: $(ArchDir)/HAL/CMOS.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/CMOS.cpp -o Compile/CMOS.o
 
 Compile/CPUID.o: $(ArchDir)/HAL/CPUID.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/HAL/CPUID.asm -o Compile/CPUID.o
 
-Compile/FrameExtractor.o: $(ArchDir)/Paging/FrameExtractor.c
-	$(CC) $(CFLAGS) $(ArchDir)/Paging/FrameExtractor.c -o Compile/FrameExtractor.o
+Compile/FrameExtractor.o: $(ArchDir)/Paging/FrameExtractor.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Paging/FrameExtractor.cpp -o Compile/FrameExtractor.o
 
-Compile/Pager.o: $(ArchDir)/Paging/Pager.c
-	$(CC) $(CFLAGS) $(ArchDir)/Paging/Pager.c -o Compile/Pager.o
+Compile/Pager.o: $(ArchDir)/Paging/Pager.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Paging/Pager.cpp -o Compile/Pager.o
 
-Compile/Processor.o: $(IfcArch)/* $(IfcHAL)/Processor.h $(ArchDir)/HAL/Processor.c
-	$(CC) $(CFLAGS) $(ArchDir)/HAL/Processor.c -o Compile/Processor.o
+Compile/Processor.o: $(IfcArch)/* $(IfcHAL)/Processor.h $(ArchDir)/HAL/Processor.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/Processor.cpp -o Compile/Processor.o
 
-Compile/SysBranch.o: $(ArchDir)/Syscall/SysBranch.c
-	$(CC) $(CFLAGS) $(ArchDir)/Syscall/SysBranch.c -o Compile/SysBranch.o
+Compile/SysBranch.o: $(ArchDir)/Syscall/SysBranch.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Syscall/SysBranch.cpp -o Compile/SysBranch.o
 
 Compile/Syscall.o: $(ArchDir)/Syscall/Syscall.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/Syscall/Syscall.asm -o Compile/Syscall.o
 
-Compile/TableManipulator.o: $(ArchDir)/Paging/TableManipulator.c
-	$(CC) $(CFLAGS) $(ArchDir)/Paging/TableManipulator.c -o Compile/TableManipulator.o
+Compile/TableManipulator.o: $(ArchDir)/Paging/TableManipulator.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/Paging/TableManipulator.cpp -o Compile/TableManipulator.o
 
-Compile/APIC.o: $(ArchDir)/HAL/APIC.c
-	$(CC) $(CFLAGS) $(ArchDir)/HAL/APIC.c -o Compile/APIC.o
+Compile/APIC.o: $(ArchDir)/HAL/APIC.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/APIC.cpp -o Compile/APIC.o
 
-Compile/GDT.o: $(ArchDir)/HAL/GDT.c
-	$(CC) $(CFLAGS) $(ArchDir)/HAL/GDT.c -o Compile/GDT.o
+Compile/GDT.o: $(ArchDir)/HAL/GDT.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/GDT.cpp -o Compile/GDT.o
 
-Compile/IDT.o: $(ArchDir)/HAL/IDT.c
-	$(CC) $(CFLAGS) $(ArchDir)/HAL/IDT.c -o Compile/IDT.o
+Compile/IDT.o: $(ArchDir)/HAL/IDT.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/IDT.cpp -o Compile/IDT.o
 
 Compile/IntrHook.o: $(ArchDir)/HAL/IntrHook.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/HAL/IntrHook.asm -o Compile/IntrHook.o
@@ -135,115 +135,115 @@ Compile/IO.o: $(ArchDir)/HAL/IO.asm
 Compile/Load.o: $(ArchDir)/HAL/Load.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/HAL/Load.asm -o Compile/Load.o
 
-Compile/TSS.o: $(ArchDir)/HAL/TSS.c
-	$(CC) $(CFLAGS) $(ArchDir)/HAL/TSS.c -o Compile/TSS.o
+Compile/TSS.o: $(ArchDir)/HAL/TSS.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/TSS.cpp -o Compile/TSS.o
 
 Compile/SwitchRunner.o: $(ArchDir)/HAL/SwitchRunner.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/HAL/SwitchRunner.asm -o Compile/SwitchRunner.o
 
 BuildArch: $(ArchObjects)
 
-Compile/RSDP.o: $(IfcACPI)/RSDP.h CoreX/ACPI/RSDP.c
-	$(CC) $(CFLAGS) CoreX/ACPI/RSDP.c -o Compile/RSDP.o
+Compile/RSDP.o: $(IfcACPI)/RSDP.h CoreX/ACPI/RSDP.cpp
+	$(CC) $(CFLAGS) CoreX/ACPI/RSDP.cpp -o Compile/RSDP.o
 
-Compile/RSDT.o: $(IfcACPI)/RSDT.h CoreX/ACPI/RSDT.c
-	$(CC) $(CFLAGS) CoreX/ACPI/RSDT.c -o Compile/RSDT.o
+Compile/RSDT.o: $(IfcACPI)/RSDT.h CoreX/ACPI/RSDT.cpp
+	$(CC) $(CFLAGS) CoreX/ACPI/RSDT.cpp -o Compile/RSDT.o
 
-Compile/MADT.o: $(IfcACPI)/RSDT.h $(IfcACPI)/MADT.h CoreX/ACPI/MADT.c
-	$(CC) $(CFLAGS) CoreX/ACPI/MADT.c -o Compile/MADT.o
+Compile/MADT.o: $(IfcACPI)/RSDT.h $(IfcACPI)/MADT.h CoreX/ACPI/MADT.cpp
+	$(CC) $(CFLAGS) CoreX/ACPI/MADT.cpp -o Compile/MADT.o
 
 BuildConfig: $(ConfigObjects)
 
-Compile/ExHandler.o: CoreX/Intr/ExHandler.c
-	$(CC) $(CFLAGS) CoreX/Intr/ExHandler.c -o Compile/ExHandler.o
+Compile/ExHandler.o: CoreX/Intr/ExHandler.cpp
+	$(CC) $(CFLAGS) CoreX/Intr/ExHandler.cpp -o Compile/ExHandler.o
 
 BuildIntr: $(IntrObjects)
 
-Compile/MessagePassing.o: CoreX/InterProcess/MessagePassing.c
-	$(CC) $(CFLAGS) CoreX/InterProcess/MessagePassing.c -o Compile/MessagePassing.o
+Compile/MessagePassing.o: CoreX/InterProcess/MessagePassing.cpp
+	$(CC) $(CFLAGS) CoreX/InterProcess/MessagePassing.cpp -o Compile/MessagePassing.o
 
 BuildInterProcess: $(InterProcessObjects)
 
-Compile/Init.o: CoreX/KernelRoutine/Init.c
-	$(CC) $(CFLAGS) CoreX/KernelRoutine/Init.c -o Compile/Init.o
+Compile/Init.o: CoreX/KernelRoutine/Init.cpp
+	$(CC) $(CFLAGS) CoreX/KernelRoutine/Init.cpp -o Compile/Init.o
 
 BuildKernelRoutines: $(KernelRoutineObjects)
 
-Compile/BuddyManager.o: $(IfcMemory)/BuddyManager.h $(IfcMemory)/Pager.h CoreX/Memory/BuddyManager.c
-	$(CC) $(CFLAGS) CoreX/Memory/BuddyManager.c -o Compile/BuddyManager.o
+Compile/BuddyAllocator.o: $(IfcMemory)/BuddyAllocator.h $(IfcMemory)/Pager.h CoreX/Memory/BuddyAllocator.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/BuddyAllocator.cpp -o Compile/BuddyAllocator.o
 
-Compile/CacheRegister.o: $(IfcHAL)/Processor.h $(IfcMemory)/CacheRegister.h CoreX/Memory/CacheRegister.c	
-	$(CC) $(CFLAGS) CoreX/Memory/CacheRegister.c -o Compile/CacheRegister.o
+Compile/CacheRegister.o: $(IfcHAL)/Processor.h $(IfcMemory)/CacheRegister.h CoreX/Memory/CacheRegister.cpp	
+	$(CC) $(CFLAGS) CoreX/Memory/CacheRegister.cpp -o Compile/CacheRegister.o
 
-Compile/KFrameManager.o: $(IfcKern) $(IfcHAL)/Processor.h $(IfcMemory)/KFrameManager.h CoreX/Memory/KFrameManager.c
-	$(CC) $(CFLAGS) CoreX/Memory/KFrameManager.c -o Compile/KFrameManager.o
+Compile/KFrameManager.o: $(IfcKern) $(IfcHAL)/Processor.h $(IfcMemory)/KFrameManager.h CoreX/Memory/KFrameManager.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/KFrameManager.cpp -o Compile/KFrameManager.o
 
-Compile/KMemoryManager.o: $(IfcHAL)/Processor.h $(IfcMemory)/KMemoryManager.h CoreX/Memory/KMemoryManager.c
-	$(CC) $(CFLAGS) CoreX/Memory/KMemoryManager.c -o Compile/KMemoryManager.o
+Compile/KMemoryManager.o: $(IfcHAL)/Processor.h $(IfcMemory)/KMemoryManager.h CoreX/Memory/KMemoryManager.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/KMemoryManager.cpp -o Compile/KMemoryManager.o
 
-Compile/KObjectManager.o: $(IfcMemory)/KObjectManager.h $(IfcMemory)/MemoryTransfer.h $(IfcMemory)/KMemoryManager.h CoreX/Memory/KObjectManager.c
-	$(CC) $(CFLAGS) CoreX/Memory/KObjectManager.c -o Compile/KObjectManager.o
+Compile/KObjectManager.o: $(IfcMemory)/KObjectManager.h $(IfcMemory)/MemoryTransfer.h $(IfcMemory)/KMemoryManager.h CoreX/Memory/KObjectManager.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/KObjectManager.cpp -o Compile/KObjectManager.o
 
-Compile/PMemoryManager.o: $(IfcMemory)/KMemoryManager.h $(IfcMemory)/Pager.h $(IfcMemory)/MemoryManager.h  $(IfcMemory)/PMemoryManager.h CoreX/Memory/PMemoryManager.c
-	$(CC) $(CFLAGS) CoreX/Memory/PMemoryManager.c -o Compile/PMemoryManager.o
+Compile/PMemoryManager.o: $(IfcMemory)/KMemoryManager.h $(IfcMemory)/Pager.h $(IfcMemory)/MemoryManager.h  $(IfcMemory)/PMemoryManager.h CoreX/Memory/PMemoryManager.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/PMemoryManager.cpp -o Compile/PMemoryManager.o
 
-Compile/Structure.o: CoreX/Memory/Structure.c
-	$(CC) $(CFLAGS) CoreX/Memory/Structure.c -o Compile/Structure.o
+Compile/Structure.o: CoreX/Memory/Structure.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/Structure.cpp -o Compile/Structure.o
 
-Compile/ZoneManager.o: $(IfcMemory)/ZoneManager.h CoreX/Memory/ZoneManager.c
-	$(CC) $(CFLAGS) CoreX/Memory/ZoneManager.c -o Compile/ZoneManager.o
+Compile/ZoneManager.o: $(IfcMemory)/ZoneManager.h CoreX/Memory/ZoneManager.cpp
+	$(CC) $(CFLAGS) CoreX/Memory/ZoneManager.cpp -o Compile/ZoneManager.o
 
 BuildMemory: $(MemoryObjects)
 
-Compile/Process.o: CoreX/Process/Process.c
-	$(CC) $(CFLAGS) CoreX/Process/Process.c -o Compile/Process.o
+Compile/Process.o: CoreX/Process/Process.cpp
+	$(CC) $(CFLAGS) CoreX/Process/Process.cpp -o Compile/Process.o
 
 BuildProcess: $(ProcessObjects)
 
-Compile/Scheduler.o: CoreX/Scheduling/Scheduler.c
-	$(CC) $(CFLAGS) CoreX/Scheduling/Scheduler.c -o Compile/Scheduler.o
+Compile/Scheduler.o: CoreX/Scheduling/Scheduler.cpp
+	$(CC) $(CFLAGS) CoreX/Scheduling/Scheduler.cpp -o Compile/Scheduler.o
 
-Compile/RR.o: $(IfcHAL)/Processor.h $(IfcRunnable)/Scheduler.h $(IfcRunnable)/RR.h CoreX/Scheduling/RR.c
-	$(CC) $(CFLAGS) CoreX/Scheduling/RR.c -o Compile/RR.o
+Compile/RR.o: $(IfcHAL)/Processor.h $(IfcRunnable)/Scheduler.h $(IfcRunnable)/RR.h CoreX/Scheduling/RR.cpp
+	$(CC) $(CFLAGS) CoreX/Scheduling/RR.cpp -o Compile/RR.o
 
 BuildScheduler: $(SchedulerObjects)
 
-Compile/Thread.o: CoreX/Thread/Thread.c
-	$(CC) $(CFLAGS) CoreX/Thread/Thread.c -o Compile/Thread.o
+Compile/Thread.o: CoreX/Thread/Thread.cpp
+	$(CC) $(CFLAGS) CoreX/Thread/Thread.cpp -o Compile/Thread.o
 
 BuildThread: $(ThreadObjects)
 
-Compile/AVLTree.o: $(IfcUtil)/AVLTree.h Util/AVLTree.c
-	$(CC) $(CFLAGS) Util/AVLTree.c -o Compile/AVLTree.o
+Compile/AVLTree.o: $(IfcUtil)/AVLTree.h Util/AVLTree.cpp
+	$(CC) $(CFLAGS) Util/AVLTree.cpp -o Compile/AVLTree.o
 
-Compile/CircuitPrimitive.o: Util/CircuitPrimitive.c
-	$(CC) $(CFLAGS) Util/CircuitPrimitive.c -o Compile/CircuitPrimitive.o
+Compile/CircuitPrimitive.o: Util/CircuitPrimitive.cpp
+	$(CC) $(CFLAGS) Util/CircuitPrimitive.cpp -o Compile/CircuitPrimitive.o
 
-Compile/CircularList.o: $(IfcUtil)/CircularList.h Util/CircularList.c
-	$(CC) $(CFLAGS) Util/CircularList.c -o Compile/CircularList.o
+Compile/CircularList.o: $(IfcUtil)/CircularList.h Util/CircularList.cpp
+	$(CC) $(CFLAGS) Util/CircularList.cpp -o Compile/CircularList.o
 
-Compile/Console.o: Util/Console.c
-	$(CC) $(CFLAGS) Util/Console.c -o Compile/Console.o
+Compile/Console.o: Util/Console.cpp
+	$(CC) $(CFLAGS) Util/Console.cpp -o Compile/Console.o
 
-Compile/Debugger.o: Util/Debugger.c
-	$(CC) $(CFLAGS) Util/Debugger.c -o Compile/Debugger.o
+Compile/Debugger.o: Util/Debugger.cpp
+	$(CC) $(CFLAGS) Util/Debugger.cpp -o Compile/Debugger.o
 
-Compile/LinkedList.o: $(IfcUtil)/LinkedList.h Util/LinkedList.c
-	$(CC) $(CFLAGS) Util/LinkedList.c -o Compile/LinkedList.o
+Compile/LinkedList.o: $(IfcUtil)/LinkedList.h Util/LinkedList.cpp
+	$(CC) $(CFLAGS) Util/LinkedList.cpp -o Compile/LinkedList.o
 
-Compile/Stack.o: $(IfcUtil)/Stack.h Util/Stack.c
-	$(CC) $(CFLAGS) Util/Stack.c -o Compile/Stack.o
+Compile/Stack.o: $(IfcUtil)/Stack.h Util/Stack.cpp
+	$(CC) $(CFLAGS) Util/Stack.cpp -o Compile/Stack.o
 
 BuildUtil: $(UtilObjects)
 
-Compile/ELF.o: $(IfcModule)/ELF.h CoreX/ModuleLoader/ELF.c
-	$(CC) $(CFLAGS) CoreX/ModuleLoader/ELF.c -o Compile/ELF.o
+Compile/ELF.o: $(IfcModule)/ELF.h CoreX/ModuleLoader/ELF.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/ELF.cpp -o Compile/ELF.o
 
-Compile/ModuleLoader.o: CoreX/ModuleLoader/ModuleLoader.c
-	$(CC) $(CFLAGS) CoreX/ModuleLoader/ModuleLoader.c -o Compile/ModuleLoader.o
+Compile/ModuleLoader.o: CoreX/ModuleLoader/ModuleLoader.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/ModuleLoader.cpp -o Compile/ModuleLoader.o
 
-Compile/MSI.o: CoreX/ModuleLoader/MSI.c
-	$(CC) $(CFLAGS) CoreX/ModuleLoader/MSI.c -o Compile/MSI.o
+Compile/MSI.o: CoreX/ModuleLoader/MSI.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/MSI.cpp -o Compile/MSI.o
 
 BuildModuleLoader: $(moduleLoaderObjects)
 
@@ -260,3 +260,7 @@ q: BuildChain
 
 b: BuildChain
 	bochs
+
+CleanAndBuild:
+	rm Compile/*
+	BuildChain

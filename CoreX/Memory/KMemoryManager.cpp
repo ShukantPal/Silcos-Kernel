@@ -22,86 +22,41 @@
 
 #include <Synch/Spinlock.h>
 
+using namespace Memory;
+using namespace Memory::Internal;
+
 /** @Prefix kp - Kernel Page */
 /** @Prefix kpt - Kernel Page Table */
 /** @Prefix kdm - Kernel Dynamic Memory */
 
 #define KMEM_ZONE_COUNT 2
 
-USHORT znObjectLiInfo[1 + PGVECTORS];
-LINKED_LIST znObjectLi[PGVECTORS];
-
-USHORT znModuleLiInfo[1 + PGVECTORS];
-LINKED_LIST znModuleLi[PGVECTORS];
-
 SPIN_LOCK kmLock;
 
-// <KtObject> KMemoryManager.pageDomains </KtObject>
-struct Zone pageDomains[2];
-//{
-	//{// <KtObject> KMemoryManager.pageDomains[KMemoryManager::ZONE_KOBJECT] </KtObject>
-		//.MmManager = {
-			//.DescriptorSize = sizeof(KPAGE),
-			//.HighestOrder = MAXPGORDER,
-			//.ListInfo = &znObjectLiInfo[0],
-		//	.BlockLists = &znObjectLi[0]
-		//},
-	//	.ZnPref = 0,
-	//	.Cache = { .ChMemoryOffset = PGCH_OFFSET }
-	//}, {// <KtObject> KMemoryManager.pageDomains[KMemoryManager::ZONE_KMODULE] </KtObject>
-		//.MmManager = {
-		//	.DescriptorSize = sizeof(KPAGE),
-			//.HighestOrder = MAXPGORDER,
-			//.ListInfo = &znModuleLiInfo[0],
-			//.BlockLists = &znModuleLi[0]
-	//	},
-		//.ZnPref = 0,
-		//.Cache = { .ChMemoryOffset = PGCH_OFFSET + sizeof(CHREG) }
-	//}
-//};// </KtObject>
+// Vectors (bit-fields) used by the (buddy) allocator
+static USHORT allocatorVectors[(1 + PGVECTORS) * 2];
 
-struct ZonePreference pagePreferences[1];
-//{
-//	.ZnPref = 0
-//};
+// Allocation lists used by the (buddy) allocator
+static struct LinkedList allocatorLists[PGVECTORS * 2];
 
-ZNSYS pageAllocator;
-//{
-//	.ZnPref = &pagePreferences,
-//	.ZnSet = &pageDomains[0],
-//	.ZnPrefCount = 1,
-//	.ZnPrefBase = 0
-//	.ZnCacheRefill = 4
-//};
+// You know that there are two page-zones - ZONE_KOBJECT &
+// ZONE_KMODULE for objects & module-memory respectively.
+static struct Zone pageZones[2];
 
-CHAR *msgSetupKMemoryManager = "Setting up KMemoryManager... ";
+// All zones are mix-able for kernel-memory & thus, there is
+// only one zone-preference.
+static struct ZonePreference pagePreferences[1];
 
-static void setupZones()
-{
-	for(long zIndex = 0; zIndex < KMEM_ZONE_COUNT; zIndex++){
-		pageDomains[zIndex].MmManager.DescriptorSize = sizeof(KPAGE);
-		pageDomains[zIndex].MmManager.HighestOrder = MAXPGORDER;
-		pageDomains[zIndex].Cache.ChMemoryOffset = PGCH_OFFSET + sizeof(CHREG) * zIndex;
-		pageDomains[zIndex].ZnPref = zIndex;
-	}
+// This is the 'core' allocation engine for the page-allocator, and
+// more allocators may be used in the future (for memory-extensions)
+static class ZoneAllocator coreEngine;
 
-	pageDomains[0].MmManager.ListInfo = znObjectLiInfo;
-	pageDomains[0].MmManager.BlockLists = znObjectLi;
-	pageDomains[1].MmManager.ListInfo = znModuleLiInfo;
-	pageDomains[1].MmManager.BlockLists = znModuleLi;
-
-	pagePreferences[0].ZnPref = 0;
-
-	pageAllocator.ZnPref = pagePreferences;
-	pageAllocator.ZnSet = pageDomains;
-	pageAllocator.ZnPrefCount = 1;
-	pageAllocator.ZnPrefBase = 0;
-}
+CHAR msgSetupKMemoryManager[] = "Setting up KMemoryManager... ";
 
 ADDRESS KiPagesAllocate(ULONG bOrder, ULONG prefZone, ULONG pgFlags){
 	SpinLock(&kmLock);
-	ZNINFO *znInfo = &pageDomains[prefZone];
-	ULONG bInfo = (ULONG) ZnAllocateBlock(bOrder, 0, znInfo, pgFlags, &pageAllocator);
+	struct Zone *znInfo = &pageZones[prefZone & 1];
+	ULONG bInfo = (ULONG) coreEngine.allocateBlock(bOrder, 0, znInfo, pgFlags);
 	SpinUnlock(&kmLock);
 	return (KPGADDRESS(bInfo));
 }
@@ -109,21 +64,27 @@ ADDRESS KiPagesAllocate(ULONG bOrder, ULONG prefZone, ULONG pgFlags){
 ULONG KiPagesFree(ADDRESS pgAddress){
 	SpinLock(&kmLock);
 	KPAGE *page = (KPAGE*) KPG_AT(pgAddress);
-	page->HashCode = pgAddress;
-	ZnFreeBlock((BDINFO*) page, &pageAllocator);
+	page->HashCode = pgAddress;// Initial hash-code for the page
+	coreEngine.freeBlock((struct BuddyBlock *) page);
 	SpinUnlock(&kmLock);
 	return (1);
 }
 
 ADDRESS KiPagesExchange(ADDRESS pgAddress, ULONG *status, ULONG znFlags) {
 	// @Prefix ea - Extension / Allocation
-	ULONG eaInfo = (ULONG) ZnExchangeBlock((BDINFO *) KPG_AT(pgAddress), status, 0, znFlags,  &pageAllocator);
-	return (KPGADDRESS(eaInfo));
+	DbgLine("exchaning not impl");
+	//ULONG eaInfo = (ULONG) ZnExchangeBlock((BDINFO *) KPG_AT(pgAddress), status, 0, znFlags,  &pageAllocator);
+	//return (KPGADDRESS(eaInfo));
+return (0);
 }
 
+ULONG db = 0;
+ULONG _tes = 0;
+
 VOID SetupKMemoryManager(VOID){
-	setupZones();
 	DbgLine(msgSetupKMemoryManager);
+
+	// SETUP KPAGE-TABLE MEMORY
 
 	ADDRESS kptTable = KDYNAMIC;
 	ULONG kptSize;
@@ -141,33 +102,42 @@ VOID SetupKMemoryManager(VOID){
 		kptTable += KPGSIZE;
 	}
 
-	memset((VOID *) KDYNAMIC, 0, kptSize);
+	memsetf((VOID *) KDYNAMIC, 0, kptSize);
 	kptTable = KDYNAMIC;
 
-	pageDomains[0].MmSize = pageDomains[1].MmSize = kdmSize / (2 * KPGSIZE);
-	pageDomains[0].MmReserved = pageDomains[1].MmReserved = kdmSize / (KPGSIZE << 5);
-	ClnInsert((CLNODE *) &pageDomains[0], CLN_LAST, &pagePreferences[0].ZoneList);
-	ClnInsert((CLNODE *) &pageDomains[1], CLN_LAST, &pagePreferences[0].ZoneList);
-	pageDomains[0].MmManager.DescriptorTable = (UBYTE*) KDYNAMIC;
-	pageDomains[1].MmManager.DescriptorTable = (UBYTE*) (KDYNAMIC + (kptSize / 2));
+	// SETUP coreEngine & ZONES
 
-	ZNINFO *pgDomain = &pageDomains[0];
-	for(ULONG pgDomainOffset=0; pgDomainOffset<2; pgDomainOffset++){
-		ZnReverseMap(pgDomainOffset, pgDomain, &pageAllocator);
-		++pgDomain;
-	}
+	coreEngine.resetAllocator((struct BuddyBlock *) kptTable, pagePreferences, 1, pageZones, 2);
+	ZoneAllocator::configureZones(sizeof(KPAGE), MAXPGORDER, allocatorVectors, allocatorLists, pageZones, 2);
+	ZoneAllocator::configurePreference(pageZones, pagePreferences, 2);
 
-	ULONG kptPages = (kptSize % KPGSIZE) ? (1+ (kptSize - (kptSize % KPGSIZE)) / KPGSIZE) : (kptSize / KPGSIZE);
+	pageZones[0].memorySize = pageZones[1].memorySize = kdmSize / (2 * KPGSIZE);
+	pageZones[0].memoryReserved = pageZones[1].memoryReserved = kdmSize / (KPGSIZE << 5);
+
+	pageZones[0].memoryAllocator.setEntryTable((UBYTE*) KDYNAMIC);
+	pageZones[1].memoryAllocator.setEntryTable((UBYTE*) (KDYNAMIC + kptSize / 2));
+
+	ZoneAllocator::configureZoneMappings(pageZones, 2);
+
+	// FREE ALL USABLE MEMORY
+
+	// No. of pages taken by the kernel-kpage-table
+	ULONG kptPages = (kptSize % KPGSIZE)
+			? (1 + (kptSize - (kptSize % KPGSIZE)) / KPGSIZE) : (kptSize / KPGSIZE);
+	// Total no. pages that are in kd-memory
 	ULONG kdmPages = kdmSize / KPGSIZE;
 
+	// Blocks from end of kpage-table to end-of-kernel-dynamic-memory
+	// will be freed.
+	DbgInt(kdmPages / 2);
+	DbgLine("_free");
+	KPAGE *usablePage = (KPAGE*) KPGOPAGE(kptPages);
 	while(kptPages < kdmPages) {
-		ZnFreeBlock((BDINFO *) KPGOPAGE(kptPages), &pageAllocator);
-		++kptPages;
+		coreEngine.freeBlock((struct BuddyBlock *) usablePage);
+		++(usablePage);
+		++(kptPages);
+		++_tes;
 	}
 
-	pgDomain = &pageDomains[0];
-	for(ULONG pgDomainOffset=0; pgDomainOffset<2; pgDomainOffset++){
-		pgDomain->MmAllocated = 0;
-		pgDomain = &pageDomains[pgDomainOffset];
-	}
+	coreEngine.resetStatistics();
 }

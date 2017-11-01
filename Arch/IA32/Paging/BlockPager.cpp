@@ -15,10 +15,10 @@
 extern PADDRESS mmTotal;
 
 /* x86-specific paging structures */
-extern U64 PDPT[4];
-extern U64 GlobalDirectory[512];
-extern U64 IdentityDirectory[512];
-extern U64 GlobalTable[512];
+import_asm U64 PDPT[4];
+import_asm U64 GlobalDirectory[512];
+import_asm U64 IdentityDirectory[512];
+import_asm U64 GlobalTable[512];
 
 extern ULONG memFrameTableSize;
 

@@ -118,25 +118,6 @@ VOID SetupKFrameManager(
 #define OFFSET_NOINTR 31
 #define KF_NOINTR (1 << 31) /* Do not turn interrupts on */
 
-/******************************************************************************
- * Function: KeFrameAllocate()
- * 
- * Summary:  This function is used for allocating a physical pageframe from the system, for
- * a specific set of flags. Clients must also specify the zone from which the pageframe should
- * belong to.
- *
- * Args:
- * fOrder - Frame order needed
- * prefZone - Preferred zone's number 
- * fFlags - Allocation-controlling flags
- *
- * Returns: Physical address of the pageframe, which can be mapped to any virtual address.
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See ZNSYS, ZNINFO, ZnAllocateBlock() - "ZoneManager.h"
- ******************************************************************************/
 PADDRESS KeFrameAllocate(
 	ULONG fOrder,
 	ULONG prefZone,

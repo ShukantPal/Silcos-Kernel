@@ -10,10 +10,10 @@
 #include <IA32/Processor.h>
 #include <Util/Memory.h>
 
-extern VOID ExecuteLIDT(IDT_POINTER *);
-extern void Spurious();
-extern VOID KiClockRespond(VOID);
-extern VOID RR_BalanceRunqueue(VOID);
+import_asm VOID ExecuteLIDT(IDT_POINTER *);
+import_asm void Spurious();
+import_asm VOID KiClockRespond(VOID);
+import_asm VOID RR_BalanceRunqueue(VOID);
 
 IDT defaultIDT[256];
 IDT_POINTER defaultIDTPointer;
@@ -57,7 +57,7 @@ VOID DisablePIC(){
 	WritePort(0x21, 0xFF);
 }
 
-VOID MapIDT(){
+decl_c void MapIDT(){
 	IDT *pIDT = defaultIDT;
 	IDT_POINTER *pIDTPointer = &(defaultIDTPointer);
 	memsetf(pIDT, 0, sizeof(IDT) * 256);
@@ -76,7 +76,7 @@ VOID MapIDT(){
 }
 
 /* Part of processor initialization series */
-VOID SetupIDT(){
+decl_c void SetupIDT(){
 	IDT_POINTER *pIDTPointer = &(defaultIDTPointer);
 	ExecuteLIDT(pIDTPointer);
 }

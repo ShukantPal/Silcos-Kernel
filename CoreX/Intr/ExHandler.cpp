@@ -10,12 +10,12 @@
 
 extern U32 regInfo;
 
-VOID HandleDF(U32 zero) {
+export_asm VOID HandleDF(U32 zero) {
 	DbgLine("Double Fault - System Down");
 	//asm volatile("cli; hlt;");
 }
 
-VOID HandleIT(U32 v) {
+export_asm VOID HandleIT(U32 v) {
 	DbgLine("Internal Failure - ");
 	DbgLine("Details - x86 : TSS segment failed to load."); 
 	DbgLine("Recovery - Try to reboot this device.");
@@ -23,7 +23,7 @@ VOID HandleIT(U32 v) {
 	asm volatile("cli; hlt;");
 }
 
-VOID HandleSNP(U32 s) {
+export_asm VOID HandleSNP(U32 s) {
 	DbgLine("Internal Failure - ");
 	DbgLine("Details - x86 : Segment Not Present - GDT Failure");
 	DbgLine("Recovery - Try to reboot this device");
@@ -31,7 +31,7 @@ VOID HandleSNP(U32 s) {
 	asm volatile("cli; hlt;");
 }
 
-VOID HandleGPF(U32 e) {
+export_asm VOID HandleGPF(U32 e) {
 	Dbg("General Protection Fault - Error Code ");
 	DbgInt(e);
 	Dbg(", PROCESSOR_ID: ");
@@ -40,7 +40,7 @@ VOID HandleGPF(U32 e) {
 	asm volatile("cli; hlt;");
 }
 
-VOID HandlePF(U32 errorCode) {
+export_asm VOID HandlePF(U32 errorCode) {
 	//if(FixPF(regInfo))
 	//	return;
 

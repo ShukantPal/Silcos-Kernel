@@ -36,6 +36,9 @@
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
 
+using namespace Memory;
+using namespace Memory::Internal;
+
 #define MAX_FRAME_ORDER 9 /* MAX-2M blocks*/
 #define FRAME_VECTORS BDSYS_VECTORS(MAX_FRAME_ORDER)
 
@@ -51,152 +54,69 @@ ULONG pgTotal;
 
 ULONG memFrameTableSize;
 
-USHORT znDMALiInfo[1 + FRAME_VECTORS];/* DMA zone */
-LINKED_LIST znDMALi[FRAME_VECTORS];
-
-USHORT znNormalLiInfo[1 + FRAME_VECTORS];/* KERNEL32 */
-LINKED_LIST znNormalLi[FRAME_VECTORS];
-
-USHORT znCodeLiInfo[1 + FRAME_VECTORS];/* CODE0 */
-LINKED_LIST znCodeLi[FRAME_VECTORS];
-
-USHORT znDataLiInfo[1 + FRAME_VECTORS];/* DATA0 */
-LINKED_LIST znDataLi[FRAME_VECTORS];
-
-USHORT znKernelLiInfo[1 + FRAME_VECTORS];/* KERNEL */
-LINKED_LIST znKernelLi[FRAME_VECTORS];
-
 SPIN_LOCK kfLock;
 
-ZNINFO frameDomains[5];
-//{
-	//{
-		//.MmManager = {
-			//.DescriptorSize = sizeof(MMFRAME),
-			//.HighestOrder = MAX_FRAME_ORDER,
-			//.ListInfo = &znDMALiInfo[0],
-			//.BlockLists = &znDMALi[0]
-		//},
-		//.MmSize = MB(16) / KB(4),
-		//.MmReserved = MB(4) / KB(4),
-		//.ZnPref = 0,
-		//.Cache = { .ChMemoryOffset = FRCH_OFFSET }
-	//}, {
-		//.MmManager = {
-			//.DescriptorSize = sizeof(MMFRAME),
-			//.HighestOrder = MAX_FRAME_ORDER,
-			//.ListInfo = &znNormalLiInfo[0],
-			//.BlockLists = &znNormalLi[0]
-		//},
-		//.ZnPref = 1,
-		//.Cache = { .ChMemoryOffset = FRCH_OFFSET + sizeof(CHREG) }
-	//}, {
-		//.MmManager = {
-			//.DescriptorSize = sizeof(MMFRAME),
-			//.HighestOrder = MAX_FRAME_ORDER,
-			//.ListInfo = &znCodeLiInfo[0],
-			//.BlockLists = &znCodeLi[0]
-		//},
-		//.ZnPref = 2,
-		//.Cache = { .ChMemoryOffset = FRCH_OFFSET + 2 * sizeof(CHREG) }
-	//}, {
-		//.MmManager = {
-			//.DescriptorSize = sizeof(MMFRAME),
-			//.HighestOrder = MAX_FRAME_ORDER,
-			//.ListInfo = &znDataLiInfo[0],
-			//.BlockLists = &znDataLi[0]
-		//},
-		//.ZnPref = 2,
-		//.Cache = { .ChMemoryOffset = FRCH_OFFSET + 3 * sizeof(CHREG) }
-	//}, {
-	//.MmManager = {
-			//.DescriptorSize = sizeof(MMFRAME),
-			//.HighestOrder = MAX_FRAME_ORDER,
-			//.ListInfo = &znKernelLiInfo[0],
-			//.BlockLists = &znKernelLi[0]
-		//},
-		//.ZnPref = 2,
-	//	.Cache = { .ChMemoryOffset = FRCH_OFFSET + 4 * sizeof(CHREG) }
-//	}
-//};
+// Vector (bit-fields) for use by (buddy) allocator
+static USHORT allocatorVectors[(1 + FRAME_VECTORS) * 5];
 
-ZNPREF framePreferences[3];
-//{
-	//{
-	//	.ZnPref = 0
-	//}, {
-	//	.ZnPref = 1
-	//}, {
-	//	.ZnPref = 2
-	//}
-//};
+// Allocation lists used by (buddy) allocator for all 5 zones
+static struct LinkedList allocatorLists[FRAME_VECTORS * 5];
 
-ZNSYS frameAllocator;
-//{/
-	//.ZnPref = &(framePreferences[0]),
-	//.ZnSet = &(frameDomains[0]),
-	//.ZnPrefCount = 1,
-	//.ZnPrefBase = 0,
-	//.ZnCacheRefill = 6
-//};
+// You know there are five frame-zones - DMA, Driver, Kernel
+// Code & Data.
+static struct Zone frameZones[5];
 
-static void setupZones(void)
-{
-	struct Zone *pmZone = frameDomains;
-	for(long zIndex = 0; zIndex < KFRAME_ZONE_COUNT; zIndex++){
-		pmZone->MmManager.DescriptorSize = sizeof(MMFRAME);
-		pmZone->MmManager.HighestOrder = MAX_FRAME_ORDER;
-		pmZone->ZnPref = zIndex;
-		pmZone->Cache.ChMemoryOffset = FRCH_OFFSET + zIndex * sizeof(CHREG);
-		++(pmZone);
-	}
+// There are three zonal preferences for frame-allocation
+// 1. DMA, which means addresses usable by DMA devices
+// 2. Drivers, which means address fitting under 32/64-bits
+// 3. Code, Data & Kernel, which all imply normal data
+static struct ZonePreference framePreferences[3];
 
-	frameDomains[0].MmSize = MB(16) >> KPGOFFSET;
-	frameDomains[0].MmReserved = MB(2) >> KPGOFFSET;
+// This ZoneAllocator is the 'core' allocation engine for the
+// KFrameManager. It may use more allocators in the future.
+static class ZoneAllocator coreEngine;
 
-	frameDomains[0].MmManager.ListInfo = znDMALiInfo;
-	frameDomains[0].MmManager.BlockLists = znDMALi;
-	frameDomains[1].MmManager.ListInfo = znNormalLiInfo;
-	frameDomains[1].MmManager.BlockLists = znNormalLi;
-	frameDomains[2].MmManager.ListInfo = znCodeLiInfo;
-	frameDomains[2].MmManager.BlockLists = znCodeLi;
-	frameDomains[3].MmManager.ListInfo = znDataLiInfo;
-	frameDomains[3].MmManager.BlockLists = znDataLi;
-	frameDomains[4].MmManager.ListInfo = znKernelLiInfo;
-	frameDomains[4].MmManager.BlockLists = znKernelLi;
+CHAR msgSetupKFrameManager[] = "Setting up KFrameManager...";
+CHAR msgMemoryTooLow[] = "At least 128MB of memory is required to run the kernel.";
 
-	// Setup Preferences
-	for(long pIndex = 0; pIndex < 3; pIndex++)
-		framePreferences[pIndex].ZnPref = pIndex;
-
-	frameAllocator.ZnPref = &(framePreferences[0]);
-	frameAllocator.ZnSet = &(frameDomains[0]);
-	frameAllocator.ZnPrefCount = 1;
-	frameAllocator.ZnPrefBase = 0;
-	frameAllocator.ZnCacheRefill = 6;
-}
-
-CHAR *msgSetupKFrameManager = "Setting up KFrameManager...";
-CHAR *msgMemoryTooLow = "At least 128MB of memory is required to run the kernel.";
-
+/**
+ * Function: KeFrameAllocate()
+ *
+ * Summary:  This function is used for allocating a physical pageframe from the system, for
+ * a specific set of flags. Clients must also specify the zone from which the pageframe should
+ * belong to.
+ *
+ * Args:
+ * fOrder - Frame order needed
+ * prefZone - Preferred zone's number
+ * fFlags - Allocation-controlling flags
+ *
+ * Returns: Physical address of the pageframe, which can be mapped to any virtual address.
+ *
+ * @Version 1
+ * @Since Circuit 2.03
+ * @Author Shukant Pal
+ * @See ZNSYS, ZNINFO, ZnAllocateBlock() - "ZoneManager.h"
+ * // TODO:@Deprecated - Use System::getMemoryFrame()
+ */
 PADDRESS KeFrameAllocate(ULONG fOrder, ULONG prefZone, ULONG znFlags)
 {
 	SpinLock(&kfLock);
-	ZNINFO *frDomain = &frameAllocator.ZnSet[prefZone];
+	struct Zone *frDomain = frameZones + prefZone;
 
 	__INTR_OFF
-	ULONG bInfo = (ULONG) ZnAllocateBlock(fOrder, 0, frDomain, znFlags, &frameAllocator);
+	ULONG bInfo = (ULONG) FRADDRESS(coreEngine.allocateBlock(fOrder, 0, frDomain, znFlags));
 	if(!FLAG_SET(znFlags, OFFSET_NOINTR)) { // Turn interrupts if allowed
 		__INTR_ON
 	}
 	SpinUnlock(&kfLock);
-	return (FRADDRESS(bInfo));
+	return (bInfo);
 }
 
 ULONG KeFrameFree(PADDRESS pAddress)
 {
 	SpinLock(&kfLock);
-	ZnFreeBlock(FRAME_AT(pAddress), &frameAllocator);
+	coreEngine.freeBlock(FRAME_AT(pAddress));
 	SpinUnlock(&kfLock);
 	return (1);
 }
@@ -230,13 +150,12 @@ void KfParseMemory()
 {
 	BDINFO *kfPointer = (BDINFO *) FROPAGE(0);
 	BDINFO *kfWall = (BDINFO *) FROPAGE(pgTotal);
-	
-	ULONG ptr_counter = 0;
+
 	ULONG last_bdtype = 10101001;
 	
 	while((ADDRESS) kfPointer <= (ADDRESS) kfWall){
 		if(kfPointer->BdType == MULTIBOOT_MEMORY_AVAILABLE)
-			ZnFreeBlock(kfPointer, &frameAllocator);
+			coreEngine.freeBlock(kfPointer);
 		kfPointer = (BDINFO *) ((ULONG) kfPointer + sizeof(MMFRAME));
 		
 		if(last_bdtype != kfPointer->BdType){
@@ -259,7 +178,6 @@ void KfParseMemory()
  */
 void SetupKFrameManager()
 {
-	setupZones();
 	DbgLine(msgSetupKFrameManager);
 
 	MULTIBOOT_TAG_BASIC_MEMINFO *mInfo = SearchMultibootTag(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
@@ -299,54 +217,53 @@ void SetupKFrameManager()
 	KiMapTables();
 }
 
-{ // Setup Zone Preferences:
-	ZNINFO *znCurrent = &frameDomains[0];
-	ZNPREF *znpCurrent = &framePreferences[0];
-	ClnInsert((CLNODE *) znCurrent, CLN_LAST, &znpCurrent->ZoneList);
-	++znCurrent;
-	++znpCurrent;
-	ClnInsert((CLNODE *) znCurrent, CLN_LAST, &znpCurrent->ZoneList);
-	++znCurrent;
-	++znpCurrent;
-	ClnInsert((CLNODE *) znCurrent, CLN_LAST, &znpCurrent->ZoneList);
-	++znCurrent;
-	ClnInsert((CLNODE *) znCurrent, CLN_LAST, &znpCurrent->ZoneList);
-	++znCurrent;
-	ClnInsert((CLNODE *) znCurrent, CLN_LAST, &znpCurrent->ZoneList);
-}
+	// INIT coreEngine
 
-	frameDomains[0].MmManager.DescriptorTable = (UBYTE *) KFRAMEMAP;
-	frameDomains[1].MmManager.DescriptorTable = (UBYTE *) FRAME_AT(MB(16));
+	coreEngine.resetAllocator((struct BuddyBlock *) KFRAMEMAP, framePreferences, 3, frameZones, 5);
+	ZoneAllocator::configureZones(sizeof(MMFRAME), MAX_FRAME_ORDER, allocatorVectors, allocatorLists, frameZones, 5);
+	ZoneAllocator::configurePreference(frameZones, framePreferences, 1);
+	ZoneAllocator::configurePreference(frameZones + 1, framePreferences + 1, 1);
+	ZoneAllocator::configurePreference(frameZones + 2, framePreferences + 2, 3);
+	memsetf((Void *) KFRAMEMAP, 0, pgTotal * sizeof(MMFRAME));
 
-	if(pgTotal < (MB(3584) / KB(4))) {
-		ULONG pgDomSize = (pgTotal / 4) & ~((1 << 9) - 1); // Align 2m
-		frameDomains[1].MmSize = pgDomSize - (MB(16) / KB(4));
-		frameDomains[2].MmManager.DescriptorTable = (UBYTE *) FROPAGE(pgDomSize);
-		frameDomains[2].MmSize = pgDomSize;
-		frameDomains[3].MmManager.DescriptorTable = (UBYTE *) FROPAGE(pgDomSize * 2);
-		frameDomains[3].MmSize = pgDomSize;
-		frameDomains[4].MmManager.DescriptorTable = (UBYTE *) FROPAGE(pgDomSize * 3);
-		frameDomains[4].MmSize = pgTotal - (3 * pgDomSize);
+	// MAP ZONE BOUNDARIES
+
+	// This section resets the memory boundaries of the frame-zones to the optimized
+	// values. ZONE_DMA has a fixed address & size, while ZONE_DRIVER has a fixed
+	// address (platform-specific)
+	UBYTE *entTable = (UBYTE *) KFRAMEMAP;
+	frameZones[ZONE_DMA].memoryAllocator.setEntryTable(entTable);
+	frameZones[ZONE_DMA].memorySize = MB(16) >> KPGOFFSET;
+	frameZones[ZONE_DRIVER].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FRAME_AT(MB(16))));
+
+	if(pgTotal < MB(3584) >> KPGOFFSET){
+		// When memory is less than 3.5 GB, it is divided into four chunks, where ZONE_DMA
+		// and ZONE_DRIVER share a chunk, while others get a full chunk.
+		ULONG pgDomSize = (pgTotal / 4) & ~((1 << 9) - 1); // Align 2m, no. of pages for 4 zones
+		frameZones[ZONE_DRIVER].memorySize = pgDomSize - (MB(16) >> KPGOFFSET);
+		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(pgDomSize)));
+		frameZones[ZONE_CODE].memorySize = pgDomSize;
+		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(2 * pgDomSize)));
+		frameZones[ZONE_DATA].memorySize = pgDomSize;
+		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(3 * pgDomSize)));
+		frameZones[ZONE_KERNEL].memorySize = pgTotal - 3 * pgDomSize;
 	} else {
-		frameDomains[1].MmSize = MB(880);
-		ULONG pgRemaining = pgTotal - (MB(896) / KB(4));
-		ULONG pgDomSize = pgRemaining / 3;
-		frameDomains[2].MmManager.DescriptorTable = (UBYTE *) FROPAGE(MB(896));
-		frameDomains[2].MmSize = pgDomSize;
-		frameDomains[3].MmManager.DescriptorTable = (UBYTE *) FROPAGE(MB(896) + pgDomSize);
-		frameDomains[3].MmSize = pgDomSize;
-		frameDomains[4].MmManager.DescriptorTable = (UBYTE *) FROPAGE(MB(896) + 2 * pgDomSize);
-		frameDomains[4].MmSize = pgRemaining - 2 * pgDomSize;
+		// When memory is more than 3.5 GB, ZONE_DMA + ZONE_DRIVER take up only MB(896). The
+		// remaining memory is divided into three chunks for all zones.
+		frameZones[ZONE_DRIVER].memorySize = MB(880) >> KPGOFFSET;
+		unsigned long pgRemaining = pgTotal - (MB(896) >> KPGOFFSET);
+		unsigned long pgDomSize = pgRemaining / 3;
+		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(896)));
+		frameZones[ZONE_CODE].memorySize = pgDomSize;
+		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(MB(896) + pgDomSize)));
+		frameZones[ZONE_DATA].memorySize = pgDomSize;
+		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(MB(896) + 2 * pgDomSize)));
+		frameZones[ZONE_KERNEL].memorySize = pgRemaining - 2 * pgDomSize;
 	}
-	ZnReverseMap(0, frameDomains, &frameAllocator);
 
-	USHORT znOffset;
-	ZNINFO *znCurrent = &frameDomains[1];
-	for(znOffset=1; znOffset<5; znOffset++) {
-		znCurrent->MmReserved = znCurrent->MmSize / 32;
-		ZnReverseMap(znOffset, znCurrent, &frameAllocator);
-		++znCurrent;	
-	}
+	// All buddy-block's zone-index field should be mapped to the right zone.
+	ZoneAllocator::configureZoneMappings(frameZones, 5);
+
 	regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((ULONG) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
 {
 	PADDRESS pRegionStart;
@@ -379,14 +296,9 @@ void SetupKFrameManager()
 	ULONG admMultibootTableStartKFrame = admMultibootTableStart >> KPGOFFSET;
 	ULONG admMultibootTableEndKFrame = ((admMultibootTableEnd % KPGSIZE) ? admMultibootTableEnd + KPGSIZE - admMultibootTableEnd % KPGSIZE : admMultibootTableEnd) >> KPGOFFSET;
 	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, admMultibootTableStartKFrame, admMultibootTableEndKFrame);// Reserved multiboot struct
+	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, MB(16), memFrameTableSize);
 	KfReserveModules();// Reserve modules, as they are not in mmap
 	KfParseMemory();// Free all available memory!!!
 
-	znCurrent = &frameDomains[0];
-	for(znOffset=0; znOffset<5; znOffset++) {
-		znCurrent->MmAllocated = 0;
-		znCurrent = &frameDomains[znOffset];
-	}
-
-	return;
+	coreEngine.resetStatistics();
 }

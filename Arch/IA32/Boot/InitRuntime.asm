@@ -38,7 +38,7 @@ ADM_MEMORY_SIZE		equ (16 << 12)								; 16 KB - ADM Size
 
 SECTION .data
 	global KernelStack_
-	KernelStack_ equ (KernelStack + 8192)
+	KernelStack_ equ (KernelStack + 16384)
 
 	bsGDTPointer:
 		DW GDT_SIZE - 1
@@ -156,10 +156,23 @@ SECTION .text
 	global InitEnvironment
 	extern LoadMultibootTags
 	extern Main
+	extern ctorsStart			; Constructor-Section Start
+	extern ctorsEnd				; Constructor-Section End
 	InitEnvironment:
 		MOV ESP, KernelStack_
 		PUSH EAX
 		PUSH EBX
+		MOV EBX, ctorsStart
+		JMP .InitializeGlobalObjects
+
+		.CallConstructor:
+		CALL [EBX]
+		ADD EBX, 4
+
+		.InitializeGlobalObjects:
+		CMP EBX, ctorsEnd
+		JB .CallConstructor
+
 		CALL LoadMultibootTags
 		CALL Main
 		INT 0x20
@@ -167,7 +180,7 @@ SECTION .text
 
 SECTION .bss
 	global KernelStack
-	KernelStack: RESB 8192
+	KernelStack: RESB 16384
 	
 	global admMultibootTable
 	global admMultibootTableStart

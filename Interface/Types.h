@@ -2,13 +2,19 @@
  * Copyright (C) 2017 - Sukant Pal
  */
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef __TYPES_H__
+#define __TYPES_H__
 
 #ifndef FBUILD_C
 	#define import_asm extern "C" // compile-time specifier
 	#define export_asm extern "C"
 	#define decl_c extern "C"
+
+	inline void *operator new(unsigned int, void *objectMemory)
+	{
+		return (objectMemory);
+	}
+
 #else
 	#define import_asm extern
 	#define export_asm extern

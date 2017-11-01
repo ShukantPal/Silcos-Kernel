@@ -113,7 +113,7 @@ VOID DisablePIC(
 	VOID
 );
 
-VOID MapIDT(
+decl_c VOID MapIDT(
 	VOID
 );
 

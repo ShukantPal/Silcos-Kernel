@@ -32,6 +32,7 @@
 #include <Memory/KFrameManager.h>
 #include <Memory/KMemoryManager.h>
 #include <Memory/KMemorySpace.h>
+#include <Memory/KObjectManager.h>
 #include <Util/Memory.h>
 #include <Synch/Spinlock.h>
 #include <Multiboot.h>
@@ -41,9 +42,8 @@
 #include <KERNEL.h>
 #include <Module/ELF.h>
 
-extern void SySetup();
 extern void SetupTick();
-extern VOID SetupAPICTimer();
+import_asm void BSPGrantPermit();
 
 CHAR *cpuIdNotSupportedError = "Error: 0xAAAE1: Platform does not support CPUID.";/* CPUID test returns zero value, indicating failure */
 
@@ -68,7 +68,7 @@ VOID ValidateSupport(){
 	} else
 		ImmatureHang(cpuIdNotSupportedError);
 }
-volatile U32 d = 0;
+
 /**
  * Function: Main()
  *
@@ -99,10 +99,11 @@ volatile U32 d = 0;
  * @Version 13
  * @Since Circuit 1.02
  */
-VOID Main(U32 bootInfo, U32 magicNo){
+export_asm void Main(U32 bootInfo, U32 magicNo)
+{
 	DbgLine("Circuit 2.03 Initializing");
 
-	if(magicNo != MULTIBOOT2_BOOTLOADER_MAGIC) {
+	if(magicNo != MULTIBOOT2_BOOTLOADER_MAGIC){
 		DbgLine("Error : Multiboot-compliant bootloader not found!");
 		DbgLine("Please install a multiboot-compliant bootloader, e.g. GRUB2");
 		asm volatile("hlt;");
@@ -110,6 +111,7 @@ VOID Main(U32 bootInfo, U32 magicNo){
 
 	SetupKFrameManager();
 	SetupKMemoryManager();
+	obSetupAllocator();
 
 	ScanRsdp();
 	SetupRsdt();
@@ -122,7 +124,6 @@ VOID Main(U32 bootInfo, U32 magicNo){
 	SetupAPs();
 	SetupTick();
 
-	extern VOID BSPGrantPermit();// APBoot.asm
 	BSPGrantPermit();
 
 	EraseIdentityPage();

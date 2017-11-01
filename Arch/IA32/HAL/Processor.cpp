@@ -35,7 +35,7 @@ SPIN_LOCK apPermitLock = 0;
 ULONG APBootSequenceBuffer;
 
 VOID SetupAPICTimer();
-VOID TimerWait(U32 t);
+import_asm void TimerWait(U32 t);
 
 VOID *RunqueueBalancers[3];
 
@@ -111,7 +111,7 @@ VOID AddProcessorInfo(MADT_ENTRY_LAPIC *PE){
 CHAR *nmPROCESSOR_TOPOLOGY = "SMP::PROCESSOR_TOPOLOGY";
 OBINFO *tPROCESSOR_TOPOLOGY;
 
-VOID SetupBSP(){
+decl_c void SetupBSP(){
 	BSP_HID = PROCESSOR_ID;
 	BSP_ID = PROCESSOR_ID;
 
@@ -156,11 +156,11 @@ VOID SetupBSP(){
 	MxRegisterProcessor();
 }
 
-VOID SetupAPs(){
+decl_c void SetupAPs(){
 	EnumerateMADT(&AddProcessorInfo, NULL, NULL);
 }
 
-PROCESSOR_INFO *SetupProcessor(){
+decl_c struct ProcessorInfo *SetupProcessor(){
 	PROCESSOR *pCPU = GetProcessorById(PROCESSOR_ID);
 	PROCESSOR_INFO *pInfo = &(pCPU->Hardware);
 
@@ -183,6 +183,8 @@ VOID MxConstructTopology(VOID *ptr){
 
 VOID UpdateProcessorCount(SCHED_DOMAIN *domain){ ++domain->ProcessorCount; }
 
+import_asm U32 FindMaskWidth(U32);
+
 MX_REGISTER_STATUS MxRegisterProcessor(){
 	PROCESSOR *pCPU = GetProcessorById(PROCESSOR_ID);
 	PROCESSOR_INFO *pInfo = &pCPU->Hardware;
@@ -192,7 +194,6 @@ MX_REGISTER_STATUS MxRegisterProcessor(){
 	if(x2APICModeEnabled){pInfo->SMT_ID = 'N';}
 	else {
 		APIC_ID apicId = pInfo->APICID;
-		extern U32 FindMaskWidth(U32);
 
 		U32 CPUIDBuffer[4];
 		CPUID(4, 0, CPUIDBuffer);

@@ -73,8 +73,6 @@ struct {
 
 #endif
 
-extern void CPUID(U32 EAX, U32 ECX, U32 *registerBuffer);
-
 /******************************************************************************
  * Function: SetupDefaultBootGDT()
  *
@@ -117,6 +115,6 @@ decl_c void SetupAPs(Void);
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-struct ProcessorInfo *SetupProcessor(Void);
+decl_c struct ProcessorInfo *SetupProcessor(Void);
 
 #endif /* IA32/Processor.h */

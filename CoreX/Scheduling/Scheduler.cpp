@@ -21,7 +21,7 @@ ULONG PickRoller(PROCESSOR *curProcessor){
 	return (SCHED_MAX);
 }
 
-VOID Schedule(PROCESSOR *curProcessor){
+export_asm void Schedule(PROCESSOR *curProcessor){
 	ULONG kRoller = PickRoller(curProcessor);
 
 	if(kRoller == SCHED_MAX){ DbgInt(PROCESSOR_ID); DbgLine("FREEZE"); while(TRUE); }

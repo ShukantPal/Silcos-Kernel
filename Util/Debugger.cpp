@@ -97,7 +97,7 @@ static VOID ToFillString(SIZE n, CHAR *buffer, UCHAR d)
 	}
 }
 
-VOID Dbg(CHAR *msg) 
+extern "C" VOID Dbg(CHAR *msg)
 {
 	SpinLock(&dbgLock);
 	UCHAR Stream = 0;
@@ -106,7 +106,7 @@ VOID Dbg(CHAR *msg)
 	SpinUnlock(&dbgLock);
 }
 
-VOID DbgInt(SIZE n) 
+export_asm VOID DbgInt(SIZE n)
 {
 	if(n) {
 		CHAR buf[33];
@@ -115,7 +115,7 @@ VOID DbgInt(SIZE n)
 	} else Dbg(digitZero);
 }
 
-VOID DbgErro(SIZE n, ULONG sy)
+export_asm VOID DbgErro(SIZE n, ULONG sy)
 {
 	//if(n) {
 		CHAR buf[65];
@@ -124,7 +124,7 @@ VOID DbgErro(SIZE n, ULONG sy)
 	//} else Dbg("0");
 }
 
-VOID DbgDump(VOID *c_, ULONG s)
+export_asm VOID DbgDump(VOID *c_, ULONG s)
 {
 	CHAR c[s + 1];
 	memcpy(c_, c, s);
@@ -132,7 +132,7 @@ VOID DbgDump(VOID *c_, ULONG s)
 	Dbg(c);
 }
 
-VOID DbgBinOut(VOID *c_, ULONG s) // s must be multiple of 4 (to dump all)
+export_asm VOID DbgBinOut(VOID *c_, ULONG s) // s must be multiple of 4 (to dump all)
 {
 	ULONG s_ = s / 4;
 	LONG i = s_ - 1;
@@ -143,6 +143,7 @@ VOID DbgBinOut(VOID *c_, ULONG s) // s must be multiple of 4 (to dump all)
 	}
 }
 
+export_asm
 VOID DbgLine(CHAR  *msg){
 	SpinLock(&dbgLock);
 	ULONG Stream = 0;

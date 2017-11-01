@@ -7,9 +7,9 @@
 #include <TYPE.h>
 
 typedef
-struct _CLNODE {
-	struct _CLNODE *ClnNext;
-	struct _CLNODE *ClnLast;
+struct CircularListNode {
+	struct CircularListNode *ClnNext;
+	struct CircularListNode *ClnLast;
 } CLNODE;
 
 typedef

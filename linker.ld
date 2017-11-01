@@ -22,12 +22,22 @@ SECTIONS {
 	. = KERNEL_START + SIZEOF_HEADERS;
 	KernelStart = .;
 	
-	.BsTransferCtl : AT(ADDR(.BsTransferCtl) - KERNEL_OFFSET){
+	.BsTransferCtl : AT(ADDR(.BsTransferCtl) - KERNEL_OFFSET)
+	{
 		*(.BsTransferCtl)
 	} :kernel
 
 	KernelCodeStart = .;
-	.text ALIGN (0x1000) : AT(ADDR(.text) - KERNEL_OFFSET){
+	.text ALIGN (0x1000) : AT(ADDR(.text) - KERNEL_OFFSET)
+	{		
+		ctorsStart = .;
+		*(SORT(.ctors*))
+		ctorsEnd = .;
+		
+		dtorsStart = .;
+		*(SORT(.dtors*))
+		dtorsEnd = .;
+		
 		*(.text)
 		*(.text.*)
 		*(.rdata)
@@ -57,6 +67,12 @@ SECTIONS {
 	{
 		*(.dynamic)
 	} :dynamic
+	
+	/DISCARD/ :
+    {
+        *(.comment)
+        *(.eh_frame) /* discard this, unless you are implementing runtime support for C++ exceptions. */
+    }
 
 	KernelEnd = .;
 	HALData = .;

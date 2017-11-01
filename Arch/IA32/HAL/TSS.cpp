@@ -6,9 +6,9 @@
 #include <Util/CtPrim.h>
 
 TSS SystemTSS;
-extern VOID ExecuteLTR(VOID);
+import_asm void ExecuteLTR(VOID);
 
-VOID SetupTSS(PROCESSOR_INFO *processorInfo){
+decl_c VOID SetupTSS(PROCESSOR_INFO *processorInfo){
 	TSS *pTSS = &(processorInfo->TSS);
 
 	UINT tBase = (UINT) pTSS;

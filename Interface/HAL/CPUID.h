@@ -145,10 +145,7 @@ enum {
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-extern
-ULONG TestCPUID(
-	VOID
-);
+import_asm ULONG TestCPUID(void);
 
 /******************************************************************************
  * Function: CPUID()
@@ -165,8 +162,7 @@ ULONG TestCPUID(
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-extern
-VOID CPUID(
+import_asm void CPUID(
 	U32 EAX,
 	U32 ECX,
 	U32 *destinationPointer

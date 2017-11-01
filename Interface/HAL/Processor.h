@@ -51,7 +51,8 @@ extern U32 BSP_HID;
 #define PROCESSOR_HIERARCHY_LOGICAL_CPU 1
 
 typedef
-struct _PROCESSOR_TOPOLOGY {
+struct _PROCESSOR_TOPOLOGY
+{
 	union {
 		LINODE LiLinker;/* Used for participating in lists */
 		CLNODE ClnLinker;

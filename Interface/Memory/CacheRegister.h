@@ -4,8 +4,8 @@
  * The cache register is a data structure used in the PROCESSOR to list (LIFO)
  * zero-order data (pages). It is an extension inside the zone allocator.
  */
-#ifndef MEMORY_CACHE_REGISTER_H
-#define MEMORY_CACHE_REGISTER_H
+#ifndef __MEMORY_CACHE_REGISTER_H
+#define __MEMORY_CACHE_REGISTER_H
 
 #include <TYPE.h>
 #include <Util/LinkedList.h>
@@ -23,9 +23,11 @@
  * @Since Circuit 2.03
  */
 typedef
-struct _CHREG {
-	union {
-		LINKED_LIST DList;
+struct CacheRegister
+{
+	union
+	{
+		struct LinkedList DList;
 		ULONG DCount;
 	};
 } CHREG;

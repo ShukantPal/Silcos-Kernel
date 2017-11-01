@@ -410,9 +410,7 @@ struct _MULTIBOOT_TAG_NETWORK {
  * @Author Shukant Pal
  * @See Multiboot 1.6
  */
-VOID *SearchMultibootTag(
-	U32 tagType
-);
+export_asm Void *SearchMultibootTag(U32 tagType);
 
 /**
  * Multiboot_Tag_Search_From() -
@@ -430,9 +428,6 @@ VOID *SearchMultibootTag(
  * @Author Shukant Pal
  * @See Multiboot 1.6
  */
-VOID *SearchMultibootTagFrom(
-	VOID *lastTag,
-	U32 tagType
-);
+export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType);
 
 #endif /* Multiboot2.h */

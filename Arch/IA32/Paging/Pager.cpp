@@ -18,15 +18,15 @@
 #include <Util/CtPrim.h>
 #include <Util/IndexMap.h>
 
-extern VOID SwitchPaging(U32);
-extern U64 PDPT[4];
-extern U64 GlobalDirectory[512];
-extern U64 IdentityDirectory[512];
-extern U64 GlobalTable[512];
+import_asm VOID SwitchPaging(U32);
+import_asm U64 PDPT[4];
+import_asm U64 GlobalDirectory[512];
+import_asm U64 IdentityDirectory[512];
+import_asm U64 GlobalTable[512];
 
 CONTEXT SystemCxt;
 
-/******************************************************************************
+/**
  * Function: EnsureMapping
  *
  * Summary: This function is for making a logical address usable or, in other words,
@@ -41,7 +41,7 @@ CONTEXT SystemCxt;
  *
  * @Version 1
  * @Since Circuit 2.03
- ******************************************************************************/
+ */
 VOID EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, ULONG frFlags, PAGE_ATTRIBUTES pgAttr){
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), frFlags, pgContext);
 	if(pgTable != NULL) {
@@ -49,8 +49,7 @@ VOID EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, ULONG
 		FlushTLB(address);
 	}
 }
-
-/******************************************************************************
+/**
  * Function: EnsureUsability
  *
  * Summary: This function is called when a logical address must be mapped, but to
@@ -66,9 +65,10 @@ VOID EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, ULONG
  *
  * @Version 1
  * @Since Circuit 2.03
- ******************************************************************************/
+ */
 VOID EnsureUsability(ADDRESS address, CONTEXT *pgContext, ULONG frFlags, PAGE_ATTRIBUTES pgAttr){
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), frFlags, pgContext);
+
 	if(pgTable != NULL && !(pgTable[(address % MB(2)) / KB(4)] & 1)) {
 		PADDRESS pAddress = KeFrameAllocate(0, ZONE_KERNEL, frFlags);
 		pgTable[(address % MB(2)) / KB(4)] = pAddress | pgAttr;

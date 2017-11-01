@@ -18,9 +18,15 @@
 
 UINT VAPICBase;
 extern IDT defaultIDT[256];
-extern void TriggerRelay();
-extern void TimerUpdate();
-extern void KiClockRespond(VOID);
+import_asm void TimerUpdate();
+
+/**
+ * Function: KiClockRespond
+ *
+ * Summary:
+ * Handles the tick related to clock on ticked kernel configurations.
+ */
+import_asm void KiClockRespond(VOID);
 
 VOID SetupAPICTimer(){
 	MapHandler(0x20, (UINT) &TimerUpdate, defaultIDT);

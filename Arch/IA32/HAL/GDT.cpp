@@ -10,12 +10,9 @@
 
 #include <IA32/Processor.h>
 
-extern
-GDT defaultBootGDT[3]; /* This should contain a flat memory-model, and no TSS entry. (APBoot.asm) */
-extern
-GDT_POINTER defaultBootGDTPointer;/* APBoot.asm */
-
-extern VOID ExecuteLGDT(GDT_POINTER *);
+import_asm GDT defaultBootGDT[3]; /* This should contain a flat memory-model, and no TSS entry. (APBoot.asm) */
+import_asm GDT_POINTER defaultBootGDTPointer;/* APBoot.asm */
+import_asm void ExecuteLGDT(GDT_POINTER *);
 
 VOID SetGateOn(USHORT gateNo, UINT segBase, UINT segLimit, UCHAR segAccess, UCHAR segGranularity, GDT *pGDT){
 	pGDT[gateNo].BaseLow = (segBase & 0xffff);
@@ -28,7 +25,7 @@ VOID SetGateOn(USHORT gateNo, UINT segBase, UINT segLimit, UCHAR segAccess, UCHA
 }
 
 /* Part of processor initialization series. */
-extern "C" void SetupGDT(PROCESSOR_INFO *processorInfo){
+decl_c void SetupGDT(PROCESSOR_INFO *processorInfo){
 	GDT *pGDT = &(processorInfo->GDT[0]);
 	GDT_POINTER *pGDTPointer = &(processorInfo->GDTPointer);
 

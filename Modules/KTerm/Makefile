@@ -6,14 +6,14 @@
 #
 # Copyright (C) 2017 - Shukant Pal
 
-CC = gcc # C Compiler
+CC = g++ # C Compiler
 CFLAGS = -m32 -I"." -I"../../Interface" -I"../../Interface/Arch" -c -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC # -fno-strict-aliasing
 
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
 
-Main.o: Main.c
-	$(CC) $(CFLAGS) Main.c -o Compile/Main.o -L../../circuitk-1.02
+Main.o: Main.cpp
+	$(CC) $(CFLAGS) Main.cpp -o Compile/Main.o -L../../circuitk-1.02
 
 KTerm_Make: Main.o
 	ld -m elf_i386 -shared --strip-all -T linker.ld Compile/Main.o -o com.silcos.circuit.kterm.110

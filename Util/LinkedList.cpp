@@ -1,6 +1,7 @@
 /* Copyright (C) 2017 - Shukant Pal */
 
 #include <Util/LinkedList.h>
+#include <Debugging.h>
 
 /**
  * AddElement() -
@@ -60,27 +61,29 @@ VOID AddElement(LIST_ELEMENT *New, LINKED_LIST *List){
  * list - List is on which the operation is being done
  */
 VOID RemoveElement(LIST_ELEMENT *oldElement, LINKED_LIST *lList){
-	LIST_ELEMENT *oldNext = oldElement->Next;
-	LIST_ELEMENT *oldPrevious = oldElement->Previous;
+	if(lList->Count){
+		LIST_ELEMENT *oldNext = oldElement->Next;
+		LIST_ELEMENT *oldPrevious = oldElement->Previous;
 
-	if(oldPrevious != NULL)
-		oldPrevious->Next = oldNext;
-	else
-		lList->Head = oldNext;
+		if(oldPrevious != NULL)
+			oldPrevious->Next = oldNext;
+		else
+			lList->Head = oldNext;
 
-	if(oldNext != NULL)
-		oldNext->Previous = oldPrevious;
-	else
-		lList->Tail = oldPrevious;
+		if(oldNext != NULL)
+			oldNext->Previous = oldPrevious;
+		else
+			lList->Tail = oldPrevious;
 
-	--(lList->Count);
+		--(lList->Count);
 
-	if(lList->Count == 1) {
-		lList->Head->Next = NULL;
-		lList->Tail = NULL;
-	} else if(lList->Count == 0) {
-		lList->Head = NULL;
-		lList->Tail = NULL;
+		if(lList->Count == 1) {
+			lList->Head->Next = NULL;
+			lList->Tail = NULL;
+		} else if(lList->Count == 0) {
+			lList->Head = NULL;
+			lList->Tail = NULL;
+		}
 	}
 }
 

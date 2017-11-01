@@ -5,7 +5,7 @@
 #ifndef MEMORY_PAGE_TRANS_H
 #define MEMORY_PAGE_TRANS_H
 
-#include <Types.h>
+#include <TYPE.h>
 
 #define PagePresent 		(1 << 0)
 #define PageReadWrite 		(1 << 1)

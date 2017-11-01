@@ -42,7 +42,7 @@ struct _IDT_POINTER {
 	typedef struct _IDT_ENTRY IDT;
 #endif /* NAMESPACE_IDT */
 
-VOID MapHandler(
+decl_c void MapHandler(
 	USHORT handlerNo,
 	UINT handlerAddress,
 	IDT *pIDT

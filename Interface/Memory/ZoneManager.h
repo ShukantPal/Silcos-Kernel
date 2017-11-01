@@ -1,4 +1,4 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: ZoneManager.h
  *
  * Summary:
@@ -22,7 +22,7 @@
  * freeing and allocating. This is done by the ZnOffset field of the buddy info type.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 #ifndef MEMORY_ZONE_MANAGER_H
 #define MEMORY_ZONE_MANAGER_H
 
@@ -59,16 +59,16 @@
  * @Since Circuit 2.03
  */
 typedef
-struct Zone
+struct Zone_
 {
 	union {
 		CLNODE LiLinker;
 		struct {
-			struct Zone *RightLinker;
-			struct Zone *LeftLinker;
+			struct Zone_ *RightLinker;
+			struct Zone_ *LeftLinker;
 		};
 	};
-	struct BuddyAllocator MmManager;
+	struct BuddyAllocator_ MmManager;
 	ULONG ZnPref;
 	ULONG MmSize;
 	ULONG MmReserved;
@@ -110,18 +110,19 @@ struct ZonePreference
  * Type: ZNSYS
  *
  * Summary:
- * This replaces the whole zone allocator. It contains the data for maintaing a zoning system.
+ * This replaces the whole zone allocator. It contains the data for maintaining a zoning system.
  *
  * Variables:
  * ZnPref - ZNPREF array
  * ZnPrefCount - No. of zone preferences
  * ZnPrefBase - Offset of the first zone
  *
+ * @Deprecated
  * @Version 1
  * @Since Circuit 2.03
  */
 typedef
-struct ZoneAllocator
+struct ZoneAllocator_
 {
 	BDINFO *BdITable;
 	ZNPREF *ZnPref;
@@ -144,6 +145,98 @@ struct ZoneAllocator
 #define FLG_NONE 0
 
 typedef ULONG ZNFLG;
+
+namespace Memory
+{
+
+namespace Internal
+{
+
+typedef unsigned long ZoneControl;
+
+struct Zone
+{
+	union
+	{
+		struct CircularListNode liLinker;
+		struct
+		{
+			struct Zone *nextZone;
+			struct Zone *previousZone;
+		};
+	};
+	class BuddyAllocator memoryAllocator;
+	unsigned long preferenceIndex;
+	unsigned long memorySize;
+	unsigned long memoryReserved;
+	unsigned long memoryAllocated;
+	SPIN_LOCK controlLock;
+};
+
+
+/**
+ * Class: ZoneAllocator
+ * Attributes: final
+ *
+ * Summary:
+ * This class is used as the backend for memory-allocators based on the zone
+ * allocation algorithm & buddy-algorithm. It uses of the concept of memory
+ * zones which contain memory for separate purposes.
+ *
+ * ZoneAllocator has the following prerequisites for its functional implementation -
+ *
+ * 1. Buddy-Block Entry Table - A table which contains a table of entries, each
+ * containing information about a memory-block (e.g. Page) which is a unit of
+ * allocation.
+ *
+ * 2. Zone Preference Table - A table containing ZonePreference entries which
+ * contain a circular list of memory-zones descriptors that are have highly
+ * mix-able memory. If a zone is low on memory, then first a zone of same
+ * preference will be tried for allocation, then the allocator will go to lower
+ * preferences.
+ *
+ * 3. Zone Table - A table containing zone descriptor entries. It is a good practice
+ * to have zones containing memory-adjacent to each other to be adjacent to each other
+ * in the zone-table.
+ *
+ * Each memory-zone has a separate buddy-allocator associated with it, which is used
+ * for allocating memory in it.
+ *
+ * Version: 1.2
+ * Since: Circuit 2.03++
+ * Author: Shukant Pal
+ */
+class ZoneAllocator final
+{
+public:
+	void resetAllocator(struct BuddyBlock *entryTable, struct ZonePreference *prefTable, ULONG prefCount, struct Zone *zoneTable, unsigned long zoneCount);
+	void resetStatistics();
+
+	// Allocator function
+	struct BuddyBlock *allocateBlock(ULONG requiredOrder, ULONG prefBase, struct Zone *prefZone, ZNFLG allocFlags);
+
+	// 'Free' the block function
+	Void freeBlock(struct BuddyBlock *givenBlock);
+
+	// Exchange-frontend for buddy-systems
+	struct BuddyBlock *exchangeBlock(struct BuddyBlock *orgBlock, ULONG *statusReg, ULONG prefBase, ZNFLG allocFlags);
+
+	static void configureZones(ULONG entrySize, ULONG highestOrder, USHORT *listInfo, LINKED_LIST *listArray, struct Zone *zoneTable, ULONG count);
+	static void configurePreference(struct Zone *zoneArray, struct ZonePreference *pref,  UINT count);
+	static void configureZoneMappings(struct Zone *zoneTable, unsigned long zoneCount);
+
+private:
+	struct BuddyBlock *descriptorTable;
+	struct ZonePreference *prefTable;
+	unsigned long prefCount;
+	struct Zone *zoneTable;
+	unsigned long zoneCount;
+
+	struct Zone *getZone(ULONG blockOrder, ULONG basePref, ZNFLG allocFlags, struct Zone *prefZone);
+};
+
+}
+}
 
 /**
  * Function: ZnAllocateBlock()
@@ -169,7 +262,7 @@ typedef ULONG ZNFLG;
  * @See ZNCFLG
  * @Author Shukant Pal
  */
-BDINFO *ZnAllocateBlock(
+decl_c BDINFO *ZnAllocateBlock(
 	ULONG bOrder,
 	ULONG znBasePref,
 	ZNINFO *znInfo,
@@ -195,6 +288,7 @@ BDINFO *ZnAllocateBlock(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
+decl_c
 VOID ZnFreeBlock(
 	BDINFO *bInfo,
 	ZNSYS *znSys
@@ -222,6 +316,7 @@ VOID ZnFreeBlock(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
+decl_c
 BDINFO *ZnExchangeBlock(
 	BDINFO *bInfo,
 	ULONG *status,
@@ -249,6 +344,7 @@ BDINFO *ZnExchangeBlock(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
+decl_c
 VOID ZnReverseMap(
 	USHORT znOffset,
 	ZNINFO *znInfo,

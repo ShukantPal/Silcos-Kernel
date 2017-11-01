@@ -54,7 +54,7 @@ KTHREAD *RetrieveThread(struct ThreadGroup *TG);
 
 KTHREAD *SelectThread(U32 RunqueueNo);
 
-VOID Schedule(
+export_asm void Schedule(
 	PROCESSOR*
 );
 

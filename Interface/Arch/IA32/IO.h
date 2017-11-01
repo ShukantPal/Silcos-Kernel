@@ -7,26 +7,12 @@
 
 #include <TYPE.h>
 
-extern
-UCHAR ReadPort(
-	USHORT portNo
-);
+import_asm UCHAR ReadPort(USHORT portNo);
 
-extern
-VOID WritePort(
-	USHORT portNo,
-	UCHAR byte
-);
+import_asm void WritePort(USHORT portNo, UCHAR byte);
 
-/* Read CMOS */
-UBYTE ReadCMOSRegister(
-	ULONG cmosRegisterIndex
-);
+export_asm UBYTE ReadCMOSRegister(ULONG cmosRegisterIndex);
 
-/* Write CMOS */
-VOID WriteCMOSRegister(
-	ULONG cmosRegisterIndex,
-	UBYTE cmosRegisterValue
-);
+export_asm void WriteCMOSRegister(ULONG cmosRegisterIndex, UBYTE cmosRegisterValue);
 
 #endif /* IO.h */

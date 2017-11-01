@@ -9,7 +9,8 @@
 U32 tagTableSize;
 MULTIBOOT_TAG *tagTable;
 U32 t = 32;
-VOID *SearchMultibootTag(U32 tagType){
+
+export_asm Void *SearchMultibootTag(U32 tagType){
 	MULTIBOOT_TAG *curTag = tagTable + 1;
 	U32 tagOffset;
 	U32 tagLimit = (U32) tagTable + tagTableSize;
@@ -30,7 +31,7 @@ VOID *SearchMultibootTag(U32 tagType){
 	return (NULL);
 }
 
-VOID *SearchMultibootTagFrom(VOID *lastTag, U32 tagType){
+export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType){
 	MULTIBOOT_TAG *curTag;
 	U32 tagOffset;
 
@@ -74,7 +75,7 @@ VOID *SearchMultibootTagFrom(VOID *lastTag, U32 tagType){
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID LoadMultibootTags(U32 pTagAddress){
+export_asm void LoadMultibootTags(U32 pTagAddress){
 	InitConsole((UCHAR *) 0xc00b8000);
 
 	SwitchContext(&SystemCxt);

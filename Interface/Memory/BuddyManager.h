@@ -30,9 +30,8 @@
  * @Version 1.1
  * @Since Circuit 2.03
  */
-
-#ifndef MEMORY_BUDDY_MANAGER_H
-#define MEMORY_BUDDY_MANAGER_H
+#ifndef __MEMORY_BUDDY_MANAGER_H__
+#define __MEMORY_BUDDY_MANAGER_H__
 
 #include <Util/LinkedList.h>
 #include <TYPE.h>
@@ -67,7 +66,7 @@
 #define BDSYS_VECTORS(maxOrder) (maxOrder + 1) * (maxOrder + 4) / 2
 
 /**
- * BDINFO - 
+ * Struct: BuddyBlock
  *
  * Summary:
  * This type represents a memory descriptor, and is the smallest unit
@@ -84,17 +83,25 @@
  * ZnOffset - Reserved for the zone allocator (not used)
  * BdType - Client-driven value, for recognizing the block type (not used).
  *
- * @Version 1
- * @Since Circuit 2.03
+ * Version: 1
+ * Since: Circuit 2.03++
+ * Author: Shukant Pal
  */
 typedef
-struct _BDINFO {
-	LIST_ELEMENT ListLinker;
+struct BuddyBlock
+{
+	struct LinkedListNode ListLinker;
 	UBYTE UpperOrder;
-	UBYTE LowerOrder;
-	union {
+	union
+	{
+		UBYTE LowerOrder;
+		UBYTE Order;
+	};
+	union
+	{
 		USHORT DescriptorFlags;
-		struct {
+		struct
+		{
 			USHORT BdFree:1;
 			USHORT BdLinked:1;
 			USHORT ZnOffset:11;
@@ -124,7 +131,7 @@ struct _BDINFO {
  * @Since Circuit 2.03
  */
 typedef
-struct BuddyAllocator {
+struct BuddyAllocator_ {
 	ULONG DescriptorSize; /* Size of memory descriptor */
 	UBYTE *DescriptorTable; /* Table of memory descriptors */
 	ULONG HighestOrder; /* Max-block allocation order of this allocator */
@@ -133,6 +140,67 @@ struct BuddyAllocator {
 	ULONG OpFree; /* Currently free buddies in the system */
 	ULONG OpAllocated; /* Total buddies allocated from the system */
 } BDSYS;
+
+#define LV_MAIN 0
+#define LV_SUB(n) (1 + n)
+
+namespace Memory {
+
+namespace Internal {
+
+/**
+ * Class: BuddyAllocator
+ *
+ * Summary:
+ * BuddyAllocator implements the buddy allocation algorithm and is the backend
+ * for the zone allocator. It uses 'buddy descriptors' which can be of various
+ * sizes with a header at the start of type 'struct BuddyBlock'.
+ *
+ * The buddy allocator is internal to the memory subsystem and is not required
+ * by code external the Core::Memory.
+ *
+ * Version: 1.1 (before struct BuddyAllocator)
+ * Since: Circuit 2.03++
+ * Author: Shukant Pal
+ */
+class BuddyAllocator final
+{
+public:
+	BuddyAllocator();
+	BuddyAllocator(ULONG entrySize, UBYTE *entryTable, ULONG highestOrder, USHORT *listInfo, LINKED_LIST *blockLists);
+	struct BuddyBlock *allocateBlock(unsigned long blockOrder);
+	unsigned long freeBlock(struct BuddyBlock *);
+	struct BuddyBlock *exchangeBlock(struct BuddyBlock *dataBlock, ULONG *status);
+
+	inline ULONG getEntrySize(){ return entrySize; }
+	inline void setEntrySize(ULONG entrySize){ this->entrySize = entrySize; }
+	inline UBYTE *getEntryTable(){ return entryTable; }
+	inline void setEntryTable(UBYTE *entryTable){ this->entryTable = entryTable; }
+private:
+	#define SIZEOF_ORDER(n) (1 << n) // Size of order-block n
+	#define SIZEOF_DIFF(u, l) (SIZEOF_ORDER(u) - SIZEOF_ORDER(l)) // Diff. b/w two blocks of order u,l
+	#define BlockAtOffsetOf(orgBlock, offsetValue) ((struct BuddyBlock *) ((ULONG) orgBlock + offsetValue * entrySize))
+
+	ULONG entrySize;// Size of total size of block-descriptor (including BuddyBlock)
+	UBYTE *entryTable;// Table containing entries of block-descriptions
+	ULONG highestOrder;// Highest order that can be allocated
+	USHORT *listInfo;// List bit-field having capacity till highestOrder (supplied by client)
+	LINKED_LIST *blockLists;// Lists for containing block-descriptions (supplied by client)
+	ULONG freeBuddies;// Blocks available in the allocator
+	ULONG allocatedBuddies;// Blocks that have been pushed out of the allocator
+
+	struct BuddyBlock *getBuddyBlock(ULONG blockOrder, struct BuddyBlock *);
+	struct LinkedList *getBuddyList(ULONG optimalOrder);
+	struct LinkedList *getBuddyList(ULONG lowerOrder, ULONG upperOrder);
+	struct LinkedList *getBuddyList(struct BuddyBlock *);
+	Void addBuddyBlock(struct BuddyBlock *);
+	Void removeBuddyBlock(struct BuddyBlock *);
+	Void removeBuddyBlock(struct BuddyBlock *, struct LinkedList *);
+	struct BuddyBlock *splitSuperBlock(ULONG newOrder, BDINFO *bInfo, BDINFO **lowerSuperBlock, BDINFO **upperSuperBlock);
+	struct BuddyBlock *mergeSuperBlock(struct BuddyBlock *, ULONG maxBlockOrder);
+};
+
+}}
 
 /**
  * BdAllocateBlock() - 
@@ -161,7 +229,7 @@ struct BuddyAllocator {
  * @Version 1
  * @Since Circuit 2.03
  */
-BDINFO *BdAllocateBlock(
+decl_c BDINFO *BdAllocateBlock(
 	ULONG bOrder,
 	BDSYS *bSys
 );
@@ -189,7 +257,7 @@ BDINFO *BdAllocateBlock(
  * @Version 1
  * @Since Circuit 2.03
  */
-ULONG BdFreeBlock(
+decl_c ULONG BdFreeBlock(
 	BDINFO *bInfo,
 	BDSYS *bdSys
 );
@@ -219,7 +287,7 @@ ULONG BdFreeBlock(
  * @Version 1
  * @Since Circuit 2.03
  */
-BDINFO *BdExchangeBlock(
+decl_c BDINFO *BdExchangeBlock(
 	BDINFO *bInfo,
 	BDSYS *bdSys,
 	ULONG *status

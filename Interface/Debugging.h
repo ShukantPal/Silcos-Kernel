@@ -5,18 +5,19 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
-#ifndef DEBUGGER_H
-#define DEBUGGER_H
+#ifndef __DEBUGGER_H__
+#define __DEBUGGER_H__
 
 #include "Types.h"
 
 /* A software-debuggable port. */
 typedef
-struct {
+struct DebugStream
+{
 	ULONG Status;
 	CHAR *CurrentBuffer;
-	VOID (*Write) (CHAR*);
-	VOID (*WriteLine) (CHAR*);
+	Void (*Write) (CHAR *);
+	Void (*WriteLine) (CHAR *);
 } DEBUG_STREAM;
 
 /* Backware-compat macros */
@@ -25,53 +26,29 @@ struct {
 #define DebugLine DbgLine
 
 /* Debugging-utiltity branches */
-VOID Dbg(
-	CHAR *dbgString
-);
+extern "C" {
+	void Dbg(CHAR *dbgString);
+	void DbgInt(SIZE_T);
+	void DbgErro(SIZE_T, ULONG Digits);
+	void DbgDump(VOID *Pointer, ULONG DumpByteSize);
+	void DbgBinOut(Void *Pointer, ULONG DumpByteSize);
+	void DbgLine(CHAR *String);
 
-VOID DbgInt(
-	SIZE_T
-);
+	/* Debug-stream g/s interface */
+	ULONG AddStream(struct DebugStream *);
+	void RemoveStream(ULONG Index);
+}
+	/* Native text-console prime debugging facility */
+	UCHAR InitConsole(
+		UCHAR *VideoBuffer
+	);
 
-VOID DbgErro(
-	SIZE_T,
-	ULONG Digits
-);
+	void Write(
+		CHAR  *ConsoleASCIIString
+	);
 
-VOID DbgDump(
-	VOID *Pointer,
-	ULONG DumpByteSize
-);
-
-VOID DbgBinOut(
-	VOID *Pointer,
-	ULONG DumpByteSize // Must be multiple of 4
-);
-
-VOID DbgLine(
-	CHAR *String
-);
-
-/* Debug-stream g/s interface */
-ULONG AddStream(
-	DEBUG_STREAM*
-);
-
-VOID RemoveStream(
-	ULONG Index
-);
-
-/* Native text-console prime debugging facility */
-UCHAR InitConsole(
-	UCHAR *VideoBuffer
-);
-
-VOID Write(
-	CHAR  *ConsoleASCIIString
-);
-
-VOID WriteLine(
-	CHAR *ConsoleASCIIString
-);
+	void WriteLine(
+		CHAR *ConsoleASCIIString
+	);
 
 #endif /* Debugging.h */
