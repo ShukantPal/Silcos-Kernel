@@ -6,7 +6,7 @@
 #include <Types.h>
 #include <Util/CtPrim.h>
 
-VOID ASSERT(BOOL c, CHAR *String)
+Void ASSERT(BOOL c, CHAR *String)
 {
 	if(!c)
 	{
@@ -17,7 +17,7 @@ VOID ASSERT(BOOL c, CHAR *String)
 	}
 }
 
-VOID memset(VOID *bPointer, UBYTE btValue, SIZE bSize){
+Void memset(Void *bPointer, UBYTE btValue, SIZE bSize){
 	UBYTE *btBuffer = (UBYTE *) bPointer;/* Transfer bytes */
 	UBYTE *btPointer = (UBYTE *) bPointer + bSize;/* Transfer serially */
 	while((ULONG) btPointer > (ULONG) btBuffer) {
@@ -26,7 +26,7 @@ VOID memset(VOID *bPointer, UBYTE btValue, SIZE bSize){
 	}
 }
 
-VOID memsetf(VOID *bPointer, SIZE_T lgsValue, SIZE_T bSize){
+Void memsetf(Void *bPointer, SIZE_T lgsValue, SIZE_T bSize){
 	ULONG *lgBuffer = bPointer;
 	bSize &= ~(3);
 	ULONG *lgPointer = (ULONG *) ((UBYTE *) bPointer + bSize);
@@ -36,7 +36,7 @@ VOID memsetf(VOID *bPointer, SIZE_T lgsValue, SIZE_T bSize){
 	}
 }
 
-VOID memcpy(const VOID *Obj1, VOID *Obj2, SIZE_T ObjSize){
+Void memcpy(const Void *Obj1, Void *Obj2, SIZE_T ObjSize){
 	CHAR *O1 = (CHAR *) Obj1;
 	CHAR *O2 = (CHAR *) Obj2;
 	while(ObjSize){
@@ -45,18 +45,21 @@ VOID memcpy(const VOID *Obj1, VOID *Obj2, SIZE_T ObjSize){
 	}
 }
 
-VOID memcpyf(const VOID *Obj1, VOID *Obj2, SIZE ObjSize){
-	ULONG *O1 = (ULONG *) Obj1;
-	ULONG *O2 = (ULONG *) Obj2;
-	ObjSize /= sizeof(SIZE);
-	while(ObjSize) {
-		--ObjSize;
-		O2[ObjSize] = O1[ObjSize];
+Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize){
+	if(bufferSize){
+		ULONG *cPointerSource = (ULONG *) ((UBYTE *) bPointerI + bufferSize);
+		ULONG *cPointerDest = (ULONG *) ((UBYTE *) bPointerII + bufferSize);
+		bufferSize /= sizeof(SIZE);
+		while(bufferSize){
+			--(bufferSize);
+			--(cPointerSource);
+			--(cPointerDest);
+			*cPointerDest = *cPointerSource;
+		}
 	}
-	O2[0] = O1[0];
 }
 
-BOOL memcmp(const VOID *bPointerI, const VOID *bPointerII, SIZE bSize){
+BOOL memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
 	UBYTE *bCounterI  = bPointerI;
 	UBYTE *bCounterII = bPointerII;
 	LONG bOffset = (LONG) bSize;

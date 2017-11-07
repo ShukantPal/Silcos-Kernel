@@ -45,8 +45,7 @@ extern ULONG pgUsable;
 
 #define FRSIZE_ORDER 12
 
-typedef BDINFO MEMORY_FRAME;
-typedef BDINFO MMFRAME;
+typedef struct Memory::Internal::BuddyBlock MMFRAME;
 
 #define FRAME_AT(pAddress) (MMFRAME*) (KFRAMEMAP + (sizeof(MMFRAME) * ((ULONG) (pAddress) >> 12)))
 #define FROPAGE(pgOffset) (KFRAMEMAP + pgOffset * sizeof(MMFRAME))

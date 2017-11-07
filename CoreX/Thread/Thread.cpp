@@ -151,6 +151,14 @@ VOID SetupRunqueue(){
 }
 
 int log_id = 2;
+/**
+ * Function: ThreadManager::createThread (will be changed)
+ *
+ * Summary:
+ * This function creates a kernel-thread by its entry-point.
+ *
+ * Author: Shukant Pal
+ */
 KTHREAD *KThreadCreate(VOID (*Entry)()){
 	PROCESSOR *currentProcessor = GetProcessorById(PROCESSOR_ID);
 	KTHREAD *newThread = KNew(tdInfo, KM_SLEEP);

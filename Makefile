@@ -61,14 +61,17 @@ SchedulerObjects = Compile/Scheduler.o Compile/RR.o #Compile/SchedList.o
 
 UtilObjects = Compile/AVLTree.o Compile/CircuitPrimitive.o Compile/CircularList.o Compile/Console.o Compile/Debugger.o Compile/LinkedList.o Compile/Stack.o
 
-moduleLoaderObjects = Compile/ELF.o Compile/ModuleLoader.o \
-Compile/MSI.o
+moduleLoaderObjects = Compile/ElfManager.o Compile/ElfAnalyzer.o \
+Compile/ModuleLoader.o Compile/MSI.o Compile/ElfLinker.o Compile/RecordManager.o
 
 # Header Dependencies
 
 BuildChain : BuildInit BuildArch BuildConfig BuildKernelRoutines BuildIntr BuildInterProcess BuildMemory BuildProcess BuildScheduler BuildThread BuildUtil BuildModuleLoader Link
 
 $(IfcHAL)/Processor.h: $(IfcMemory)/CacheRegister.h $(IfcUtil)/AVLTree.h $(IfcUtil)/CircularList.h
+
+$(IfcModule)/Elf/ELF.h: $(IfcModule)/ModuleLoader.h
+$(IfcModule)/Elf/ElfManager.hpp: $(IfcModule)/Elf/ELF.h
 
 Compile/86InitPaging.o: $(ArchDir)/Paging/86InitPaging.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/Paging/86InitPaging.asm -o Compile/86InitPaging.o
@@ -169,7 +172,7 @@ Compile/Init.o: CoreX/KernelRoutine/Init.cpp
 
 BuildKernelRoutines: $(KernelRoutineObjects)
 
-Compile/BuddyAllocator.o: $(IfcMemory)/BuddyAllocator.h $(IfcMemory)/Pager.h CoreX/Memory/BuddyAllocator.cpp
+Compile/BuddyAllocator.o: $(IfcMemory)/BuddyManager.h $(IfcMemory)/Pager.h CoreX/Memory/BuddyAllocator.cpp
 	$(CC) $(CFLAGS) CoreX/Memory/BuddyAllocator.cpp -o Compile/BuddyAllocator.o
 
 Compile/CacheRegister.o: $(IfcHAL)/Processor.h $(IfcMemory)/CacheRegister.h CoreX/Memory/CacheRegister.cpp	
@@ -236,19 +239,28 @@ Compile/Stack.o: $(IfcUtil)/Stack.h Util/Stack.cpp
 
 BuildUtil: $(UtilObjects)
 
-Compile/ELF.o: $(IfcModule)/ELF.h CoreX/ModuleLoader/ELF.cpp
-	$(CC) $(CFLAGS) CoreX/ModuleLoader/ELF.cpp -o Compile/ELF.o
+Compile/ElfAnalyzer.o: $(IfcModule)/Elf/ElfAnalyzer.hpp CoreX/ModuleLoader/ElfAnalyzer.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/ElfAnalyzer.cpp -o Compile/ElfAnalyzer.o
 
-Compile/ModuleLoader.o: CoreX/ModuleLoader/ModuleLoader.cpp
+Compile/ElfLinker.o: $(IfcModule)/Elf/ElfLinker.hpp CoreX/ModuleLoader/ElfLinker.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/ElfLinker.cpp -o Compile/ElfLinker.o
+
+Compile/ElfManager.o: $(IfcModule)/Elf/ElfManager.hpp CoreX/ModuleLoader/ElfManager.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/ElfManager.cpp -o Compile/ElfManager.o
+
+Compile/ModuleLoader.o: $(IfcModule)/ModuleLoader.h CoreX/ModuleLoader/ModuleLoader.cpp
 	$(CC) $(CFLAGS) CoreX/ModuleLoader/ModuleLoader.cpp -o Compile/ModuleLoader.o
 
-Compile/MSI.o: CoreX/ModuleLoader/MSI.cpp
+Compile/MSI.o: $(IfcModule)/ModuleLoader.h CoreX/ModuleLoader/MSI.cpp
 	$(CC) $(CFLAGS) CoreX/ModuleLoader/MSI.cpp -o Compile/MSI.o
+
+Compile/RecordManager.o: $(IfcModule)/ModuleRecord.h CoreX/ModuleLoader/RecordManager.cpp
+	$(CC) $(CFLAGS) CoreX/ModuleLoader/RecordManager.cpp -o Compile/RecordManager.o
 
 BuildModuleLoader: $(moduleLoaderObjects)
 
 Link: Compile/IO.o
-	ld -m elf_i386 -T linker.ld --export-dynamic -pie Compile/IO.o $(InitObjects) $(ConfigObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) $(InterProcessObjects) $(MemoryObjects) $(ProcessObjects) $(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) -o circuitk-1.02
+	ld -m elf_i386 -T linker.ld --export-dynamic --strip-all -pie Compile/IO.o $(InitObjects) $(ConfigObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) $(InterProcessObjects) $(MemoryObjects) $(ProcessObjects) $(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) -o circuitk-1.02
 	make -C ./Modules
 	cp circuitk-1.02 ../circuit-iso/boot/
 	cp -a Modules/Builtin/* ../circuit-iso/boot/

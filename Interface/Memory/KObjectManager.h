@@ -34,7 +34,10 @@
 #define KM_SLEEP 1
 #define KM_NOSLEEP 0
 
-#define NO_ALIGN 0
+/*
+ * Default-alignment is 4 for 32-bit systems/ 8 for 64-bit systems
+ */
+#define NO_ALIGN 4
 
 #ifdef x86
 	#define L1_CACHE_ALIGN 64
@@ -114,7 +117,7 @@ struct ObjectInfo {
 	SPIN_LOCK ObLock;
 } OBINFO;
 
-/******************************************************************************
+/**
  * Function: KiCreateType()
  *
  * Summary: This function creates a object allocator, for the given properties. Duplicate
@@ -131,7 +134,7 @@ struct ObjectInfo {
  *
  * @Version 1
  * @Since Circuit 2.03
- ******************************************************************************/
+ */
 struct ObjectInfo *KiCreateType(CHAR *tName,
 								ULONG tSize,
 								ULONG tAlign,
@@ -140,13 +143,12 @@ struct ObjectInfo *KiCreateType(CHAR *tName,
 );
 
 VOID *KNew(struct ObjectInfo *typeInfo, ULONG kmSleep);
-
 VOID KDelete(Void *object, struct ObjectInfo *objectInfo);
-
-ULONG KDestroyType(struct ObjectInfo *);
+ULONG KiDestroyType(struct ObjectInfo *);
 
 #define SETUP_OBJECT(typeName) KiCreateType("typeName", sizeof(typeName), sizeof(ULONG), NULL, NULL)
 
 void obSetupAllocator(Void);
+void SetupPrimitiveObjects(void);
 
 #endif/* Memory/KObjectManager.h */

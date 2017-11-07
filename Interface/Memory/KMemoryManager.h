@@ -27,7 +27,7 @@
 
 	typedef
 	struct _KPAGE {
-		BDINFO BInfo;
+		struct Memory::Internal::BuddyBlock BInfo;
 		ULONG HashCode;
 	} KPAGE;
 #endif

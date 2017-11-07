@@ -1,11 +1,27 @@
+/**
+ * File: Module/ModuleRecord.h
+ *
+ * Summary:
+ * ModuleRecord provides a management interface to manage module's and their related data
+ * base.
+ *
+ * Author: Shukant Pal
+ */
 #ifndef __MODULE_RECORD_H__
 #define __MODULE_RECORD_H__
 
 #include <Memory/KObjectManager.h>
-#include "ELF.h"
+#include "Elf/ELF.h"
+#include "Elf/ElfManager.hpp"
 #include <Util/LinkedList.h>
 
+using namespace Module;
+using namespace Module::Elf;
+
 // remember, KAF applications are not modules. They are loaded by KAF clients
+namespace Module
+{
+
 typedef
 enum ModuleType {
 	KMT_KDF_DRIVER	= 1,// Kernel-mode Driver
@@ -14,19 +30,92 @@ enum ModuleType {
 	KMT_UNKNOWN	= 4// Unknown (restricted form)
 } KM_TYPE;
 
+enum ABI
+{
+	INVALID = 0,
+	ELF = 1
+};
+
+struct DynamicLink
+{
+	LinkedList *moduleDependencies;
+	SymbolTable dynamicSymbols;
+	HashTable symbolHash;
+};
+
+/**
+ * Struct: ModuleRecord
+ *
+ * Summary:
+ * This struct is used for modeling a runtime-record of a kernel module. It
+ * contains ABI information and dynamic-linking information related to the
+ * module.
+ *
+ * It is used by the RecordManager for cross-ABI searches for symbols exported
+ * by software-components. Client must initialize it & register it into the
+ * RecordManager.
+ *
+ * Origin:
+ * This struct is used for maintaining module records with the RecordManager.
+ *
+ * Version: 1.0
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
+ */
 typedef
-struct ModuleRecord {
-	union {
-		struct ModuleRecord *NextModule;
-		struct ModuleRecord *PreviousModule;
-		LINODE LiLinker;
+struct ModuleRecord
+{
+	union
+	{
+		ModuleRecord *NextModule;/* Next-module in list */
+		ModuleRecord *PreviousModule;/* Previous-module in list */
+		LinkedListNode LiLinker;/* Used for participating the RecordManager list */
 	};
-	CHAR Name[16];
-	ULONG Version;
-	KM_TYPE Type;
-	KMOD_ECACHE ECache;
-	ADDRESS BaseAddr;/* Points to the memory where the module is loaded at. */
+	CHAR buildName[16];/* Name given to the module, at build time (16-bytes max., may not null-terminate) */
+	ULONG buildVersion;/* Version of the module build, not service */
+	KM_TYPE serviceType;/* Type of service provided by the module */
+	DynamicLink *linkerInfo;/* Dynamic link-information */
+	ADDRESS entryAddr;/* Virtual address of entry point */
+	ADDRESS BaseAddr;/* Address where the module was loaded in kernel memory */
 } KMOD_RECORD;
+
+/**
+ * Class: RecordManager
+ *
+ * Summary:
+ * This class provides a ABI-independent organization of modules & their
+ * associated symbol lookup tables. The RecordManager helps the dynamic
+ * linkers to query symbols & module-information globally.
+ *
+ * It also helps the linker to process multiple inter-dependent modules,
+ * each of which the dynamic-link info is exported and inserted into the
+ * respective records. Then the relocations are done on each of them.
+ *
+ * Functions:
+ * registerRecord - This function inserts a module-record into global namespace
+ * createRecord - Allocates a module-record with a valid name, build, and type
+ * querySymbol - Used for querying a symbol in the global namespace by name
+ *
+ * Version: 1.1
+ * Since: Circuit 2.03++
+ * Author: Shukant Pal
+ */
+class RecordManager
+{
+public:
+	static inline void registerRecord(ModuleRecord *modRecord){
+		AddElement((LinkedListNode *) modRecord, &globalRecordList);
+	}
+
+	static ModuleRecord *createRecord(CHAR *modName, ULONG modVersion, ULONG type);
+
+	static Symbol *querySymbol(CHAR *symbolName);
+
+private:
+	static LinkedList globalRecordList;
+};
+
+}
 
 /**
  * Function: MdCreateModule
@@ -38,12 +127,7 @@ struct ModuleRecord {
  * @Version 1
  * @Since Circuit 2.03
  */
-struct ModuleRecord *
-MdCreateModule(
-		CHAR *moduleName,
-		ULONG moduleVersion,
-		ULONG moduleType
-);
+ModuleRecord *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG moduleType);
 
 /**
  * Function: MdLoadCoreModule
@@ -51,15 +135,13 @@ MdCreateModule(
  * Summary:
  * This function loads the 'core' module. This refers to the kernel-executable's module
  * record, which is required for keeping its symbol table in the kernel module list. Thus,
- * a separate record is kept for the microkernel and added to the ModuleList.
+ * a separate record is kept for the micro-kernel and added to the ModuleList.
  *
  * @Version 1
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-static inline
-struct ModuleRecord *
-MdLoadCoreModule(VOID){
+static inline ModuleRecord *MdLoadCoreModule(VOID){
 	return MdCreateModule("CORE", 200300, KMT_EXC_MODULE);
 }
 

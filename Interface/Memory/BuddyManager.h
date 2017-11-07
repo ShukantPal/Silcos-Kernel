@@ -1,34 +1,5 @@
 /**
  * Copyright (C) 2017 - Shukant Pal
- *
- * The buddy allocator presents a generic-interface to seperate the allocation
- * algorithms, layer-wise to organize and reduce code. The memory allocators
- * (physical and kernel memory) use this system to share the allocation code.
- * Actually, the buddy allocator is a layer beneath the ZONE allocator and
- * CACHE-based allocator.
- *
- * The buddy system has been modified in two crucial ways - 
- *
- * 1- Usage of superblocks - A superblock is memory chunk having a size
- * equal to the DIFFERENCE of two powers-of-two (2^k - 2^i). They are used
- * to reduce the number of splits and merges required.
- *
- * 2- Multiple lists per block size - For a block of size 2^k, (k+1) number of
- * (2^k - 2^i) superblocks are available. A seperate list is kept for each type,
- * arising the need for multiple block lists.
- *
- * The BDSYS type is used to represent the buddy system and its statistical
- * data. It requires the block lists, list infos, and the buddy info descriptors. This
- * is quite less for usage with PAGE_SIZE memory blocks.
- *
- * The BDINFO type is the core type used by the allocator. Its size is actually
- * modifiable for the system, by the DescriptorSize variable. The fields except
- * DescriptorFlags (only 2-bits used) are totally used by the system. They are
- * not supposed to be modified, or else it will lead to the failure of the buddy
- * system.
- *
- * @Version 1.1
- * @Since Circuit 2.03
  */
 #ifndef __MEMORY_BUDDY_MANAGER_H__
 #define __MEMORY_BUDDY_MANAGER_H__
@@ -36,22 +7,18 @@
 #include <Util/LinkedList.h>
 #include <TYPE.h>
 
+namespace Memory
+{
+
 /* Definitions */
 #define MAX_BUDDY_ORDER 15
+
+namespace Internal
+{
 
 /* Flag offsets */
 #define BD_FREE 0
 #define BD_LINKED 1
-
-#define BD_USED 0xBDF1
-#define BD_ORDER_CORRUPT 0xBDF2
-#define BD_MEMORY_LOW 0xBDA1
-#define BD_MEMORY_OVERLOAD 0xBDA2 /* Not implemented */
-#define BD_FRAGMENTATION 0xBDA3
-#define BD_ERR_FREE 0xBDE1
-#define BD_INTERNAL 0xBDE2
-#define BD_EXTERNAL 0xBDE3
-#define BD_SUCCESS 0xBDE
 
 /* Flag readers */
 #define TBDFREE(bInfo) ((bInfo->DescriptorFlags >> BD_FREE) & 1)
@@ -64,6 +31,22 @@
 #define BDLINK(bInfo) (bInfo->DescriptorFlags |= (1 << BD_LINKED)) /* Set the linked flag */
 
 #define BDSYS_VECTORS(maxOrder) (maxOrder + 1) * (maxOrder + 4) / 2
+
+#define LV_MAIN 0
+#define LV_SUB(n) (1 + n)
+
+enum BuddyResult
+{
+	BD_USED 			= 0xBDF1,
+	BD_ORDER_CORRUPT 	= 0xBDF2,
+	BD_MEMORY_LOW 		= 0xBDA1,
+	BD_MEMORY_OVERLOAD 	= 0xBDA2, /* Not implemented */
+	BD_FRAGMENTATION 	= 0xBDA3,
+	BD_ERR_FREE 		= 0xBDE1,
+	BD_INTERNAL 		= 0xBDE2,
+	BD_EXTERNAL 		= 0xBDE3,
+	BD_SUCCESS 			= 0xBDE
+};
 
 /**
  * Struct: BuddyBlock
@@ -86,6 +69,8 @@
  * Version: 1
  * Since: Circuit 2.03++
  * Author: Shukant Pal
+ * Deprecated-Style:;
+ * Before: BDINFO
  */
 typedef
 struct BuddyBlock
@@ -108,45 +93,8 @@ struct BuddyBlock
 			USHORT BdType:3;
 		};
 	};
-} BDINFO;
+};
 
-/**
- * BDSYS -
- *
- * Summary:
- * This type is used to contain data for the buddy system. It is read-only for external
- * code. The fields are filled only once and should not be changed during runtime. The
- * variables are strongly used by the allocator code.
- * 
- * Variables:
- * DescriptorSize - Size of the memory descriptor (BDINFO)
- * DescriptorTable - Table of memory descriptors (BDINFO)
- * HighestOrder - The highest order of allocation allowed (read-only)
- * ListInfo - The information array containing bits for each list
- * BlockLists - The array of lists used for containing free blocks
- * OpFree - Total number of free units in the system, currently
- * OpAllocated - Total number of allocated units in the system, from starting (modifiable to 0)
- *
- * @Version 1.1
- * @Since Circuit 2.03
- */
-typedef
-struct BuddyAllocator_ {
-	ULONG DescriptorSize; /* Size of memory descriptor */
-	UBYTE *DescriptorTable; /* Table of memory descriptors */
-	ULONG HighestOrder; /* Max-block allocation order of this allocator */
-	USHORT *ListInfo; /* List info contains bits for various PRESENT/NOT-PRESENT for each block type. */
-	LINKED_LIST *BlockLists; /* Array of lists having atleast HighestOrder lists.*/
-	ULONG OpFree; /* Currently free buddies in the system */
-	ULONG OpAllocated; /* Total buddies allocated from the system */
-} BDSYS;
-
-#define LV_MAIN 0
-#define LV_SUB(n) (1 + n)
-
-namespace Memory {
-
-namespace Internal {
 
 /**
  * Class: BuddyAllocator
@@ -196,101 +144,12 @@ private:
 	Void addBuddyBlock(struct BuddyBlock *);
 	Void removeBuddyBlock(struct BuddyBlock *);
 	Void removeBuddyBlock(struct BuddyBlock *, struct LinkedList *);
-	struct BuddyBlock *splitSuperBlock(ULONG newOrder, BDINFO *bInfo, BDINFO **lowerSuperBlock, BDINFO **upperSuperBlock);
+	struct BuddyBlock *splitSuperBlock(ULONG newOrder, struct BuddyBlock *bInfo, struct BuddyBlock **lowerSuperBlock, struct BuddyBlock **upperSuperBlock);
 	struct BuddyBlock *mergeSuperBlock(struct BuddyBlock *, ULONG maxBlockOrder);
 };
 
-}}
+} // namespace Internal
 
-/**
- * BdAllocateBlock() - 
- *
- * Summary:
- * This function looks for a superblock in two steps - 
- * 1- Search for superblock with a block of required size.
- * 2- If not found, then search for a superblock of size greater than
- *	  required size.
- * Once a superblock is found, it is split into upto three pieces and
- * the fitting block is returned. The other two pieces are added into
- * the buddy system's lists for use later.
- *
- * Args:
- * bOrder -  Order of the memory size required
- * bSys - Buddy System of the context
- *
- * Changes:
- * This function can change the buddy lists in the system given.
- *
- * Exceptions:
- * BD_MEMORY_LOW: Memory is too low to allocate the block.
- * BD_MEMORY_OVERLOAD: Rarely given, to show that allocation is greater than total memory.
- * BD_FRAGMENTATION: Memory is fragmented to allocate a contigous block so large.
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-decl_c BDINFO *BdAllocateBlock(
-	ULONG bOrder,
-	BDSYS *bSys
-);
-
-/**
- * BdFreeBlock() - 
- *
- * Summary:
- * This function simply uses the given block for merging and getting a
- * block as large as possible. The block is automatically added to the
- * buddy lists during merging. It is just made free by setting the BD_FREE
- * flag.
- *
- * Args:
- * BDiNFO *bInfo - The block to be freed
- * BDSYS *bdSys - The buddy system to be used
- *
- * Exceptions:
- * BD_USED: Linked flag is still set (not allowed)
- * BD_CORRUPT_ORDER: The orders of the block aren't correct
- *
- * Success Return:
- * BD_SUCCESS
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-decl_c ULONG BdFreeBlock(
-	BDINFO *bInfo,
-	BDSYS *bdSys
-);
-
-/**
- * BdExchangeBlock() - 
- *
- * Summary:
- * This function, simply, extends or exchanges the current block with a new block
- * by doubling it. If the block cannot be enlarged, then a new block of order+1
- * is allocated. It allows atomic extension of various data structures, and if the
- * block can be extended directly, it saves memory transfer overhead.
- *
- * Args:
- * bInfo - The original block, which needs extension
- * bdSys - The buddy system, being used
- * status - Return information, if the original block was freed or not
- *
- * Exceptions:
- * BD_FREE - If the block is not allocated, and you are trying to exchange it
- * 
- * Returns: The larger block, which is exchanged or allocated
- *
- * Changes:
- * status - BD_INTERNAL iff the org. block not extended, else BD_EXTERNAL
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-decl_c BDINFO *BdExchangeBlock(
-	BDINFO *bInfo,
-	BDSYS *bdSys,
-	ULONG *status
-);
+} // namespace Memory
 
 #endif /* Memory/BuddyManager.h */

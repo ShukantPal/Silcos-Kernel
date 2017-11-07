@@ -9,35 +9,34 @@
 #include <Memory/MemoryTransfer.h>
 #include <KERNEL.h>
 
+/*
+ * Size of buffer (object aligned to memory)
+ */
 #define BUFFER_SIZE(ObSize, ObAlign) ((ObSize % ObAlign) ? (ObSize + ObAlign - (ObSize % ObAlign)) : ObSize)
 
 CHAR nmOBINFO[7] = "OBINFO"; /* Name of OBINFO */
+
+/*
+ * Object-types, for alloc
+ */
 OBINFO tOBINFO;
-//{
-//	.ObName = &nmOBINFO[0],
-//	.ObSize = sizeof(OBINFO),
-//	.ObColor = 0,
-//	.ObAlign = L1_CACHE_ALIGN,
-//	.BufferSize = BUFFER_SIZE(sizeof(OBINFO), L1_CACHE_ALIGN),
-//	.BufferPerSlab = (KPGSIZE - sizeof(OBSLAB)) / BUFFER_SIZE(sizeof(OBINFO), L1_CACHE_ALIGN),
-//	.BufferMargin = (KPGSIZE - sizeof(OBSLAB)) % BUFFER_SIZE(sizeof(OBINFO), L1_CACHE_ALIGN),
-//	.ObConstruct = NULL,
-//	.ObDestruct = NULL
-//};
 
 CHAR nmOBSLAB[7] = "OBSLAB"; /* Name of OBSLAB */
+
+/*
+ * Slab descriptors, for large object sizes, to implement them in a hash tree.
+ */
 OBINFO tOBSLAB;
-//{
-//	.ObName = &nmOBSLAB[0],
-//	.ObSize = sizeof(OBSLAB),
-//	.ObColor = 0,
-//	.ObAlign = NO_ALIGN,
-//	.BufferSize = sizeof(OBSLAB),
-//	.BufferPerSlab = (KPGSIZE - sizeof(OBSLAB)) / sizeof(OBSLAB),
-//	.BufferMargin = (KPGSIZE - sizeof(OBSLAB)) % sizeof(OBSLAB),
-//	.ObConstruct = NULL,
-//	.ObDestruct = NULL
-//};
+
+ObjectInfo *tAVLNode;
+
+CHAR nmLinkedList[] = "LinkedList";
+
+/*
+ * Linked List for general purpose use (prim. type), and also the
+ * GenericLinkedListNode can be allocated from this for temporary usage.
+ */
+ObjectInfo *tLinkedList;
 
 void obSetupAllocator(Void)
 {
@@ -56,6 +55,11 @@ void obSetupAllocator(Void)
 	tOBSLAB.BufferSize = sizeof(OBSLAB);
 	tOBSLAB.BufferPerSlab = (KPGSIZE - sizeof(OBSLAB)) / sizeof(OBSLAB);
 	tOBSLAB.BufferMargin = (KPGSIZE - sizeof(OBSLAB)) % sizeof(OBSLAB);
+}
+
+void SetupPrimitiveObjects(void)
+{
+	tLinkedList = KiCreateType(nmLinkedList, sizeof(LinkedList), NO_ALIGN, NULL, NULL);
 }
 
 CLIST tList; /* List of active kernel object managers */

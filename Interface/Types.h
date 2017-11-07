@@ -10,15 +10,29 @@
 	#define export_asm extern "C"
 	#define decl_c extern "C"
 
-	inline void *operator new(unsigned int, void *objectMemory)
-	{
+	extern struct ObjectInfo *tLinkedList;
+
+	inline void *operator new(unsigned int, void *objectMemory){
 		return (objectMemory);
+	}
+
+	extern void *KNew(struct ObjectInfo *, unsigned long km_sleep);
+	inline void *operator new(unsigned int, struct ObjectInfo *objectType)
+	{
+		return KNew(objectType, 0);
+	}
+
+	extern void KDelete(void *del_ptr, struct ObjectInfo *);
+	typedef void kobj;
+	inline void kobj_free(void *del_ptr, struct ObjectInfo *useless_type)
+	{
+		KDelete(del_ptr, useless_type);
 	}
 
 #else
 	#define import_asm extern
 	#define export_asm extern
-	#define decl_c extern
+	#define decl_c
 #endif
 
 #define returnv_if(boolCondition) if(boolCondition) return;

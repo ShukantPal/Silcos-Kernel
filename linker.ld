@@ -24,11 +24,12 @@ SECTIONS {
 	
 	.BsTransferCtl : AT(ADDR(.BsTransferCtl) - KERNEL_OFFSET)
 	{
+	kernelSeg = .;
 		*(.BsTransferCtl)
 	} :kernel
 
 	KernelCodeStart = .;
-	.text ALIGN (0x1000) : AT(ADDR(.text) - KERNEL_OFFSET)
+	.text : AT(ADDR(.text) - KERNEL_OFFSET)
 	{		
 		ctorsStart = .;
 		*(SORT(.ctors*))
@@ -51,6 +52,7 @@ SECTIONS {
 	.data ALIGN (0x1000) : AT(ADDR(.data) - KERNEL_OFFSET){
 		*(.data)
 		*(.gnu.linkonce.d.*)
+
 	}
 	KernelDataEnd = .;
 
@@ -60,13 +62,16 @@ SECTIONS {
 		*(COMMON)
 		*(.bss)
 		*(.gnu.linkonce.b.*)
+		endKSearch = .;
 	}
 	KernelBSSEnd = .;
 
 	.dynamic ALIGN(0x1000) : AT(ADDR(.dynamic) - KERNEL_OFFSET)
 	{
+				msiKernelDynamicTableStart = .;
 		*(.dynamic)
-	} :dynamic
+				msiKernelDynamicTableEnd = .;
+	} :kernel
 	
 	/DISCARD/ :
     {

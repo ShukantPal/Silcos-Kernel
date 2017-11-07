@@ -1,25 +1,20 @@
-/*=+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: MSI.h
  *
  * Summary:
- * MSI is the acronym for 'Multiboot Section Interface'. It is used by the core
- * kernel to link its own symbols with the kmodules. This separate interface is
- * provided, because the multiboot-compliant boot-loader may/may not load the ELF
- * header. But, the multiboot specification provides the multiboot-section tags
- * for the ELF-kernel binaries.
- *  
- * MSI is just an interface to use the multiboot-section tags and load the core
- * kernel symbol table.
+ *
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-#ifndef __MODULE_MSI_H__
-#define __MODULE_MSI_H__
+ */
+#ifndef __INTERFACE_MODULE_MSI_H__
+#define __INTERFACE_MODULE_MSI_H__
 
-#include "ELF.h"
+#include "Elf/ELF.h"
 #include <Multiboot2.h>
 
-typedef ELF_SHDR MSI_SHDR;
+using namespace Module::Elf;
+
+typedef struct SectionHeader MSI_SHDR;
 
 /**
  * Type: KCOR_MSICACHE
@@ -43,31 +38,43 @@ struct MultibootElfCache {
 	MSI_SHDR *SectionHeaderTable;
 	struct {
 		CHAR *DynamicSymbolNames;
-		ELF_SYM *DynamicSymbolTable;
+		struct Symbol *DynamicSymbolTable;
 		ULONG DynamicSymbolCount;
 	};
-	ELF_SYMTAB eSymbolTbl;
-	EHASH_CACHE eSymbolHashTbl;
+	struct SymbolTable eSymbolTbl;
+	struct HashTable eSymbolHashTbl;
 } KCOR_MSICACHE;
 
 extern KCOR_MSICACHE msiKernelSections;
 
-MSI_SHDR *MsiFindSectionHeaderByName(
-	CHAR *eRequiredSectionName
-);
-
-static inline
-MSI_SHDR *MsiFindSectionHeaderByIndex(ULONG msiRequiredSectionIndex){
-	return (msiKernelSections.SectionHeaderTable + msiRequiredSectionIndex);
-}
-
-MSI_SHDR *MsiFindSectionHeaderByType(
-	ULONG eRequiredSectionType
-);
-
-ELF_SYM *MsiFindSymbolByName(
-	CHAR *
-);
+/**
+ * Class: KernelElf
+ *
+ * Summary:
+ * This class manages the boot-time module loading & also abstracts the microkernel
+ * elf-binary, which is special due to the absence of its elf-header.
+ *
+ * Functions:
+ * getDynamicEntry - Searches for a microkernel dynamic entry
+ * registerDynamicLink - Registers the microkernel dynamic-link info
+ * loadBootModules - Loads all the boot-time modules (called only once)
+ *
+ * Origin:
+ * This is the modified version of the 'Multiboot-Section Interface' which abstracted
+ * multiboot-sections, which has been deprecated due to use of symbols to find the
+ * dynamic table.
+ *
+ * Version: 1.1
+ * Since: Circuit 2.03++
+ * Author: Shukant Pal
+ */
+class KernelElf
+{
+public:
+	static DynamicEntry *getDynamicEntry(DynamicTag tag);
+	static ModuleRecord *registerDynamicLink();
+	static void loadBootModules();
+};
 
 VOID MsiSetupKernelForLinking(
 		struct ElfCache *coreCache

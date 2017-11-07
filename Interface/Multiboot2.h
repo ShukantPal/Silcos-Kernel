@@ -193,7 +193,7 @@ struct _MULTIBOOT_TAG_STRING {
  * @See Multiboot 1.6
  */
 typedef
-struct _MULTIBOOT_TAG_MODULE {
+struct MultibootTagModule {
 	U32 Type;/* must equal MULTIBOOT_TAG_TYPE_MODULE */
 	U32 Size;/* Size of the module descriptor, including CMDLine */
 	U32 ModuleStart;/* Physical load-address of the module */

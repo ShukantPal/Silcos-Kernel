@@ -32,6 +32,7 @@
 									<listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
 									<listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
 									<listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
+									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1518564512" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -81,8 +82,9 @@
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1548784359" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.923355682" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.396858246" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.396858246" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
+									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1262902665" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>

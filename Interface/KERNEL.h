@@ -11,23 +11,6 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
 
-#ifdef AI_MULTIBOOT2
-	#include "Multiboot2.h"
-#endif
-
-#ifdef AI_VMM
-	#define NS_PMFLGS
-	#include <Memory/Pager.h>
-	#include <Memory/KMemoryManager.h>
-	#include <Memory/KObjectManager.h>
-#endif
-
-#ifdef AI_MODLOADER
-	#include <Module/ELF.h>
-	#include <Module/ModuleLoader.h>
-	#include <Module/ModuleRecord.h>
-#endif
-
 #include <Debugging.h>
 #include <TYPE.h>
 #include <Util/Memory.h>

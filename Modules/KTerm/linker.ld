@@ -24,6 +24,7 @@ SECTIONS {
 		*(.text*)
 		*(.rdata)
 		*(.rodata)
+		*(.rel*)
 	} :KmTextSegment
 	
 	.data ALIGN(0x1000):{
@@ -46,7 +47,5 @@ SECTIONS {
 		*(.eh_frame)
 		*(.note)
 		*(.comment)
-		*(.rel.*)
-		*(.rela.*)
 	}
 } 

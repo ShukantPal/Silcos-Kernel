@@ -1,10 +1,10 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: Debugging.h
  *
  * Summary: This file contains the interface for debugging with streams.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 #ifndef __DEBUGGER_H__
 #define __DEBUGGER_H__
 
@@ -26,7 +26,9 @@ struct DebugStream
 #define DebugLine DbgLine
 
 /* Debugging-utiltity branches */
-extern "C" {
+#ifndef FBUILD_C
+decl_c {
+#endif
 	void Dbg(CHAR *dbgString);
 	void DbgInt(SIZE_T);
 	void DbgErro(SIZE_T, ULONG Digits);
@@ -37,7 +39,9 @@ extern "C" {
 	/* Debug-stream g/s interface */
 	ULONG AddStream(struct DebugStream *);
 	void RemoveStream(ULONG Index);
+#ifndef FBUILD_C
 }
+#endif
 	/* Native text-console prime debugging facility */
 	UCHAR InitConsole(
 		UCHAR *VideoBuffer

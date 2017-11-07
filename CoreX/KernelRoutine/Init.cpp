@@ -3,15 +3,16 @@
  *
  * Modify this file as per you wish, to adapt the kernel to your OS.
  */
-
-#define AI_MODLOADER
-#define AI_MULTIBOOT2
-
+#include <Module/Elf/ElfManager.hpp>
+#include <Module/ModuleRecord.h>
+#include <Module/ModuleLoader.h>
 #include <Memory/Pager.h>
 #include <Memory/PMemoryManager.h>
 #include <KERNEL.h>
-
+#include <Multiboot2.h>
 #include <Module/MSI.h>
+
+using namespace Module;
 
 VOID bsp_main(){
 	DbgLine("thread_main");
@@ -23,14 +24,8 @@ VOID Init() {
 	DbgLine("Loading Executive Modules...");
 
 	MdSetupLoader();
+	KernelElf::registerDynamicLink();
+	KernelElf::loadBootModules();
 
-	struct ModuleRecord *coreRecord = MdLoadCoreModule();
-	MsiSetupKernelForLinking(&coreRecord->ECache);
-
-	KMOD_RECORD *kmRecord = MdCreateModule("KTERM", 100000, KMT_EXC_MODULE);
-	MULTIBOOT_TAG_MODULE *muModule = SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
-	MdLoadFile(muModule->ModuleStart, muModule->ModuleEnd-muModule->ModuleStart, &muModule->CMDLine[0], kmRecord);
-
-	while(TRUE)
-		asm volatile("nop;");
+	while(TRUE) { asm volatile("nop"); }
 }

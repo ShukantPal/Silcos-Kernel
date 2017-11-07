@@ -1,94 +1,188 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * File: MSI.c
+/**
+ * File: KernelElf.cpp
  *
  * Summary:
- * This file contains the source for the 'Multiboot Section Interface' and lets
- * the kernel use its own symbol table and section headers.
+ * This file implements abstracting the microkernel elf-binary & loading the
+ * boot-modules.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
-
+ */
+#include <Exec/Thread.h>
+#include <Module/ModuleLoader.h>
+#include <Module/ModuleRecord.h>
 #include <Memory/KMemorySpace.h>
+#include <Memory/KObjectManager.h>
 #include <Module/MSI.h>
 #include <Util/Memory.h>
 #include <Debugging.h>
 
+using namespace Module;
+using namespace Module::Elf;
+
 KCOR_MSICACHE msiKernelSections;
 
-MSI_SHDR *MsiFindSectionHeaderByName(CHAR *eRequiredSectionName){
-	ULONG msiSectionHeaderIndex = 0;
-	ULONG msiSectionHeaderCount = msiKernelSections.SectionHeaderCount;
-	MSI_SHDR *msiSectionHeader = msiKernelSections.SectionHeaderTable;
-	while(msiSectionHeaderIndex < msiSectionHeaderCount){
-		if(strcmp(eRequiredSectionName, msiKernelSections.SectionNames + msiSectionHeader->Name))
-			return (msiSectionHeader);
+/*
+ * Contains the microkernel dynamic-link info
+ */
+static struct Module::DynamicLink coreLink;
 
-		++(msiSectionHeaderIndex);
-		++(msiSectionHeader);
-	}
+/*
+ * Contains the module-record for the microkernel
+ */
+static ModuleRecord coreRecord;
 
-	return (NULL);
-}
+/*
+ * Symbol defined, as the location of the microkernel dynamic table
+ */
+extern ULONG msiKernelDynamicTableStart;
+
+/*
+ * Symbol defined, as the location of the end of the microkernel dynamic table
+ */
+extern ULONG msiKernelDynamicTableEnd;
+
+/*
+ * DynamicEntry* array for the microkernel
+ */
+#define msiDynamicTable ((DynamicEntry *) ((ULONG) &msiKernelDynamicTableStart))
+
+/*
+ * DynamicEntry count for the microkernel
+ */
+#define msiDynamicCount ((ULONG) &msiKernelDynamicTableEnd - (ULONG) &msiKernelDynamicTableStart) / sizeof(DynamicEntry)
+
+extern ULONG kernelSeg;
+extern ULONG endKSearch;
+#define HDR_SEARCH_START (ULONG) &kernelSeg
 
 /**
- * Function: MsiFindSectionHeaderByType
+ * KernelElf::getDynamicEntry
  *
  * Summary:
- * Looks for the section header by doing
+ * Special function for getting a dynamic entry of the microkernel (only).
+ *
+ * Args:
+ * DynamicTag dRequiredTag - required dynamic tag
+ *
+ * Author: Shukant Pal
  */
-MSI_SHDR *MsiFindSectionHeaderByType(ULONG eRequiredSectionType){
-	ULONG msiSectionHeaderIndex = 0;
-	ULONG msiSectionHeaderCount = msiKernelSections.SectionHeaderCount;
-	MSI_SHDR *msiSectionHeader = msiKernelSections.SectionHeaderTable;
-	while(msiSectionHeaderIndex < msiSectionHeaderCount){
-		if(msiSectionHeader->Type == eRequiredSectionType)
-			return (msiSectionHeader);
+DynamicEntry *KernelElf::getDynamicEntry(
+		enum DynamicTag dRequiredTag
+){
+	DynamicEntry *dynamicEntry = msiDynamicTable;
+	unsigned long dynamicEntryCount = msiDynamicCount;
+	unsigned long dynamicEntryIndex = 0;
 
-		++(msiSectionHeaderIndex);
-		++(msiSectionHeader);
+	while(dynamicEntryIndex < dynamicEntryCount){
+		if(dynamicEntry->Tag == dRequiredTag)
+			return (dynamicEntry);
+
+		++(dynamicEntry);
+		++(dynamicEntryIndex);
 	}
 
 	return (NULL);
 }
 
-VOID MsiSetupKernelForLinking(struct ElfCache *coreCache){
-	MULTIBOOT_TAG_ELF_SECTIONS *mbKernelSections = SearchMultibootTag(MULTIBOOT_TAG_TYPE_ELF_SECTIONS);
-	if(mbKernelSections == NULL){
-		DbgLine("MSI::MsiSetupKernelForLinking - FATAL: Section headers not found");
+/*
+ * Build name for the microkernel
+ */
+CHAR coreModuleString[] = "Microkernel";
+
+/**
+ * Function: KernelElf::registerDynamicLink
+ *
+ * Summary:
+ * This function will setup the microkernel-record & its dynamic link-info for use
+ * by module-loaders.
+ *
+ * Args: NONE
+ *
+ * Author: Shukant Pal
+ */
+ModuleRecord *KernelElf::registerDynamicLink()
+{
+	DynamicEntry *dsmEntry = KernelElf::getDynamicEntry(DT_SYMTAB);
+	DynamicEntry *dsmNamesEntry = KernelElf::getDynamicEntry(DT_STRTAB);
+	DynamicEntry *dsmSizeEntry = KernelElf::getDynamicEntry(DT_SYMENT);
+	DynamicEntry *dsmHashEntry = KernelElf::getDynamicEntry(DT_HASH);
+
+	if(dsmEntry != NULL && dsmNamesEntry != NULL &&
+			dsmSizeEntry != NULL && dsmHashEntry != NULL){
+		coreLink.dynamicSymbols.entryTable = (Symbol *) dsmEntry->refPointer;
+		coreLink.dynamicSymbols.nameTable = (CHAR *) dsmNamesEntry->refPointer;
+
+		ULONG *dsmHashContents = (ULONG *) dsmHashEntry->refPointer;
+		coreLink.symbolHash.bucketEntries = dsmHashContents[0];
+		coreLink.symbolHash.chainEntries = dsmHashContents[1];
+		coreLink.symbolHash.bucketTable = dsmHashContents + 2;
+		coreLink.symbolHash.chainTable = dsmHashContents + 2 + coreLink.symbolHash.bucketEntries;
+
+		coreLink.dynamicSymbols.entryCount = coreLink.symbolHash.chainEntries;
+
+		ModuleRecord *coreRecord = RecordManager::createRecord(coreModuleString, 1001, 0);
+		coreRecord->linkerInfo = &coreLink;
+
+		RecordManager::registerRecord(coreRecord);
+		return (coreRecord);
 	} else {
-		msiKernelSections.SectionHeaderCount = mbKernelSections->Number;
-		msiKernelSections.SectionHeaderEntrySize = mbKernelSections->EntrySize;
-		msiKernelSections.SectionNameIndex = mbKernelSections->ShstrIndex;
-		msiKernelSections.SectionHeaderTable = (MSI_SHDR *) &mbKernelSections->Sections;
-		msiKernelSections.SectionNames
-		 = (CHAR *) MsiFindSectionHeaderByIndex(msiKernelSections.SectionNameIndex)->Address + 0xC0000000;
-
-		struct ElfSectionHeader *msiDynsymShdr = MsiFindSectionHeaderByType(SHT_DYNSYM);
-		struct ElfSectionHeader *msiDynstrShdr = MsiFindSectionHeaderByName(".dynstr");
-		if(msiDynsymShdr == NULL || msiDynstrShdr == NULL){
-			DbgLine("MSI::MsiSetupKernelForLinking - FATAL: Kernel symbols didn't load properly.");
-		} else {
-			struct ElfSymbolTable *msiCoreDynamicSymbolTbl = &coreCache->dsmTable;
-			msiCoreDynamicSymbolTbl->Names = (CHAR *) msiDynstrShdr->Address;
-			msiCoreDynamicSymbolTbl->EntryTable = (ELF_SYM *) msiDynsymShdr->Address;
-			msiCoreDynamicSymbolTbl->EntryCount = msiDynstrShdr->Size / sizeof(ELF_SYM);
-		}
-
-		struct ElfSectionHeader *msiHashShdr = MsiFindSectionHeaderByType(SHT_HASH);
-		if(msiHashShdr == NULL){
-			DbgLine("MSI::MsiSetupKernelForLinking - ERROR: Kernel Symbol-Hashtable not found!");
-		} else {
-			struct ElfHashTable *msiHashTbl = &coreCache->dsmHash;
-			ULONG *msiHashTblContents = (ULONG *) msiHashShdr->Address;
-			msiHashTbl->HashSectionHdr = msiHashShdr;
-			msiHashTbl->BucketEntries = *msiHashTblContents;
-			msiHashTbl->ChainEntries = *(msiHashTblContents + 1);
-			msiHashTbl->BucketTable = msiHashTblContents + 2;
-			msiHashTbl->ChainTable = msiHashTblContents + 2 + msiHashTbl->BucketEntries;
-		}
-
-		DbgLine("MSI::MsiSetupKernelForLinking - Success");
+		DbgLine("ERROR: DYNAMIC SYMBOLS NOT FOUND IN MICROKERNEL");
+		return (NULL);
 	}
 }
 
+/*
+ * Temporary object-allocator for getting blob-registers for the boot modules.
+ *
+ * @Note - Future builds will contain a general-use heap from which they will
+ * be taken
+ */
+ObjectInfo *tBlobRegister;
+CHAR nmBlobRegister[] = "BlobRegister";
 
+void KernelElf::loadBootModules()
+{
+	tBlobRegister = KiCreateType(nmBlobRegister, sizeof(BlobRegister), NO_ALIGN, NULL, NULL);
+
+	/*
+	 * List of blobs
+	 */
+	LinkedList *bmRecordList = new(tLinkedList) LinkedList();
+
+	/*
+	 * This part lists all of the boot-time modules with their blob-registers
+	 * in a list containing pointers to all registers.
+	 */
+	BlobRegister *blob;
+	ModuleRecord *bmRecord = NULL;
+	MultibootTagModule *foundModule = SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
+	while(foundModule != NULL){
+		bmRecord = RecordManager::createRecord(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
+
+		blob = new(tBlobRegister) BlobRegister();
+		blob->loadAddr = foundModule->ModuleStart;
+		blob->blobSize = foundModule->ModuleEnd - foundModule->ModuleStart;
+		blob->cmdLine = &foundModule->CMDLine[0];
+		blob->regForm = bmRecord;
+
+		AddElement((LinkedListNode*) blob, bmRecordList);
+
+		foundModule = SearchMultibootTagFrom(foundModule, MULTIBOOT_TAG_TYPE_MODULE);
+	}
+
+	ModuleLoader::loadBundle(*bmRecordList);
+
+	/*
+	 * Free all useless blobs
+	 */
+	BlobRegister *nextBlob;
+	blob = (BlobRegister*) bmRecordList->Head;
+	while(blob != NULL){
+		KThreadCreate((void(*)()) blob->regForm->entryAddr);
+		nextBlob = (BlobRegister*) blob->liLinker.Next;
+		kobj_free((kobj*) blob, tBlobRegister);
+		blob = nextBlob;
+	}
+
+	KiDestroyType(tBlobRegister);
+}

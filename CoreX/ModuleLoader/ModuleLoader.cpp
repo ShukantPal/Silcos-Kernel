@@ -1,64 +1,212 @@
+/**
+ * File: ModuleLoader.cpp
+ *
+ * Summary:
+ * This files implements the so-called cross-ABI module-loader.
+ *
+ * Author: Shukant Pal
+ */
 #define NS_PMFLGS // Paging Flags
 
 #include <Memory/Pager.h>
 #include <Memory/KMemoryManager.h>
 #include <Memory/KObjectManager.h>
 #include <Module/ModuleLoader.h>
+#include <Module/Elf/ELF.h>
+#include <Module/Elf/ElfManager.hpp>
+#include <Module/Elf/ElfAnalyzer.hpp>
+#include <Module/Elf/ElfLinker.hpp>
 #include <KERNEL.h>
 
-VOID elf_dbg() { Dbg("ELF PROGRAME CALLS MK");}
+using namespace Module;
+using namespace Module::Elf;
+
+decl_c VOID elf_dbg() { Dbg("ELF PROGRAME CALLS MK");}
+CHAR elf_data;
 
 OBINFO *tKMOD_RECORD;
+
+CHAR nmElfManager[] = "Module::Elf::ElfManager";
+CHAR nmDynamicLink[] = "Module::DynamicLink";
+
+/*
+ * ElfManager objects are allocated dynamically
+ */
+struct ObjectInfo *tElfManager;// class ElfManager - Slab-Allocator
+
+/*
+ * Dynamic-linker objects are allocated for registration
+ */
+struct ObjectInfo *tDynamicLink;// struct DynamicLink - Slab-Allocator
+
 LINKED_LIST LoadedModules;
 
 /**
- * Function: MdLoadFile
+ * Function: ModuleLoader::moveFileIntoMemory
  *
  * Summary:
- * This function is used to load a module which is present in physical
- * memory. It will map the module to virtual memory and invoke the ABI
- * handler for its type. Beware, that this function requires a valid
- * kernel module record. Use, MdLoadRawBinary() to automatically create
- * a kernel module record based on file-contents (not recommended).
+ * Moves a binary-blob into the kernel memory by mapping its physical addresses
  *
- * @Version 1
- * @Circuit 2.03
+ * Args:
+ * BlobRegister& blob - Blob parameters
+ *
+ * Author: Shukant Pal
  */
-BOOL MdLoadFile(PADDRESS moduleAddress, ULONG moduleSize, CHAR *cmdLine, KMOD_RECORD *kmRecord){
-	moduleSize = NextPowerOf2(moduleSize);
-	DbgLine("Module::MdLoadFile { ");
-	Dbg("Module Name: "); DbgLine(kmRecord->Name);
-	
+static void *ModuleLoader::moveFileIntoMemory(
+		BlobRegister &blob
+){
+	blob.blobSize = NextPowerOf2(blob.blobSize);
+	ULONG fileSize = blob.blobSize;
+
 	#ifdef ARCH_32
-		return_if(moduleSize > MB(2), FALSE);
+		return_if(fileSize > MB(2), FALSE);
 	#else // ARCH_64
-		return_if(moduleSize > MB(4), FALSE);
+		return_if(fileSize > MB(4), FALSE);
 	#endif
 
-	VOID *moduleLoader = (VOID *) KiPagesAllocate(HighestBitSet(moduleSize >> KPGOFFSET), ZONE_KMODULE, FLG_NONE);
-	EnsureAllMappings((ULONG) moduleLoader, moduleAddress, moduleSize, NULL, PRESENT | READ_WRITE);
+	Void *memoryArena = (VOID *) KiPagesAllocate(HighestBitSet(fileSize >> KPGOFFSET), ZONE_KMODULE, FLG_NONE);
+	EnsureAllMappings((ULONG) memoryArena, blob.loadAddr, blob.blobSize, NULL, PRESENT | READ_WRITE);
 
-	if(MdCheckELFCompat(moduleLoader)){
-		DbgLine("@TransferControl - Module::ELF }");
-		ELF_EHDR *eHeader = moduleLoader;
-		MdLoadELF(eHeader, kmRecord);
-
-		return (TRUE);
-	}
-
-	return (FALSE);
+	return (memoryArena);
 }
 
-VOID MdSetupLoader(){
+/**
+ * Function: ModuleLoader::globalDynamic
+ *
+ * Summary:
+ * Exports the dynamic-symbols for the module
+ *
+ * Args:
+ * void *moduleMemory - Module's file in the virtual memory
+ * ModuleRecord& kmRecord - Record of the module, as filled by client
+ * BlobRegister& blob - Register for blob-information
+ *
+ * Author: Shukant Pal
+ */
+ABI ModuleLoader::globalizeDynamic(
+		void *moduleMemory,
+		ModuleRecord& kmRecord,
+		BlobRegister &blob
+){
+	if(ElfAnalyzer::validateBinary(moduleMemory)){
+		ElfManager *moduleHandler = new(tElfManager) ElfManager((ElfHeader*) moduleMemory);
+		DynamicLink *linkHandle = moduleHandler->exportDynamicLink();
+
+		kmRecord.linkerInfo = linkHandle;
+		kmRecord.BaseAddr = moduleHandler->baseAddress;
+		kmRecord.entryAddr =
+				kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
+
+		blob.manager = moduleHandler;
+
+		return (ABI::ELF);
+	} else
+		return (ABI::INVALID);
+}
+
+/**
+ * Function: ModuleLoader::linkFile
+ *
+ * Summary:
+ * This function finishes linkage of the module.
+ *
+ * Args:
+ * void *modmem - Module's address in virtual memory
+ *
+ * Author: Shukant Pal
+ */
+void ModuleLoader::linkFile(
+		ABI binaryIfc,
+		BlobRegister& blob
+){
+	switch(binaryIfc){
+	case ELF:
+		ElfManager *manager = blob.manager;
+		ElfLinker::resolveLinkage(*manager);
+		manager->~ElfManager();
+		kobj_free((kobj*) manager, tElfManager);
+	}
+}
+
+/**
+ * Function: ModuleLoader::loadFile
+ *
+ * Summary:
+ * This function loads & links the module-file fully. The module-record is also
+ * registered in the end.
+ *
+ * Args:
+ * PADDRESS moduleAddress - Physical address of the loaded module
+ * PADDRESS moduleSIze - Size of the module, in bytes
+ * CHAR *cmdLine - Command line option loaded for the module
+ * struct ModuleRecord *record - Optional, a module record for the binary
+ *
+ * Version: 1
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
+ */
+void ModuleLoader::loadFile(
+		BlobRegister &blob
+){
+	Void *modMemory = ModuleLoader::moveFileIntoMemory(blob);
+
+	blob.regForm->linkerInfo = NULL;
+	RecordManager::registerRecord(blob.regForm);
+
+	blob.abiFound =
+			ModuleLoader::globalizeDynamic(modMemory, *blob.regForm, blob);
+
+	ModuleLoader::linkFile(blob.abiFound, blob);
+}
+
+/**
+ * Function: ModuleLoader::loadBundle
+ *
+ * Summary:
+ * This function loads & links a bundle of modules. Dynamic-linking is done after
+ * registration of all modules, to avoid any inter-depedencies that would cause
+ * a not-found linkage error.
+ *
+ * Args:
+ * LinkedList& blobList - List of blob-registers
+ *
+ * Author: Shukant Pal
+ */
+void ModuleLoader::loadBundle(
+		LinkedList &blobList
+){
+	BlobRegister *blob = (BlobRegister*) blobList.Head;
+
+	while(blob != NULL){
+		blob->fileAddr = (ULONG) ModuleLoader::moveFileIntoMemory(*blob);
+		blob->regForm->linkerInfo = NULL;
+		RecordManager::registerRecord(blob->regForm);
+		blob->abiFound =
+			ModuleLoader::globalizeDynamic((void*) blob->fileAddr, *blob->regForm, *blob);
+
+		blob = (BlobRegister*) blob->liLinker.Next;
+	}
+
+	blob = (BlobRegister*) blobList.Head;
+
+	while(blob != NULL){
+		ModuleLoader::linkFile(blob->abiFound, *blob);
+		blob = (BlobRegister*) blob->liLinker.Next;
+	}
+}
+
+VOID MdSetupLoader()
+{
 	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD", sizeof(KMOD_RECORD), sizeof(ULONG), NULL, NULL);
-	ESetupLoader();
+	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager), sizeof(ULONG), NULL, NULL);
+	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink), sizeof(ULONG), NULL, NULL);
 }
 
 KMOD_RECORD *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG moduleType){
-	KMOD_RECORD *mdRecord = KNew(tKMOD_RECORD, KM_SLEEP);
-	memcpy(moduleName, &mdRecord->Name, 16);
-	mdRecord->Version = moduleVersion;
-	mdRecord->Type = moduleType;
+	KMOD_RECORD *mdRecord = (KMOD_RECORD*) KNew(tKMOD_RECORD, KM_SLEEP);
+	memcpy(moduleName, &mdRecord->buildName, 16);
+	mdRecord->buildVersion = moduleVersion;
+	mdRecord->serviceType = (KM_TYPE) moduleType;
 
 	AddElement(&mdRecord->LiLinker, &LoadedModules);
 	return (mdRecord);

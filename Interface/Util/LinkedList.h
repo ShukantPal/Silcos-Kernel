@@ -17,6 +17,35 @@ struct LinkedListNode {
 	struct LinkedListNode *Previous;
 } LINODE;
 
+/**
+ * Struct: GenericLinkedListNode
+ *
+ * Summary:
+ * This generic linked-list node is used for lists in which the elements point
+ * to certain object by a (void*) pointer. This means they aren't contained in
+ * the object listed.
+ *
+ * NOTE:
+ * This is of same size as the 'linked-list' thus you should allocated it from
+ * the tLinkedList object-allocator.
+ *
+ * Author: Shukant Pal
+ */
+struct GenericLinkedListNode
+{
+	union
+	{
+		GenericLinkedListNode *nextGenericNode;/* for client */
+		LinkedListNode *nextNode;/* for compat with linode */
+	};
+	union
+	{
+		GenericLinkedListNode *previousGenericNode;/* for client */
+		LinkedListNode *previousNode;/* for compat with linode */
+	};
+	Void *objectListed;
+};
+
 typedef LINODE LIST_ELEMENT;
 
 /* Helper macros */
@@ -31,15 +60,9 @@ struct LinkedList {
 	struct LinkedListNode*Tail;
 } LINKED_LIST;
 
-VOID AddElement(
-		struct LinkedListNode *newNode,
-		struct LinkedList *List
-);
+VOID AddElement(LinkedListNode *newNode, struct LinkedList *List);
 
-VOID RemoveElement(
-		struct LinkedListNode *newNode,
-		struct LinkedList *list
-);
+VOID RemoveElement(LinkedListNode *newNode, LinkedList *list);
 
 /**
  * InsertElementAfter() - 

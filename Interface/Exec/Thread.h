@@ -38,7 +38,7 @@ enum
 };
 
 /* TdFlags macros */
-enum
+enum ThreadState
 {
 	Thread_Ran = (1 << 0),
 	Thread_Global = (1 << 1),
@@ -185,6 +185,8 @@ KTHREAD *KeGetThread(
 VOID InitTTable(VOID);
 
 VOID SetupRunqueue();
+
+KTHREAD* KThreadCreate(void (*entry)());
 
 /* Thread Operation Exceptions */
 #define ParadoxError 0xE1

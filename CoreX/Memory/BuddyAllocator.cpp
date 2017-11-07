@@ -51,6 +51,9 @@ struct BuddyBlock *BuddyAllocator::getBuddyBlock(
 	return (struct BuddyBlock *) (this->entryTable + descOffset * this->entrySize);
 }
 
+static CHAR msgNoBuddyBlockAvail[] = "BuddyAllocator::getBuddyList - No block avail";
+static CHAR msgListRecordInternalErr[] = "BuddyAllocator - Impl error FIXME (getBuddyList)";
+
 /**
  * Function: BuddyAllocator::getBuddyList
  *
@@ -85,7 +88,7 @@ struct LinkedList *BuddyAllocator::getBuddyList(
 	// Error: No block list is free containing a block
 	// of this order
 	if(optimalOrder > highestOrder){
-		DbgLine("BuddyAllocator Error: NO_LIST_FOUND_WITH_LOWER_ORDER GIVEN");
+		DbgLine(msgNoBuddyBlockAvail);
 		return (NULL);
 	}
 
@@ -103,7 +106,7 @@ struct LinkedList *BuddyAllocator::getBuddyList(
 	// is not-empty with a superblock of min-order (optimalOrder).
 	// (Should not happen) [sbUpperOrder is always <= highestOrder]
 	if(sbUpperOrder > highestOrder){
-		Dbg("getBuddyList() - ERR: ("); DbgInt(optimalOrder); Dbg(","); DbgInt(sbUpperOrder); DbgLine(" - DUMP");
+		Dbg(msgListRecordInternalErr);
 		return (NULL);
 	}
 
@@ -371,11 +374,11 @@ struct BuddyBlock *BuddyAllocator::allocateBlock(
 		unsigned long blockOrder
 ){
 	if(freeBuddies < SIZEOF_ORDER(blockOrder))
-		return (BDINFO *) (BD_MEMORY_LOW);// Package err to front-end
+		return (struct BuddyBlock *) (BD_MEMORY_LOW);// Package err to front-end
 
 	struct LinkedList *optimalList = getBuddyList(blockOrder);
 	if(optimalList == NULL){
-		return (BDINFO *) (BD_FRAGMENTATION);
+		return (struct BuddyBlock *) (BD_FRAGMENTATION);
 	} else {
 		struct BuddyBlock *paSuperBlock = (struct BuddyBlock*) optimalList->Head;
 		removeBuddyBlock(paSuperBlock, optimalList);

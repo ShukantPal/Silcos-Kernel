@@ -116,7 +116,7 @@ PADDRESS KeFrameAllocate(ULONG fOrder, ULONG prefZone, ULONG znFlags)
 ULONG KeFrameFree(PADDRESS pAddress)
 {
 	SpinLock(&kfLock);
-	coreEngine.freeBlock(FRAME_AT(pAddress));
+	coreEngine.freeBlock((struct BuddyBlock *) FRAME_AT(pAddress));
 	SpinUnlock(&kfLock);
 	return (1);
 }
@@ -124,12 +124,12 @@ ULONG KeFrameFree(PADDRESS pAddress)
 void TypifyMRegion(ULONG typeValue, ULONG regionStartKFrame, ULONG regionEndKFrame)
 {
 	if(regionEndKFrame > pgTotal) regionEndKFrame = pgTotal;// BUG: pgTotal is less than memory
-	BDINFO *pfCurrent = (BDINFO *) FROPAGE(regionStartKFrame);
-	BDINFO *pfLimit = (BDINFO *) FROPAGE(regionEndKFrame);
+	struct BuddyBlock *pfCurrent = (struct BuddyBlock *) FROPAGE(regionStartKFrame);
+	struct BuddyBlock *pfLimit = (struct BuddyBlock *) FROPAGE(regionEndKFrame);
 	
 	while((ULONG) pfCurrent < (ULONG) pfLimit){
 		pfCurrent->BdType = typeValue;
-		pfCurrent = (BDINFO *) ((ULONG ) pfCurrent + sizeof(MMFRAME));
+		pfCurrent = (struct BuddyBlock *) ((ULONG ) pfCurrent + sizeof(MMFRAME));
 	}
 }
 
@@ -148,15 +148,15 @@ void KfReserveModules()
 /* Free all memory available by parsing the BdType field for every kfpage */
 void KfParseMemory()
 {
-	BDINFO *kfPointer = (BDINFO *) FROPAGE(0);
-	BDINFO *kfWall = (BDINFO *) FROPAGE(pgTotal);
+	struct BuddyBlock *kfPointer = (struct BuddyBlock *) FROPAGE(0);
+	struct BuddyBlock *kfWall = (struct BuddyBlock *) FROPAGE(pgTotal);
 
 	ULONG last_bdtype = 10101001;
 	
 	while((ADDRESS) kfPointer <= (ADDRESS) kfWall){
 		if(kfPointer->BdType == MULTIBOOT_MEMORY_AVAILABLE)
 			coreEngine.freeBlock(kfPointer);
-		kfPointer = (BDINFO *) ((ULONG) kfPointer + sizeof(MMFRAME));
+		kfPointer = (struct BuddyBlock *) ((ULONG) kfPointer + sizeof(MMFRAME));
 		
 		if(last_bdtype != kfPointer->BdType){
 			last_bdtype = kfPointer->BdType;

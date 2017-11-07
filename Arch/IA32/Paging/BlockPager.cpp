@@ -30,7 +30,7 @@ VOID MTMap2mb(PHYSICAL_T Address, VIRTUAL_T Vad){
 PADDRESS KiMapTables(){
 	PADDRESS frameMapper = MB(16);
 	ULONG framePtr = KFRAMEMAP;
-	ULONG frameTableEnd = KFRAMEMAP + sizeof(MEMORY_FRAME) * (mmTotal >> 12);
+	ULONG frameTableEnd = KFRAMEMAP + sizeof(MMFRAME) * (mmTotal >> 12);
 	while(framePtr < frameTableEnd) {
 		MTMap2mb(frameMapper, framePtr);
 		frameMapper += MB(2);

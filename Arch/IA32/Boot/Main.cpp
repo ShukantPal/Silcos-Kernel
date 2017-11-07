@@ -40,7 +40,7 @@
 #include <Multiboot2.h>
 #include <TYPE.h>
 #include <KERNEL.h>
-#include <Module/ELF.h>
+#include <Module/Elf/ELF.h>
 
 extern void SetupTick();
 import_asm void BSPGrantPermit();
@@ -117,6 +117,12 @@ export_asm void Main(U32 bootInfo, U32 magicNo)
 	SetupRsdt();
 	MapAPIC();
 	SetupBSP();
+
+	/*
+	 * In object-allocator, setup the utility objects (linked-list, avl-tree, etc.)
+	 * now because process-lookup table is ready (kobject-allocator requires it)
+	 */
+	SetupPrimitiveObjects();
 
 	InitPTable();
 	InitTTable();
