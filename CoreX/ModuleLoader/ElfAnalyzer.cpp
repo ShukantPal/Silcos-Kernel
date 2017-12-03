@@ -45,6 +45,7 @@ ULONG ElfAnalyzer::getSymbolHash(
 	return (hashKey);
 }
 
+#include <KERNEL.h>
 struct Symbol *ElfAnalyzer::querySymbol(
 		CHAR *requiredSymbolName,
 		struct SymbolTable *symbolRecord,

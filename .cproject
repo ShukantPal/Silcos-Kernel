@@ -34,12 +34,21 @@
 									<listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
 									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
 								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1948716526" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Interface}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Interface/Arch}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ObjectManager/Interface}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ModuleFramework/Interface}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ProcessManager/Interface}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ThreadManager}&quot;"/>
+								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1518564512" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1832730151" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
 								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.128797908" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface/Arch&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ObjectManager/Interface}&quot;"/>
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1278889805" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
@@ -55,6 +64,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -107,6 +121,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

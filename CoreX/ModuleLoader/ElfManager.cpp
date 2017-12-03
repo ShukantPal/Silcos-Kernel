@@ -26,8 +26,6 @@ decl_c void elf_dbg();
 
 void ElfLinker::__fill_edbg(RelEntry *rel, class ElfManager &programContainer){
 	Dbg("_perform edbg ___");
-	ULONG *rel_loc = programContainer.baseAddress + rel->Offset;
-	*rel_loc = &elf_dbg;
 }
 
 ULONG ElfManager::getLimitAddress(
@@ -172,7 +170,8 @@ ElfManager::ElfManager(
 			relTable.entryTable = (RelEntry *) (baseAddress + dRelEntry->refPointer);
 			relTable.entrySize = dRelSizeEntry->refValue;
 			relTable.entryCount = dRelTableSizeEntry->refValue / relTable.entrySize;
-		}
+		} else
+			relTable.entryCount = 0;
 
 		DynamicEntry *dRelaEntry = getDynamicEntry(DT_RELA);
 		DynamicEntry *dRelaTableSizeEntry = getDynamicEntry(DT_RELASZ);
@@ -183,7 +182,8 @@ ElfManager::ElfManager(
 			relaTable.entryTable = (RelaEntry *) (baseAddress + dRelaEntry->refPointer);
 			relaTable.entrySize = dRelaSizeEntry->refValue;
 			relaTable.entryCount = dRelaTableSizeEntry->refValue / relaTable.entrySize;
-		}
+		} else
+			relaTable.entryCount = 0;
 
 		DynamicEntry *dPltRelEntry = getDynamicEntry(DT_PLTREL);
 		DynamicEntry *dPltRelSzEntry = getDynamicEntry(DT_PLTRELSZ);
@@ -204,6 +204,9 @@ ElfManager::ElfManager(
 		dynamicEntryCount = 0;
 
 		fillBlankDsm();
+
+		relTable.entryCount = 0;
+		relaTable.entryCount = 0;
 	}
 }
 

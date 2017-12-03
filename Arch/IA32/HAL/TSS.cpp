@@ -9,7 +9,7 @@ TSS SystemTSS;
 import_asm void ExecuteLTR(VOID);
 
 decl_c VOID SetupTSS(PROCESSOR_INFO *processorInfo){
-	TSS *pTSS = &(processorInfo->TSS);
+	TSS *pTSS = &(processorInfo->kTSS);
 
 	UINT tBase = (UINT) pTSS;
 	UINT tSize = sizeof(TSS) - 1;

@@ -11,7 +11,7 @@
 
 #include <TYPE.h>
 
-/******************************************************************************
+/**
  * Type: SDT_HEADER
  *
  * Summary: This type is used for unifing the ACPI tables and giving them a common header.
@@ -22,7 +22,7 @@
  * U8 Revision - Version of the table
  * U8 Checksum -
  * S8 OemId[6]
- ******************************************************************************/
+ */
 typedef
 struct _SDT_HEADER
 {

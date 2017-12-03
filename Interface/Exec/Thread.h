@@ -186,7 +186,7 @@ VOID InitTTable(VOID);
 
 VOID SetupRunqueue();
 
-KTHREAD* KThreadCreate(void (*entry)());
+KTHREAD* KThreadCreate(void *entry);
 
 /* Thread Operation Exceptions */
 #define ParadoxError 0xE1

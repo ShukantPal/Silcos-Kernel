@@ -135,13 +135,16 @@ void TypifyMRegion(ULONG typeValue, ULONG regionStartKFrame, ULONG regionEndKFra
 
 void KfReserveModules()
 {
-	MULTIBOOT_TAG_MODULE *muModule = SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
+	MULTIBOOT_TAG_MODULE *muModule =
+			(MULTIBOOT_TAG_MODULE*)
+			SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
 	while(muModule != NULL){
 		#ifdef ADM_MULTIBOOT_MODULE_DEBUGGER/* Debug *::Multiboot::Module Support */
 			Dbg("Module ::ModuleStart "); DbgInt(muModule->ModuleStart); DbgLine(";"); 
 		#endif
 		TypifyMRegion(MULTIBOOT_MEMORY_MODULE, muModule->ModuleStart >> KPGOFFSET, muModule->ModuleEnd >> KPGOFFSET);
-		muModule = SearchMultibootTagFrom(muModule, MULTIBOOT_TAG_TYPE_MODULE);
+		muModule = (MULTIBOOT_TAG_MODULE*)
+				SearchMultibootTagFrom(muModule, MULTIBOOT_TAG_TYPE_MODULE);
 	}
 }
 
@@ -180,8 +183,13 @@ void SetupKFrameManager()
 {
 	DbgLine(msgSetupKFrameManager);
 
-	MULTIBOOT_TAG_BASIC_MEMINFO *mInfo = SearchMultibootTag(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
-	MULTIBOOT_TAG_MMAP *mmMap = SearchMultibootTag(MULTIBOOT_TAG_TYPE_MMAP);
+	MULTIBOOT_TAG_BASIC_MEMINFO *mInfo =
+			(MULTIBOOT_TAG_BASIC_MEMINFO*)
+			SearchMultibootTag(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
+
+	MULTIBOOT_TAG_MMAP *mmMap =
+			(MULTIBOOT_TAG_MMAP*)
+			SearchMultibootTag(MULTIBOOT_TAG_TYPE_MMAP);
 
 	mmLow = mInfo->MmLower;
 	mmHigh = mInfo->MmUpper;

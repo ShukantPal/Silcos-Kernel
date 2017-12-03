@@ -226,32 +226,8 @@ struct _PROCESSOR {
 
 extern PROCESSOR *CPUArray;
 
-VOID SendIPI(
-	APIC_ID apicId,
-	APIC_VECTOR vectorIndex
-);
-
-/**
- * AddProcessorInfo() -
- *
- * Summary:
- * This function parses the MADT entry (for local APIC) and adds the data into
- * the processor table. It is used during startup and in dynamic addition of CPUs
- * (in servers).
- *
- * Args:
- * madtEntry -
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-VOID AddProcessorInfo(
-	MADT_ENTRY_LAPIC *madtEntry
-);
-
-VOID SendIPI(
-	APIC_ID apicId,
-	APIC_VECTOR vectorIndex
-);
+void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
+void AddProcessorInfo(MADTEntryLAPIC *madtEntry);
+void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
 
 #endif /* HAL/Processor.h */

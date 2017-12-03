@@ -94,7 +94,6 @@ enum ElfVersion {
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-typedef
 struct ElfHeader {
 	#define EI_MAG0		0 // File Identification
 	#define EI_MAG1		1 // File Identification
@@ -132,7 +131,8 @@ struct ElfHeader {
 #define SECTION_HEADER(eHeader) (eHeader->sectionHeaderOffset) ? ((struct SectionHeader *) ((ULONG) eHeader + eHeader->sectionHeaderOffset)) : NULL
 
 /* Special Section Indexes */
-enum SectionIndex {
+enum SectionIndex
+{
 	SHN_UNDEF 		= 0, // Undefined, missing, irrelevant or otherwise meaningless section
 	SHN_LORESERVE	= 0xFF00, // Lower bound of the range of reserved indexes
 	SHN_LOPROC		= 0xFF00, // <Values in this inclusive range are reserved for
@@ -143,7 +143,8 @@ enum SectionIndex {
 };
 
 /* ELF Section Types */
-enum SectionType {
+enum SectionType
+{
 	SHT_NULL		= 0,
 	SHT_PROGBITS	= 1,
 	SHT_SYMTAB		= 2,
@@ -163,15 +164,16 @@ enum SectionType {
 };
 
 /* Section Flags */
-enum SectionFlag {
+enum SectionFlag
+{
 	SHF_WRITE		= 0x1, // Section contains data that should be writable during process execution
 	SHF_ALLOC		= 0x2, // Section occupies memory during process exeuction
 	SHF_EXECINSTR	= 0x4, // Executuable machine instructions
 	SHF_MASKPROC	= 0xF0000000 // Reserved for processor-specific semantics
 };
 
-typedef
-struct SectionHeader {
+struct SectionHeader
+{
 	ELF32_WORD Name;/* Index into the section header table section (null-terminated) */
 	ELF32_WORD Type;/* Section's content and semantics */
 	ELF32_WORD Flags;/* Support 1-bit flags that describe miscellaneous attributes */
@@ -182,23 +184,24 @@ struct SectionHeader {
 	ELF32_WORD Info;/* Holds extra information */
 	ELF32_WORD AddressAlign;/* Address alignment constraints */
 	ELF32_WORD EntrySize;/* For sections holding entries of fixed-size of this value */
-} ELF32_SHDR;
+};
 
 //--------------------------------ELF Symbol-----------------------------------
 
 #define STN_UNDEF			0
 #define ELF32_ST_BIND(value) ((value) >> 4)
-typedef
-enum SymbolBind {
+
+enum SymbolBind
+{
 	STB_LOCAL	 	= 0, // Local symbols, not visible outside the object file
 	STB_GLOBAL 		= 1, // Global symbols, visible outside the object files
 	STB_WEAK   		= 2, // Represent global symbols of lower precedence
 	STB_LOPROC 		= 13,// Values in range STB_LOPROC
 	STB_HIPROC 		= 15 // to STB_HIPROC are reserved for processor-specific semantics
-} ELF32_ST_BIND;
+};
 
 #define ELF32_ST_TYPE(value) ((value) & 0xF)
-typedef
+
 enum SymbolType {
 	STT_NOTYPE 		= 0,// Symbol's type is not specified
 	STT_OBJECT 		= 1,// Symbol is associated with a data object
@@ -207,11 +210,10 @@ enum SymbolType {
 	STT_FILE   		= 4,// Symbol's name gives the name of the source file associated
 	STT_LOPROC 		= 13,
 	STT_HIPROC 		= 15
-} ELF32_ST_TYPE;
+};
 
 #define ELF32_ST_INFO(b, t) (((b) << 4) + ((t)&0xF))
 
-typedef
 struct Symbol {
 	ELF32_WORD Name;/* Index into object file's string, holding string of symbol name (no name if 0) */
 	ELF32_ADDR Value;/* Value of associated symbol */
@@ -219,7 +221,7 @@ struct Symbol {
 	UCHAR Info;/* Specifies the symbol's type and binding attributes */
 	UCHAR Other;/* Currently holds 0 */
 	ELF32_HALF SectionIndex;/* Relevant section header table index */
-} ELF32_SYM;
+};
 
 //------------------------------ELF Relocation---------------------------------
 enum RelocationType {
@@ -236,25 +238,22 @@ enum RelocationType {
 	R_386_GOTPC		= 10
 };
 
-typedef
+#define ELF32_R_SYM(i) ((i) >> 8)
+#define ELF32_R_TYPE(i) ((UCHAR) (i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + (UCHAR) (t))
+
 struct RelEntry {
 	ELF32_ADDR Offset;
 	ELF32_WORD Info;
-} ELF32_REL;
+};
 
-typedef
 struct RelaEntry
 {
 	ELF32_ADDR Offset;/* Location at which to apply relocation action */
-	
-	#define ELF32_R_SYM(i) ((i) >> 8)
-	#define ELF32_R_TYPE(i) ((UCHAR) (i))
-	#define ELF32_R_INFO(s, t) (((s) << 8) + (UCHAR) (t))
 	ELF32_WORD Info;/* Symbol table index and type of relocation */
 	ELF32_SWORD AddEnd;/* Constant addend used to compute the value to be stored into the relocatable field.*/
-} ELF32_RELA;
+};
 
-typedef
 enum PhdrType
 {
 	PT_NULL		= 0,
@@ -266,7 +265,7 @@ enum PhdrType
 	PT_PHDR		= 6,
 	PT_LOPROC	= 0x70000000,
 	PT_HIPROC	= 0x7FFFFFFF
-} ELF32_PT;
+};
 
 /**
  * Struct: ProgramHeader
@@ -291,7 +290,6 @@ struct ProgramHeader
 	ELF32_WORD alignBoundary;/* Gives the value to which segments are aligned in memory & in the file */
 };
 
-typedef
 enum DynamicTag
 {
 	DT_NULL 		= 	0, // Marks the end of _DYNAMIC array
@@ -320,7 +318,7 @@ enum DynamicTag
 	DT_JMPREL		=	23,// If present, this entries's' Pointer holds the address of relocation entries associated with PLT
 	DT_LOPROC		=	0x70000000,//  For processor-specific...
 	DT_HIPROC		=	0x7FFFFFFF// semantics
-} DTAG;
+};
 
 typedef
 struct DynamicEntry
@@ -332,47 +330,32 @@ struct DynamicEntry
 	};
 } ELF32_DYN;
 
-// ----------------------------------- ELF Default Types (kernel-specific, not in specs) -----------
-
-#ifdef IA32
-	typedef ELF32_SHDR 		ELF_SHDR;
-
-	typedef ELF32_PT	ELF_PT;
-	
-	typedef ELF32_ST_TYPE		ELF_STT;
-	typedef ELF32_SYM 	ELF_SYM;
-
-	typedef ELF32_DYN ELF_DYN;
-	typedef ELF32_REL ELF_REL;
-	typedef ELF32_RELA ELF_RELA;
-#else
-	
-	typedef ELF64_SHT		ELF_SHT;
-	typedef ELF64_SHDR 		ELF_SHDR;
-
-	typedef ELF64_PT		ELF_PT;
-	typedef ELF64_PHDR 		ELF_PHDR;
-#endif
-
 // -- KMod-ELF-Loader CACHE ---
 
-typedef
 struct SymbolTable
 {
 	CHAR *nameTable;
 	struct Symbol *entryTable;
 	ULONG entryCount;
-} ELF_SYMTAB;
+};
 
-typedef
+/*
+ * Struct: HashTable
+ *
+ * Summary:
+ * Default-hashTable for storing elf-symbols and getting low lookup-delays
+ * while querying symbols.
+ *
+ * Author: Shukant Pal
+ */
 struct HashTable
 {
-	struct SectionHeader *hashSectionHdr;
-	ULONG bucketEntries;
-	ULONG chainEntries;
-	ULONG *bucketTable;
-	ULONG *chainTable;
-} EHASH_CACHE;
+	struct SectionHeader *hashSectionHdr;/* Section-header, optional (@Deprecated) */
+	ULONG bucketEntries;/* No. of bucket entries */
+	ULONG chainEntries;/* No. of chain entries */
+	ULONG *bucketTable;/* Pointer to bucket table */
+	ULONG *chainTable;/* Pointer to chain table */
+};
 
 struct RelaTable
 {
@@ -401,7 +384,6 @@ struct RelocationTable
 	ULONG relocType;
 };
 
-typedef
 struct DynamicTable {
 	struct ElfDynamicEntry *EntryTable;
 	ULONG EntryCount;
@@ -470,30 +452,13 @@ EHashSymbolName(
 		CHAR *eSymbolName
 );
 
-struct ElfSymbol *
-ESearchForSymbol(
-		CHAR *eRequiredSymbolNme,
-		ELF_SYMTAB *eSymbolTbl,
-		EHASH_CACHE *eHashTbl
-);
+Symbol *ESearchForSymbol(CHAR *eRequiredSymbolNme, SymbolTable *eSymbolTbl,
+					struct HashTable *eHashTbl);
+Symbol * ESearchForSymbolName(CHAR *eRequiredSymbolName);
 
-struct ElfSymbol *
-ESearchForSymbolName(
-		CHAR *eRequiredSymbolName
-);
+void ESetupLoader(void);
 
-/**
- * Function: ESetupLoader
- *
- * Summary:
- * Initializes the Elf subsystem
- */
-void
-ESetupLoader(
-		VOID
-);
+}// namespace Elf
 
-}
-}
-
+}// namespace Module
 #endif/* Module/ELF.h */

@@ -1,69 +1,38 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: RSDT.h
  *
- * Summary: This file contains the interface for finding and using the RSDT.
+ * Summary:
+ * Declares the driver to find & parse the ACPI-RSDT.
  *
  * Functions:
- * SetupRsdt() - This function is used for mapping and initializating the ACPI subsystem.
- * RetrieveConfiguration() - This function is used for getting a specific ACPI table.
+ * SetupRsdt() - search & store the RSDT (at boot)
+ * RetrieveConfiguration() - parse RSDT & get another ACPI table
  *
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #ifndef CONFIG_RSDT_H
 #define CONFIG_RSDT_H
 
 #include "SDTHeader.h"
 
-/******************************************************************************
+/**
  * Type: RSDT
  * 
- * Summary: This type represents the RSDT (from ACPI), which contains references to other
- * ACPI tables.
+ * Summary:
+ * Defines the structure of the root-system-descriptor-table which is filled
+ * by the ACPI to allow (this kernel) to access hardware configurations.
  *
- * Fields:
- * SDT_HEADER RootHeader - SDT_HEADER of the RSDT
- * U32 ConfigurationTables - Physical addresses (32-bit) to ACPI tables (other than RSDT)
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
-typedef
-struct {
-	SDT_HEADER RootHeader;
-	U32 ConfigurationTables[];
-} RSDT;
+ * Author: Shukant Pal
+ */
+struct RSDT {
+	SDT_HEADER RootHeader;// Standard ACPI Header
+	U32 ConfigurationTables[];// Physical-addresses of ACPI Tables
+};
 
 extern RSDT *SystemRsdt;/* RSDT found during setup */
 
-/******************************************************************************
- * Function: SetupRsdt() 
- *
- * Summary: After finding the RSDP, the kernel calls this function to map the RSDT, and also
- * other ACPI tables.
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
-VOID SetupRsdt(
-	VOID
-);
+void SetupRsdt(void);
+void *RetrieveConfiguration(RSDT *RootSDT, const char *Signature,
+				U32 MappingBlk);
 
-/******************************************************************************
- * Function: RetrieveConfiguration()
- *
- * Summary: This function is used to search for a particular ACPI table.
- *
- * Fields:
- * RootSDT - RSDT used
- * Signature - String-identifier for the table
- * MappingBlk - Kernel-space for ACPI tables block
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
-VOID *RetrieveConfiguration(
-	RSDT *RootSDT,
-	CHAR *Signature,
-	U32 MappingBlk
-);
-
-#endif /* Config/RSDT.h */
+#endif/* ACPI/RSDT.h */

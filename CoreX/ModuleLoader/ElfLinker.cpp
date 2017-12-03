@@ -38,13 +38,25 @@ void ElfLinker::resolveRelocation(
 	ULONG *relocationArena = (ULONG*) (handlerService.baseAddress + relocEntry->Offset);
 
 	ULONG symbolIdx = ELF32_R_SYM(relocEntry->Info);
+
+//	Dbg("_relidx: "); DbgInt(relocEntry->Info); DbgLine(";");
+
 	Symbol *symbolFound = handlerService.dynamicSymbols.entryTable + symbolIdx;
 
 	CHAR *signature = handlerService.dynamicSymbols.nameTable + symbolFound->Name;
-	Symbol *declarer = RecordManager::querySymbol(signature);
+
+	ULONG declBase;
+	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
 
 	if(declarer != NULL){
-		*relocationArena = declarer->Value;
+		switch(ELF32_R_TYPE(relocEntry->Info)){
+		case R_386_JMP_SLOT:
+		case R_386_GLOB_DAT:
+			*relocationArena = declarer->Value + declBase;
+		}
+	} else {
+		Dbg("__notfound ");
+		DbgLine(handlerService.dynamicSymbols.nameTable + symbolFound->Name);
 	}
 }
 

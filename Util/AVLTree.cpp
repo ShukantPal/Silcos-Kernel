@@ -218,7 +218,7 @@ AVLNODE *DeleteNodeInBranch(SIZE_T Indicator, AVLNODE **deletedNode, AVLNODE *ro
 
 AVLNODE *AVLFindGTE(ULONG nodeValue, AVLTREE *tree){
 	AVLNODE *curNode = tree->Root;
-	AVLNODE *closestNode = closestNode;
+	AVLNODE *closestNode = NULL;
 
 	ULONG curValue;
 	ULONG curDiff = 0;

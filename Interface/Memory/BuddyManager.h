@@ -56,23 +56,10 @@ enum BuddyResult
  * allocable from the buddy system. Most of it is used by the buddy system
  * and should not be hampered with.
  *
- * Variables:
- * ListLinker - This is used to participate in block lists.
- * UpperOrder - This is the upper order of the super block.
- * LowerOrder - This is the lower order of the super block.
- * DescriptorFlags - Only 2-bits are used for keeping flags BD_FREE and BD_LINKED.
- * BdFree - If the buddy is free, or not
- * BdLinked - If the buddy is linked a buddy list, or not
- * ZnOffset - Reserved for the zone allocator (not used)
- * BdType - Client-driven value, for recognizing the block type (not used).
- *
  * Version: 1
  * Since: Circuit 2.03++
  * Author: Shukant Pal
- * Deprecated-Style:;
- * Before: BDINFO
  */
-typedef
 struct BuddyBlock
 {
 	struct LinkedListNode ListLinker;
@@ -125,17 +112,17 @@ public:
 	inline UBYTE *getEntryTable(){ return entryTable; }
 	inline void setEntryTable(UBYTE *entryTable){ this->entryTable = entryTable; }
 private:
-	#define SIZEOF_ORDER(n) (1 << n) // Size of order-block n
+	#define SIZEOF_ORDER(n) (unsigned long)(1 << n) // Size of order-block n
 	#define SIZEOF_DIFF(u, l) (SIZEOF_ORDER(u) - SIZEOF_ORDER(l)) // Diff. b/w two blocks of order u,l
 	#define BlockAtOffsetOf(orgBlock, offsetValue) ((struct BuddyBlock *) ((ULONG) orgBlock + offsetValue * entrySize))
 
-	ULONG entrySize;// Size of total size of block-descriptor (including BuddyBlock)
-	UBYTE *entryTable;// Table containing entries of block-descriptions
-	ULONG highestOrder;// Highest order that can be allocated
-	USHORT *listInfo;// List bit-field having capacity till highestOrder (supplied by client)
-	LINKED_LIST *blockLists;// Lists for containing block-descriptions (supplied by client)
-	ULONG freeBuddies;// Blocks available in the allocator
-	ULONG allocatedBuddies;// Blocks that have been pushed out of the allocator
+	unsigned long entrySize;// Size of total size of block-descriptor (including BuddyBlock)
+	unsigned char *entryTable;// Table containing entries of block-descriptions
+	unsigned long highestOrder;// Highest order that can be allocated
+	unsigned short *listInfo;// List bit-field having capacity till highestOrder (supplied by client)
+	LinkedList *blockLists;// Lists for containing block-descriptions (supplied by client)
+	unsigned long freeBuddies;// Blocks available in the allocator
+	unsigned long allocatedBuddies;// Blocks that have been pushed out of the allocator
 
 	struct BuddyBlock *getBuddyBlock(ULONG blockOrder, struct BuddyBlock *);
 	struct LinkedList *getBuddyList(ULONG optimalOrder);

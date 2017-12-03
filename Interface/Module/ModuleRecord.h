@@ -109,7 +109,7 @@ public:
 
 	static ModuleRecord *createRecord(CHAR *modName, ULONG modVersion, ULONG type);
 
-	static Symbol *querySymbol(CHAR *symbolName);
+	static Symbol *querySymbol(CHAR *symbolName, ULONG& baseAddress);
 
 private:
 	static LinkedList globalRecordList;
@@ -142,11 +142,11 @@ ModuleRecord *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG module
  * @Author Shukant Pal
  */
 static inline ModuleRecord *MdLoadCoreModule(VOID){
-	return MdCreateModule("CORE", 200300, KMT_EXC_MODULE);
+	return MdCreateModule((char*) "CORE", 200300, KMT_EXC_MODULE);
 }
 
 
-extern OBINFO *tKMOD_RECORD;
-extern LINKED_LIST LoadedModules;
+extern ObjectInfo *tKMOD_RECORD;
+extern LinkedList LoadedModules;
 
 #endif

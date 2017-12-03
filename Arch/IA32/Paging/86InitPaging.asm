@@ -1,7 +1,12 @@
+; File - 86InitPaging.asm
+;
+; Summary -
+; Pagination support starts from this file, which also contains the permanent
+; page tables for the kernel.
+;
 ; Copyright (C) 2017 - Sukant Pal
 
-SECTION .data
-
+SECTION .KernelPermData
 	global GlobalTable
 	align 0x1000
 	GlobalTable:
@@ -33,6 +38,7 @@ SECTION .data
 
 	; ---------------------------
 
+SECTION .data
 	global PDPT
 	align 0x20
 	PDPT:

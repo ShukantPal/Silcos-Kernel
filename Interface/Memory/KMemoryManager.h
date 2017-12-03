@@ -21,7 +21,7 @@
 #endif
 
 #ifdef NS_KMEMORYMANAGER
-	#define KPG_AT(pgAddress) (KDYNAMIC + sizeof(KPAGE) * ((pgAddress - KDYNAMIC) >> KPGOFFSET))
+	#define KPG_AT(pgAddress) (KDYNAMIC + sizeof(KPAGE) * (((unsigned long) pgAddress - KDYNAMIC) >> KPGOFFSET))
 	#define KPGOPAGE(pgOffset) (KPAGE*) (KDYNAMIC + sizeof(KPAGE) * pgOffset)
 	#define KPGADDRESS(kpPtr) (KDYNAMIC + (KPGSIZE * ((kpPtr - KDYNAMIC) / sizeof(KPAGE))))
 

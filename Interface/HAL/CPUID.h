@@ -121,7 +121,7 @@ enum {
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-enum {
+enum CPUIDRequest{
 	CPUID_GETVENDORSTRING = 0x0,
  	CPUID_GETFEATURES =0x1,
   	CPUID_GETTLB = 0x2,
@@ -132,7 +132,7 @@ enum {
   	CPUID_INTELBRANDSTRING,
   	CPUID_INTELBRANDSTRINGMORE,
   	CPUID_INTELBRANDSTRINGEND,
-} CPUID_REQUEST;
+};
 
 /******************************************************************************
  * Function: TestCPUID()

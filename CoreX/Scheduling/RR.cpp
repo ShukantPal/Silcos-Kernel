@@ -1,15 +1,16 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  * File: RR.c
-  *
-  * Summary:
-  * RR-scheduling-class is available for low-level tasks in the system that are executed when no
-  * task is available.
-  *
-  * Copyright (C) 2017 - Shukant Pal
-  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+/**
+ * File: RR.c
+ *
+ * Summary:
+ * RR-scheduling-class is available for low-level tasks in the system that are executed when no
+ * task is available.
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 
 #include <HAL/Processor.h>
 #include <Exec/RR.h>
+#include <Util/CircularList.h>
 #include <KERNEL.h>
 
 Void RrBalanceRoutine(PROCESSOR *);

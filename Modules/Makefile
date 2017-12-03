@@ -6,4 +6,5 @@
 # Copyright (C) 2017 - Shukant Pal
 
 KModule_Make:
-	make -C ./KTerm KTerm_Make
+	make -C ./ObjectManager ObMake
+	make -C ./ModuleFramework MfMake

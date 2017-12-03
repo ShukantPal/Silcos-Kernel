@@ -12,15 +12,19 @@
 #include <Util/CtPrim.h>
 #include <Synch/Spinlock.h>
 
-DEBUG_STREAM *Streams[10];
-CHAR StreamNo = -1;
+DebugStream *Streams[10];
+char StreamNo = -1;
+
+const char *__space = " ";
+const char *__leftparen = "(";
+const char *__rightparen = ") ";
+const char *__comma = ", ";
 
 SPIN_LOCK dbgLock;
 
 CHAR digitMapping[36] = "0123456789ABCDEFGHIJK";
 CHAR digitZero[2] = "0";
-static
-VOID ToString(SIZE n, CHAR* buffer, UCHAR d){
+static void ToString(SIZE n, CHAR* buffer, UCHAR d){
 	if(d < 2 || d > 36) {
 		buffer = "";
 		return;			
@@ -56,7 +60,7 @@ VOID ToString(SIZE n, CHAR* buffer, UCHAR d){
 	}
 }
 
-static VOID ToFillString(SIZE n, CHAR *buffer, UCHAR d)
+static void ToFillString(SIZE n, CHAR *buffer, UCHAR d)
 {
 	if(d < 2 || d > 36) {
 		buffer[32] = '\0';
@@ -97,8 +101,9 @@ static VOID ToFillString(SIZE n, CHAR *buffer, UCHAR d)
 	}
 }
 
-extern "C" VOID Dbg(CHAR *msg)
-{
+decl_c void Dbg(
+		const char *msg
+){
 	SpinLock(&dbgLock);
 	UCHAR Stream = 0;
 	for( ; Stream <= StreamNo; Stream++)
@@ -143,16 +148,17 @@ export_asm VOID DbgBinOut(VOID *c_, ULONG s) // s must be multiple of 4 (to dump
 	}
 }
 
-export_asm
-VOID DbgLine(CHAR  *msg){
+export_asm void DbgLine(
+		const char  *msg
+){
 	SpinLock(&dbgLock);
-	ULONG Stream = 0;
+	char Stream = 0;
 	for( ; Stream <= StreamNo; Stream++)
 		Streams[Stream] -> WriteLine(msg);
 	SpinUnlock(&dbgLock);
 }
 
-ULONG AddStream(DEBUG_STREAM *dbg){
+ULONG AddStream(DebugStream *dbg){
 	++StreamNo;
 	if(StreamNo == 10) {
 		--StreamNo;

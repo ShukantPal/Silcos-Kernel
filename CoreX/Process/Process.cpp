@@ -13,8 +13,8 @@
 #include <Memory/KObjectManager.h>
 #include <Util/CtPrim.h>
 
-CHAR *psName = "KPROCESS";
-OBINFO *psInfo;
+const char *psName = "KPROCESS";
+ObjectInfo *psInfo;
 
 
 KPROCESS *psKernel;
@@ -29,7 +29,7 @@ KPROCESS *KeGetProcess(ID PID){
 	return (NULL);
 }
 
-CHAR *msgInitProcess = "Setting up psKernel...";
+const char *msgInitProcess = "Setting up psKernel...";
 VOID InitPTable(){
 	DbgLine(msgInitProcess);
 	psInfo = KiCreateType(psName, sizeof(KPROCESS), sizeof(ULONG), NULL, NULL);

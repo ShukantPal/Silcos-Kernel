@@ -27,9 +27,9 @@ Void memset(Void *bPointer, UBYTE btValue, SIZE bSize){
 }
 
 Void memsetf(Void *bPointer, SIZE_T lgsValue, SIZE_T bSize){
-	ULONG *lgBuffer = bPointer;
+	unsigned long *lgBuffer = (unsigned long*) bPointer;
 	bSize &= ~(3);
-	ULONG *lgPointer = (ULONG *) ((UBYTE *) bPointer + bSize);
+	unsigned long *lgPointer = (ULONG *) ((UBYTE *) bPointer + bSize);
 	while((ULONG) lgPointer > (ULONG) lgBuffer){
 		--(lgPointer);
 		*lgPointer = lgsValue;
@@ -60,18 +60,18 @@ Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize){
 }
 
 BOOL memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
-	UBYTE *bCounterI  = bPointerI;
-	UBYTE *bCounterII = bPointerII;
+	unsigned char *bCounterI  = (unsigned char*) bPointerI;
+	unsigned char *bCounterII = (unsigned char*) bPointerII;
 	LONG bOffset = (LONG) bSize;
 	while(bOffset > 0) {
 		--(bOffset);
 		if(*bCounterI != *bCounterII)
-			return (FALSE);
+			return (false);
 		else {
 			++(bCounterI); ++(bCounterII);
 		}
 	}
-	return (TRUE);
+	return (true);
 }
 
 BOOL strcmp(const CHAR *s1, const CHAR *s2)

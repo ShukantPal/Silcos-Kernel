@@ -42,7 +42,8 @@ VOID *RunqueueBalancers[3];
 PROCESSOR_SETUP_INFO *ConstructTrampoline(){
 	ULONG apTrampoline = ALLOCATE_TRAMPOLINE();
 	VOID *apBoot = (VOID *) PADDR_TO_VADDR(apTrampoline);
-	memcpy(&APBoot, apBoot, (U32) &APBootSequenceEnd - (U32) &APBoot);
+	memcpy((const void*) &APBoot, apBoot,
+			(U32) &APBootSequenceEnd - (U32) &APBoot);
 	
 	PROCESSOR_SETUP_INFO *setupInfo
 			= (VOID*) ((U32) apBoot + ((U32)&apSetupInfo - (U32)&APBoot));
@@ -54,7 +55,7 @@ PROCESSOR_SETUP_INFO *ConstructTrampoline(){
 	}
 
 	GDT_POINTER *bootGDTPointer = &setupInfo->DefaultBootGDTPointer;
-	bootGDTPointer->Limit = (sizeof(GDT) * 3) - 1;
+	bootGDTPointer->Limit = (sizeof(GDTEntry) * 3) - 1;
 	bootGDTPointer->Base = ((U32) &setupInfo->DefaultBootGDT) - KERNEL_OFFSET;
 	
 	APBootSequenceBuffer = apTrampoline >> 12;
@@ -83,10 +84,10 @@ VOID ConstructProcessor(PROCESSOR *processorInfo){
 	cpuScheduler->CurrentRoller = rrRoller;
 }
 
-VOID AddProcessorInfo(MADT_ENTRY_LAPIC *PE){
-	PROCESSOR *cpu = GetProcessorById(PE->APICID);
+VOID AddProcessorInfo(MADTEntryLAPIC *PE){
+	PROCESSOR *cpu = GetProcessorById(PE->apicID);
 	PROCESSOR_INFO *platformInfo = &cpu->Hardware;
-	ULONG apicID = PE->APICID;
+	ULONG apicID = PE->apicID;
 	
 	if(apicID != BSP_ID){
 		EnsureUsability((ADDRESS) cpu, NULL, FLG_NOCACHE, KernelData | PageCacheDisable);
@@ -94,22 +95,22 @@ VOID AddProcessorInfo(MADT_ENTRY_LAPIC *PE){
 	}
 
 	platformInfo->APICID = apicID;
-	platformInfo->ACPIID = PE->ACPIID;
+	platformInfo->ACPIID = PE->acpiID;
 	if(apicID != BSP_ID)
 		ConstructProcessor(cpu);
 
 	if(cpu->Hardware.APICID != BSP_ID){
 		(VOID) ConstructTrampoline();
-		TriggerIPI(PE->APICID, LAPIC_DM_INIT | LAPIC_LEVEL_ASSERT);
+		TriggerIPI(PE->apicID, LAPIC_DM_INIT | LAPIC_LEVEL_ASSERT);
 		TimerWait(1);
-		TriggerIPI(PE->APICID, APBootSequenceBuffer | LAPIC_DM_STARTUP);
+		TriggerIPI(PE->apicID, APBootSequenceBuffer | LAPIC_DM_STARTUP);
 		TimerWait(1);
 		WriteCMOSRegister(0xF, 0);
 	}
 }
 
-CHAR *nmPROCESSOR_TOPOLOGY = "SMP::PROCESSOR_TOPOLOGY";
-OBINFO *tPROCESSOR_TOPOLOGY;
+const char *nmPROCESSOR_TOPOLOGY = "@SMP::ProcessorTopology";
+ObjectInfo *tPROCESSOR_TOPOLOGY;
 
 decl_c void SetupBSP(){
 	BSP_HID = PROCESSOR_ID;

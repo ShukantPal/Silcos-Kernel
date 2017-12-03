@@ -54,11 +54,11 @@ section .text
 	global TimerWait
 	TimerWait:
 		MOV EBX, [ESP + 4]								; Load wait time into EBX
-		LOCK ADD EBX, [DelayTime]					; Calculate stopping time
+		ADD EBX, [DelayTime]					; Calculate stopping time
 		CompareTimer:
 		NOP
 		PAUSE
-		LOCK CMP DWORD [DelayTime], EBX	; If current time is equ to stopping
+		CMP DWORD [DelayTime], EBX	; If current time is equ to stopping
 		JNE CompareTimer								; if not, loop again
 		RET
 	

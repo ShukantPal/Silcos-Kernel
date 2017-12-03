@@ -50,9 +50,6 @@ extern ULONG msiKernelDynamicTableEnd;
  * DynamicEntry count for the microkernel
  */
 #define msiDynamicCount ((ULONG) &msiKernelDynamicTableEnd - (ULONG) &msiKernelDynamicTableStart) / sizeof(DynamicEntry)
-
-extern ULONG kernelSeg;
-extern ULONG endKSearch;
 #define HDR_SEARCH_START (ULONG) &kernelSeg
 
 /**
@@ -121,6 +118,7 @@ ModuleRecord *KernelElf::registerDynamicLink()
 		coreLink.dynamicSymbols.entryCount = coreLink.symbolHash.chainEntries;
 
 		ModuleRecord *coreRecord = RecordManager::createRecord(coreModuleString, 1001, 0);
+		coreRecord->BaseAddr = 0;// symbols already contain absolute values
 		coreRecord->linkerInfo = &coreLink;
 
 		RecordManager::registerRecord(coreRecord);
@@ -155,7 +153,8 @@ void KernelElf::loadBootModules()
 	 */
 	BlobRegister *blob;
 	ModuleRecord *bmRecord = NULL;
-	MultibootTagModule *foundModule = SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
+	MultibootTagModule *foundModule = (MultibootTagModule*)
+			SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
 	while(foundModule != NULL){
 		bmRecord = RecordManager::createRecord(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
 
@@ -167,7 +166,8 @@ void KernelElf::loadBootModules()
 
 		AddElement((LinkedListNode*) blob, bmRecordList);
 
-		foundModule = SearchMultibootTagFrom(foundModule, MULTIBOOT_TAG_TYPE_MODULE);
+		foundModule = (MultibootTagModule*)
+				SearchMultibootTagFrom(foundModule, MULTIBOOT_TAG_TYPE_MODULE);
 	}
 
 	ModuleLoader::loadBundle(*bmRecordList);
@@ -178,7 +178,8 @@ void KernelElf::loadBootModules()
 	BlobRegister *nextBlob;
 	blob = (BlobRegister*) bmRecordList->Head;
 	while(blob != NULL){
-		KThreadCreate((void(*)()) blob->regForm->entryAddr);
+		if(blob->regForm->entryAddr)
+			KThreadCreate((void*) blob->regForm->entryAddr);
 		nextBlob = (BlobRegister*) blob->liLinker.Next;
 		kobj_free((kobj*) blob, tBlobRegister);
 		blob = nextBlob;

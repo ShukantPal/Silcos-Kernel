@@ -153,7 +153,6 @@ static enum AllocationAction getAction(
 		ZNFLG allocFlags
 ){
 	switch(allocState){
-
 	case ALLOCABLE:
 		return (ALLOCATE);
 
@@ -165,6 +164,8 @@ static enum AllocationAction getAction(
 	case BARRIER_OVERLAP:
 		if(FLAG_SET(allocFlags, NO_FAILURE))
 			return (ALLOCATE);
+		break;
+	default:
 		break;
 	}
 
@@ -216,6 +217,8 @@ struct Zone *ZoneAllocator::getZone(
 				return (trialZone);
 			case RET_FAIL:
 				return (NULL);
+			case GOTO_NEXT:
+				break;
 			}
 
 			SpinUnlock(&trialZone->controlLock);
@@ -393,7 +396,7 @@ void ZoneAllocator::configurePreference(
 /**
  * Function: ZoneAllocator::configureZoneMappings
  */
-static void ZoneAllocator::configureZoneMappings(
+void ZoneAllocator::configureZoneMappings(
 		struct Zone *zoneArray,
 		unsigned long count
 ){
@@ -413,14 +416,6 @@ static void ZoneAllocator::configureZoneMappings(
 	}
 }
 
-/*
-decl_c
-VOID ZnFreeBlock(BDINFO *bdInfo, ZNSYS *znSys){
-	ZNINFO *znInfo = znSys->ZnSet + bdInfo->ZnOffset;
-	znInfo->MmAllocated -= (1 << bdInfo->UpperOrder);
-	BdFreeBlock(bdInfo, &znInfo->MmManager);
-}
-*/
 /*
 decl_c
 BDINFO *ZnExchangeBlock(BDINFO *bdInfo, ULONG *status, ULONG znBasePref, ULONG znFlags, ZNSYS *znSys){

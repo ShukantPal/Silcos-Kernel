@@ -8,13 +8,13 @@
 #include "LinkedList.h"
 
 typedef
-struct _STACK_ELEMENT
+struct StackElement
 {
-	struct _STACK_ELEMENT *Next;
+	struct StackElement *Next;
 } STACK_ELEMENT;
 
 typedef
-struct
+struct Stack
 {
 	STACK_ELEMENT *Head;
 } STACK;

@@ -24,7 +24,7 @@ using namespace Module::Elf;
 decl_c VOID elf_dbg() { Dbg("ELF PROGRAME CALLS MK");}
 CHAR elf_data;
 
-OBINFO *tKMOD_RECORD;
+ObjectInfo *tKMOD_RECORD;
 
 CHAR nmElfManager[] = "Module::Elf::ElfManager";
 CHAR nmDynamicLink[] = "Module::DynamicLink";
@@ -52,7 +52,7 @@ LINKED_LIST LoadedModules;
  *
  * Author: Shukant Pal
  */
-static void *ModuleLoader::moveFileIntoMemory(
+void *ModuleLoader::moveFileIntoMemory(
 		BlobRegister &blob
 ){
 	blob.blobSize = NextPowerOf2(blob.blobSize);
@@ -94,8 +94,10 @@ ABI ModuleLoader::globalizeDynamic(
 
 		kmRecord.linkerInfo = linkHandle;
 		kmRecord.BaseAddr = moduleHandler->baseAddress;
-		kmRecord.entryAddr =
-				kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
+
+		if(moduleHandler->binaryHeader->entryAddress)
+			kmRecord.entryAddr =
+					kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
 
 		blob.manager = moduleHandler;
 
@@ -119,12 +121,21 @@ void ModuleLoader::linkFile(
 		ABI binaryIfc,
 		BlobRegister& blob
 ){
-	switch(binaryIfc){
-	case ELF:
-		ElfManager *manager = blob.manager;
+	ElfManager *manager;
+	switch(binaryIfc)
+	{
+	case ABI::ELF:
+		manager = (ElfManager*) blob.manager;
 		ElfLinker::resolveLinkage(*manager);
 		manager->~ElfManager();
 		kobj_free((kobj*) manager, tElfManager);
+		break;
+	case ABI::INVALID:
+		DbgLine("ModuleLoader::linkFile - INVALID ABI is not recognized.");
+		break;
+	default:
+		DbgLine("Unknown ABI Given");
+		break;
 	}
 }
 

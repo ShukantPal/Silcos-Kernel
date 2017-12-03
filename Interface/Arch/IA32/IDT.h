@@ -1,7 +1,6 @@
 /**
  * Copyright (C) 2017 - Shukant Pal
  */
-
 #ifndef IA32_IDT_H
 #define IA32_IDT_H
 
@@ -18,7 +17,6 @@ enum GateType
 	TRAP_GATE_386 = 0xF
 };
 
-typedef
 struct IDTEntry
 {
 	USHORT LowOffset;	
@@ -29,23 +27,21 @@ struct IDTEntry
 	UCHAR DPL : 2;
 	UCHAR Present : 1;
 	USHORT HighOffset;
-} __attribute__((__packed__)) IDT;
+} __attribute__((__packed__));
 
-typedef
-struct _IDT_POINTER {
+struct IDTPointer {
 	USHORT Limit;
 	UINT Base;
-} __attribute__((__packed__)) IDT_POINTER;
+} __attribute__((__packed__));
 
 #else
-	struct _IDT_ENTRY;
-	typedef struct _IDT_ENTRY IDT;
-#endif /* NAMESPACE_IDT */
+	struct IDTEntry;
+#endif/* NAMESPACE_IDT */
 
 decl_c void MapHandler(
 	USHORT handlerNo,
 	UINT handlerAddress,
-	IDT *pIDT
+	IDTEntry *pIDT
 );
 
 #endif /* IA32/IDT.h */

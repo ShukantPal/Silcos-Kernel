@@ -1,18 +1,13 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: Processor.h
  *
- * Summary: This file contains the interface for managing IA32-specific processor
- * functionalities and hot-plugging runqueues (and of course CPUs). Also, the
- * distro-boot feature is implemented here.
- *
- * Topological hiearchy of processors is maintained in the PROCESSOR_INFO struct. Intel has specified
- * that each processor-package/chip can have different topological levels. Thus, to manage these levels
- * individually each processor-package is assigned a package-manager CPU. This CPU constructs the
- * hiearchy tree further and manages all system-level functionalities in the package.
+ * Summary:
+ * Declares how the IA32-processor-specific data is maintained in each per-CPU
+ * struct. Also defines some initialization specific code used during SMP-wake
+ * to initialize application-processors.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
-
+ */
 #ifndef X86_PROCESSOR_H
 #define X86_PROCESSOR_H
 
@@ -32,89 +27,44 @@
 #define PROCESSOR_ID ((U32) RdApicRegister(APIC_REGISTER_ID) >> 24)
 #define PROCESSOR_STACK_SIZE 1024
 
-VOID MxConstructTopology(
-	VOID *
-);
+void MxConstructTopology(void *);
 
-/******************************************************************************
- * Type: PROCESSOR_INFO
- *
- * Summary: This type represents the topological hierarchy of the processor and also
- * contains the platform-specific data structures.
- ******************************************************************************/
 typedef
 struct ProcessorInfo {
-	UINT APICID;
-	UINT ACPIID;
-	UINT ClusterID;
-	UINT PackageID;
-	UINT CoreID;
-	UINT SMT_ID;
-	UINT ProcessorStack[256];
-	GDT GDT[6];
-	GDT_POINTER GDTPointer;
-	TSS TSS;
-	IDT IDT[256];
-	IDT_POINTER IDTPointer;
+	unsigned int APICID;
+	unsigned int ACPIID;
+	unsigned int ClusterID;
+	unsigned int PackageID;
+	unsigned int CoreID;
+	unsigned int SMT_ID;
+	unsigned int ProcessorStack[256];
+	GDTEntry GDT[6];
+	GDTPointer GDTR;
+	TSS kTSS;
+	IDTEntry IDT[256];
+	IDTPointer IDTR;
 	UINT TopologyIdentifiers[0];
 } PROCESSOR_INFO;
 
 typedef
 struct {
-	GDT DefaultBootGDT[3];
+	GDTEntry DefaultBootGDT[3];
 	USHORT BootStatusRegister;
-	GDT_POINTER DefaultBootGDTPointer;
-} PROCESSOR_SETUP_INFO __attribute__((__packed__));
+	GDTPointer DefaultBootGDTPointer;
+} PROCESSOR_SETUP_INFO;
 
-#define __INTR_ON asm("sti");/* Turn interrupts on */
-#define __INTR_OFF asm("cli");/* Turn interrupts off */
+#define __INTR_ON asm("sti");
+#define __INTR_OFF asm("cli");
 
-#ifdef ADM_DISTRO_BOOT
+decl_c
+{
+void SetupDefaultBootGDT(void);
+void SetupGDT(ProcessorInfo *);
+void SetupTSS(ProcessorInfo *);
+void SetupIDT(void);
+void SetupBSP(void);
+void SetupAPs(void);
+ProcessorInfo *SetupProcessor(void);
+}
 
-#endif
-
-/******************************************************************************
- * Function: SetupDefaultBootGDT()
- *
- * Summary: This function is used for initializing the default boot GDT, which is used in SMP
- * booting the APs, which use it for entering protected mode. It also setups the default boot
- * GDT pointer.
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
-decl_c void SetupDefaultBootGDT(Void);
-
-decl_c void SetupGDT(struct ProcessorInfo *);
-
-decl_c void SetupTSS(struct ProcessorInfo *);
-
-decl_c void SetupIDT(Void);
-
-/******************************************************************************
- * Function: SetupBSP()
- *
- * Summary: This function is used for setting up the BSP processor. It setups the
- * early kernel-timer. It also maps its PROCESSOR struct and prepares for booting
- * other APs.
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
-decl_c void SetupBSP(Void);
-
-decl_c void SetupAPs(Void);
-
-/******************************************************************************
- * Function: SetupProcessor()
- *
- * Summary: This function is used for mapping platform-specific structs and on
- * the x86 - IDT, GDT (non-defaultBootGDT), TSS. It then (if non-BSP processor)
- * hot-plugs a new logical runqueue.
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
-decl_c struct ProcessorInfo *SetupProcessor(Void);
-
-#endif /* IA32/Processor.h */
+#endif/* IA32/Processor.h */

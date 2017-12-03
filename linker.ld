@@ -65,6 +65,11 @@ SECTIONS {
 		endKSearch = .;
 	}
 	KernelBSSEnd = .;
+	
+	KernelPDatStart = .;
+	.KernelPermData ALIGN(0x1000) : AT(ADDR(.KernelPermData) - KERNEL_OFFSET)
+			{ *(.KernelPermData) }
+	KernelPDatEnd = .;
 
 	.dynamic ALIGN(0x1000) : AT(ADDR(.dynamic) - KERNEL_OFFSET)
 	{

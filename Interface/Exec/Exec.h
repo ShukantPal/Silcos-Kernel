@@ -1,4 +1,4 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: Exec.h
  *
  * Summary:
@@ -6,7 +6,7 @@
  * of executable tasks using the KTASK type.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 #ifndef EXEC_EXEC_H
 #define EXEC_EXEC_H
 

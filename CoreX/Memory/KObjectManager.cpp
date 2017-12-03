@@ -14,47 +14,31 @@
  */
 #define BUFFER_SIZE(ObSize, ObAlign) ((ObSize % ObAlign) ? (ObSize + ObAlign - (ObSize % ObAlign)) : ObSize)
 
-CHAR nmOBINFO[7] = "OBINFO"; /* Name of OBINFO */
-
-/*
- * Object-types, for alloc
- */
-OBINFO tOBINFO;
-
-CHAR nmOBSLAB[7] = "OBSLAB"; /* Name of OBSLAB */
-
-/*
- * Slab descriptors, for large object sizes, to implement them in a hash tree.
- */
-OBINFO tOBSLAB;
-
+const char *nmObjectInfo = "@KObjectManager::ObjectInfo"; /* Name of ObjectInfo */
+ObjectInfo tObjectInfo;
+const char *nmSlab = "@KObjectManager::Slab"; /* Name of OBSLAB */
+ObjectInfo tSlab;
 ObjectInfo *tAVLNode;
-
 CHAR nmLinkedList[] = "LinkedList";
-
-/*
- * Linked List for general purpose use (prim. type), and also the
- * GenericLinkedListNode can be allocated from this for temporary usage.
- */
 ObjectInfo *tLinkedList;
 
 void obSetupAllocator(Void)
 {
-	tOBINFO.ObName = nmOBINFO;
-	tOBINFO.ObSize = sizeof(OBINFO);
-	tOBINFO.ObColor = 0;
-	tOBINFO.ObAlign = L1_CACHE_ALIGN;
-	tOBINFO.BufferSize = BUFFER_SIZE(sizeof(OBINFO), L1_CACHE_ALIGN);
-	tOBINFO.BufferPerSlab = (KPGSIZE - sizeof(OBSLAB)) / BUFFER_SIZE(sizeof(OBINFO), L1_CACHE_ALIGN);
-	tOBINFO.BufferMargin = (KPGSIZE - sizeof(OBSLAB)) % BUFFER_SIZE(sizeof(OBINFO), L1_CACHE_ALIGN);
+	tObjectInfo.name = nmObjectInfo;
+	tObjectInfo.rawSize = sizeof(ObjectInfo);
+	tObjectInfo.colorScheme = 0;
+	tObjectInfo.align = L1_CACHE_ALIGN;
+	tObjectInfo.bufferSize = BUFFER_SIZE(sizeof(ObjectInfo), L1_CACHE_ALIGN);
+	tObjectInfo.bufferPerSlab = (KPGSIZE - sizeof(Slab)) / BUFFER_SIZE(sizeof(ObjectInfo), L1_CACHE_ALIGN);
+	tObjectInfo.bufferMargin = (KPGSIZE - sizeof(Slab)) % BUFFER_SIZE(sizeof(ObjectInfo), L1_CACHE_ALIGN);
 
-	tOBSLAB.ObName = nmOBSLAB;
-	tOBSLAB.ObSize = sizeof(OBSLAB);
-	tOBSLAB.ObColor = 0;
-	tOBSLAB.ObAlign = NO_ALIGN;
-	tOBSLAB.BufferSize = sizeof(OBSLAB);
-	tOBSLAB.BufferPerSlab = (KPGSIZE - sizeof(OBSLAB)) / sizeof(OBSLAB);
-	tOBSLAB.BufferMargin = (KPGSIZE - sizeof(OBSLAB)) % sizeof(OBSLAB);
+	tSlab.name = nmSlab;
+	tSlab.rawSize = sizeof(Slab);
+	tSlab.colorScheme = 0;
+	tSlab.align = NO_ALIGN;
+	tSlab.bufferSize = sizeof(Slab);
+	tSlab.bufferPerSlab = (KPGSIZE - sizeof(Slab)) / sizeof(Slab);
+	tSlab.bufferMargin = (KPGSIZE - sizeof(Slab)) % sizeof(Slab);
 }
 
 void SetupPrimitiveObjects(void)
@@ -65,51 +49,57 @@ void SetupPrimitiveObjects(void)
 CLIST tList; /* List of active kernel object managers */
 
 /**
- * ObCreateSlab() - 
+ * Function: ObCreateSlab
  *
  * Summary:
- * This function is used for making a new slab. It uses the general (CacheRegister)
- * slab cache to store recently used mapped slabs. If the cache is not currently free,
- * then a new page-frame and a new kernel page is allocated and mapped. Then, it
- * is setup properly and returned.
- *
- * The caching technique allows better TLB usage.
+ * Creates new slab, with all buffers linked and constructed objects. It also
+ * writes the signature of the object into the page-forum. The Slab struct is
+ * placed at the very end of the page to reduce TLB usage during allocation &
+ * deallocation operations.
  *
  * Args:
- * metaInfo - Object-type info 
- * kmSleep - Whether to sleep in page-frame or page allocation
+ * ObjectInfo* metaInfo - information of the buffers to keep in the new slab
+ * unsigned long kmSleep - tells whether waiting for memory is allowed
  *
- * Changes: NONE
- *
- * Returns: VOID
- *
- * @Version 1
- * @Since Circuit 2.03
+ * Version: 1
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
  */
-static
-OBSLAB *ObCreateSlab(OBINFO *metaInfo, ULONG kmSleep){
+static Slab* ObCreateSlab(
+		ObjectInfo *metaInfo,
+		unsigned long kmSleep
+){
 	ADDRESS pageAddress;
-	OBSLAB *newSlab;
+	Slab *newSlab;
 
 	ULONG slFlags = (kmSleep) ? (FLG_ATOMIC) : (FLG_NONE);
 	pageAddress = KiPagesAllocate(0, ZONE_KOBJECT, slFlags);
 	EnsureUsability(pageAddress, NULL, slFlags, KernelData);
 
-	newSlab = (OBSLAB *) (pageAddress + KPGSIZE - sizeof(OBSLAB));
-	newSlab->ObColor = metaInfo->ObColor;
-	newSlab->ObStack.Head = NULL;
-	newSlab->ObCount = metaInfo->BufferPerSlab;
+	newSlab = (Slab *) (pageAddress + KPGSIZE - sizeof(Slab));
+	newSlab->colouringOffset = metaInfo->colorScheme;
+	newSlab->bufferStack.Head = NULL;
+	newSlab->freeCount = metaInfo->bufferPerSlab;
 
-	ULONG obPtr = pageAddress;
-	STACK *bufferStack = &newSlab->ObStack;
-	ULONG bufferSize = metaInfo->BufferSize;
-	ULONG bufferFence = pageAddress + ((bufferSize > (KPGSIZE / 8)) ? KPGSIZE : (KPGSIZE - sizeof(OBSLAB))) - bufferSize;
-	VOID (*objectConstructor) (VOID *) = metaInfo->ObConstruct;
-	while(obPtr < bufferFence) {
-		if(objectConstructor != NULL)
-			objectConstructor(obPtr);
-		PushElement((STACK_ELEMENT *) obPtr, bufferStack);
-		obPtr += bufferSize;
+	unsigned long obPtr = pageAddress, bufferSize = metaInfo->bufferSize;
+	unsigned long bufferFence =
+				pageAddress + ((bufferSize > (KPGSIZE / 8)) ?
+					KPGSIZE :
+					(KPGSIZE - sizeof(Slab))) - bufferSize;
+	Stack *bufferStack = &newSlab->bufferStack;
+	void (*ctor) (void *) = metaInfo->ctor;
+
+	if(ctor != NULL){
+		while(obPtr < bufferFence) {
+			ctor((void*) obPtr);
+			PushElement((STACK_ELEMENT *) obPtr, bufferStack);
+			obPtr += bufferSize;
+		}
+	} else {
+		while(obPtr < bufferFence){
+			PushElement((StackElement*) obPtr, bufferStack);
+			obPtr += bufferSize;
+		}
 	}
 
 	KPAGE *slabPage = KPG_AT(pageAddress);
@@ -118,11 +108,29 @@ OBSLAB *ObCreateSlab(OBINFO *metaInfo, ULONG kmSleep){
 	return (newSlab);
 }
 
-static
-VOID ObDestroySlab(OBSLAB *emptySlab, OBINFO *metaInfo){
-	if(metaInfo->ObDestruct != NULL) {
-		STACK_ELEMENT *objectPtr = emptySlab->ObStack.Head;
-		VOID (*destructObject) (VOID *)  = metaInfo->ObDestruct;
+/**
+ * Function: ObDestroySlab
+ *
+ * Summary:
+ * Deletes a totally unused object-slab, by calling all object destructors and
+ * by freeing the cached free-slab. This slab becomes the new cached free-slab
+ * for the object meta-data.
+ *
+ * Args:
+ * Slab* emptySlab - any unused slab, out of which no objects are allocated
+ * ObjectInfo* metaInfo - information about the object & slab-caches
+ *
+ * Version: 1.1
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
+ */
+static void ObDestroySlab(
+		Slab *emptySlab,
+		ObjectInfo *metaInfo
+){
+	if(metaInfo->dtor != NULL) {
+		STACK_ELEMENT *objectPtr = emptySlab->bufferStack.Head;
+		void (*destructObject)(void*)  = metaInfo->dtor;
 		while(objectPtr != NULL) {
 			destructObject((VOID *) objectPtr);
 			objectPtr = objectPtr->Next;
@@ -130,7 +138,7 @@ VOID ObDestroySlab(OBSLAB *emptySlab, OBINFO *metaInfo){
 	}
 
 	ADDRESS pageAddress;
-	if(metaInfo->ObSize <= (KPGSIZE / 8)) {
+	if(metaInfo->rawSize <= (KPGSIZE / 8)) {
 		pageAddress = (ADDRESS) emptySlab & ~((1 << KPGOFFSET) - 1);
 	} else {
 		// TODO : Get pageAddress using self-scaling hash tree
@@ -143,7 +151,7 @@ VOID ObDestroySlab(OBSLAB *emptySlab, OBINFO *metaInfo){
 }
 
 /**
- * ObFindSlab() - 
+ * Function: ObFindSlab
  *
  * Summary:
  * This function finds a partially/fully free slab, that can be used to allocate objects. It
@@ -161,137 +169,222 @@ VOID ObDestroySlab(OBSLAB *emptySlab, OBINFO *metaInfo){
  * @Version 1
  * @Since Circuit 2.03
  */
-static
-OBSLAB *ObFindSlab(OBINFO *metaInfo, ULONG kmSleep){
-	if(metaInfo->PartialList.ClnCount){
-		return (OBSLAB *) (metaInfo->PartialList.ClnMain);
+static Slab *ObFindSlab(
+		ObjectInfo *metaInfo,
+		unsigned long kmSleep
+){
+	if(metaInfo->partialList.ClnCount){
+		return (Slab *) (metaInfo->partialList.ClnMain);
 	} else {
-		OBSLAB *emptySlab = metaInfo->EmptySlab;
+		Slab *emptySlab = metaInfo->emptySlab;
 		if(emptySlab == NULL)
 			emptySlab = ObCreateSlab(metaInfo, kmSleep);
 
-		ClnInsert((CLNODE*) emptySlab, CLN_LAST, &metaInfo->PartialList);
+		ClnInsert((CircularListNode*) emptySlab, CLN_LAST,
+				&metaInfo->partialList);
 		return (emptySlab);
 	}
 }
 
 /**
- * ObPlaceSlab() -
+ * Function: ObPlaceSlab
  *
  * Summary:
  * This function places a slab (from which a object was allocated), into the required
  * list.
  *
  * Args:
- * slab - The slab, just from which a object was allocated
- * metaInfo - Object-type info
+ * Slab* slab - the slab from which a object was unlinked (allocated)
+ * ObjectInfo* metaInfo - meta-data for the object-type
  *
  * Changes: To partial list and others
  *
- * Returns: VOID
- *
- * @Version 1
- * @Since Circuit 2.03
+ * Version: 1
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
  */
-static
-VOID ObPlaceSlab(OBSLAB *slab, OBINFO *metaInfo){
-	if(slab->ObCount == 0) {
-		ClnRemove((CLNODE *) slab, &metaInfo->PartialList);
-		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->FullList);
+static void ObPlaceSlab(
+		Slab *slab,
+		ObjectInfo *metaInfo
+){
+	if(slab->freeCount == 0) {
+		ClnRemove((CLNODE *) slab, &metaInfo->partialList);
+		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->fullList);
 	}
 }
 
-/******************************************************************************
- * ObRecheckSlab() - 
+/**
+ * Function: ObRecheckSlab
  *
- * Summary: This function is used to position the slab, after deallocation of an object from
- * the the allocator. It will place a slab, which is empty now but was not before freeing, to
- * the partial list and it will remove a slab, which was full before, from the full list and move
- * it to the partial force.
+ * Summary:
+ * This function is used to position the slab, after deallocation of an object
+ * from the the allocator. It will place a slab, which is empty now but was not
+ * before freeing, to the partial list and it will remove a slab, which was
+ * full before, from the full list and move it to the partial force.
  *
- * If the slab cache (EmptySlab), is not free, the the slab placed before is destroyed.
+ * If the slab cache (EmptySlab), is not free, the the slab placed before is
+ * destroyed.
  *
  * Args:
- * slab - The slab, to which a object was just freed
- * metaInfo - Object-type info
+ * Slab* slab - the slab from which a object was linked (or freed)
+ * ObjectInfo* metaInfo - meta-data for the object-type
  *
  * Changes: To partial list and others
  *
- * Returns: VOID
- *
- * @Version 1
- * @Since Circuit 2.03
- ******************************************************************************/
+ * Version: 1.1
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
+ */
 static
-VOID ObRecheckSlab(OBSLAB *slab, OBINFO *metaInfo){
-	if(slab->ObCount == 1) { // Came from full list
-		ClnRemove((CLNODE *) slab, &metaInfo->FullList);
-		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->PartialList);
-	} else if(slab->ObCount == metaInfo->BufferPerSlab) {
-		ClnRemove((CLNODE *) slab, &metaInfo->PartialList);
+VOID ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo){
+	if(slab->freeCount == 1) { // Came from full list
+		ClnRemove((CLNODE *) slab, &metaInfo->fullList);
+		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->partialList);
+	} else if(slab->freeCount == metaInfo->bufferPerSlab) {
+		ClnRemove((CLNODE *) slab, &metaInfo->partialList);
 
-		OBSLAB *oldEmptySlab = metaInfo->EmptySlab;
-		metaInfo->EmptySlab = slab;
+		Slab *oldEmptySlab = metaInfo->emptySlab;
+		metaInfo->emptySlab = slab;
 		if(oldEmptySlab != NULL)
 			ObDestroySlab(oldEmptySlab, metaInfo);
 	}
 }
 
-VOID *KNew(OBINFO *metaInfo, ULONG kmSleep){
-	SpinLock(&metaInfo->ObLock);
-	OBSLAB *freeSlab = ObFindSlab(metaInfo, kmSleep);
+/**
+ * Function: KNew
+ *
+ * Summary:
+ * Allocates a constructed object, given its static & runtime information forum
+ * and has capability to wait until memory is available.
+ *
+ * Args:
+ * ObjectInfo* metaInfo - static & runtime information about the object
+ * unsigned long kmSleep - tells whether waiting for memory is allowed
+ *
+ * See: KM_SLEEP & KM_NOSLEEP
+ * Version: 1.0
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
+ */
+decl_c void *KNew(
+		ObjectInfo *metaInfo,
+		unsigned long kmSleep
+){
+	SpinLock(&metaInfo->lock);
+	Slab *freeSlab = ObFindSlab(metaInfo, kmSleep);
 	VOID *object = NULL;
 
 	if(freeSlab != NULL) {
-		VOID *freeObject = PopElement(&freeSlab->ObStack);
-		--(freeSlab->ObCount);
+		void *freeObject = PopElement(&freeSlab->bufferStack);
+		--(freeSlab->freeCount);
 		ObPlaceSlab(freeSlab, metaInfo);
 		object = freeObject;
 	}
 	
-	SpinUnlock(&metaInfo->ObLock);
+	SpinUnlock(&metaInfo->lock);
 	return (object);
 }
 
-VOID KDelete(VOID *object, OBINFO *metaInfo){
-	SpinLock(&metaInfo->ObLock);
+/**
+ * Function: KDelete
+ *
+ * Summary:
+ * Simply deallocates the object and allows it to be allocated later, given its
+ * runtime information.
+ *
+ * Args:
+ * void* object - ptr to allocated object
+ * ObjectInfo* metaInfo - runtime information about the object
+ *
+ * Author: Shukant Pal
+ */
+decl_c void KDelete(
+		void *object,
+		ObjectInfo *metaInfo
+){
+	SpinLock(&metaInfo->lock);
 
-	OBSLAB *slab = (OBSLAB *) (((ULONG) object & ~(KPGSIZE - 1)) + (KPGSIZE - sizeof(OBSLAB)));
-	PushElement((STACK_ELEMENT *) object, &slab->ObStack);
-	++(slab->ObCount);
+	Slab *slab = (Slab *) (((unsigned long) object & ~(KPGSIZE - 1))
+			+ (KPGSIZE - sizeof(Slab)));
+	PushElement((STACK_ELEMENT *) object, &slab->bufferStack);
+	++(slab->freeCount);
 	ObRecheckSlab(slab, metaInfo);
 	
-	SpinUnlock(&metaInfo->ObLock);
+	SpinUnlock(&metaInfo->lock);
 }
 
-OBINFO *KiCreateType(CHAR *tName, ULONG tSize, ULONG tAlign, VOID (*tConstruct) (VOID *), VOID (*tDestruct) (VOID *)){
-	OBINFO *typeInfo = KNew(&tOBINFO, 1);
+/**
+ * Function: KiCreateType
+ *
+ * Summary:
+ * Creates a new-object information struct, given its initial parameters, and
+ * returns it for usage.
+ *
+ * Args:
+ * const char *name - pointer to a static memory location containing the name
+ * unsigned long size - byte-size of the object
+ * unsigned long align - alignment constraints for the object
+ * void (*ctor)(void*) - a constructor for the object (C++ linkage)
+ * void (*dtor)(void*) - a destructor for the object (C++ linkage)
+ *
+ * Version: 1.1
+ * Since: Circuit 2.03
+ * Author: Shukant Pal
+ */
+decl_c ObjectInfo *KiCreateType(
+		const char *tName,
+		unsigned long tSize,
+		unsigned long tAlign,
+		void (*ctor) (void *),
+		void (*dtor) (void *)
+){
+	ObjectInfo *typeInfo = (ObjectInfo*) KNew(&tObjectInfo, 1);
+
 	if(typeInfo == NULL) DbgLine("NULLIFED");
-	typeInfo->ObName = tName;
-	typeInfo->ObSize = tSize;
-	typeInfo->ObAlign = tAlign;
-	typeInfo->BufferSize = (tSize % tAlign) ? (tSize + tAlign - tSize % tAlign) : (tSize);
-	typeInfo->BufferPerSlab = (KPGSIZE - sizeof(OBSLAB)) / typeInfo->BufferSize;
-	typeInfo->BufferMargin = (KPGSIZE - sizeof(OBSLAB)) % typeInfo->BufferSize;
-	typeInfo->ObConstruct = tConstruct;
-	typeInfo->ObDestruct = tDestruct;
-	typeInfo->CallCount = 0;
-	typeInfo->EmptySlab = NULL;
-	typeInfo->PartialList.ClnMain = NULL;
-	typeInfo->PartialList.ClnCount = 0;
-	typeInfo->FullList.ClnMain = NULL;
-	typeInfo->FullList.ClnCount= 0;
+	typeInfo->name = tName;
+	typeInfo->rawSize = tSize;
+	typeInfo->align = tAlign;
+	typeInfo->bufferSize = (tSize % tAlign) ? (tSize + tAlign - tSize % tAlign) : (tSize);
+	typeInfo->bufferPerSlab = (KPGSIZE - sizeof(Slab)) / typeInfo->bufferSize;
+	typeInfo->bufferMargin = (KPGSIZE - sizeof(Slab)) % typeInfo->bufferSize;
+	typeInfo->ctor = ctor;
+	typeInfo->dtor = dtor;
+	typeInfo->callCount = 0;
+	typeInfo->emptySlab = NULL;
+	typeInfo->partialList.ClnMain = NULL;
+	typeInfo->partialList.ClnCount = 0;
+	typeInfo->fullList.ClnMain = NULL;
+	typeInfo->fullList.ClnCount= 0;
 	ClnInsert((CLNODE*) typeInfo, CLN_LAST, &tList);
+
 	return (typeInfo);
 }
 
-ULONG KiDestroyType(OBINFO *typeInfo){
-	if(typeInfo->PartialList.ClnCount != 0 || typeInfo->FullList.ClnCount != 0) {
+/**
+ * Function: KiDestroyType
+ *
+ * Summary:
+ * Removes the object & its allocator, if and only if no objects are currently
+ * outside the allocator.
+ *
+ * Args:
+ * ObjectInfo* obj - meta-data for the object
+ *
+ * Returns:
+ * FALSE, if any objects are in circulation and its wasn't freed; TRUE, if it
+ * is now freed, and further objects SHOULD NOT be allocated.
+ *
+ * Author: Shukant Pal
+ */
+decl_c unsigned long KiDestroyType(
+		ObjectInfo *typeInfo
+){
+	if(typeInfo->partialList.ClnCount != 0 || typeInfo->fullList.ClnCount != 0) {
 		return (FALSE);
 	} else {
 		ClnRemove((CLNODE*) typeInfo, &tList);
 
-		OBSLAB *emptySlab = (OBSLAB*) typeInfo->EmptySlab;
+		Slab *emptySlab = (Slab*) typeInfo->emptySlab;
 		if(emptySlab != NULL)
 			ObDestroySlab(emptySlab, typeInfo);
 

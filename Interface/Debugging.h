@@ -1,58 +1,42 @@
 /**
  * File: Debugging.h
  *
- * Summary: This file contains the interface for debugging with streams.
+ * Summary:
+ * Allows kernel-mode debugging with a fixed no. of streams. When the kernel
+ * matures a custom-debugger is registered which allows dynamic-debugging
+ * streams.
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef __DEBUGGER_H__
-#define __DEBUGGER_H__
+#ifndef DEBUGGER_H__
+#define DEBUGGER_H__
 
 #include "Types.h"
 
-/* A software-debuggable port. */
-typedef
 struct DebugStream
 {
 	ULONG Status;
 	CHAR *CurrentBuffer;
-	Void (*Write) (CHAR *);
-	Void (*WriteLine) (CHAR *);
-} DEBUG_STREAM;
+	Void (*Write) (const char *);
+	Void (*WriteLine) (const char *);
+};
 
-/* Backware-compat macros */
-#define Debug Dbg
-#define DebugInt DbgInt
-#define DebugLine DbgLine
-
-/* Debugging-utiltity branches */
-#ifndef FBUILD_C
-decl_c {
-#endif
-	void Dbg(CHAR *dbgString);
-	void DbgInt(SIZE_T);
-	void DbgErro(SIZE_T, ULONG Digits);
-	void DbgDump(VOID *Pointer, ULONG DumpByteSize);
-	void DbgBinOut(Void *Pointer, ULONG DumpByteSize);
-	void DbgLine(CHAR *String);
+decl_c
+{
+void Dbg(const char *dbgString);
+void DbgInt(SIZE_T);
+void DbgErro(SIZE_T, ULONG Digits);
+void DbgDump(void *Pointer, ULONG DumpByteSize);
+void DbgBinOut(Void *Pointer, ULONG DumpByteSize);
+void DbgLine(const char *String);
 
 	/* Debug-stream g/s interface */
-	ULONG AddStream(struct DebugStream *);
-	void RemoveStream(ULONG Index);
-#ifndef FBUILD_C
+ULONG AddStream(struct DebugStream *);
+void RemoveStream(ULONG Index);
+
+U8 InitConsole(U8* videoRAM);
+void Write(const char *consoleASCIIString);
+void WriteLine(const char *consoleASCIIString);
 }
-#endif
-	/* Native text-console prime debugging facility */
-	UCHAR InitConsole(
-		UCHAR *VideoBuffer
-	);
-
-	void Write(
-		CHAR  *ConsoleASCIIString
-	);
-
-	void WriteLine(
-		CHAR *ConsoleASCIIString
-	);
 
 #endif /* Debugging.h */

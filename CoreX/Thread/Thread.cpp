@@ -24,8 +24,8 @@
 #include <Memory/KObjectManager.h>
 #include <KernelRoutine/Init.h>
 
-CHAR *tdName = "KTHREAD";
-OBINFO *tdInfo;
+const char *tdName = "KTHREAD";
+ObjectInfo *tdInfo;
 
 KTHREAD *kIdlerThread; /* BSP idler thread */
 KTHREAD *kInitThread; /* Kernel-comm thread */
@@ -60,7 +60,7 @@ VOID InitTTable(VOID){
 	KTHREAD *kInit = kInitThread;
 	KiSetupRunnable((KRUNNABLE*) kInit, (ADDRESS) kInit, ThreadTp);
 	kInit->Gate.TaskFlags = (1 << 0) | (1 << 1);
-	kInit->Gate.EIP = &Init;
+	kInit->Gate.EIP = (void*) &Init;
 	kInit->Gate.Context = NULL;
 	kInit->Priority = 0xFF;
 	kInit->Privelege = 0xFF;
@@ -99,14 +99,12 @@ VOID APThreadMain(){
 	while(TRUE){ asm volatile("nop"); };
 }
 
-KTHREAD* KThreadCreate(VOID (*)());
-
 VOID APInitService(){
 	DbgLine("APInitService");
 
-	KThreadCreate(&APThreadMain);
-	KThreadCreate(&APThreadMain);
-	KThreadCreate(&APThreadMain);
+	KThreadCreate((void*) &APThreadMain);
+	KThreadCreate((void*)&APThreadMain);
+	KThreadCreate((void*)&APThreadMain);
 
 	while(TRUE) { asm volatile("nop"); };
 }
@@ -122,7 +120,7 @@ VOID SetupRunqueue(){
 		
 	KiSetupRunnable((KRUNNABLE*) setupThread, (ADDRESS) setupThread, ThreadTp);
 	setupThread->Gate.TaskFlags = (1 << 0) | (1 << 1);
-	setupThread->Gate.EIP = &APInitService;
+	setupThread->Gate.EIP = (void*) &APInitService;
 	setupThread->Gate.Context = NULL;
 	setupThread->Flags = 0;
 	setupThread->Status = Thread_Runnable;
@@ -159,11 +157,11 @@ int log_id = 2;
  *
  * Author: Shukant Pal
  */
-KTHREAD *KThreadCreate(VOID (*Entry)()){
+KTHREAD *KThreadCreate(void *entry){
 	PROCESSOR *currentProcessor = GetProcessorById(PROCESSOR_ID);
 	KTHREAD *newThread = KNew(tdInfo, KM_SLEEP);
 	newThread->Gate.TaskFlags = (1 << 0) | (1 << 1);
-	newThread->Gate.EIP = Entry;
+	newThread->Gate.EIP = entry;
 	newThread->Gate.Context = NULL;
 	newThread->Flags = 0;
 	newThread->Status = Thread_Runnable;

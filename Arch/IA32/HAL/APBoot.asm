@@ -39,19 +39,19 @@ extern InitPaging
 
 SECTION .text
 
-		GDT_ENTRY_SIZE 		equ 			8
-		GDT_SIZE 					equ 			(GDT_ENTRY_SIZE * 3)
-		GDT_POINTER_SIZE 	equ 			6
+		GDT_ENTRY_SIZE 								equ 			8
+		GDT_SIZE 									equ 			(GDT_ENTRY_SIZE * 3)
+		GDT_POINTER_SIZE 							equ 			6
 
-		STATUS_INIT 				equ			0x0002
-		STATUS_BOOTING	 	equ			0x00BB
-		STATUS_ERROR 			equ			0x00FF
+		STATUS_INIT 								equ			0x0002
+		STATUS_BOOTING	 							equ			0x00BB
+		STATUS_ERROR 								equ			0x00FF
 
-		ADM_PADDR_TRAMPOLINE 								equ 	(589824) 		; 576 KB
-		ADM_PADDR_APMAIN32  									equ 	(ADM_PADDR_TRAMPOLINE + APMain32 	- APBoot)
-		ADM_PADDR_APSETUPRUNTIME 						equ 	(ADM_PADDR_TRAMPOLINE + APSetupRuntime - APBoot)
+		ADM_PADDR_TRAMPOLINE 						equ 	(589824) 		; 576 KB
+		ADM_PADDR_APMAIN32  						equ 	(ADM_PADDR_TRAMPOLINE + APMain32 	- APBoot)
+		ADM_PADDR_APSETUPRUNTIME 					equ 	(ADM_PADDR_TRAMPOLINE + APSetupRuntime - APBoot)
 		ADM_PADDR_DEFAULT_BOOT_GDT 					equ 	(ADM_PADDR_TRAMPOLINE + defaultBootGDT - APBoot)
-		ADM_PADDR_DEFAULT_BOOT_GDT_POINTER 	equ 	(ADM_PADDR_TRAMPOLINE + defaultBootGDTPointer - APBoot)
+		ADM_PADDR_DEFAULT_BOOT_GDT_POINTER 			equ 	(ADM_PADDR_TRAMPOLINE + defaultBootGDTPointer - APBoot)
 
 		KCPUINFO equ (0xC0000000 + (20 << 20))
 
@@ -268,7 +268,7 @@ SECTION .text
 		SpinUnlock:
 			PUSH EAX
 			MOV EAX, [ESP + 8]
-			LOCK MOV DWORD [EAX], 0
+			MOV DWORD [EAX], 0
 			MFENCE
 			POP EAX
 			RET

@@ -13,7 +13,7 @@
 ArchDir = Arch/IA32
 
 CC = g++ -std=c++1z# C Compiler
-CFLAGS = -m32 -I"." -I"./Interface" -I"./Interface/Arch" -c -fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC -fpermissive -fno-rtti -fno-exceptions# -fno-strict-aliasing
+CFLAGS = -m32 -I"." -I"./Interface" -I"./Interface/Arch" -c -fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -Os -fPIC -fpermissive -fno-rtti -fno-exceptions# -fno-strict-aliasing
 
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
@@ -29,7 +29,7 @@ IfcModule = Interface/Module
 IfcUtil = Interface/Util
 
 #IA32 Boot Service
-InitObjects = Compile/InitRuntime.o Compile/86InitPaging.o Compile/InitADM.o Compile/BlockPager.o Compile/Main.o Compile/Multiboot.o
+InitObjects = Compile/InitRuntime.o Compile/86InitPaging.o Compile/BlockPager.o Compile/Main.o Compile/Multiboot.o
 
 # IA32 Objects 
 ArchObjects = Compile/APBoot.o Compile/CMOS.o Compile/CPUID.o \
@@ -49,7 +49,7 @@ KernelRoutineObjects = Compile/Init.o
 # Memory Subsystems + Algorithms
 MemoryObjects = Compile/BuddyAllocator.o Compile/CacheRegister.o \
 Compile/KFrameManager.o Compile/KMemoryManager.o  Compile/KObjectManager.o \
-Compile/PMemoryManager.o Compile/Structure.o Compile/ZoneManager.o
+Compile/Structure.o Compile/ZoneManager.o
 
 ProcessObjects = Compile/Process.o
 
@@ -75,9 +75,6 @@ $(IfcModule)/Elf/ElfManager.hpp: $(IfcModule)/Elf/ELF.h
 
 Compile/86InitPaging.o: $(ArchDir)/Paging/86InitPaging.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/Paging/86InitPaging.asm -o Compile/86InitPaging.o
-
-Compile/InitADM.o: $(IfcMemory)/KMemorySpace.h Interface/Multiboot2.h $(ArchDir)/Boot/InitADM.cpp
-	$(CC) $(CFLAGS) $(ArchDir)/Boot/InitADM.cpp -o Compile/InitADM.o
 
 Compile/BlockPager.o: $(ArchDir)/Paging/BlockPager.cpp
 	$(CC) $(CFLAGS) $(ArchDir)/Paging/BlockPager.cpp -o Compile/BlockPager.o

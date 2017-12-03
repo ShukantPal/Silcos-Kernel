@@ -1,13 +1,15 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: APIC.h
  *
- * Summary: This file contains the interface for using the APIC and management of interrupts -
- * recieving and sending interrupts, handling IPIs, mapping system calls and much more!
+ * Summary:
+ * Embedded xAPIC/x2APIC kernel-driver is given here to be used by other
+ * components to control/modify the behavior of the local APIC. It is
+ * used mostly by CPU-driver.
  *
  * Functions:
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 #ifndef IA32_APIC_H
 #define IA32_APIC_H
 
@@ -18,7 +20,7 @@
 
 #define DefaultAPICBase 0xFEE00000
 
-/* APIC register relative offsets */
+/* xAPIC register relative offsets */
 #define APIC_REGISTER_ID 		0x20
 #define APIC_REGISTER_VERSION		0x30
 #define APIC_REGISTER_TPR 		0x80
@@ -83,8 +85,7 @@ extern UINT VAPICBase;
 typedef U32 APIC_ID;
 typedef U8 APIC_VECTOR;
 
-static inline
-VOID MapAPIC(){
+static inline void MapAPIC(){
 	VAPICBase = ArchBlock * 4096;
 	++ArchBlock;
 
@@ -94,28 +95,23 @@ VOID MapAPIC(){
 #define ReadX2APICRegister ReadMSR
 #define WriteX2APICRegister WriteMSR
 
-static inline
-UINT RdApicRegister(UINT Reg){
+static inline unsigned int RdApicRegister(UINT Reg){
 	 return *((UINT volatile*) (VAPICBase + Reg));
 }
 
-static inline
-VOID WtApicRegister(UINT Reg, UINT Value){
+static inline void WtApicRegister(
+		unsigned int Reg,
+		unsigned int Value
+){
 	UINT volatile *VirtualAPICReg = (UINT*) (VAPICBase + Reg); 
  	*VirtualAPICReg = Value;
 }
 
 VOID SetupTick();
 
-ULONG TriggerIPI(U32, U32);
-
-VOID DisablePIC(
-	VOID
-);
-
-decl_c VOID MapIDT(
-	VOID
-);
+void TriggerIPI(U32, U32);
+void DisablePIC(void);
+decl_c VOID MapIDT(void);
 
 
 #endif /* IA32/APIC.h */

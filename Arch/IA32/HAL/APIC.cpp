@@ -17,7 +17,7 @@
 #include <IA32/IDT.h>
 
 UINT VAPICBase;
-extern IDT defaultIDT[256];
+extern IDTEntry defaultIDT[256];
 import_asm void TimerUpdate();
 
 /**
@@ -49,14 +49,14 @@ VOID SetupAPICTimer(){
 VOID SetupTick(VOID){
 	extern U32 BSP_ID;
 	if(RdApicRegister(APIC_REGISTER_ID) == BSP_ID)
-		MapHandler(0x20, (UINT) &KiClockRespond, (IDT *) &defaultIDT);
+		MapHandler(0x20, (UINT) &KiClockRespond, (IDTEntry*) &defaultIDT);
 	WtApicRegister(APIC_REGISTER_SIVR, 0xFE | (1 << 8));
 	WtApicRegister(APIC_REGISTER_TIMER_DCR, 32);
 	WtApicRegister(APIC_REGISTER_LVT_TR, (1 << 17) | 0x20);
 	WtApicRegister(APIC_REGISTER_TIMER_ICR, 1 << 24);
 }
 
-ULONG TriggerIPI(U32 destination, U32 controlSet){
+void TriggerIPI(U32 destination, U32 controlSet){
 	WtApicRegister(APIC_REGISTER_ICR_HIGH, (destination << 24));
 	WtApicRegister(APIC_REGISTER_ICR_LOW, controlSet);
 }

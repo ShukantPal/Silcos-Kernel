@@ -10,15 +10,19 @@
 #include <IA32/Processor.h>
 #include <Util/Memory.h>
 
-import_asm VOID ExecuteLIDT(IDT_POINTER *);
+import_asm void ExecuteLIDT(IDTPointer *);
 import_asm void Spurious();
-import_asm VOID KiClockRespond(VOID);
-import_asm VOID RR_BalanceRunqueue(VOID);
+import_asm void KiClockRespond(VOID);
+import_asm void RR_BalanceRunqueue(VOID);
 
-IDT defaultIDT[256];
-IDT_POINTER defaultIDTPointer;
+IDTEntry defaultIDT[256];
+IDTPointer defaultIDTPointer;
 
-VOID MapHandler(USHORT handlerNo, UINT handlerAddress, IDT *pIDT){
+void MapHandler(
+		unsigned short handlerNo,
+		unsigned int handlerAddress,
+		IDTEntry *pIDT
+){
 	pIDT[handlerNo].LowOffset = (USHORT) (handlerAddress & 0x0000ffff);
 	pIDT[handlerNo].Selector = 0x08;
 	pIDT[handlerNo].ReservedSpace = 0;
@@ -36,7 +40,7 @@ static inline void IOWait(void){
                    "2:" );
 }
 
-VOID DisablePIC(){
+void DisablePIC(){
 	WritePort(0xA0, 0x11);
 	IOWait();
 	WritePort(0x20, 0x11);
@@ -58,9 +62,9 @@ VOID DisablePIC(){
 }
 
 decl_c void MapIDT(){
-	IDT *pIDT = defaultIDT;
-	IDT_POINTER *pIDTPointer = &(defaultIDTPointer);
-	memsetf(pIDT, 0, sizeof(IDT) * 256);
+	IDTEntry *pIDT = defaultIDT;
+	IDTPointer *pIDTPointer = &(defaultIDTPointer);
+	memsetf(pIDT, 0, sizeof(IDTEntry) * 256);
 
 	MapHandler(0x8, (UINT) &DoubleFault, pIDT);
 	MapHandler(0xA, (UINT) &InvalidTSS, pIDT);
@@ -71,12 +75,12 @@ decl_c void MapIDT(){
 	MapHandler(0x20, (UINT) &KiClockRespond, pIDT);
 	//MapHandler(0x21, (UINT) &RR_BalanceRunqueue, pIDT);
 
-	pIDTPointer->Limit = (sizeof(IDT) * 256) - 1;
+	pIDTPointer->Limit = (sizeof(IDTEntry) * 256) - 1;
 	pIDTPointer->Base = (UINT) pIDT;
 }
 
 /* Part of processor initialization series */
 decl_c void SetupIDT(){
-	IDT_POINTER *pIDTPointer = &(defaultIDTPointer);
+	IDTPointer *pIDTPointer = &(defaultIDTPointer);
 	ExecuteLIDT(pIDTPointer);
 }

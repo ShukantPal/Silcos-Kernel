@@ -1,7 +1,6 @@
 /**
  * Copyright (C) 2017 - Shukant Pal
  */
-
 #include <ACPI/RSDP.h>
 #include <Memory/Pager.h>
 #include <Util/Memory.h>
@@ -10,7 +9,8 @@
 RSDP *SystemRsdp = NULL;
 RSDP2 *SystemRsdp2 = NULL;
 
-RSDP *ScanRsdp(){
+RSDP *ScanRsdp()
+{
 	UCHAR *ScanAddress = (UCHAR *) 0xc0000000;
 	CHAR *RsdpString = RsdpSignature;
 

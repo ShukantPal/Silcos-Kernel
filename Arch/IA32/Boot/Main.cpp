@@ -1,4 +1,4 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: Main.c
  *
  * Summary:
@@ -9,13 +9,8 @@
  * system. This allows for the flexibility of the software to bend against changes
  * in the models of a CPU in the architecture.
  *
- *
- * Functions:
- * Main() - Everything starts from here.
- *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
- 
+ */
 #define NAMESPACE_MAIN
 #define NAMESPACE_MEMORY_MANAGER
 
@@ -45,15 +40,15 @@
 extern void SetupTick();
 import_asm void BSPGrantPermit();
 
-CHAR *cpuIdNotSupportedError = "Error: 0xAAAE1: Platform does not support CPUID.";/* CPUID test returns zero value, indicating failure */
+const char *cpuIdNotSupportedError = "Error: 0xAAAE1: Platform does not support CPUID.";/* CPUID test returns zero value, indicating failure */
 
-VOID ImmatureHang(CHAR *dbgString){
+void ImmatureHang(const char *dbgString){
 	DbgLine(dbgString);
 	while(TRUE){ asm("hlt"); }
 }
 
 PROCESSOR_SETUP_INFO *dInfo;
-/******************************************************************************
+/**
  * Function: ValidateSupport()
  *
  * Summary: This function validates the required features to run the kernel, by checking for
@@ -61,7 +56,7 @@ PROCESSOR_SETUP_INFO *dInfo;
  *
  * @Version 1
  * @Since Circuit 2.03
- ******************************************************************************/
+ */
 VOID ValidateSupport(){
 	if(TestCPUID() != 0) {
 		// TODO: Implement CPUID feature searching through ADM subset.
@@ -69,12 +64,28 @@ VOID ValidateSupport(){
 		ImmatureHang(cpuIdNotSupportedError);
 }
 
+/*
+ * For debugging, print sizes of sections & global data structures that are
+ * important for kernel size.
+ */
+void printStatic()
+{
+#ifdef DEBUG
+	Dbg("Kernel Code: "); DbgInt((U32) &KernelCodeEnd - (U32) &KernelCodeStart);
+	Dbg("\nKernel Data: "); DbgInt((U32) &KernelDataEnd - (U32) &KernelDataStart);
+	Dbg("\nKernel BSS: "); DbgInt((U32) &KernelBSSEnd - (U32) &KernelBSSStart);
+	Dbg("\nKernel PDat: "); DbgInt((U32) &KernelPDatEnd - (U32) &KernelPDatStart);
+	DbgLine("");
+#endif
+}
+
 /**
  * Function: Main()
  *
  * Summary:
- * This is the logical entry point, for the kernel, in the C language. From here, you can see
- * the early initialization steps for the kernel. Serially, it setups the following subsystems -
+ * This is the logical entry of the kernel, where all subsystems initialize and
+ * interactive-scheduling starts at the end. OS-specific threads are spawned
+ * which wakeup other parts of the system.
  *
  * 1. Console & Debugger
  * 2. Multiboot Check
@@ -83,15 +94,11 @@ VOID ValidateSupport(){
  * 5. RSDP & RSDT (ACPI Tables)
  * 6. Processor Management
  * 7. Interrupts & System Calls
- * 8. Threads & Process Init
- * 9. Scheduler Enable
- *
- * At the end, this function returns and after one timer tick, the scheduler starts the first
- * kernel thread, which does further system initialization.
+ * 8. Threads & Process Init * 9. Scheduler Enable
  *
  * Args:
- * bootInfo - Multiboot header, for initialization data
- * magicNo - Conformatory number, to check for multiboot loader
+ * bootInfo - virtual address of the multiboot header
+ * magicNo - the identification number given by the loader
  *
  * Returns: VOID
  *
@@ -99,9 +106,12 @@ VOID ValidateSupport(){
  * @Version 13
  * @Since Circuit 1.02
  */
-export_asm void Main(U32 bootInfo, U32 magicNo)
-{
-	DbgLine("Circuit 2.03 Initializing");
+export_asm void Main(
+		U32 bootInfo,
+		U32 magicNo
+){
+	DbgLine("Reporting Load: @(com.silcos.circuit.2030) \nCircuit Kernel 2.03\b!");
+	printStatic();
 
 	if(magicNo != MULTIBOOT2_BOOTLOADER_MAGIC){
 		DbgLine("Error : Multiboot-compliant bootloader not found!");
@@ -118,10 +128,6 @@ export_asm void Main(U32 bootInfo, U32 magicNo)
 	MapAPIC();
 	SetupBSP();
 
-	/*
-	 * In object-allocator, setup the utility objects (linked-list, avl-tree, etc.)
-	 * now because process-lookup table is ready (kobject-allocator requires it)
-	 */
 	SetupPrimitiveObjects();
 
 	InitPTable();

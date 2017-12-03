@@ -43,110 +43,39 @@
 	#define L1_CACHE_ALIGN 64
 #endif
 
-/**
- * OBSLAB - 
- *
- * Summary:
- * This type is used to store data about a slab and is located at the end of the page. It
- * is internal to the KObjectManager.
- *
- * Fields:
- * LiLinker - Used for participating in lists
- * ObStack - Stack of free, constructed objects
- * ObColor - Object-colour for this slab
- * ObCount - No. of objects in this slab (free ones)
- * TypeInfo - Address of the Object-type info
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-typedef
 struct Slab {
-	LIST_ELEMENT LiLinker;
-	STACK ObStack;
-	ULONG ObColor;
-	ULONG ObCount;
-} OBSLAB;
+	LinkedListNode liLinker;
+	STACK bufferStack;
+	unsigned long colouringOffset;
+	unsigned long freeCount;
+};
 
-/**
- * OBINFO - 
- *
- * Summary:
- * This type contains all data for maintaining a independent (kernel) object. It stores its
- * name, size, alignment, colour, constructor, destructor and lots of other (internal) data.
- *
- * Fields:
- * LiLinker - Used for participating in list of active (kernel) objects
- * ObName - Name of the object
- * ObSize - Size of the object
- * ObColor - Last color of the object
- * ObAlign - Alignment-preferred for the object
- * BufferSize - Aligned size for the object
- * BufferPerSlab - No. of buffers fitting in one slab
- * BufferMargin - Margin left after fitting all buffers
- * ObConstruct - Constructor for the object (NULL, if none)
- * ObDestruct - Destructor for the object (NULL, if none)
- * ObAllocated - No. of object allocated
- * ObFree - No. of free objects
- * CallCount - No. of operations on the object-type
- * EmptySlab - Cache for a empty slab
- * PartialList - List of partial slabs
- * FullList - List of full slabs
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-typedef
 struct ObjectInfo {
-	LIST_ELEMENT LiLinker;
-	CHAR *ObName;
-	ULONG ObSize;
-	ULONG ObColor;
-	ULONG ObAlign;
-	ULONG BufferSize;
-	ULONG BufferPerSlab;
-	ULONG BufferMargin;
-	void (*ObConstruct) (Void *);
-	void (*ObDestruct) (Void *);
-	ULONG ObAllocated;
-	ULONG ObFree;
-	ULONG CallCount;
-	struct Slab *EmptySlab;
-	CLIST PartialList;
-	CLIST FullList;
-	SPIN_LOCK ObLock;
-} OBINFO;
+	LinkedListNode liLinker;// Used for listing this, for pressurizing vmm
+	const char *name;// Name of the object, used for debugging
+	unsigned long rawSize;// Raw size of the object
+	unsigned long colorScheme;// Current coloring scheme for the incoming slabs
+	unsigned long align;// Alignment constraints for the object
+	unsigned long bufferSize;// Size of the aligned-object buffer
+	unsigned long bufferPerSlab;// No. of buffers that can fit into one slab
+	unsigned long bufferMargin;// Leftover-space in a slab, after buffers
+	void (*ctor) (Void *);// Object-constructor (not for C++, yet)
+	void (*dtor) (Void *);// Object-destructor (not for C++, yet)
+	unsigned long allocatedObjects;// No. of object that are in usage
+	unsigned long freeCount;// No. of objects that are free in current pool
+	unsigned long callCount;// No. of operation done on this type (not used)
+	Slab *emptySlab;// Cache for a empty slab
+	CircularList partialList;// List of partial slabs
+	CircularList fullList;// List of complete slabs
+	SPIN_LOCK lock;// Serialization lock
+};
 
-/**
- * Function: KiCreateType()
- *
- * Summary: This function creates a object allocator, for the given properties. Duplicate
- * types (with the same name) can exist and are not check for co-existence.
- *
- * Args:
- * tName - Object's name
- * tSize - Object's size
- * tAlign - Object's alignment
- * tConstruct - Constructor
- * tDestruct - Destructor
- *
- * Returns: The object allocator, allocated from the root allocator.
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-struct ObjectInfo *KiCreateType(CHAR *tName,
-								ULONG tSize,
-								ULONG tAlign,
-								void (*tConstruct) (Void *),
-								void (*tDestruct) (Void *)
-);
-
-VOID *KNew(struct ObjectInfo *typeInfo, ULONG kmSleep);
-VOID KDelete(Void *object, struct ObjectInfo *objectInfo);
-ULONG KiDestroyType(struct ObjectInfo *);
-
-#define SETUP_OBJECT(typeName) KiCreateType("typeName", sizeof(typeName), sizeof(ULONG), NULL, NULL)
+decl_c ObjectInfo *KiCreateType(const char *tName, unsigned long tSize,
+			unsigned long tAlign, void (*tConstruct) (Void *),
+				void (*tDestruct) (Void *));
+decl_c void *KNew(ObjectInfo *typeInfo, ULONG kmSleep);
+decl_c void KDelete(void *object, ObjectInfo *objectInfo);
+decl_c unsigned long KiDestroyType(ObjectInfo *);
 
 void obSetupAllocator(Void);
 void SetupPrimitiveObjects(void);

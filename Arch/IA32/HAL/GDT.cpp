@@ -1,36 +1,55 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * File: GDT.c
- *
- * Summary:  This file contains the code for setting up the GDT, and is part of the CPU-initialization
- * series. It also contains the defaultBootGDTPointer and defaultBootGDT, which is used for early GDT
- * to enter protected mode for the APs.
- *
- * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
-
+/** Public Domain (no guarantee provided) */
 #include <IA32/Processor.h>
+#include <HAL/Processor.h>
 
-import_asm GDT defaultBootGDT[3]; /* This should contain a flat memory-model, and no TSS entry. (APBoot.asm) */
-import_asm GDT_POINTER defaultBootGDTPointer;/* APBoot.asm */
-import_asm void ExecuteLGDT(GDT_POINTER *);
+import_asm GDTEntry defaultBootGDT[3];/* This should contain a flat memory-model, and no TSS entry. (APBoot.asm) */
+import_asm GDTPointer defaultBootGDTPointer;/* APBoot.asm */
+import_asm int ExecuteLGDT(GDTPointer *);
 
-VOID SetGateOn(USHORT gateNo, UINT segBase, UINT segLimit, UCHAR segAccess, UCHAR segGranularity, GDT *pGDT){
-	pGDT[gateNo].BaseLow = (segBase & 0xffff);
-	pGDT[gateNo].BaseMiddle = (segBase >> 16) & 0xff;
-	pGDT[gateNo].BaseHigh = (segBase >> 24) & 0xff;
-	pGDT[gateNo].Limit = (segLimit & 0xffff);
-	pGDT[gateNo].Granularity = (segLimit >> 16) & 0x0f;
-	pGDT[gateNo].Granularity |= ((segGranularity << 4) & 0xf0);
-	pGDT[gateNo].Access = segAccess;
+/**
+ * Function: SetGateOn
+ *
+ * Summary:
+ * Writes the GDT entry at the given index and parameters.
+ *
+ * Args:
+ * unsigned short gateNo - index of the GDT-entry
+ * unsigned int base - base address of the segment
+ * unsigned int limit - limiting address of the segment
+ * unsigned char access - access-levels/security-parameter
+ * unsigned char granularity - segment-addressing granularity
+ * GDTEntry *pGDT - start of the GDT-table
+ *
+ * Author: Shukant Pal
+ */
+void SetGateOn(
+		unsigned short gateNo,
+		unsigned int segBase,
+		unsigned int segLimit,
+		unsigned char segAccess,
+		unsigned char segGranularity,
+		GDTEntry *pGDT
+){
+	pGDT[gateNo].baseLow = (segBase & 0xffff);
+	pGDT[gateNo].baseMiddle = (segBase >> 16) & 0xff;
+	pGDT[gateNo].baseHigh = (segBase >> 24) & 0xff;
+	pGDT[gateNo].limit = (segLimit & 0xffff);
+	pGDT[gateNo].granularity = (segLimit >> 16) & 0x0f;
+	pGDT[gateNo].granularity |= ((segGranularity << 4) & 0xf0);
+	pGDT[gateNo].access = segAccess;
 }
 
 /* Part of processor initialization series. */
-decl_c void SetupGDT(PROCESSOR_INFO *processorInfo){
-	GDT *pGDT = &(processorInfo->GDT[0]);
-	GDT_POINTER *pGDTPointer = &(processorInfo->GDTPointer);
+decl_c void SetupGDT(
+		ProcessorInfo *processorInfo
+){
+	GDTEntry *pGDT = &(processorInfo->GDT[0]);
+	GDTPointer *pGDTPointer = &(processorInfo->GDTR);
 
-	pGDTPointer->Limit = (sizeof(GDT_ENTRY) * 6) - 1;
+	pGDTPointer->Limit = (sizeof(GDTEntry) * 6) - 1;
 	pGDTPointer->Base = (UINT) pGDT;
+
+	DbgInt((ULONG) pGDT); Dbg(" ");
 
 	SetGateOn(0, 0, 0, 0, 0, pGDT);
 	SetGateOn(1, 0, 0xffffffff, 0x9a, 0xcf, pGDT);

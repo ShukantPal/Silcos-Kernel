@@ -55,7 +55,7 @@ ModuleRecord *RecordManager::createRecord(
 
 	memcpy(modName, &newRecord->buildName, 16);
 	newRecord->buildVersion = buildVersion;
-	newRecord->serviceType = serviceType;
+	newRecord->serviceType = (KM_TYPE) serviceType;
 
 	return (newRecord);
 }
@@ -70,13 +70,15 @@ ModuleRecord *RecordManager::createRecord(
  *
  * Args:
  * CHAR *requiredSymbolName - Name of the symbol being queried
+ * ULONG& baseAddress - (Return) arg for giving base-address of declarer
  *
  * Version: 1.0
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
 Symbol *RecordManager::querySymbol(
-		CHAR *requiredSymbolName
+		CHAR *requiredSymbolName,
+		ULONG &baseAddress
 ){
 	ModuleRecord *qRecord = (ModuleRecord*) RecordManager::globalRecordList.Head;
 	ULONG qRecordIndex = 0;
@@ -90,12 +92,14 @@ Symbol *RecordManager::querySymbol(
 		foundSymbol = ElfAnalyzer::querySymbol(requiredSymbolName, &qLink->dynamicSymbols, &qLink->symbolHash);
 
 		if(foundSymbol != NULL){
-			if(foundSymbol->Value != 0)
+			if(foundSymbol->Value != 0){
+				baseAddress = qRecord->BaseAddr;
 				return (foundSymbol);
+			}
 		}
 
 		++(qRecordIndex);
-		++(qRecord);
+		qRecord = qRecord->NextModule;
 	}
 
 	return (NULL);

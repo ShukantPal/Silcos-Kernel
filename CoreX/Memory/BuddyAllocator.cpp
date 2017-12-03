@@ -24,7 +24,15 @@ using namespace Memory;
 using namespace Memory::Internal;
 
 BuddyAllocator::BuddyAllocator()
-{} // Simply useless (for global objects)
+{
+	this->entrySize = 0;
+	this->entryTable = NULL;
+	this->highestOrder = 0;
+	this->listInfo = NULL;
+	this->blockLists = NULL;
+	this->freeBuddies =
+			this->allocatedBuddies = 0;
+}
 
 BuddyAllocator::BuddyAllocator(
 		ULONG entrySize,
@@ -142,8 +150,8 @@ struct LinkedList *BuddyAllocator::getBuddyList(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-struct LinkedList *BuddyAllocator::getBuddyList(
-		struct BuddyBlock *bBlock
+LinkedList *BuddyAllocator::getBuddyList(
+		BuddyBlock *bBlock
 ){
 	return getBuddyList(bBlock->LowerOrder, bBlock->UpperOrder);
 }
@@ -159,7 +167,7 @@ struct LinkedList *BuddyAllocator::getBuddyList(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-Void BuddyAllocator::addBuddyBlock(struct BuddyBlock *bBlock)
+void BuddyAllocator::addBuddyBlock(BuddyBlock *bBlock)
 {
 	AddElement((struct LinkedListNode *) bBlock, getBuddyList(bBlock));
 	BDLINK(bBlock);
@@ -180,16 +188,16 @@ Void BuddyAllocator::addBuddyBlock(struct BuddyBlock *bBlock)
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-Void BuddyAllocator::removeBuddyBlock(struct BuddyBlock *bBlock)
+void BuddyAllocator::removeBuddyBlock(BuddyBlock *bBlock)
 {
 	removeBuddyBlock(bBlock, getBuddyList(bBlock));
 }
 
-Void BuddyAllocator::removeBuddyBlock(
-		struct BuddyBlock *bBlock,
-		struct LinkedList *containerList
+void BuddyAllocator::removeBuddyBlock(
+		BuddyBlock *bBlock,
+		LinkedList *containerList
 ){
-	RemoveElement((struct LinkedListNode *) bBlock, containerList);
+	RemoveElement((LinkedListNode *) bBlock, containerList);
 
 	BDUNLINK(bBlock);
 	if(containerList->Count == 0){
@@ -228,21 +236,21 @@ Void BuddyAllocator::removeBuddyBlock(
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-struct BuddyBlock *BuddyAllocator::splitSuperBlock(
-		ULONG newOrder,
-		struct BuddyBlock *orgSuperBlock,
-		struct BuddyBlock **lowerSuperBlock,
-		struct BuddyBlock **upperSuperBlock
+BuddyBlock *BuddyAllocator::splitSuperBlock(
+		unsigned long newOrder,
+		BuddyBlock *orgSuperBlock,
+		BuddyBlock **lowerSuperBlock,
+		BuddyBlock **upperSuperBlock
 ){
 	if(newOrder > orgSuperBlock->LowerOrder){
 		// The block of the required order is contained in the superblock given and
 		// thus the structure is - [lower super-block][block-required][upper super-block]
-		struct BuddyBlock *newBlock = BlockAtOffsetOf(orgSuperBlock, SIZEOF_DIFF(newOrder, orgSuperBlock->LowerOrder));
-		struct BuddyBlock *lowerChunk = orgSuperBlock;
+		BuddyBlock *newBlock = BlockAtOffsetOf(orgSuperBlock, SIZEOF_DIFF(newOrder, orgSuperBlock->LowerOrder));
+		BuddyBlock *lowerChunk = orgSuperBlock;
 
 		if(newOrder != orgSuperBlock->UpperOrder){
 			// Here, we know that a upper super-block will be created
-			struct BuddyBlock *upperChunk =
+			BuddyBlock *upperChunk =
 					BlockAtOffsetOf(newBlock, SIZEOF_ORDER(newOrder));
 			upperChunk->UpperOrder = orgSuperBlock->UpperOrder;
 			upperChunk->LowerOrder = newOrder + 1;
@@ -262,7 +270,7 @@ struct BuddyBlock *BuddyAllocator::splitSuperBlock(
 		// super-blocks set & result - [block-required][lower chunk][upper chunk]
 		BOOL orgIsBlock = (orgSuperBlock->LowerOrder == orgSuperBlock->UpperOrder);
 		if(orgSuperBlock->UpperOrder != newOrder){
-			struct BuddyBlock *upperChunk;
+			BuddyBlock *upperChunk;
 			if(orgIsBlock){
 				// newOrder < orgSuperBlock->LowerOrder (must be satisfied)
 				upperChunk = BlockAtOffsetOf(orgSuperBlock, SIZEOF_ORDER(newOrder));
@@ -280,7 +288,7 @@ struct BuddyBlock *BuddyAllocator::splitSuperBlock(
 		}
 
 		if(!orgIsBlock && newOrder != orgSuperBlock->LowerOrder){
-			struct BuddyBlock *lowerChunk =
+			BuddyBlock *lowerChunk =
 					BlockAtOffsetOf(orgSuperBlock, SIZEOF_ORDER(newOrder));
 			lowerChunk->UpperOrder = orgSuperBlock->LowerOrder - 1;
 			lowerChunk->LowerOrder = newOrder;
@@ -313,15 +321,15 @@ struct BuddyBlock *BuddyAllocator::splitSuperBlock(
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-struct BuddyBlock *BuddyAllocator::mergeSuperBlock(
-		struct BuddyBlock *orgSuperBlock,
+BuddyBlock *BuddyAllocator::mergeSuperBlock(
+		BuddyBlock *orgSuperBlock,
 		ULONG maxMergeOrder
 ){
 	// Recursion is being used here
 	if(orgSuperBlock->UpperOrder < maxMergeOrder){
-		struct BuddyBlock *orgBuddyBlock;
-		struct BuddyBlock *orgLeftBlock;
-		struct BuddyBlock *orgRightBlock;
+		BuddyBlock *orgBuddyBlock;
+		BuddyBlock *orgLeftBlock;
+		BuddyBlock *orgRightBlock;
 
 		orgBuddyBlock = getBuddyBlock(orgSuperBlock->Order, orgSuperBlock);
 		if(TBDFREE(orgBuddyBlock)){
@@ -370,7 +378,7 @@ struct BuddyBlock *BuddyAllocator::mergeSuperBlock(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-struct BuddyBlock *BuddyAllocator::allocateBlock(
+BuddyBlock *BuddyAllocator::allocateBlock(
 		unsigned long blockOrder
 ){
 	if(freeBuddies < SIZEOF_ORDER(blockOrder))
@@ -380,12 +388,12 @@ struct BuddyBlock *BuddyAllocator::allocateBlock(
 	if(optimalList == NULL){
 		return (struct BuddyBlock *) (BD_FRAGMENTATION);
 	} else {
-		struct BuddyBlock *paSuperBlock = (struct BuddyBlock*) optimalList->Head;
+		BuddyBlock *paSuperBlock = (struct BuddyBlock*) optimalList->Head;
 		removeBuddyBlock(paSuperBlock, optimalList);
 
 
-		struct BuddyBlock *upperPortion, *lowerPortion;
-		struct BuddyBlock *allocBlock =
+		BuddyBlock *upperPortion, *lowerPortion;
+		BuddyBlock *allocBlock =
 				splitSuperBlock(blockOrder, paSuperBlock, &lowerPortion, &upperPortion);
 
 		if(upperPortion != NULL) addBuddyBlock(upperPortion);
