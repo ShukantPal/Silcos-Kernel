@@ -73,6 +73,7 @@ bool BinaryTree::insert(
 			} else if(nkey > parent->key()){
 				leaf = parent->getRightChild();
 			} else {
+				parent->associatedValue = node.val();
 				return (false);
 			}
 		}

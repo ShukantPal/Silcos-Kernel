@@ -30,22 +30,22 @@ SECTION .text
 		PUSH EDI
 		PUSH EBP
 
-		MOV EBP, ESP 				; Load ESP into EBP
-		add EBP, 28 					; Load Interrupt Stack Frame
+		MOV EBP, ESP 			; Load ESP into EBP
+		ADD EBP, 28 			; Load Interrupt Stack Frame
 
 		MOV EDX, [VAPICBase] 	; Use APIC Registers
 		MOV EDX, [EDX + 0x20] 	; Load PROCESSOR_ID << 24
-		SHR EDX, 24					; Get APIC_ID
+		SHR EDX, 24				; Get APIC_ID
 		CMP [BSP_ID], EDX 		; Compare for BSP_ID
-		JNE KiScheduleEntry 		; If not the BSP, don't update time
+		JNE KiScheduleEntry 	; If not the BSP, don't update time
 
 		; Update kTime
-		PUSH EDX						; Save PROCESSOR_ID on stack
-		MOV EDX, 1					; Load 1 for incrementing time
+		PUSH EDX				; Save PROCESSOR_ID on stack
+		MOV EDX, 1				; Load 1 for incrementing time
 		XADD [XMilliTime], EDX 	; Update time and load old time into EDX
 		CMP [XMilliTime], EDX	; Test for overflow in lower 32-bits
-		POP EDX						; Restore PROCESSOR_ID into EDX
-		JLE Incro						; If overflow occured, increment upper-32bits
+		POP EDX					; Restore PROCESSOR_ID into EDX
+		JLE Incro				; If overflow occured, increment upper-32bits
 		JMP KiRunnerUpdate		; Else, continue
 
 		Incro:
@@ -71,34 +71,34 @@ SECTION .text
 	; @Since Circuit 2.03
 	extern Schedule
 	KiScheduleEntry:
-		SHL EDX, 12												; Get KPAGE offset for the PROCESSOR struct
+		SHL EDX, 12								; Get KPAGE offset for the PROCESSOR struct
 		ADD EDX, 0xc0000000 + 20 * 1024 * 1024	; Add offset to KCPUINFO to get the PROCESSOR struct
 
-		MOV EBX, [EDX + 24] ; Runner Info
-		MOV EDI, [EBX + 32] ; Runner's KernelStack
+		MOV EBX, [EDX + 24] 	; Runner Info
+		MOV EDI, [EBX + 32] 	; Runner's KernelStack
 
 		MOV ECX, [EBP]
-		MOV [EBX + 16], ECX ; Runner's EIP
+		MOV [EBX + 16], ECX 	; Runner's EIP
 
 		CMP DWORD [EBP + 4], 0x8
 		je KiScheduleKernel
 
 		KiScheduleUser:
-			MOV ECX, [EBP + 12] 								; UserStack.Pointer
-			MOV ESI, [EBX + 28] 								; Store the UserStack
-			MOV [ESI + 4], ECX 								; Save UserStack.Pointer
-			SUB EBP, 28											; Load Save-Register StackFrame
-			MOV [EDI + 4], EBP									; Save KernelStack.Pointer
-			JMP KiInvokeScheduler							; Invoke the scheduler
+			MOV ECX, [EBP + 12] ; UserStack.Pointer
+			MOV ESI, [EBX + 28]	; Store the UserStack
+			MOV [ESI + 4], ECX 	; Save UserStack.Pointer
+			SUB EBP, 28			; Load Save-Register StackFrame
+			MOV [EDI + 4], EBP	; Save KernelStack.Pointer
+			JMP KiInvokeScheduler ; Invoke the scheduler
 
 		KiScheduleKernel:
-			SUB EBP, 28											; Load Save-Register StackFrame
-			MOV [EDI + 4], EBP									; Save KernelStack.Pointer
+			SUB EBP, 28			; Load Save-Register StackFrame
+			MOV [EDI + 4], EBP	; Save KernelStack.Pointer
 
 		KiInvokeScheduler:
 		PUSH EDX
-		PUSH EDX												; Pass Arg-pCPU
-		CALL Schedule											; Scheduler the next Runner
+		PUSH EDX				; Pass Arg-pCPU
+		CALL Schedule			; Scheduler the next Runner
 
 	; KiScheduleExit() -
 	;

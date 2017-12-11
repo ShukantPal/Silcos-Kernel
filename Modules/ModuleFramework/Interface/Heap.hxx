@@ -15,6 +15,7 @@
 #ifndef __MODULES_MODULEFRAMEWORK_INTERFACE_HEAP_HXX__
 #define __MODULES_MODULEFRAMEWORK_INTERFACE_HEAP_HXX__
 
+#include <Util/Memory.h>
 #include <KERNEL.h>
 
 namespace Heap
@@ -56,6 +57,8 @@ struct BlockContainer
 
 Void* kmalloc(unsigned int memSize, unsigned int initalUsers = 1);
 bool kfree(Void *memGiven, bool forceDelete = false);
+void* kralloc(void *kmal_mem, unsigned long sasur_ka_size);
+void* krcalloc(void *kmal_mem, unsigned long sasur_ka_size);
 
 /**
  * Function: kuse
@@ -76,6 +79,13 @@ static inline void kuse(const void *memory)
 {
 	Heap::BlockContainer *mdesc = (Heap::BlockContainer*) ((char*) memory - sizeof(Heap::BlockContainer));
 	++(mdesc->referenceCount);
+}
+
+static inline void *kcalloc(unsigned int memSize)
+{
+	void *mem = kmalloc(memSize);
+	memsetf(mem, 0, memSize);
+	return (mem);
 }
 
 void __initHeap();

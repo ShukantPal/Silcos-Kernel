@@ -138,6 +138,26 @@ String::String(
 	kuse((const void*) value);// Reinforce a new-user to kmalloc-memory
 }
 
+/**
+ * Function: String::String
+ *
+ * Summary:
+ * Copies the string data to this & shares the character contents.
+ */
+String::String(
+		String& anotherString
+){
+	this->count = anotherString.count;
+	this->offset = anotherString.offset;
+	this->ownerPool = anotherString.ownerPool;
+	this->hash = DEFAULT_HASH;
+	this->referCount = 1;
+	this->source = anotherString.source;
+	this->value = anotherString.value;
+
+	kuse((const void *) anotherString.source);
+}
+
 String::~String()
 {
 	// Some strings' value are stored in non-kmalloc regions thus, not all

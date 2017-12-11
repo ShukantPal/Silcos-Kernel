@@ -27,20 +27,11 @@
 #ifndef MODULES_RESOURCEMANAGER_INTERFACE_PROCESS_EPROCESS_HPP_
 #define MODULES_RESOURCEMANAGER_INTERFACE_PROCESS_EPROCESS_HPP_
 
-class EProcess
+class EProcess final
 {
 public:
-	inline unsigned long getPID(){ return (pid); }
-	inline unsigned long getThreadCount(){ return (threadCount); }
-	inline unsigned long getActiveThreadCount(){ return (activeThreadCount); }
-
-
-protected:
-	EProcess();
 private:
 	unsigned long pid;
-	unsigned long threadCount;
-	unsigned long activeThreadCount;
 };
 
-#endif /* MODULES_RESOURCEMANAGER_INTERFACE_PROCESS_EPROCESS_HPP_ */
+#endif/* Process/EProcess.hpp */

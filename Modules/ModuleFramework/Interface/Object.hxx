@@ -29,15 +29,25 @@
 
 #include "Heap.hxx"
 
+class String;
+
 class Object
 {
 public:
-	virtual unsigned int hashCode(){ return (unsigned int) this;}
-	virtual bool equals(Object *anotherObject){ return (this == anotherObject); }
-	virtual class String& toString();
-	virtual ~Object() = 0;
+	virtual unsigned int hashCode();
+	virtual bool equals(Object *anotherObject);
+	virtual String& toString();
+	virtual ~Object();
 protected:
 	Object(){}
+};
+
+/* A constructible object */
+class AbstractObject final : public Object
+{
+public:
+	AbstractObject() : Object() {}
+	~AbstractObject(){}
 };
 
 #define internal static
@@ -61,4 +71,4 @@ inline void* operator new[](unsigned int alloc_size)
 	return kmalloc(alloc_size);
 }
 
-#endif /* MODULES_MODULEFRAMEWORK_OBJECT_HXX_ */
+#endif/* Object.hxx */

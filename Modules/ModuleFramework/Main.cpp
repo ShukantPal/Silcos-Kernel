@@ -15,6 +15,7 @@
 
 #include <Memory/KObjectManager.h>
 #include <Heap.hxx>
+#include <Util/HashMap.hxx>
 #include <Util/RBTree.hxx>
 #include <String.hxx>
 
@@ -32,6 +33,8 @@ static inline void __init()
 	tRBTree = KiCreateType(nmRBTree, sizeof(RBTree), NO_ALIGN, NULL, NULL);
 	tRBNode = KiCreateType(nmRBNode, sizeof(RBNode), NO_ALIGN, NULL, NULL);
 
+	HashMap::init();
+
 	defaultString  = new(tString) String("@com.silcos.mdfrwk#Object");
 }
 
@@ -45,18 +48,6 @@ decl_c void KModuleMain(void)
 	DbgLine("Reporting Load: com.silcos.obmgr.109");
 	__initHeap();
 	__init();
-
-	RBTree& tree =* new(tRBTree) RBTree();
-
-	for(int x=2; x>1; x--){
-		Dbg("Entry:"); DbgInt(x); Dbg(" ");
-		tree.insert(x, (void*)x);
-		DbgLine(" &&");
-	}
-
-	Dbg(" ");
-//	BinaryTree::printInorder(&tree);
-	DbgLine(" __rbdebg");
 
 	while(1) { asm volatile("nop"); }
 }

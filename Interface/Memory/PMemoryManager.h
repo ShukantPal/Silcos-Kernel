@@ -80,7 +80,7 @@ struct _PSMM_MANAGER {
 	ULONG BSSBounds[2];/* Uninitialized Data */
 	ULONG HeapBounds[2];/* Heap given by kernel */
 	ULONG StackBounds[2];/* Stack provided by kernel */
-	ULONG CodePages;/* Pages mapped to executable code*/
+	ULONG CodePages;/* Pages mapped to executable code */
 	ULONG DataPages;
 	ULONG BSSPages;
 	ULONG HeapPages;

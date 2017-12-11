@@ -66,8 +66,10 @@ bool RBTree::insert(
 		void *value
 ){
 	RBNode *newNode = new(tRBNode) RBNode(key, value, (RBNode*) nil);
-	if(!BinaryTree::insert(*newNode, *this))
+	if(!BinaryTree::insert(*newNode, *this)){
+		kobj_free((kobj*) newNode, tRBNode);
 		return (false);
+	}
 	fixInsert(newNode);
 	return (true);
 }

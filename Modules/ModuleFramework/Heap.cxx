@@ -86,8 +86,10 @@ Void* kmalloc(
  *
  * Author: Shukant Pal
  */
-bool kfree(Void* memGiven, bool forceDelete)
-{
+bool kfree(
+		void* memGiven,
+		bool forceDelete
+){
 	BlockContainer *memBlock = BlockFor(memGiven);
 
 	if(memBlock->magicNo != HEAP_MAGIC)
@@ -102,6 +104,35 @@ bool kfree(Void* memGiven, bool forceDelete)
 
 		return (true);
 	}
+}
+
+void* kralloc(
+		void *heap_mem,
+		unsigned long new_size
+){
+	BlockContainer *heap_block = BlockFor(heap_mem);
+	unsigned long org_size = 1 << heap_block->blockOrder;
+
+	if(org_size >= new_size)
+		return (heap_mem);
+	else {
+		return kmalloc(new_size);
+	}
+}
+
+void *krcalloc(
+		void *heap_mem,
+		unsigned long new_size
+){
+	BlockContainer *heap_block = BlockFor(heap_mem);
+	unsigned long org_size = (1 << heap_block->blockOrder);
+
+	if(org_size >= new_size){
+		if(org_size> new_size)
+			memsetf(heap_mem + org_size, 0, new_size - org_size);
+		return (heap_mem);
+	} else
+		return (kcalloc(new_size));
 }
 
 char engineName[] = "heap_sv";

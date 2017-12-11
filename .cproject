@@ -23,6 +23,9 @@
 							<builder arguments="q" cleanBuildTarget="CleanAndBuild" command="make" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.settings.default.builder.353955350" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1123211836" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1819911617" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.195907285" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
+								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1139205146" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1995962644" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
@@ -41,6 +44,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ModuleFramework/Interface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ProcessManager/Interface}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ThreadManager}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1518564512" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
@@ -49,6 +53,7 @@
 									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface/Arch&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ObjectManager/Interface}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1278889805" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
@@ -65,7 +70,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Source|Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
 					</sourceEntries>
@@ -122,7 +127,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Source|Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
 					</sourceEntries>

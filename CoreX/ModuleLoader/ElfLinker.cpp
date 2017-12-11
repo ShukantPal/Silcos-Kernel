@@ -46,13 +46,26 @@ void ElfLinker::resolveRelocation(
 	CHAR *signature = handlerService.dynamicSymbols.nameTable + symbolFound->Name;
 
 	ULONG declBase;
-	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
 
+	if(*signature == '\0' &&
+			ELF32_R_TYPE(relocEntry->Info) == R_386_RELATIVE){
+		*relocationArena = (unsigned long) relocationArena;
+		return;
+	}
+
+	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
 	if(declarer != NULL){
 		switch(ELF32_R_TYPE(relocEntry->Info)){
 		case R_386_JMP_SLOT:
 		case R_386_GLOB_DAT:
 			*relocationArena = declarer->Value + declBase;
+			break;
+		case R_386_32:
+			*relocationArena = declarer->Value + declBase + *relocationArena;
+			break;
+		default:
+			DbgLine("Error 40A: TODO:: Build code (elf-linkage-reloc-switch");
+			break;
 		}
 	} else {
 		Dbg("__notfound ");

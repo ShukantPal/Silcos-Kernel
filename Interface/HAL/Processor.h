@@ -1,4 +1,4 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: Processor.h
  *
  * Summary:
@@ -24,10 +24,11 @@
  * MxIterateTopology() - Do some operation on each domain in which this processor exists
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 #ifndef HAL_PROCESSOR_H
 #define HAL_PROCESSOR_H
 
+#include "ProcessorTopology.hpp"
 #include <ACPI/MADT.h>
 #include <Exec/CFS.h>
 #include <Exec/RR.h>
@@ -37,6 +38,7 @@
 #include <Util/AVLTree.h>
 #include <Util/CircularList.h>
 #include <Util/LinkedList.h>
+#include <Util/Memory.h>
 #include <Synch/Spinlock.h>
 
 #ifdef x86
@@ -49,83 +51,40 @@ extern U32 BSP_HID;
 #define PROCESSOR_HIEARCHY_CLUSTER				10
 #define PROCESSOR_HIEARCHY_PACKAGE				
 #define PROCESSOR_HIERARCHY_LOGICAL_CPU 1
-
+/*
 typedef
 struct _PROCESSOR_TOPOLOGY
 {
 	union {
-		LINODE LiLinker;/* Used for participating in lists */
+		LINODE LiLinker;///* Used for participating in lists *
 		CLNODE ClnLinker;
 		struct {
 			struct _PROCESSOR_TOPOLOGY *NextDomain;
 			struct _PROCESSOR_TOPOLOGY *PreviousDomain;
 		};
 	};
-	UINT DomainID;/* ID for this group */
-	UINT Level;/* Topology Level (inside processor package) */
-	UINT Type;/* Topology Type (outside the package) */
-	UINT ProcessorCount;/* No. of processors in the domain */
-	KSCHED_ROLLER_DOMAIN SchedDomain[3];/* Scheduler Domain Info */
-	CLIST DomainList;/* (Sorted) List of SCHED_GROUPs */
-	struct _PROCESSOR_TOPOLOGY *ParentDomain;/* Parent SCHED_DOMAIN */
-	SPIN_LOCK WriteLock;/* Lock for manipulating stats */
+	UINT DomainID;///* ID for this group *
+	UINT Level;///* Topology Level (inside processor package) *
+	UINT Type;///* Topology Type (outside the package) *
+	UINT ProcessorCount;///* No. of processors in the domain *
+	KSCHED_ROLLER_DOMAIN SchedDomain[3];///* Scheduler Domain Info *
+	CLIST DomainList;///* (Sorted) List of SCHED_GROUPs *
+	struct _PROCESSOR_TOPOLOGY *ParentDomain;///* Parent SCHED_DOMAIN *
+	SPIN_LOCK WriteLock;///* Lock for manipulating stats *
 } PROCESSOR_TOPOLOGY;
+*/
+struct _PROCESSOR;
+typedef _PROCESSOR Processor;
 
-typedef PROCESSOR_TOPOLOGY SCHED_DOMAIN;/* Scheduling Domain */
-typedef PROCESSOR_TOPOLOGY SCHED_GROUP;/* Scheduable Groups inside a domain */
-typedef PROCESSOR_TOPOLOGY PROCESSOR_GROUP;/* Generic #TERM */
+
+//typedef PROCESSOR_TOPOLOGY SCHED_DOMAIN;/* Scheduling Domain */
+//typedef PROCESSOR_TOPOLOGY SCHED_GROUP;/* Scheduable Groups inside a domain */
+//typedef PROCESSOR_TOPOLOGY PROCESSOR_GROUP;/* Generic #TERM */
 
 #define MXRS_PROCESSOR_ALREADY_EXISTS	0xFAE0
 #define MXRS_PROCESSOR_STRUCT_INVALID	0xFAE1
 #define MXRS_PROCESSOR_REGISTERED		0xFAEF
 typedef ULONG MX_REGISTER_STATUS;
-
-/**
- * Function: MxRegisterProcessor()
- *
- * Summary:
- * This processor makes sure that all domains in which the current processor exists are present in
- * topology of the system. It will start from cluster-level and then eventually will come down to the
- * logical-CPU level. At each level, it will obtain a lock and search for the child-group in the domain's
- * group list. If the group is not present, then one group struct is allocated and this is continued till
- * a domain only for the current processor is created.
- *
- * The depth of the tree for processors vary on a system. But, the depth till the package-level domain is
- * same on a SMP system.
- *
- * Exceptions:
- * PROCESSOR_ALREADY_EXISTS - Occurs on double-registeration of processor
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-MX_REGISTER_STATUS MxRegisterProcessor(
-	VOID
-);
-
-/**
- * Function: MxIterateTopology()
- *
- * Summary:
- * This function iterates through the system-topology tree from the base-domain to the topmost
- * system-domain. At each level, a call-back function is invoked to do a operation.
- *
- * Iteration over all domains is particulary helpful for updating status on the system like scheduling
- * load.
- *
- * Args:
- * PROCESSOR *pCPU - Starting processor
- * VOID (*domainUpdate)(SCHED_DOMAIN *) - Call-back function to do some operation at each level
- * ULONG domainLevel - Max. domain level to go to
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-VOID MxIterateTopology(
-	PROCESSOR *pCPU,
-	VOID (*domainUpdater)(SCHED_DOMAIN *),
-	ULONG domainLevel
-);
 
 /**
  * enum PoS - 
@@ -218,9 +177,9 @@ struct _PROCESSOR {
 	KSCHED_ROLLER ScheduleClasses[3];/* Scheduler Classes */
 	SCHED_CFS CFS;/* CFS-Scheduler Status */
 	SCHED_RR RR;/* RR-Scheduler Status */
-	VOID *IdlerThread;/* Task for idle CPU */
-	VOID *SetupThread;/* Maintenance and setup task */
-	SCHED_DOMAIN *DomainInfo;/* Processor Topology & Scheduling Domains */
+	void *IdlerThread;/* Task for idle CPU */
+	void *SetupThread;/* Maintenance and setup task */
+	HAL::Domain *DomainInfo;/* Processor Topology & Scheduling Domains */
 	PROCESSOR_INFO Hardware;/* Platform-specific data */
 } PROCESSOR;
 

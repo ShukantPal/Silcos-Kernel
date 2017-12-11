@@ -135,6 +135,7 @@ export_asm void Main(
 
 	SetupAPs();
 	SetupTick();
+	ImmatureHang("ap-done");
 
 	BSPGrantPermit();
 

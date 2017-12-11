@@ -36,7 +36,7 @@ ArchObjects = Compile/APBoot.o Compile/CMOS.o Compile/CPUID.o \
 Compile/FrameExtractor.o Compile/Pager.o Compile/Processor.o \
 Compile/TableManipulator.o Compile/APIC.o Compile/GDT.o Compile/IDT.o \
 Compile/IntrHook.o Compile/Load.o Compile/TSS.o \
-Compile/SwitchRunner.o
+Compile/SwitchRunner.o Compile/ProcessorTopology.o
 
 ConfigObjects = Compile/RSDP.o Compile/RSDT.o Compile/MADT.o # ACPI tables
 
@@ -58,8 +58,8 @@ ThreadObjects = Compile/Thread.o
 # Core Scheduler + Scheduler Classes/Rollers
 SchedulerObjects = Compile/Scheduler.o Compile/RR.o #Compile/SchedList.o
 
-
-UtilObjects = Compile/AVLTree.o Compile/CircuitPrimitive.o Compile/CircularList.o Compile/Console.o Compile/Debugger.o Compile/LinkedList.o Compile/Stack.o
+UtilObjects = Compile/AVLTree.o Compile/CircuitPrimitive.o Compile/CircularList.o \
+Compile/Console.o Compile/Debugger.o Compile/LinkedList.o Compile/Stack.o
 
 moduleLoaderObjects = Compile/ElfManager.o Compile/ElfAnalyzer.o \
 Compile/ModuleLoader.o Compile/MSI.o Compile/ElfLinker.o Compile/RecordManager.o
@@ -107,6 +107,9 @@ Compile/Pager.o: $(ArchDir)/Paging/Pager.cpp
 
 Compile/Processor.o: $(IfcArch)/* $(IfcHAL)/Processor.h $(ArchDir)/HAL/Processor.cpp
 	$(CC) $(CFLAGS) $(ArchDir)/HAL/Processor.cpp -o Compile/Processor.o
+
+Compile/ProcessorTopology.o: $(IfcHAL)/ProcessorTopology.hpp $(ArchDir)/HAL/ProcessorTopology.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/ProcessorTopology.cpp -o Compile/ProcessorTopology.o
 
 Compile/SysBranch.o: $(ArchDir)/Syscall/SysBranch.cpp
 	$(CC) $(CFLAGS) $(ArchDir)/Syscall/SysBranch.cpp -o Compile/SysBranch.o

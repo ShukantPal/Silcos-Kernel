@@ -81,6 +81,7 @@ public:
 	String();
 	String(const char *value);
 	String(const char *value, unsigned int length);
+	String(String& anotherString);
 	virtual ~String();
 
 	inline ULONG length(){ return (count); }

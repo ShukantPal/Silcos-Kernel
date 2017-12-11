@@ -1,18 +1,13 @@
 /**
- * File: ObjectGenerator.hpp
+ * File: SystemObject.hpp
  *
  * Summary:
- * Declares the ObjectGenerator class, used for allowing modules to implement a
- * object-generator to export their global data structures into the kernel-software
- * infrastructure & to user-mode services.
  * 
- * Classes:
- * ObjectGenerator - Used for generating a object
+ * Functions:
  *
  * Origin:
- * Used for allowing other modules to create objects exported by a modules using
- * its ObjectGenerator.
- * ___________________________________________________________________
+ *
+ * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -28,25 +23,34 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef __OBJMGR_OBJECTGENERATOR_HPP_
-#define __OBJMGR_OBJECTGENERATOR_HPP_
 
-#include "SystemObject.hpp"
+#ifndef MODULES_OBJECTMANAGER_INTERFACE_OBJECTMANAGER_SYSTEMOBJECT_HPP_
+#define MODULES_OBJECTMANAGER_INTERFACE_OBJECTMANAGER_SYSTEMOBJECT_HPP_
+
+#include "Handle.hpp"
 #include <String.hxx>
 
 namespace ObjectManager
 {
 
-class ObjectGenerator
+class SystemObject
 {
 public:
-	virtual SystemObject& create() = 0;
-	virtual void destroy(SystemObject&) = 0;
+	virtual HANDLE open() = 0;
+	virtual HANDLE duplicate(HANDLE) = 0;
+	virtual SystemObject* parse(String& path) = 0;
+	virtual void close(HANDLE) = 0;
 protected:
-	ObjectGenerator();
-	virtual ~ObjectGenerator();
+	SystemObject();
+	~SystemObject();
+private:
+	unsigned long referCount;
+	unsigned long openHandles;
+	String& localName;
+	String& globalName;
+	LinkedList openHandleList;
 };
 
 }
 
-#endif/* ObjectGenerator.hpp */
+#endif/* ObjectManager/SystemObject.hpp */

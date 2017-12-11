@@ -122,7 +122,6 @@ public:
 	~RBTree();
 	bool insert(unsigned long key, void * value);
 	void* remove(unsigned long anyKey);
-
 	void _dub();
 protected:
 	RBNode& rotateLeft(RBNode& tNode);
@@ -140,4 +139,4 @@ protected:
 	void fixRemoval(RBNode *tNode);
 };
 
-#endif/* ModuleFramework/RBTree.hxx*/
+#endif/* Util/RBTree.hxx*/
