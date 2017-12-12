@@ -72,6 +72,19 @@ struct MemorySection
 
 	MemorySection(
 			unsigned long initialAddress,
+			unsigned long pageCount,
+			unsigned long cfgFlags,
+			PAGE_ATTRIBUTES pagerFlags
+	){
+		this->initialAddress = initialAddress;
+		this->finalAddress = initialAddress + pageCount * KPGSIZE;
+		this->pageCount = pageCount;
+		this->cfgFlags = cfgFlags;
+		this->pagerFlags = pagerFlags;
+	}
+
+	MemorySection(
+			unsigned long initialAddress,
 			unsigned long finalAddress,
 			unsigned short typeId,
 			unsigned short ctlFlags,

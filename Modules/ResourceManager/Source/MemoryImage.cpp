@@ -25,3 +25,53 @@
  */
 #include <Process/MemoryImage.hpp>
 
+using namespace Resource;
+using namespace Process;
+
+RegionInsertionResult MemoryImage::insertRegion(
+		unsigned long initialAddress,
+		unsigned long pageCount,
+		unsigned short ctlFlags,
+		PAGE_ATTRIBUTES pageFlags
+){
+	MemorySection *region = new(tMemorySection) MemorySection
+				(initialAddress, pageCount,
+				(psmmManager << 16) | ctlFlags, pageFlags);
+
+
+}
+
+/**
+ * Function: MemoryImage::findRegion
+ *
+ * Summary:
+ * Finds the region which contains the given address and uses the tree
+ * or linked-list based on the treeUsed (bool) flag.
+ */
+MemorySection* MemoryImage::findRegion(
+		unsigned long address
+){
+	if(treeUsed){
+		MemorySection *closestMatch = // lower becauz starting is <
+				(MemorySection*) sectionTree->getLowerBoundFor
+								(address);
+
+		if(closestMatch && closestMatch->finalAddress > address)
+			return (closestMatch);
+		else
+			return (NULL);
+	} else {
+		MemorySection *tSection = (MemorySection*) regionChain.Head;
+
+		while(tSection != NULL){
+			if(tSection->initialAddress <= address &&
+					tSection->finalAddress > address){
+				return (tSection);
+			}
+
+			tSection = tSection->nextSection;
+		}
+
+		return (NULL);
+	}
+}

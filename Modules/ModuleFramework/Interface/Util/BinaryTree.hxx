@@ -231,6 +231,10 @@ public:
 		printInorder(tree->treeRoot, tree->nil);
 	}
 
+	void* getLowerBoundFor(unsigned long key);
+	void* getUpperBoundFor(unsigned long key);
+	void* getClosestOf(unsigned long key);
+
 	//virtual String& toString();
 protected:
 	BinaryNode *nil;/* Nil node for all leaves (initialized by child) */

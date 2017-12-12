@@ -12,6 +12,7 @@
 #include <Memory/KMemoryManager.h>
 #include <Memory/KObjectManager.h>
 #include <Module/ModuleLoader.h>
+#include <Module/Elf/ABI/icxxabi.h>
 #include <Module/Elf/ELF.h>
 #include <Module/Elf/ElfManager.hpp>
 #include <Module/Elf/ElfAnalyzer.hpp>
@@ -206,11 +207,26 @@ void ModuleLoader::loadBundle(
 	}
 }
 
+/* @See(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
+const char *nmElf_ABI_Exitor_Func_ = "Elf::ABI::ExitorFunc (__cxa)";
+
+/* @See(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
+ObjectInfo *tElf_ABI_ExitorFunc_;
+
 VOID MdSetupLoader()
 {
-	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD", sizeof(KMOD_RECORD), sizeof(ULONG), NULL, NULL);
-	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager), sizeof(ULONG), NULL, NULL);
-	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink), sizeof(ULONG), NULL, NULL);
+	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD", sizeof(KMOD_RECORD),
+					sizeof(ULONG), NULL, NULL);
+
+	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager),
+					sizeof(ULONG), NULL, NULL);
+
+	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink),
+					sizeof(unsigned long), NULL, NULL);
+
+	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_,
+				sizeof(::Elf::ABI::ExitorFunction),
+				sizeof(long), NULL, NULL);
 }
 
 KMOD_RECORD *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG moduleType){

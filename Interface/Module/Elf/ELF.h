@@ -94,7 +94,8 @@ enum ElfVersion {
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-struct ElfHeader {
+struct ElfHeader
+{
 	#define EI_MAG0		0 // File Identification
 	#define EI_MAG1		1 // File Identification
 	#define EI_MAG2		2 // File Identification
@@ -111,20 +112,20 @@ struct ElfHeader {
 	#define ELFMAG2		'L' // EI_MAG2
 	#define ELFMAG3		'F' // EI_MAG3
 
-	UCHAR fileIdentifier[EI_NIDENT];/* Identify the file as an object-file & provide machine-independent data */
-	ELF32_HALF fileType;/* Identifies the object-file type */
-	ELF32_HALF platformRequired;/* Required architecture for and individual file */
-	ELF32_WORD buildVersion;/* Object-file version */
-	ELF32_ADDR entryAddress;/* Virtual address to which the system first transfers control; if not present, 0 */
-	ELF32_OFF programHeaderOffset;/* Program Header Table's file offset, in bytes */
-	ELF32_OFF sectionHeaderOffset;/* Section Header Table's file offset, in bytes */
-	ELF32_WORD machineFlags;/* Processor-specific flags associated with the file */
-	ELF32_HALF headerSize;/* ELF header's size in bytes */
-	ELF32_HALF programHeaderEntrySize;/* Size of one entry in file's program header table, in bytes */
-	ELF32_HALF programHeaderEntryCount;/* No. of entries in the program header table */
-	ELF32_HALF sectionHeaderEntrySize;/* Size of section header's size in bytes */
-	ELF32_HALF sectionHeaderEntryCount;/* No. of entries in the section header table */
-	ELF32_HALF sectionStringIndex;/* Section header table index of entry associated with section name-table */
+	UCHAR fileIdentifier[EI_NIDENT];// Identify the file as an object-file & provide machine-independent data
+	ELF32_HALF fileType;// Identifies the object-file type
+	ELF32_HALF platformRequired;// Required architecture for and individual file
+	ELF32_WORD buildVersion;// Object-file version
+	ELF32_ADDR entryAddress;// Virtual address to which the system first transfers control; if not present, 0
+	ELF32_OFF programHeaderOffset;// Program Header Table's file offset, in bytes
+	ELF32_OFF sectionHeaderOffset;// Section Header Table's file offset, in bytes
+	ELF32_WORD machineFlags;// Processor-specific flags associated with the file
+	ELF32_HALF headerSize;// ELF header's size in bytes
+	ELF32_HALF programHeaderEntrySize;// Size of one entry in file's program header table, in bytes
+	ELF32_HALF programHeaderEntryCount;// No. of entries in the program header table
+	ELF32_HALF sectionHeaderEntrySize;// Size of section header's size in bytes
+	ELF32_HALF sectionHeaderEntryCount;// No. of entries in the section header table
+	ELF32_HALF sectionStringIndex;// Section header table index of entry associated with section name-table
 };
 
 #define PROGRAM_HEADER(eHeader) ((struct ProgramHeader *) ((ULONG) eHeader + eHeader->programHeaderOffset))
@@ -280,14 +281,14 @@ enum PhdrType
  */
 struct ProgramHeader
 {
-	ELF32_WORD entryType;/* Type of segment this array element describes */
-	ELF32_OFF fileOffset;/* Offset from beginning of file at which the first byte of segment resides*/
-	ELF32_ADDR virtualAddress;/* Virtual address of first byte of segment, residing in memory */
-	ELF32_ADDR physicalAddress;/* Physical addressing relevancy only, not used in CircuitKernel-ELF-KModule support! */
-	ELF32_WORD fileSize;/* No. of bytes in file image of the segment, may be zero */
-	ELF32_WORD memorySize;/* No. of bytes in memory image of the segment, may be zero */
-	ELF32_WORD flagSet;/* Has flags relevant to the segment */
-	ELF32_WORD alignBoundary;/* Gives the value to which segments are aligned in memory & in the file */
+	ELF32_WORD entryType;// Type of segment this array element describes
+	ELF32_OFF fileOffset;// Offset from beginning of file at which the first byte of segment resides
+	ELF32_ADDR virtualAddress;// Virtual address of first byte of segment, residing in memory
+	ELF32_ADDR physicalAddress;// Physical addressing relevancy only, not used in CircuitKernel-ELF-KModule support!
+	ELF32_WORD fileSize;// No. of bytes in file image of the segment, may be zero
+	ELF32_WORD memorySize;// No. of bytes in memory image of the segment, may be zero
+	ELF32_WORD flagSet;// Has flags relevant to the segment
+	ELF32_WORD alignBoundary;// Gives the value to which segments are aligned in memory & in the file
 };
 
 enum DynamicTag

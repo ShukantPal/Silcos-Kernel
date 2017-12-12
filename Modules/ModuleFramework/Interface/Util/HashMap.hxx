@@ -70,7 +70,6 @@ public:
 	void* putForNullKey(void *value);
 	void* remove(Object& key);
 	void* removeForNullKey();
-	void* get(Object& key);
 	static void init();
 protected:
 

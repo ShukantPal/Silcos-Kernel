@@ -177,6 +177,7 @@ void KernelElf::loadBootModules()
 	 */
 	BlobRegister *nextBlob;
 	blob = (BlobRegister*) bmRecordList->Head;
+
 	while(blob != NULL){
 		if(blob->regForm->entryAddr)
 			KThreadCreate((void*) blob->regForm->entryAddr);

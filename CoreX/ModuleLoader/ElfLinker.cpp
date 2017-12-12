@@ -19,6 +19,8 @@
 using namespace Module;
 using namespace Module::Elf;
 
+void* __dso_handle;
+
 /**
  * Function: ElfLinker::resolveRelocation
  *

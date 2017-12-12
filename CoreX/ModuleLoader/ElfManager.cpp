@@ -208,6 +208,13 @@ ElfManager::ElfManager(
 		relTable.entryCount = 0;
 		relaTable.entryCount = 0;
 	}
+
+	DynamicEntry *init = this->getDynamicEntry(DT_INIT);
+	if(init){
+		Dbg("init: ");
+		DbgInt(init->refPointer);
+		DbgLine(" ");
+	}
 }
 
 ElfManager::~ElfManager(){}

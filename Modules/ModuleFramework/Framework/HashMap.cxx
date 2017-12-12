@@ -359,7 +359,7 @@ HashMap::Entry* HashMap::removeEntryForKey(
 	Entry *tcache;
 	while(ent){
 		if(ent->hashCode() == hash &&
-				(&key == ent->getKey() ||
+				(&key == &ent->getKey() ||
 						key.equals(&ent->getKey()))){
 			--(size);
 

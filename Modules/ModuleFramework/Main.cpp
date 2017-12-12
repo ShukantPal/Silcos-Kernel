@@ -19,11 +19,15 @@
 #include <Util/RBTree.hxx>
 #include <String.hxx>
 
+#include <Module/Elf/ABI/Implementor.h>
+
 ObjectInfo *tRBTree;
 char nmRBTree[] = "@com.silcos.circuit.mdfrwk.RBTree";
 ObjectInfo *tRBNode;
 char nmRBNode[] = "@com.silcos.circuit.mdfrwk.RBTree::RBNode";
 extern String *defaultString;
+
+void* __dso_handle;
 
 //using namespace Util;
 

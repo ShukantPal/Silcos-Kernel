@@ -131,6 +131,8 @@ protected:
 	MemorySection *mainStack;
 	MemorySection *recentCache;
 	unsigned long referCount;
+	unsigned long regionCount;
+	LinkedList regionChain;
 
 	static ObjectInfo *tMemorySection;
 

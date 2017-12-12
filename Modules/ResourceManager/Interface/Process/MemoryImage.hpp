@@ -20,7 +20,7 @@
 #define MEMORYIMAGE_HPP_
 
 #include <Resource/ContextManager.hpp>
-#include <Util/RBTree.hpp>
+#include <Util/RBTree.hxx>
 
 namespace Process
 {
@@ -47,7 +47,7 @@ class MemoryImage : public Resource::ContextManager
 public:
 	Resource::RegionInsertionResult insertRegion
 			(unsigned long initialAddress, unsigned long pageCount,
-			unsigned long cfgFlags, PAGE_ATTRIBUTES permissions);
+			unsigned short ctlFlags, PAGE_ATTRIBUTES permissions);
 
 	Resource::RegionRemovalResult removeRegion
 				(unsigned long initialAddress,
@@ -72,6 +72,7 @@ protected:
 	unsigned long pinnedPages;
 	unsigned long libraryCount;
 
+	bool treeUsed;
 	RBTree* sectionTree;
 
 	Resource::MemorySection* findRegion(unsigned long address);
