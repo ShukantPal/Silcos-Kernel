@@ -23,7 +23,7 @@ struct _MESSAGE
 	LIST_ELEMENT MsgLinker;
 	ID Sender;
 	SIZE Size;
-	VOID *Buffer;
+	void *Buffer;
 } MESSAGE;
 
 typedef
@@ -31,8 +31,8 @@ struct _MESSAGE_QUEUE
 {
 	IPC_HEADER Control;
 	AVL_TREE PriorityMsgTree;
-	ULONG UsageLimit;
-	ULONG SizeLimit;
+	unsigned long UsageLimit;
+	unsigned long SizeLimit;
 	ID LastSender;
 	ID LastReader;
 	TIME LastSend;
@@ -54,24 +54,24 @@ ID CreateMsgQueue(
 	SIZE queueMaxMessages
 );
 
-LONG ReadMsg(
+long ReadMsg(
 	ID queueID,
-	VOID *bufferPointer,
-	USHORT bufferSize,
-	USHORT msgTag,	
-	USHORT minPriority,
-	ULONG msgFlags,
-	USHORT timeOut
+	void *bufferPointer,
+	unsigned short bufferSize,
+	unsigned short msgTag,	
+	unsigned short minPriority,
+	unsigned long msgFlags,
+	unsigned short timeOut
 );
 
-LONG SendMsg(
+long SendMsg(
 	ID queueID,
-	VOID *bufferPointer,
-	USHORT bufferSize,
-	USHORT msgTag,
-	USHORT msgPriority,
-	ULONG msgFlags,
-	USHORT timeOut
+	void *bufferPointer,
+	unsigned short bufferSize,
+	unsigned short msgTag,
+	unsigned short msgPriority,
+	unsigned long msgFlags,
+	unsigned short timeOut
 );
 
 #endif

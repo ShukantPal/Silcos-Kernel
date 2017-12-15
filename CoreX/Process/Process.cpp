@@ -22,7 +22,7 @@ KPROCESS *psKernel;
 KPROCESS *KeGetProcess(ID PID){
 	if(PID > KERNEL_OFFSET) {
 		KPAGE *psPage = (KPAGE*) KPG_AT((PID & ~(KPGSIZE - 1)));
-		if(psPage->HashCode == (ULONG) psInfo)
+		if(psPage->HashCode == (unsigned long) psInfo)
 			return (KPROCESS*) (PID);
 	}
 
@@ -30,9 +30,9 @@ KPROCESS *KeGetProcess(ID PID){
 }
 
 const char *msgInitProcess = "Setting up psKernel...";
-VOID InitPTable(){
+void InitPTable(){
 	DbgLine(msgInitProcess);
-	psInfo = KiCreateType(psName, sizeof(KPROCESS), sizeof(ULONG), NULL, NULL);
+	psInfo = KiCreateType(psName, sizeof(KPROCESS), sizeof(unsigned long), NULL, NULL);
 	psKernel = KNew(psInfo, KM_NOSLEEP);
 	KiSetupRunnable((KRUNNABLE*) psKernel, (ADDRESS) psKernel, ProcessTp);
 

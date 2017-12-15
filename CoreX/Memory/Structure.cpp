@@ -4,5 +4,5 @@
 
 #include <Memory/KMemorySpace.h>
 
-VIRTUAL_T ArchBlock = KARCHINFO / 4096;
-VIRTUAL_T ConfigBlock = KCONFIGINFO / 4096;
+ADDRESS ArchBlock = KARCHINFO / 4096;
+ADDRESS ConfigBlock = KCONFIGINFO / 4096;

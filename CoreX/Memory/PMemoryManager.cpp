@@ -7,13 +7,13 @@
 #include <Memory/PMemoryManager.h>
 #include <KERNEL.h>
 
-CHAR *nmPSMM_MANAGER = "PSMM_MANAGER";
-CHAR *nmPSMM_REGION = "PSMM_REGION";
+char *nmPSMM_MANAGER = "PSMM_MANAGER";
+char *nmPSMM_REGION = "PSMM_REGION";
 
 ObjectInfo *tPSMM_MANAGER;
 ObjectInfo *tPSMM_REGION;
 
-VOID PMgrConstruct(VOID *pmgrPtr){
+void PMgrConstruct(void *pmgrPtr){
 	PSMM_MANAGER *mgr = pmgrPtr;
 	MM_MANAGER *mm = &mgr->MmMgr;
 
@@ -31,7 +31,7 @@ VOID PMgrConstruct(VOID *pmgrPtr){
 	memsetf(&mgr->LastUsed, 0, sizeof(PSMM_MANAGER) - sizeof(MM_MANAGER));
 }
 
-VOID PRegionConstruct(VOID *prgPtr){
+void PRegionConstruct(void *prgPtr){
 	memsetf(prgPtr, 0, sizeof(MM_REGION));
 }
 
@@ -44,19 +44,19 @@ VOID PRegionConstruct(VOID *prgPtr){
  * have a new reference count of 1.
  *
  * Args:
- * ULONG codeBounds[2] -
- * ULONG dataBounds[2] -
- * ULONG bssBounds[2] -
+ * unsigned long codeBounds[2] -
+ * unsigned long dataBounds[2] -
+ * unsigned long bssBounds[2] -
  *
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-PSMM_MANAGER *PMgrCreate(ULONG codeBounds[2], ULONG dataBounds[2], ULONG bssBounds[2]){
+PSMM_MANAGER *PMgrCreate(unsigned long codeBounds[2], unsigned long dataBounds[2], unsigned long bssBounds[2]){
 	if(tPSMM_MANAGER == NULL)
-		tPSMM_MANAGER = KiCreateType(nmPSMM_MANAGER, sizeof(PSMM_MANAGER), sizeof(ULONG), &PMgrConstruct, NULL);
+		tPSMM_MANAGER = KiCreateType(nmPSMM_MANAGER, sizeof(PSMM_MANAGER), sizeof(unsigned long), &PMgrConstruct, NULL);
 
 	if(tPSMM_REGION == NULL)
-		tPSMM_REGION = KiCreateType(nmPSMM_REGION, sizeof(MM_REGION), sizeof(ULONG), &PRegionConstruct, NULL);
+		tPSMM_REGION = KiCreateType(nmPSMM_REGION, sizeof(MM_REGION), sizeof(unsigned long), &PRegionConstruct, NULL);
 
 	PSMM_MANAGER *mgr = KNew(tPSMM_MANAGER, KM_SLEEP);
 	mgr->CodeBounds[0] = codeBounds[0]; mgr->CodeBounds[1] = codeBounds[1];
@@ -75,7 +75,7 @@ PSMM_MANAGER *PMgrCreate(ULONG codeBounds[2], ULONG dataBounds[2], ULONG bssBoun
  * the given address. If a region is found containing the address, it is immediately returned.
  *
  * Args:
- * ULONG rgAddress - Address to be searched for
+ * unsigned long rgAddress - Address to be searched for
  * MM_MANAGER *mgr - Memory manager
  *
  * Returns: This function returns the memory region unchanged.
@@ -84,9 +84,9 @@ PSMM_MANAGER *PMgrCreate(ULONG codeBounds[2], ULONG dataBounds[2], ULONG bssBoun
  * @Since Circuit 2.03
  ******************************************************************************/
 static
-MM_REGION *PFindRegion(ULONG rgAddress, PSMM_MANAGER *mgr){
-	ULONG nodeAddress;
-	ULONG nodeLimit;
+MM_REGION *PFindRegion(unsigned long rgAddress, PSMM_MANAGER *mgr){
+	unsigned long nodeAddress;
+	unsigned long nodeLimit;
 	if(FLAG_SET(mgr->PmFlags, PM_MAP)){ /* BST-search for the region */
 		AVLTREE *regionTree = &mgr->MmMgr.RegionMap;
 		AVLNODE *regionNode = regionTree->Root;
@@ -105,12 +105,12 @@ MM_REGION *PFindRegion(ULONG rgAddress, PSMM_MANAGER *mgr){
 
 		return (NULL);
 	} else { /* Serial-search for the region */
-		LINKED_LIST *regionList = &mgr->MmMgr.RegionList;
+		LinkedList *regionList = &mgr->MmMgr.RegionList;
 		MM_REGION *regionInfo = NULL;
-		LINODE *regionLinker = regionList->Head;
+		LinkedListNode *regionLinker = regionList->Head;
 
 		while(regionLinker != NULL){
-			regionInfo = (MM_REGION*) ((ULONG) regionLinker - sizeof(AVLNODE));
+			regionInfo = (MM_REGION*) ((unsigned long) regionLinker - sizeof(AVLNODE));
 			nodeAddress = regionInfo->Address; nodeLimit = regionInfo->Size + nodeAddress;
 			if(nodeAddress >= rgAddress && rgAddress < nodeLimit)
 				return (regionInfo);
@@ -122,18 +122,18 @@ MM_REGION *PFindRegion(ULONG rgAddress, PSMM_MANAGER *mgr){
 }
 
 static
-VOID PDeleteRegion(MM_REGION *region, MM_MANAGER *pmgr){
+void PDeleteRegion(MM_REGION *region, MM_MANAGER *pmgr){
 	AVLDelete(region->Address, &pmgr->RegionMap);
 	RemoveElement(&region->LiLinker, &pmgr->RegionList);
 }
 
 static
-ULONG PSplitRegion(ULONG rgAddress, ULONG rgLimit, MM_REGION *region, MM_MANAGER *pmgr){
-	ULONG olAddress = region->Address;
-	ULONG olLimit = olAddress + region->Size;
+unsigned long PSplitRegion(unsigned long rgAddress, unsigned long rgLimit, MM_REGION *region, MM_MANAGER *pmgr){
+	unsigned long olAddress = region->Address;
+	unsigned long olLimit = olAddress + region->Size;
 
-	ULONG leftMargin = (rgAddress > olAddress) ? (rgAddress - olAddress) : 0;
-	ULONG rightMargin = (rgLimit < olLimit) ? (olLimit - rgLimit) : 0;
+	unsigned long leftMargin = (rgAddress > olAddress) ? (rgAddress - olAddress) : 0;
+	unsigned long rightMargin = (rgLimit < olLimit) ? (olLimit - rgLimit) : 0;
 
 	PDeleteRegion(region, pmgr);
 
@@ -161,9 +161,9 @@ ULONG PSplitRegion(ULONG rgAddress, ULONG rgLimit, MM_REGION *region, MM_MANAGER
  * 2. Given region boundaries overlap with another region - RG_FAILURE
  *
  * Args:
- * ULONG rgAddress - The initial address of the region, which is decided by the client only
- * ULONG rgSize - The size of the region, which is decided by the client only
- * ULONG rgFlags - This contains the region's type and its control flags, partially given by the kernel
+ * unsigned long rgAddress - The initial address of the region, which is decided by the client only
+ * unsigned long rgSize - The size of the region, which is decided by the client only
+ * unsigned long rgFlags - This contains the region's type and its control flags, partially given by the kernel
  * PAGE_ATTRIBTUTES pgFlags - Mapping-flags for the region, decided by the kernel
  * MM_MANAGER *pmgr - PSMM-compatible memory manager
  *
@@ -174,7 +174,7 @@ ULONG PSplitRegion(ULONG rgAddress, ULONG rgLimit, MM_REGION *region, MM_MANAGER
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-ULONG PInsertRegion(ULONG rgAddress, ULONG rgSize, ULONG rgFlags, PAGE_ATTRIBUTES pgFlags, MM_MANAGER *pmgr){
+unsigned long PInsertRegion(unsigned long rgAddress, unsigned long rgSize, unsigned long rgFlags, PAGE_ATTRIBUTES pgFlags, MM_MANAGER *pmgr){
 	MM_REGION *overlapRegion = (MM_REGION *) PFindRegion(rgAddress, (convert_psmm) pmgr);
 
 	if(overlapRegion == NULL){
@@ -198,7 +198,7 @@ ULONG PInsertRegion(ULONG rgAddress, ULONG rgSize, ULONG rgFlags, PAGE_ATTRIBUTE
 	return (RG_FAILURE);
 }
 
-ULONG PRemoveRegion(ULONG rgAddress, ULONG rgSize, USHORT rgType, MM_MANAGER *pmgr){
+unsigned long PRemoveRegion(unsigned long rgAddress, unsigned long rgSize, unsigned short rgType, MM_MANAGER *pmgr){
 	MM_REGION *container = (MM_REGION *) PFindRegion(rgAddress, (convert_psmm) pmgr);
 
 	if(container == NULL)
@@ -207,11 +207,11 @@ ULONG PRemoveRegion(ULONG rgAddress, ULONG rgSize, USHORT rgType, MM_MANAGER *pm
 	return (PSplitRegion(rgAddress, rgSize, container, pmgr));
 }
 
-ULONG PExtendRegion(ULONG rgAddress, ULONG exAddress, MM_MANAGER *pmgr){
+unsigned long PExtendRegion(unsigned long rgAddress, unsigned long exAddress, MM_MANAGER *pmgr){
 	MM_REGION *region = (MM_REGION *) PFindRegion(rgAddress, (convert_psmm) pmgr);
 
 	rgAddress = region->Address;
-	ULONG rgLimit = rgAddress + region->Size;
+	unsigned long rgLimit = rgAddress + region->Size;
 
 	if(rgAddress <= exAddress && exAddress < rgLimit)
 		return (RG_FAILURE);
@@ -226,7 +226,7 @@ ULONG PExtendRegion(ULONG rgAddress, ULONG exAddress, MM_MANAGER *pmgr){
 	} else {
 		adjRegion = region->NextLinker;
 		if(exAddress < adjRegion->Address){
-			ULONG oldSize = region->Size;
+			unsigned long oldSize = region->Size;
 			region->Size += exAddress - rgAddress - oldSize;
 		}
 	}
@@ -234,11 +234,11 @@ ULONG PExtendRegion(ULONG rgAddress, ULONG exAddress, MM_MANAGER *pmgr){
 	return (RG_EXTEND);
 }
 
-MM_REGION *PValidateAddress(ULONG address, MM_MANAGER *pmgr){
+MM_REGION *PValidateAddress(unsigned long address, MM_MANAGER *pmgr){
 	return (MM_REGION *) (PFindRegion(address, (convert_psmm) pmgr));
 }
 
-VOID PMgrDispose(PSMM_MANAGER *mgr){
+void PMgrDispose(PSMM_MANAGER *mgr){
 	--(mgr->MmMgr.ReferCount);
 	if(mgr->MmMgr.ReferCount == 0){
 		KDelete(mgr, tPSMM_MANAGER);

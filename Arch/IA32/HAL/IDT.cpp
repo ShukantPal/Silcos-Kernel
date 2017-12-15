@@ -12,25 +12,22 @@
 
 import_asm void ExecuteLIDT(IDTPointer *);
 import_asm void Spurious();
-import_asm void KiClockRespond(VOID);
-import_asm void RR_BalanceRunqueue(VOID);
+import_asm void KiClockRespond(void);
+import_asm void RR_BalanceRunqueue(void);
 
 IDTEntry defaultIDT[256];
 IDTPointer defaultIDTPointer;
 
-void MapHandler(
-		unsigned short handlerNo,
-		unsigned int handlerAddress,
-		IDTEntry *pIDT
-){
-	pIDT[handlerNo].LowOffset = (USHORT) (handlerAddress & 0x0000ffff);
+void MapHandler(unsigned short handlerNo, unsigned int handlerAddress, IDTEntry *pIDT)
+{
+	pIDT[handlerNo].LowOffset = (unsigned short) (handlerAddress & 0x0000ffff);
 	pIDT[handlerNo].Selector = 0x08;
 	pIDT[handlerNo].ReservedSpace = 0;
 	pIDT[handlerNo].GateType = INTERRUPT_GATE_386;
 	pIDT[handlerNo].StorageSegment = 0;
 	pIDT[handlerNo].DPL = 0;
 	pIDT[handlerNo].Present = 1;
-	pIDT[handlerNo].HighOffset = (USHORT) (handlerAddress >> 16);
+	pIDT[handlerNo].HighOffset = (unsigned short) (handlerAddress >> 16);
 }
 
 static inline void IOWait(void){
@@ -40,7 +37,8 @@ static inline void IOWait(void){
                    "2:" );
 }
 
-void DisablePIC(){
+void DisablePIC()
+{
 	WritePort(0xA0, 0x11);
 	IOWait();
 	WritePort(0x20, 0x11);
@@ -61,26 +59,28 @@ void DisablePIC(){
 	WritePort(0x21, 0xFF);
 }
 
-decl_c void MapIDT(){
+extern "C" void MapIDT()
+{
 	IDTEntry *pIDT = defaultIDT;
 	IDTPointer *pIDTPointer = &(defaultIDTPointer);
 	memsetf(pIDT, 0, sizeof(IDTEntry) * 256);
 
-	MapHandler(0x8, (UINT) &DoubleFault, pIDT);
-	MapHandler(0xA, (UINT) &InvalidTSS, pIDT);
-	MapHandler(0xB, (UINT) &SegmentNotPresent, pIDT);
-	MapHandler(0xD, (UINT) &GeneralProtectionFault, pIDT);
-	MapHandler(0xE, (UINT) &PageFault, pIDT);
-	MapHandler(0xFE, (UINT) &Spurious, pIDT);
-	MapHandler(0x20, (UINT) &KiClockRespond, pIDT);
-	//MapHandler(0x21, (UINT) &RR_BalanceRunqueue, pIDT);
+	MapHandler(0x8, (unsigned int) &DoubleFault, pIDT);
+	MapHandler(0xA, (unsigned int) &InvalidTSS, pIDT);
+	MapHandler(0xB, (unsigned int) &SegmentNotPresent, pIDT);
+	MapHandler(0xD, (unsigned int) &GeneralProtectionFault, pIDT);
+	MapHandler(0xE, (unsigned int) &PageFault, pIDT);
+	MapHandler(0xFE, (unsigned int) &Spurious, pIDT);
+	MapHandler(0x20, (unsigned int) &KiClockRespond, pIDT);
+	//MapHandler(0x21, (unsigned int) &RR_BalanceRunqueue, pIDT);
 
 	pIDTPointer->Limit = (sizeof(IDTEntry) * 256) - 1;
-	pIDTPointer->Base = (UINT) pIDT;
+	pIDTPointer->Base = (unsigned int) pIDT;
 }
 
 /* Part of processor initialization series */
-decl_c void SetupIDT(){
+extern "C" void SetupIDT()
+{
 	IDTPointer *pIDTPointer = &(defaultIDTPointer);
 	ExecuteLIDT(pIDTPointer);
 }

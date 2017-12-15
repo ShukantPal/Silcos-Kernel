@@ -34,23 +34,23 @@ static ModuleRecord coreRecord;
 /*
  * Symbol defined, as the location of the microkernel dynamic table
  */
-extern ULONG msiKernelDynamicTableStart;
+extern unsigned long msiKernelDynamicTableStart;
 
 /*
  * Symbol defined, as the location of the end of the microkernel dynamic table
  */
-extern ULONG msiKernelDynamicTableEnd;
+extern unsigned long msiKernelDynamicTableEnd;
 
 /*
  * DynamicEntry* array for the microkernel
  */
-#define msiDynamicTable ((DynamicEntry *) ((ULONG) &msiKernelDynamicTableStart))
+#define msiDynamicTable ((DynamicEntry *) ((unsigned long) &msiKernelDynamicTableStart))
 
 /*
  * DynamicEntry count for the microkernel
  */
-#define msiDynamicCount ((ULONG) &msiKernelDynamicTableEnd - (ULONG) &msiKernelDynamicTableStart) / sizeof(DynamicEntry)
-#define HDR_SEARCH_START (ULONG) &kernelSeg
+#define msiDynamicCount ((unsigned long) &msiKernelDynamicTableEnd - (unsigned long) &msiKernelDynamicTableStart) / sizeof(DynamicEntry)
+#define HDR_SEARCH_START (unsigned long) &kernelSeg
 
 /**
  * KernelElf::getDynamicEntry
@@ -63,9 +63,8 @@ extern ULONG msiKernelDynamicTableEnd;
  *
  * Author: Shukant Pal
  */
-DynamicEntry *KernelElf::getDynamicEntry(
-		enum DynamicTag dRequiredTag
-){
+DynamicEntry *KernelElf::getDynamicEntry(enum DynamicTag dRequiredTag)
+{
 	DynamicEntry *dynamicEntry = msiDynamicTable;
 	unsigned long dynamicEntryCount = msiDynamicCount;
 	unsigned long dynamicEntryIndex = 0;
@@ -84,7 +83,7 @@ DynamicEntry *KernelElf::getDynamicEntry(
 /*
  * Build name for the microkernel
  */
-CHAR coreModuleString[] = "Microkernel";
+char coreModuleString[] = "Microkernel";
 
 /**
  * Function: KernelElf::registerDynamicLink
@@ -107,9 +106,9 @@ ModuleRecord *KernelElf::registerDynamicLink()
 	if(dsmEntry != NULL && dsmNamesEntry != NULL &&
 			dsmSizeEntry != NULL && dsmHashEntry != NULL){
 		coreLink.dynamicSymbols.entryTable = (Symbol *) dsmEntry->refPointer;
-		coreLink.dynamicSymbols.nameTable = (CHAR *) dsmNamesEntry->refPointer;
+		coreLink.dynamicSymbols.nameTable = (char *) dsmNamesEntry->refPointer;
 
-		ULONG *dsmHashContents = (ULONG *) dsmHashEntry->refPointer;
+		unsigned long *dsmHashContents = (unsigned long *) dsmHashEntry->refPointer;
 		coreLink.symbolHash.bucketEntries = dsmHashContents[0];
 		coreLink.symbolHash.chainEntries = dsmHashContents[1];
 		coreLink.symbolHash.bucketTable = dsmHashContents + 2;
@@ -136,15 +135,23 @@ ModuleRecord *KernelElf::registerDynamicLink()
  * be taken
  */
 ObjectInfo *tBlobRegister;
-CHAR nmBlobRegister[] = "BlobRegister";
+char nmBlobRegister[] = "BlobRegister";
 
+/**
+ * Function: KernelElf::loadBootModules
+ *
+ * Summary:
+ * Loads all the boot-modules which were loaded into memory according to the
+ * multiboot specification.
+ *
+ * Changes:
+ * # Way to skip the entry point (for module that ain't have any entry), using
+ *   the NO_ENTRY_ADDR symbol-value as the poopy linker because sets the
+ *   entry point the the first byte in .text
+ */
 void KernelElf::loadBootModules()
 {
 	tBlobRegister = KiCreateType(nmBlobRegister, sizeof(BlobRegister), NO_ALIGN, NULL, NULL);
-
-	/*
-	 * List of blobs
-	 */
 	LinkedList *bmRecordList = new(tLinkedList) LinkedList();
 
 	/*
@@ -153,8 +160,8 @@ void KernelElf::loadBootModules()
 	 */
 	BlobRegister *blob;
 	ModuleRecord *bmRecord = NULL;
-	MultibootTagModule *foundModule = (MultibootTagModule*)
-			SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
+	MultibootTagModule *foundModule = (MultibootTagModule*) SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
+
 	while(foundModule != NULL){
 		bmRecord = RecordManager::createRecord(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
 
@@ -172,15 +179,27 @@ void KernelElf::loadBootModules()
 
 	ModuleLoader::loadBundle(*bmRecordList);
 
-	/*
-	 * Free all useless blobs
-	 */
-	BlobRegister *nextBlob;
-	blob = (BlobRegister*) bmRecordList->Head;
+	DbgLine("Boot Bundle Loaded");
 
+	BlobRegister *nextBlob;
+
+	blob = (BlobRegister*) bmRecordList->Head;
 	while(blob != NULL){
-		if(blob->regForm->entryAddr)
+		if(blob->regForm->init){
+			blob->regForm->init();
+		}
+
+		blob = (BlobRegister*) blob->liLinker.Next;
+	}
+
+	DbgLine("Initialized all kernel boot modules");
+
+	blob = (BlobRegister*) bmRecordList->Head;
+	while(blob != NULL){
+		if(blob->regForm->entryAddr && *(unsigned long*) blob->regForm->entryAddr != NO_ENTRY_ADDR)
 			KThreadCreate((void*) blob->regForm->entryAddr);
+		else
+			DbgLine("DKDKDK");
 		nextBlob = (BlobRegister*) blob->liLinker.Next;
 		kobj_free((kobj*) blob, tBlobRegister);
 		blob = nextBlob;

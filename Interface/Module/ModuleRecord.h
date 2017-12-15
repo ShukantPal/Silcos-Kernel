@@ -71,11 +71,13 @@ struct ModuleRecord
 		ModuleRecord *PreviousModule;/* Previous-module in list */
 		LinkedListNode LiLinker;/* Used for participating the RecordManager list */
 	};
-	CHAR buildName[16];/* Name given to the module, at build time (16-bytes max., may not null-terminate) */
-	ULONG buildVersion;/* Version of the module build, not service */
+	char buildName[16];/* Name given to the module, at build time (16-bytes max., may not null-terminate) */
+	unsigned long buildVersion;/* Version of the module build, not service */
 	KM_TYPE serviceType;/* Type of service provided by the module */
 	DynamicLink *linkerInfo;/* Dynamic link-information */
+	void (*init)();/* Initialization function */
 	ADDRESS entryAddr;/* Virtual address of entry point */
+	void (*fini)();/* Finialization function */
 	ADDRESS BaseAddr;/* Address where the module was loaded in kernel memory */
 } KMOD_RECORD;
 
@@ -107,9 +109,9 @@ public:
 		AddElement((LinkedListNode *) modRecord, &globalRecordList);
 	}
 
-	static ModuleRecord *createRecord(CHAR *modName, ULONG modVersion, ULONG type);
+	static ModuleRecord *createRecord(char *modName, unsigned long modVersion, unsigned long type);
 
-	static Symbol *querySymbol(CHAR *symbolName, ULONG& baseAddress);
+	static Symbol *querySymbol(char *symbolName, unsigned long& baseAddress);
 
 private:
 	static LinkedList globalRecordList;
@@ -127,7 +129,7 @@ private:
  * @Version 1
  * @Since Circuit 2.03
  */
-ModuleRecord *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG moduleType);
+ModuleRecord *MdCreateModule(char *moduleName, unsigned long moduleVersion, unsigned long moduleType);
 
 /**
  * Function: MdLoadCoreModule
@@ -141,7 +143,7 @@ ModuleRecord *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG module
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-static inline ModuleRecord *MdLoadCoreModule(VOID){
+static inline ModuleRecord *MdLoadCoreModule(void){
 	return MdCreateModule((char*) "CORE", 200300, KMT_EXC_MODULE);
 }
 

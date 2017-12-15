@@ -29,8 +29,8 @@ namespace Process
  * Class: MemoryImage
  *
  * Summary:
- * Represent the address-space of a isolated process. This allows dynamic
- * libraries and remote-code.
+ * Manages the address-space for a general process and uses a faster-BST when
+ * the number of regions exceeds a limit.
  *
  * Function:
  * getImage - create a fresh image
@@ -45,24 +45,20 @@ namespace Process
 class MemoryImage : public Resource::ContextManager
 {
 public:
-	Resource::RegionInsertionResult insertRegion
-			(unsigned long initialAddress, unsigned long pageCount,
-			unsigned short ctlFlags, PAGE_ATTRIBUTES permissions);
+	virtual Resource::RegionInsertionResult insertRegion(unsigned long initialAddress, unsigned long pageCount,
+								unsigned long cfg, PAGE_ATTRIBUTES permissions) override;
 
-	Resource::RegionRemovalResult removeRegion
-				(unsigned long initialAddress,
-				unsigned long pageCount, unsigned short typeId);
+	Resource::RegionRemovalResult removeRegion(unsigned long initialAddress, unsigned long pageCount,
+							unsigned short typeId);
 
-	unsigned long includeInRegion(unsigned long initialAddress,
-					unsigned long addressExtension);
+	unsigned long includeInRegion(unsigned long initialAddress, unsigned long addressExtension);
 
 	Resource::MemorySection* validateRegion(unsigned long address);
 
 	static MemoryImage* getImage();
 
-	static MemoryImage* getImage(unsigned long code[2],
-			unsigned long data[2], unsigned long bss[2],
-				unsigned long stack[2]);
+	static MemoryImage* getImage(unsigned long code[2], unsigned long data[2], unsigned long bss[2],
+					unsigned long stack[2]);
 
 	static bool deleteImage(MemoryImage*);
 protected:
@@ -72,12 +68,13 @@ protected:
 	unsigned long pinnedPages;
 	unsigned long libraryCount;
 
-	bool treeUsed;
-	RBTree* sectionTree;
-
 	Resource::MemorySection* findRegion(unsigned long address);
+	Resource::MemorySection* findClosestRegion(unsigned long address);
 	unsigned long carveRegion(unsigned long address, unsigned long limit,
 					Resource::MemorySection* parent);
+
+	void manifestTree();
+	void eradicateTree();
 
 	MemoryImage();
 	MemoryImage(unsigned long code[2], unsigned long data[2],

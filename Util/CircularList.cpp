@@ -2,7 +2,7 @@
 
 #include <Util/CircularList.h>
 
-decl_c void ClnInsert(
+extern "C" void ClnInsert(
 		CircularListNode *clnNode,
 		unsigned long clnPosition,
 		CircularList *clList
@@ -31,11 +31,11 @@ decl_c void ClnInsert(
 	++(clList->ClnCount);
 }
 
-decl_c void ClnRemove(
+extern "C" void ClnRemove(
 		CircularListNode *clnNode,
 		CircularList *clList
 ){
-	ULONG clnCount = clList->ClnCount;
+	unsigned long clnCount = clList->ClnCount;
 	if(clnCount > 0){/* Eliminate blind-removals */
 		if(clnCount > 1) {
 			CLNODE *clnNext = clnNode->ClnNext;

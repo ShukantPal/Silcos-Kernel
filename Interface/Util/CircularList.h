@@ -29,22 +29,22 @@
 #include <TYPE.h>
 
 typedef
-struct CircularListNode {
-	struct CircularListNode *ClnNext;
-	struct CircularListNode *ClnLast;
+struct CircularListNode
+{
+	CircularListNode *ClnNext;
+	CircularListNode *ClnLast;
 } CLNODE;
 
 typedef
 struct CircularList {
-	ULONG ClnCount;
+	unsigned long ClnCount;
 	CLNODE *ClnMain;
 } CLIST;
 
 #define CLN_LAST 0
 #define CLN_FIRST 1
 
-decl_c void ClnInsert(CircularListNode *ClnNode, unsigned long ClnPosition,
-			CircularList *clList);
-decl_c void ClnRemove(CircularListNode *ClnNode, CircularList *clList);
+extern "C" void ClnInsert(CircularListNode *ClnNode, unsigned long ClnPosition, CircularList *clList);
+extern "C" void ClnRemove(CircularListNode *ClnNode, CircularList *clList);
 
 #endif/* Util/CircularList.h */

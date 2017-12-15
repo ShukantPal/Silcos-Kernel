@@ -16,10 +16,7 @@ MDFRWK_UTIL = Compile/Arrays.o Compile/BinaryTree.o Compile/HashMap.o \
 Compile/Object.o Compile/RBTree.o Compile/String.o
 
 # Code that is not classifed is compiled here!
-MDFRWK = Compile/MDFSTART.o Compile/Heap.o Compile/Main.o
-
-Compile/MDFSTART.o: MDF_START.asm
-	$(AS) $(ASFLAGS) MDF_START.asm -o Compile/MDFSTART.o
+MDFRWK = Compile/Heap.o Compile/Main.o
 
 Compile/Arrays.o: Framework/Arrays.cxx
 	$(CC) $(CFLAGS) Framework/Arrays.cxx -o Compile/Arrays.o

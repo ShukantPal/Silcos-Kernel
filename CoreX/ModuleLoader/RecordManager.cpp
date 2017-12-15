@@ -35,9 +35,9 @@ LinkedList RecordManager::globalRecordList;
  * type.
  *
  * Args:
- * CHAR *modName - Name of the registering module
- * ULONG buildVersion - Version for the module build
- * ULONG serviceType - Type of service provided by the module (@See ModuleType)
+ * char *modName - Name of the registering module
+ * unsigned long buildVersion - Version for the module build
+ * unsigned long serviceType - Type of service provided by the module (@See ModuleType)
  *
  * Origin:
  * This creates a valid-record for the RecordManager.
@@ -46,11 +46,9 @@ LinkedList RecordManager::globalRecordList;
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-ModuleRecord *RecordManager::createRecord(
-		CHAR *modName,
-		ULONG buildVersion,
-		ULONG serviceType
-){
+ModuleRecord *RecordManager::createRecord(char *modName, unsigned long buildVersion,
+						unsigned long serviceType)
+{
 	ModuleRecord *newRecord = new(tKMOD_RECORD) ModuleRecord();
 
 	memcpy(modName, &newRecord->buildName, 16);
@@ -69,20 +67,18 @@ ModuleRecord *RecordManager::createRecord(
  * for this, and no filters are applied.
  *
  * Args:
- * CHAR *requiredSymbolName - Name of the symbol being queried
- * ULONG& baseAddress - (Return) arg for giving base-address of declarer
+ * char *requiredSymbolName - Name of the symbol being queried
+ * unsigned long& baseAddress - (Return) arg for giving base-address of declarer
  *
  * Version: 1.0
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-Symbol *RecordManager::querySymbol(
-		CHAR *requiredSymbolName,
-		ULONG &baseAddress
-){
+Symbol *RecordManager::querySymbol(char *requiredSymbolName, unsigned long &baseAddress)
+{
 	ModuleRecord *qRecord = (ModuleRecord*) RecordManager::globalRecordList.Head;
-	ULONG qRecordIndex = 0;
-	ULONG qRecordCount = RecordManager::globalRecordList.Count;
+	unsigned long qRecordIndex = 0;
+	unsigned long qRecordCount = RecordManager::globalRecordList.Count;
 
 	DynamicLink *qLink;
 	Symbol *foundSymbol;

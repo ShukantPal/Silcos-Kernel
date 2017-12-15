@@ -37,8 +37,8 @@ extern PADDRESS mmLow;
 extern PADDRESS mmHigh;
 extern PADDRESS mmTotal;
 extern PADDRESS mmUsable;
-extern ULONG pgTotal;
-extern ULONG pgUsable;
+extern unsigned long pgTotal;
+extern unsigned long pgUsable;
 
 #ifdef NS_KFRAMEMANAGER
 #include "BuddyManager.h"
@@ -47,9 +47,9 @@ extern ULONG pgUsable;
 
 typedef struct Memory::Internal::BuddyBlock MMFRAME;
 
-#define FRAME_AT(pAddress) (MMFRAME*) (KFRAMEMAP + (sizeof(MMFRAME) * ((ULONG) (pAddress) >> 12)))
+#define FRAME_AT(pAddress) (MMFRAME*) (KFRAMEMAP + (sizeof(MMFRAME) * ((unsigned long) (pAddress) >> 12)))
 #define FROPAGE(pgOffset) (KFRAMEMAP + pgOffset * sizeof(MMFRAME))
-#define FRADDRESS(fAddress) (PADDRESS) (((ULONG)fAddress - KFRAMEMAP) / sizeof(MMFRAME)) * KB(4)
+#define FRADDRESS(fAddress) (PADDRESS) (((unsigned long)fAddress - KFRAMEMAP) / sizeof(MMFRAME)) * KB(4)
 
 /**
  * Function: TypifyMRegion()
@@ -76,10 +76,10 @@ typedef struct Memory::Internal::BuddyBlock MMFRAME;
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID TypifyMRegion(
-	ULONG typeValue,
-	ULONG regionAddress,
-	ULONG regionSize
+void TypifyMRegion(
+	unsigned long typeValue,
+	unsigned long regionAddress,
+	unsigned long regionSize
 );
 
 #endif
@@ -102,8 +102,8 @@ VOID TypifyMRegion(
  * @Author Shukant Pal
  * @See Multiboot 1.6
  */
-VOID SetupKFrameManager(
-	VOID
+void SetupKFrameManager(
+	void
 );
 
 #endif
@@ -118,9 +118,9 @@ VOID SetupKFrameManager(
 #define KF_NOINTR (1 << 31) /* Do not turn interrupts on */
 
 PADDRESS KeFrameAllocate(
-	ULONG fOrder,
-	ULONG prefZone,
-	ULONG fFlags
+	unsigned long fOrder,
+	unsigned long prefZone,
+	unsigned long fFlags
 );
 
 /******************************************************************************
@@ -139,7 +139,7 @@ PADDRESS KeFrameAllocate(
  * @Author Shukant Pal
  * @See ZNSYS, ZNINFO, ZnFreeBlock() - "ZoneManager.h"
  ******************************************************************************/
-ULONG KeFrameFree(
+unsigned long KeFrameFree(
 	PADDRESS frameAddress
 );
 

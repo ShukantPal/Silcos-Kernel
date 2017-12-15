@@ -111,14 +111,14 @@ struct _KPROCESS {
 	UBYTE Privelege;
 	GID GroupId;
 	UID UserId;
-	USHORT State;
-	ULONG Flags;
+	unsigned short State;
+	unsigned long Flags;
 	PSMM_MANAGER *MemoryManager;
 	CONTEXT *AddressSpace;
 	EPI ExPI;
 } KPROCESS;
 
-typedef ULONG KPROCESS_HANDLE;
+typedef unsigned long KPROCESS_HANDLE;
 
 extern KPROCESS *psKernel;/* psKernel process for containing non-core kernel processes */
 
@@ -142,7 +142,7 @@ KPROCESS *KeGetProcess(
 	ID processID
 );
 
-VOID InitPTable(VOID);
+void InitPTable(void);
 
 /**
  * KeNewProcess() -
@@ -153,14 +153,14 @@ VOID InitPTable(VOID);
  *
  * 
  */
-VOID XNewProcess();
-VOID XCopyProcess(VOID);
-VOID XExecProcess(VOID);
-VOID XExitProcess(VOID);
-VOID XDeleteProcess(VOID);
-VOID XWaitForProcess(VOID);
-VOID XSleepProcess(VOID);
-VOID XSuspendProcess(VOID);
-VOID XWakeupProcess(VOID);
+void XNewProcess();
+void XCopyProcess(void);
+void XExecProcess(void);
+void XExitProcess(void);
+void XDeleteProcess(void);
+void XWaitForProcess(void);
+void XSleepProcess(void);
+void XSuspendProcess(void);
+void XWakeupProcess(void);
 
 #endif /* Exec/Process.h */

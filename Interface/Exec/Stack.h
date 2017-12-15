@@ -33,8 +33,8 @@
 typedef
 struct _KSTACKINFO
 {
-	ULONG Base;
-	ULONG Pointer;
+	unsigned long Base;
+	unsigned long Pointer;
 } KSTACKINFO;
 
 #endif /* Exec/Stack.h */

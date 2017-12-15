@@ -18,10 +18,10 @@
 
 #include <Memory/Pager.h>
 
-typedef ULONG ID;
-typedef ULONG TYPE;
-typedef USHORT GID;
-typedef USHORT UID;
+typedef unsigned long ID;
+typedef unsigned long TYPE;
+typedef unsigned short GID;
+typedef unsigned short UID;
 typedef U64 TIME;
 
 /* Types for the Exec resources. */
@@ -52,7 +52,7 @@ enum {
 #define TF_ROUTINE 2
 
 typedef
-struct _PROCESSOR
+struct Processor
 PROCESSOR;
 
 /**
@@ -76,17 +76,17 @@ struct Exec {
 		struct {
 			struct Exec *RightLinker;
 			struct Exec *LeftLinker;
-			ULONG NodeHeight;
-			ULONG Relativity;/* Task priority if required */
+			unsigned long NodeHeight;
+			unsigned long Relativity;/* Task priority if required */
 		};
 	};
-	VOID *EIP;/* IP for this task */
-	VOID (*Run)(PROCESSOR *);/* Task loader (sub-scheduler or NULL) */
-	ULONG TaskFlags;/* Runtime flags */
+	void *EIP;/* IP for this task */
+	void (*Run)(PROCESSOR *);/* Task loader (sub-scheduler or NULL) */
+	unsigned long TaskFlags;/* Runtime flags */
 	KSTACKINFO *UserStack;/* User-mode stack, if any */
 	KSTACKINFO *KernelStack;/* Kernel-mode stack, required */
-	LINKED_LIST *OwnerList;/* Legacy, list back-pointer */
-	ULONG RRM_ID;/* Resource-management id */
+	LinkedList *OwnerList;/* Legacy, list back-pointer */
+	unsigned long RRM_ID;/* Resource-management id */
 	ID ID;/* TASK Id*/
 	TYPE Type;/* Legacy, type back-specifier */
 	PROCESSOR *Processor;/* Processor holding the runqueue in which this task exists */
@@ -99,7 +99,7 @@ typedef EXEC KRUNNABLE;
 typedef EXEC KTASK;
 
 static inline
-VOID SetupExec(EXEC *E, ID ID, TYPE Type)
+void SetupExec(EXEC *E, ID ID, TYPE Type)
 {
 	EID(E) = ID;
 	ETypeInfo(E) = Type;
@@ -121,7 +121,7 @@ VOID SetupExec(EXEC *E, ID ID, TYPE Type)
  * @Author Shukant Pal
  */
 static inline
-VOID KiSetupRunnable(KRUNNABLE *kRunner, ID rID, TYPE rType){
+void KiSetupRunnable(KRUNNABLE *kRunner, ID rID, TYPE rType){
 	kRunner->ID = rID;
 	kRunner->Type = rType;
 	kRunner->EIP = NULL;

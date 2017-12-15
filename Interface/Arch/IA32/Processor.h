@@ -43,20 +43,20 @@ struct ProcessorInfo {
 	TSS kTSS;
 	IDTEntry IDT[256];
 	IDTPointer IDTR;
-	UINT TopologyIdentifiers[0];
+	unsigned int TopologyIdentifiers[0];
 } PROCESSOR_INFO;
 
 typedef
 struct {
 	GDTEntry DefaultBootGDT[3];
-	USHORT BootStatusRegister;
+	unsigned short BootStatusRegister;
 	GDTPointer DefaultBootGDTPointer;
 } PROCESSOR_SETUP_INFO;
 
 #define __INTR_ON asm("sti");
 #define __INTR_OFF asm("cli");
 
-decl_c
+extern "C"
 {
 void SetupDefaultBootGDT(void);
 void SetupGDT(ProcessorInfo *);

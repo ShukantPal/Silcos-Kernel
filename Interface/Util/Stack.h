@@ -22,7 +22,7 @@ struct Stack
 #define NEW_STACK { .Head = NULL }
 #define PACK_STACK(Head_) { .Head = Head_ }
 
-VOID PushElement(
+void PushElement(
 	STACK_ELEMENT *New,
 	STACK *Stack
 );

@@ -29,11 +29,8 @@
  *
  * Author: Shukant Pal
  */
-void Arrays::copy(
-		const void *org,
-		void *dst,
-		unsigned int copySize
-){
+void Arrays::copy(const void *org, void *dst, unsigned int copySize)
+{
 	const byte *orgPtr = (const byte*) org;
 	byte *dstPtr = (byte*) dst;
 	while(copySize-- > 0){
@@ -59,10 +56,8 @@ void Arrays::copy(
  *
  * Author: Shukant Pal
  */
-void* Arrays::copyOf(
-		const void *original,
-		unsigned int newLength
-){
+void* Arrays::copyOf(const void *original, unsigned int newLength)
+{
 	void *newCopy = kmalloc(newLength);
 	copy(original, newCopy, newLength);
 	return (newCopy);

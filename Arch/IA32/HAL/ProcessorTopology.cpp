@@ -35,7 +35,7 @@
 
 using namespace HAL;
 
-extern BOOL x2APICModeEnabled;
+extern bool x2APICModeEnabled;
 Domain *ProcessorTopology::systemDomain;
 ObjectInfo *ProcessorTopology::tDomain;
 
@@ -167,11 +167,9 @@ void ProcessorTopology::plug()
  *
  * Author: Shukant Pal
  */
-void ProcessorTopology::Iterator::ofEach(
-		Processor *initialCPU,
-		void (*handler)(HAL::Domain*),
-		unsigned long limit
-){
+void ProcessorTopology::Iterator::ofEach(Processor *initialCPU, void (*handler)(HAL::Domain*),
+						unsigned long limit)
+{
 	if(!initialCPU) // Client can pass NULL which means this CPU
 		initialCPU = GetProcessorById(PROCESSOR_ID);
 

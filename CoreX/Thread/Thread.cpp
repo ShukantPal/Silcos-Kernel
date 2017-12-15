@@ -33,26 +33,26 @@ KTHREAD *kInitThread; /* Kernel-comm thread */
 KTHREAD *KeGetThread(ID threadID){
 	if(threadID > KDYNAMIC){
 		KPAGE *slabPage = (KPAGE*) KPG_AT((threadID & ~(KPGSIZE - 1)));
-		if(slabPage->HashCode == (ULONG) tdInfo)
+		if(slabPage->HashCode == (unsigned long) tdInfo)
 			return ((KTHREAD*) threadID);
 	}
 
 	return (NULL);
 }
 
-VOID KiThreadConstruct(VOID *kthreadPtr){
+void KiThreadConstruct(void *kthreadPtr){
 	KTHREAD *thread = (KTHREAD*) kthreadPtr;
-	thread->Gate.ID = (ULONG) kthreadPtr;
+	thread->Gate.ID = (unsigned long) kthreadPtr;
 	thread->Gate.UserStack = &thread->UserStack;
 	thread->Gate.KernelStack = &thread->KernelStack;	
 	thread->Gate.Run = NULL;
 }
 
-CHAR *msgInitThread = "Setting up kInitThread...";
-VOID InitTTable(VOID){
+char *msgInitThread = "Setting up kInitThread...";
+void InitTTable(void){
 	DbgLine(msgInitThread);
 
-	tdInfo = KiCreateType(tdName, sizeof(KTHREAD), sizeof(ULONG), &KiThreadConstruct, NULL);
+	tdInfo = KiCreateType(tdName, sizeof(KTHREAD), sizeof(unsigned long), &KiThreadConstruct, NULL);
 	kIdlerThread = KNew(tdInfo, KM_NOSLEEP);
 	kInitThread = KNew(tdInfo, KM_NOSLEEP);
 
@@ -77,7 +77,7 @@ VOID InitTTable(VOID){
 	EnsureUsability(kisBase, NULL, FLG_ATOMIC, KernelData);
 
 	PROCESSOR *cpu = GetProcessorById(PROCESSOR_ID);
-	cpu->PoExT = (VOID*) kIdlerThread;
+	cpu->PoExT = (void*) kIdlerThread;
 	kIdlerThread->Gate.RightLinker = (KRUNNABLE*) kInitThread;
 
 	KSCHEDINFO *bspSched = &cpu->SchedulerInfo;
@@ -88,18 +88,18 @@ VOID InitTTable(VOID){
 	rrRoller->InsertRunner((KRUNNABLE*) kInitThread, cpu);
 }
 
-VOID Idle(){
+void Idle(){
 	DbgLine("SMP:: AP::IDLE");
 	while(TRUE);
 }
 
-VOID APThreadMain(){
+void APThreadMain(){
 	Dbg("APThreadMain"); DbgInt(PROCESSOR_ID); DbgLine(" ");
 	
 	while(TRUE){ asm volatile("nop"); };
 }
 
-VOID APInitService(){
+void APInitService(){
 	DbgLine("APInitService");
 
 	KThreadCreate((void*) &APThreadMain);
@@ -109,7 +109,7 @@ VOID APInitService(){
 	while(TRUE) { asm volatile("nop"); };
 }
 
-VOID SetupRunqueue(){
+void SetupRunqueue(){
 	PROCESSOR *processor = GetProcessorById(PROCESSOR_ID);
 
 	KTHREAD *idlerThread = KNew(tdInfo, KM_SLEEP);
@@ -132,7 +132,7 @@ VOID SetupRunqueue(){
 	idlerStack->Pointer = processor->ProcessorStack - 64;
 
 	KSTACKINFO *setupStack = &(setupThread->KernelStack);
-	ULONG ssb = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
+	unsigned long ssb = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
 	setupStack->Base = ssb + KPGSIZE - 4;
 	setupStack->Pointer = ssb + KPGSIZE - 64;
 	EnsureUsability(ssb, NULL, FLG_ATOMIC, KernelData);
@@ -169,7 +169,7 @@ KTHREAD *KThreadCreate(void *entry){
 	newThread->Gate.RRM_ID = log_id++;
 	
 	KSTACKINFO *threadStack = &(newThread->KernelStack);
-	ULONG stackAddress = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
+	unsigned long stackAddress = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
 	threadStack->Base = stackAddress + KPGSIZE - 4;
 	threadStack->Pointer = stackAddress + KPGSIZE - 64;
 	EnsureUsability(stackAddress, NULL, FLG_ATOMIC, KernelData);
@@ -179,10 +179,10 @@ KTHREAD *KThreadCreate(void *entry){
 	return (newThread);
 }
 
-VOID KThreadDestroy(){
+void KThreadDestroy(){
 
 }
 
-VOID KThreadExit(){
+void KThreadExit(){
 
 }

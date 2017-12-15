@@ -27,10 +27,10 @@ typedef
 struct _IPC_HEADER
 {
 	U64 Signature;
-	ULONG OwnerUID;
-	ULONG OwnerGID;
-	ULONG CreatorUID;
-	ULONG CreatorGID;
+	unsigned long OwnerUID;
+	unsigned long OwnerGID;
+	unsigned long CreatorUID;
+	unsigned long CreatorGID;
 } IPC_HEADER;
 
 #ifdef NAMESPACE_IPC_MANAGEMENT

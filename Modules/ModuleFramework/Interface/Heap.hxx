@@ -51,7 +51,7 @@ struct BlockContainer
  * Get the block-container struct for any memory-location. It may be invalid &
  * this is checked by validating the magicNo field.
  */
-#define BlockFor(memAddr) ((BlockContainer*) ((ULONG) memAddr - 12))
+#define BlockFor(memAddr) ((BlockContainer*) ((unsigned long) memAddr - 12))
 
 }
 

@@ -38,10 +38,10 @@ struct _SDT_HEADER
 } SDT_HEADER;
 
 static inline
-BOOL VerifySdtChecksum(SDT_HEADER *Sdt) {
+bool VerifySdtChecksum(SDT_HEADER *Sdt) {
 	register U8 Sum = 0;
 
-	for(register ULONG Counter = 0; Counter < Sdt -> Length; Counter++)
+	for(register unsigned long Counter = 0; Counter < Sdt -> Length; Counter++)
 		Sum += ((U8*) Sdt)[Counter];
 
 	return (Sum == 0);

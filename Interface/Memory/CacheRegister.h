@@ -28,7 +28,7 @@ struct CacheRegister
 	union
 	{
 		struct LinkedList DList;
-		ULONG DCount;
+		unsigned long DCount;
 	};
 } CHREG;
 
@@ -51,7 +51,7 @@ struct CacheRegister
  */
 typedef
 struct _CHSYS {
-	ULONG ChMemoryOffset;
+	unsigned long ChMemoryOffset;
 } CHSYS;
 
 /**
@@ -72,9 +72,9 @@ struct _CHSYS {
  * @Version 1
  * @Since Circuit 2.03
  */
-LINODE *ChDataAllocate(
+LinkedListNode *ChDataAllocate(
 	CHSYS *chInfo,
-	ULONG *statusFilters
+	unsigned long *statusFilters
 );
 
 LIST_ELEMENT *ChDataFree(

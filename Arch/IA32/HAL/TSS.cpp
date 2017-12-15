@@ -6,15 +6,16 @@
 #include <Util/CtPrim.h>
 
 TSS SystemTSS;
-import_asm void ExecuteLTR(VOID);
+import_asm void ExecuteLTR(void);
 
-decl_c VOID SetupTSS(PROCESSOR_INFO *processorInfo){
-	TSS *pTSS = &(processorInfo->kTSS);
+extern "C" void SetupTSS(ProcessorInfo *pinfo)
+{
+	TSS *pTSS = &(pinfo->kTSS);
 
-	UINT tBase = (UINT) pTSS;
-	UINT tSize = sizeof(TSS) - 1;
+	unsigned int tBase = (unsigned int) pTSS;
+	unsigned int tSize = sizeof(TSS) - 1;
 
-	SetGateOn(5, tBase, tSize, 0x89, 0, &(processorInfo->GDT[0]));
+	SetGateOn(5, tBase, tSize, 0x89, 0, &(pinfo->GDT[0]));
 	memsetf(pTSS, 0, sizeof(TSS));
 
 	pTSS->CS = 0x8;

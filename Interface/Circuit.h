@@ -33,8 +33,8 @@
 #define CastPtrOfStruct(type_name, var) (struct type_name*) var
 #define Cast(Type, Variable) ((Type) Variable)
 
-#define PtrAddress(P) (SIZE_T) P
+#define PtrAddress(P) (SIZE) P
 
-VOID ASSERT(BOOL Condition, CHAR *ErroMsg);
+void ASSERT(bool Condition, char *ErroMsg);
 
 #endif /* Circuit.h */

@@ -15,12 +15,12 @@
  * newNode - Node to be added
  * list - List on which the operation is being done
  *
- * Returns: VOID
+ * Returns: void
  *
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID AddElement(LIST_ELEMENT *New, LINKED_LIST *List){
+void AddElement(LIST_ELEMENT *New, LinkedList *List){
 	LIST_ELEMENT *lHead = List->Head;
 
 	if(lHead != NULL)
@@ -60,7 +60,7 @@ VOID AddElement(LIST_ELEMENT *New, LINKED_LIST *List){
  * newNode - Node to be added
  * list - List is on which the operation is being done
  */
-VOID RemoveElement(LIST_ELEMENT *oldElement, LINKED_LIST *lList){
+void RemoveElement(LIST_ELEMENT *oldElement, LinkedList *lList){
 	if(lList->Count){
 		LIST_ELEMENT *oldNext = oldElement->Next;
 		LIST_ELEMENT *oldPrevious = oldElement->Previous;
@@ -87,7 +87,7 @@ VOID RemoveElement(LIST_ELEMENT *oldElement, LINKED_LIST *lList){
 	}
 }
 
-VOID InsertElementAfter(LIST_ELEMENT *Old, LIST_ELEMENT *New, LINKED_LIST *List){
+void InsertElementAfter(LIST_ELEMENT *Old, LIST_ELEMENT *New, LinkedList *List){
 	NextElement(New) = NextElement(Old);
 	PreviousElement(New) = Old;
 
@@ -100,8 +100,8 @@ VOID InsertElementAfter(LIST_ELEMENT *Old, LIST_ELEMENT *New, LINKED_LIST *List)
 	++(Count(List));
 }
 
-VOID InsertElementBefore(LINODE *oldElement, LINODE *newElement, LINKED_LIST *list){
-	LINODE *previousElement = oldElement->Previous;
+void InsertElementBefore(LinkedListNode *oldElement, LinkedListNode *newElement, LinkedList *list){
+	LinkedListNode *previousElement = oldElement->Previous;
 	if(previousElement == NULL)
 		list->Head = newElement;
 	else
@@ -114,7 +114,7 @@ VOID InsertElementBefore(LINODE *oldElement, LINODE *newElement, LINKED_LIST *li
 	++(list->Count);
 }
 
-VOID PushHead(LIST_ELEMENT *New, LINKED_LIST *List)
+void PushHead(LIST_ELEMENT *New, LinkedList *List)
 {
 	LIST_ELEMENT *lHead = List->Head;
 
@@ -135,7 +135,7 @@ VOID PushHead(LIST_ELEMENT *New, LINKED_LIST *List)
 	++(Count(List));
 }
 
-LIST_ELEMENT *PullTail(LINKED_LIST *List)
+LIST_ELEMENT *PullTail(LinkedList *List)
 {
 	LIST_ELEMENT *oldTail = List->Tail;
 	LIST_ELEMENT *oldHead = List->Head;

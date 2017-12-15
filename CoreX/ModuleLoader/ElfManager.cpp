@@ -22,19 +22,18 @@ using namespace Module::Elf;
 
 extern ObjectInfo *tDynamicLink;
 
-decl_c void elf_dbg();
+extern "C" void elf_dbg();
 
 void ElfLinker::__fill_edbg(RelEntry *rel, class ElfManager &programContainer){
 	Dbg("_perform edbg ___");
 }
 
-ULONG ElfManager::getLimitAddress(
-		class ElfManager *mgr
-){
-	ULONG maxAddrFound = 0, curAddrFound;
+unsigned long ElfManager::getLimitAddress(ElfManager *mgr)
+{
+	unsigned long maxAddrFound = 0, curAddrFound;
 
-	ULONG phdrIndex = 0;
-	ULONG phdrCount = mgr->phdrCount;
+	unsigned long phdrIndex = 0;
+	unsigned long phdrCount = mgr->phdrCount;
 	ProgramHeader *programHeader = mgr->phdrTable;
 
 	while(phdrIndex < phdrCount){
@@ -51,12 +50,11 @@ ULONG ElfManager::getLimitAddress(
 	return (maxAddrFound);
 }
 
-void ElfManager::loadBinary(
-		ULONG address
-){
+void ElfManager::loadBinary(unsigned long address)
+{
 	// This part loads the module's binary into kernel memory & places
 	// all segments into the correct areas.
-	ULONG limitVAddr = ElfManager::getLimitAddress(this);
+	unsigned long limitVAddr = ElfManager::getLimitAddress(this);
 	if(limitVAddr){
 		pageCount = NextPowerOf2(limitVAddr) >> KPGOFFSET;
 
@@ -69,8 +67,8 @@ void ElfManager::loadBinary(
 		loadAddress = KeFrameAllocate(HighestBitSet(pageCount), ZONE_KERNEL, FLG_NONE);
 		EnsureAllMappings(baseAddress, loadAddress, pageCount * KPGSIZE, NULL, PRESENT | READ_WRITE);
 
-		ULONG segIndex = 0;
-		ULONG segCount = phdrCount;
+		unsigned long segIndex = 0;
+		unsigned long segCount = phdrCount;
 		ProgramHeader *segHdr = phdrTable;
 		while(segIndex < segCount){
 			if(segHdr->entryType == PT_LOAD || segHdr->entryType == PT_DYNAMIC){
@@ -102,8 +100,8 @@ void ElfManager::loadBinary(
 	}
 }
 
-static CHAR msgDynamicSegmentMissing[] = "ElfManager - No dynamic segment !";
-static CHAR msgDsmMissing[] = "ElfManager - Dynamic Symbols or Hash table missing";
+static char msgDynamicSegmentMissing[] = "ElfManager - No dynamic segment !";
+static char msgDsmMissing[] = "ElfManager - Dynamic Symbols or Hash table missing";
 
 void ElfManager::fillBlankDsm()
 {
@@ -113,9 +111,8 @@ void ElfManager::fillBlankDsm()
 	DbgLine(msgDsmMissing);
 }
 
-ElfManager::ElfManager(
-		ElfHeader *binaryHeader
-){
+ElfManager::ElfManager(ElfHeader *binaryHeader)
+{
 	// Find PHDR-table & SHDR-table
 	this->binaryHeader = binaryHeader;
 	phdrTable = PROGRAM_HEADER(binaryHeader);
@@ -145,10 +142,10 @@ ElfManager::ElfManager(
 				&& dsmNamesEntry != NULL && dsmHashEntry != NULL){
 			// Fill dynamic symbol table field
 			dynamicSymbols.entryTable = (Symbol *) ((UBYTE *) binaryHeader + dsmEntry->refPointer);
-			dynamicSymbols.nameTable = (CHAR *) ((UBYTE *) binaryHeader + dsmNamesEntry->refPointer);
+			dynamicSymbols.nameTable = (char *) ((UBYTE *) binaryHeader + dsmNamesEntry->refPointer);
 
 			// Fill dynamic hash-table field
-			ULONG *dsmHashContents = (ULONG *) ((UBYTE *) binaryHeader + dsmHashEntry->refPointer);
+			unsigned long *dsmHashContents = (unsigned long *) ((UBYTE *) binaryHeader + dsmHashEntry->refPointer);
 			dynamicHash.bucketEntries = *dsmHashContents;
 			dynamicHash.chainEntries = dsmHashContents[1];
 			dynamicHash.bucketTable = dsmHashContents + 2;
@@ -219,6 +216,11 @@ ElfManager::ElfManager(
 
 ElfManager::~ElfManager(){}
 
+Symbol* ElfManager::getStaticSymbol(const char *name)
+{
+	return ElfAnalyzer::querySymbol((char*) name, &dynamicSymbols, &dynamicHash);
+}
+
 /**
  * Function: ElfManager::getProgramHeader
  *
@@ -231,12 +233,11 @@ ElfManager::~ElfManager(){}
  *
  * Author: Shukant Pal
  */
-ProgramHeader *ElfManager::getProgramHeader(
-		enum PhdrType typeRequired
-){
+ProgramHeader *ElfManager::getProgramHeader(PhdrType typeRequired)
+{
 	if(phdrTable){
-		ULONG testIndex = 0;
-		ULONG testCount = phdrCount;
+		unsigned long testIndex = 0;
+		unsigned long testCount = phdrCount;
 		ProgramHeader *testPhdr = phdrTable;
 
 		while(testIndex < testCount){
@@ -263,17 +264,15 @@ ProgramHeader *ElfManager::getProgramHeader(
  *
  * Author: Shukant Pal
  */
-DynamicEntry *ElfManager::getDynamicEntry(
-		enum DynamicTag tag
-){
+DynamicEntry *ElfManager::getDynamicEntry(DynamicTag tag)
+{
 	if(dynamicTable){
-		ULONG entryIndex = 0;
+		unsigned long entryIndex = 0;
 		DynamicEntry *entry = dynamicTable;
 
 		while(entryIndex < dynamicEntryCount){
-			if(entry->Tag == tag){
+			if(entry->Tag == tag)
 				return (entry);
-			}
 			++(entryIndex);
 			++(entry);
 		}
@@ -286,10 +285,10 @@ DynamicEntry *ElfManager::getDynamicEntry(
  * Function: ElfManager::exportDynamicLink
  *
  * Summary:
- * ElfManager is a heavy-weight container for the elf-binary and can be used to get
- * all required information out of it. All of this is almost unnecessary for the
- * module linker, thus a (DynamicLink) structure is used, which is exported
- * from the module by this function.
+ * ElfManager is a heavy-weight container for the elf-binary and can be used to
+ * get all required information out of it. All of this is almost unnecessary
+ * for the module linker, thus a (DynamicLink) structure is used, which is
+ * exported from the module by this function.
  *
  * Returns:
  * Exported dynamic link structure, which can be used for linkage with other kernel

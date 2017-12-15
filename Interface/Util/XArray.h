@@ -18,19 +18,19 @@
 typedef
 struct GrowableArray 
 {
-	VOID **ArrayData;
-	USHORT Size;
-	USHORT MSize;
-	USHORT GSize; // Alloc Size
+	void **ArrayData;
+	unsigned short Size;
+	unsigned short MSize;
+	unsigned short GSize; // Alloc Size
 } XArray;
 
-ULONG XAddData(
-	VOID *X,
+unsigned long XAddData(
+	void *X,
 	XArray *Array
 );
 
-VOID XRemoveData(
-	ULONG Index,
+void XRemoveData(
+	unsigned long Index,
 	XArray *Array
 );
 

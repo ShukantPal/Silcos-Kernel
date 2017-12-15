@@ -61,10 +61,8 @@ RBTree::~RBTree()
  *
  * Author: Shukant Pal
  */
-bool RBTree::insert(
-		unsigned long key,
-		void *value
-){
+bool RBTree::insert(unsigned long key, void *value)
+{
 	RBNode *newNode = new(tRBNode) RBNode(key, value, (RBNode*) nil);
 	if(!BinaryTree::insert(*newNode, *this)){
 		kobj_free((kobj*) newNode, tRBNode);
@@ -90,9 +88,8 @@ bool RBTree::insert(
  *
  * Author: Shukant Pal
  */
-void* RBTree::remove(
-		unsigned long key
-){
+void* RBTree::remove(unsigned long key)
+{
 	RBNode *tNode = (RBNode*) search(key, *this), *tnChild = NULL;
 	if(isNil(tNode) || !tNode){
 		return (NULL);
@@ -129,18 +126,15 @@ void* RBTree::remove(
  * It is used for swapping the color of two internal nodes, during violation
  * fixing (rotation).
  */
-static inline void SwapColour(
-		RBColor *arg0,
-		RBColor *arg1
-){
+static inline void SwapColour(RBColor *arg0, RBColor *arg1)
+{
 	volatile RBColor __cache_of_0 = *arg0;
 	*arg0 = *arg1;
 	*arg1 = __cache_of_0;
 }
 
-RBNode& RBTree::rotateLeft(
-		RBNode& tNode
-){
+RBNode& RBTree::rotateLeft(RBNode& tNode)
+{
 	RBNode& edgeNode =* (RBNode*) tNode.getRightChild();
 	replaceChild(tNode, edgeNode);
 
@@ -151,9 +145,8 @@ RBNode& RBTree::rotateLeft(
 	return (edgeNode);
 }
 
-RBNode& RBTree::rotateRight(
-		RBNode& tNode
-){
+RBNode& RBTree::rotateRight(RBNode& tNode)
+{
 	RBNode& edgeNode =* (RBNode*) tNode.getLeftChild();
 	replaceChild(tNode, edgeNode);
 
@@ -164,9 +157,8 @@ RBNode& RBTree::rotateRight(
 	return (edgeNode);
 }
 
-void RBTree::fixInsert(
-		RBNode *tNode
-){
+void RBTree::fixInsert(RBNode *tNode)
+{
 	RBNode *tnParent = NULL, *tnUncle = NULL;
 	while(!tNode->isBlack() && !tNode->isParentBlack()){
 		tnParent = tNode->getColouredParent();
@@ -189,9 +181,8 @@ void RBTree::fixInsert(
 		tNode->setColour(RB_BLACK);
 }
 
-void RBTree::fixRemoval(
-		RBNode *tNode
-){
+void RBTree::fixRemoval(RBNode *tNode)
+{
 	RBNode *tnSibling;
 	while(tNode->isBlack() && !isNil(tNode->getParent())){
 		tnSibling = (RBNode*) tNode->getSibling();

@@ -32,7 +32,7 @@
 #define MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_CONTEXTMANAGER_HPP_
 
 #include "MemorySection.hpp"
-#include "Pager.h"
+#include <Memory/Pager.h>
 #include <Memory/KObjectManager.h>
 
 namespace Resource
@@ -102,11 +102,11 @@ enum RegionRemovalResult
 class ContextManager
 {
 public:
-/* Specifies the type for this context manager */
-enum TypeId
-{
-	psmmManager = 0
-};
+	/* Specifies the type for this context manager */
+	enum TypeId
+	{
+		psmmManager = 0
+	};
 
 	const char *name;
 	const int typeId;
@@ -115,13 +115,13 @@ enum TypeId
 			unsigned long pageCount, unsigned long cfgFlags,
 			PAGE_ATTRIBUTES permissions) = 0;
 
-	virtual RegionRemovalResult removeRegion(unsigned long initialAddress,
-			unsigned long pageCount, unsigned short typeId) = 0;
+//	virtual RegionRemovalResult removeRegion(unsigned long initialAddress,
+//			unsigned long pageCount, unsigned short typeId) = 0;
 
-	virtual unsigned long includeInRegion(unsigned long initialAddress,
-			unsigned long addressExtension) = 0;
+//	virtual unsigned long includeInRegion(unsigned long initialAddress,
+//			unsigned long addressExtension) = 0;
 
-	virtual MemorySection* validateRegion(unsigned long address) = 0;
+//	virtual MemorySection* validateRegion(unsigned long address) = 0;
 
 	static void init();
 protected:
@@ -132,12 +132,18 @@ protected:
 	MemorySection *recentCache;
 	unsigned long referCount;
 	unsigned long regionCount;
-	LinkedList regionChain;
+
+	MemorySection *firstArena;
+	MemorySection *lastArena;
+	RBTree *arenaTree;
+	bool treeUsed;
 
 	static ObjectInfo *tMemorySection;
 
 	ContextManager(const char *name, const int typeId);
 	virtual ~ContextManager();
+	RegionInsertionResult add(MemorySection *sec);
+	//void remove(MemorySection *sec);
 };
 
 }

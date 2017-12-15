@@ -12,33 +12,33 @@
 typedef
 struct _TSS
 {
-   UINT PreviousTSS;
-   UINT ESP_0;
-   UINT SS_0;
-   UINT ESP_1;
-   UINT SS_1;
-   UINT ESP_2;
-   UINT SS_2;
-   UINT CR3;
-   UINT EIP;
-   UINT EFLAGS;
-   UINT EAX;
-   UINT ECX;
-   UINT EDX;
-   UINT EBX;
-   UINT ESP;
-   UINT EBP;
-   UINT ESI;
-   UINT EDI;
-   UINT ES;         
-   UINT CS;        
-   UINT SS;        
-   UINT DS;        
-   UINT FS;       
-   UINT GS;         
-   UINT LDT;      
-   USHORT TRAP;
-   USHORT IOMAP_BASE;
+   unsigned int PreviousTSS;
+   unsigned int ESP_0;
+   unsigned int SS_0;
+   unsigned int ESP_1;
+   unsigned int SS_1;
+   unsigned int ESP_2;
+   unsigned int SS_2;
+   unsigned int CR3;
+   unsigned int EIP;
+   unsigned int EFLAGS;
+   unsigned int EAX;
+   unsigned int ECX;
+   unsigned int EDX;
+   unsigned int EBX;
+   unsigned int ESP;
+   unsigned int EBP;
+   unsigned int ESI;
+   unsigned int EDI;
+   unsigned int ES;         
+   unsigned int CS;        
+   unsigned int SS;        
+   unsigned int DS;        
+   unsigned int FS;       
+   unsigned int GS;         
+   unsigned int LDT;      
+   unsigned short TRAP;
+   unsigned short IOMAP_BASE;
 } __attribute__((packed)) TSS;
 
 #endif

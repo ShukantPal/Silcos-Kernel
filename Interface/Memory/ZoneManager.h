@@ -32,7 +32,7 @@
 #include <Util/Stack.h>
 #include <Util/CircularList.h>
 
-typedef ULONG ZNPNO;
+typedef unsigned long ZNPNO;
 
 /**
  * Type: ZNPREF 
@@ -73,7 +73,7 @@ struct ZonePreference
 #define FLG_NOCACHE (1 << ZONE_NO_CACHE)
 #define FLG_NONE 0
 
-typedef ULONG ZNFLG;
+typedef unsigned long ZNFLG;
 
 namespace Memory
 {
@@ -138,20 +138,20 @@ struct Zone
 class ZoneAllocator final
 {
 public:
-	void resetAllocator(struct BuddyBlock *entryTable, struct ZonePreference *prefTable, ULONG prefCount, struct Zone *zoneTable, unsigned long zoneCount);
+	void resetAllocator(struct BuddyBlock *entryTable, struct ZonePreference *prefTable, unsigned long prefCount, struct Zone *zoneTable, unsigned long zoneCount);
 	void resetStatistics();
 
 	// Allocator function
-	struct BuddyBlock *allocateBlock(ULONG requiredOrder, ULONG prefBase, struct Zone *prefZone, ZNFLG allocFlags);
+	struct BuddyBlock *allocateBlock(unsigned long requiredOrder, unsigned long prefBase, struct Zone *prefZone, ZNFLG allocFlags);
 
 	// 'Free' the block function
 	Void freeBlock(struct BuddyBlock *givenBlock);
 
 	// Exchange-frontend for buddy-systems
-	struct BuddyBlock *exchangeBlock(struct BuddyBlock *orgBlock, ULONG *statusReg, ULONG prefBase, ZNFLG allocFlags);
+	struct BuddyBlock *exchangeBlock(struct BuddyBlock *orgBlock, unsigned long *statusReg, unsigned long prefBase, ZNFLG allocFlags);
 
-	static void configureZones(ULONG entrySize, ULONG highestOrder, USHORT *listInfo, LINKED_LIST *listArray, struct Zone *zoneTable, ULONG count);
-	static void configurePreference(struct Zone *zoneArray, struct ZonePreference *pref,  UINT count);
+	static void configureZones(unsigned long entrySize, unsigned long highestOrder, unsigned short *listInfo, LinkedList *listArray, struct Zone *zoneTable, unsigned long count);
+	static void configurePreference(struct Zone *zoneArray, struct ZonePreference *pref,  unsigned int count);
 	static void configureZoneMappings(struct Zone *zoneTable, unsigned long zoneCount);
 
 private:
@@ -161,7 +161,7 @@ private:
 	struct Zone *zoneTable;
 	unsigned long zoneCount;
 
-	struct Zone *getZone(ULONG blockOrder, ULONG basePref, ZNFLG allocFlags, struct Zone *prefZone);
+	struct Zone *getZone(unsigned long blockOrder, unsigned long basePref, ZNFLG allocFlags, struct Zone *prefZone);
 };
 
 }

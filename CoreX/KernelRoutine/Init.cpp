@@ -14,13 +14,13 @@
 
 using namespace Module;
 
-VOID bsp_main(){
+void bsp_main(){
 	DbgLine("thread_main");
 	while(TRUE) { asm volatile("nop"); }
 }
 
 
-VOID Init() {
+void Init() {
 	DbgLine("Loading Executive Modules...");
 
 	MdSetupLoader();

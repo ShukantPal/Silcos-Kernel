@@ -23,8 +23,8 @@
 
 #ifdef NS_ADM
 	#ifdef NS_ADM_MULTIBOOT
-		import_asm ULONG admMultibootTableStart;
-		import_asm ULONG admMultibootTableEnd;
+		import_asm unsigned long admMultibootTableStart;
+		import_asm unsigned long admMultibootTableEnd;
 	#endif
 #endif
 
@@ -34,8 +34,8 @@
 #define ALIGN_MAX(no, align) (no % align) ? ((no / align) * (align + 1)) : no
 #define ALIGN_MIN(no, align) (no % align) ? ((no / align) * align) : no
 
-#define VADDR_TO_PADDR(virtualAddress) ((ULONG) virtualAddress - 0xC0000000)
-#define PADDR_TO_VADDR(physicalAddress) ((ULONG) physicalAddress + 0xC0000000)
+#define VADDR_TO_PADDR(virtualAddress) ((unsigned long) virtualAddress - 0xC0000000)
+#define PADDR_TO_VADDR(physicalAddress) ((unsigned long) physicalAddress + 0xC0000000)
 
 #define LESS(ctvName, vLimit) ((ctvName < vLimit) ? ctvName : vLimit)
 
@@ -58,7 +58,7 @@ static inline unsigned long NextPowerOf2(
 static inline unsigned long HighestBitSet(
 		unsigned long x
 ){
-	ULONG highestBit = 0;
+	unsigned long highestBit = 0;
 	while(x >>= 1)
 		++highestBit;
 	return (highestBit);
@@ -67,7 +67,7 @@ static inline unsigned long HighestBitSet(
 #else /* ARCH_64 */
 
 static inline
-ULONG NextPowerOf2(ULONG x){
+unsigned long NextPowerOf2(unsigned long x){
 	--(x);
 	x |= (x >> 1);
 	x |= (x >> 2);
@@ -79,8 +79,8 @@ ULONG NextPowerOf2(ULONG x){
 }
 
 static inline
-ULONG HighestBitSet(ULONG x){
-	ULONG highestBit = 0;
+unsigned long HighestBitSet(unsigned long x){
+	unsigned long highestBit = 0;
 	while(x >>= 1)
 		++highestBit;
 	return (highestBit);
@@ -89,8 +89,8 @@ ULONG HighestBitSet(ULONG x){
 #endif
 
 void ASSERT(
-	BOOL boolCondition,
-	CHAR *errorMsg
+	bool boolCondition,
+	char *errorMsg
 );
 
 #endif/* KERNEL.h */

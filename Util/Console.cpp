@@ -32,12 +32,13 @@
 
 static volatile U8 *writeBuffer;
 static volatile U8 *bufferPos;
-static USHORT writeIndex = 0;
+static unsigned short writeIndex = 0;
 static DebugStream Console;
 
-static inline void ClearLine(
-		unsigned long lineIndex
-){ memset((void*) bufferPos, 0, 2 * (80 - writeIndex % 80)); }
+static inline void ClearLine(unsigned long lineIndex)
+{
+	memset((void*) bufferPos, 0, 2 * (80 - writeIndex % 80));
+}
 
 static inline unsigned long SwitchLine()
 {
@@ -67,9 +68,8 @@ static inline void RestoreConsole()
 	}
 }
 
-static const char *PrintInline(
-		const char *asciiString
-){
+static const char *PrintInline(const char *asciiString)
+{
 	unsigned long inlineIndex = (unsigned long) (writeIndex % 80);
 	unsigned long oldIndex = inlineIndex;
 	while(inlineIndex < 80 && *asciiString){
@@ -107,20 +107,20 @@ static const char *PrintInline(
 }
 
 
-decl_c void ClearScreen()
+extern "C" void ClearScreen()
 {
-	USHORT currentPos = 0;
+	unsigned short currentPos = 0;
 	while(currentPos < 80 * 25 * 2) {
 		writeBuffer[currentPos++] = ' ';
 		writeBuffer[currentPos++] = 0x07;
 	}
 }
 
-decl_c U8 InitConsole(U8 *vid) {
+extern "C" U8 InitConsole(U8 *vid) {
 	writeBuffer = vid;
 	bufferPos = writeBuffer;
 
-	USHORT currentPos = 0;
+	unsigned short currentPos = 0;
 	while(currentPos < 80 * 25 * 2) {
 		writeBuffer[currentPos++] = ' ';
 		writeBuffer[currentPos++] = 0x07;
@@ -132,11 +132,11 @@ decl_c U8 InitConsole(U8 *vid) {
 	return AddStream(&Console);
 }
 
-decl_c void WriteTo(U8 *buf) {
+extern "C" void WriteTo(U8 *buf) {
 	writeBuffer = buf;
 }
 
-decl_c void Write(const char *msg) {/*
+extern "C" void Write(const char *msg) {/*
 	const char *ch = msg;
 	while(*ch != '\0'){
 		*bufferPos = *ch;
@@ -145,7 +145,7 @@ decl_c void Write(const char *msg) {/*
 		++bufferPos;
 		++ch;	
 	}
-	writeIndex += 2 * ((ULONG) ch - (ULONG) msg - 1);*/
+	writeIndex += 2 * ((unsigned long) ch - (unsigned long) msg - 1);*/
 
 	RestoreConsole();
 
@@ -159,7 +159,7 @@ decl_c void Write(const char *msg) {/*
 	}
 }
 
-decl_c void WriteLine(const char *msg) {
+extern "C" void WriteLine(const char *msg) {
 	Write(msg);
 	SwitchLine();
 }

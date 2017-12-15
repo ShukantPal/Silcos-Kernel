@@ -23,11 +23,11 @@
 #include "icxxabi.h"
 #include <Util/LinkedList.h>
 
-decl_c {
+extern "C" {
 
 extern ObjectInfo *tElf_ABI_ExitorFunc_;
 LinkedList __atExitEntries;
-void *__dsohandle = 0;
+void *__dso_handle = 0;
 
 /**
  * Function: __cxa_atexit

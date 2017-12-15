@@ -23,9 +23,9 @@ typedef struct Exec SchedEntity;
 
 #define AdoptSched(Ex, Sl) (Ex -> OwnerList = Sl)
 
-typedef LINKED_LIST ExecList;
+typedef LinkedList ExecList;
 
-#define AddEntity(List, Entity) KRUNNABLE *e = Entity; e->OwnerList=List; AddElement((LIST_ELEMENT*) Entity,(LINKED_LIST*) List);
-#define RemoveEntity(Entity) RemoveElement((LIST_ELEMENT*) Entity, (LINKED_LIST*) ((KRUNNABLE *)Entity)->OwnerList)
+#define AddEntity(List, Entity) KRUNNABLE *e = Entity; e->OwnerList=List; AddElement((LIST_ELEMENT*) Entity,(LinkedList*) List);
+#define RemoveEntity(Entity) RemoveElement((LIST_ELEMENT*) Entity, (LinkedList*) ((KRUNNABLE *)Entity)->OwnerList)
 
 #endif /* Exec/SchedList.h */

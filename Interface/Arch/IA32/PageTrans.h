@@ -24,19 +24,19 @@
 #define PgUserLdBTI 2
 #define PgCheDisableBTI 3
 
-typedef ULONG VIRTUAL_T;
+typedef unsigned long ADDRESS;
 typedef U64 PHYSICAL_T;
 typedef U64 PADDRESS;
 typedef U64 PAGE_ATTRIBUTES;
 
-typedef ULONG ADDRESS;
+typedef unsigned long ADDRESS;
 
 #define PDPT(ptran) (ptran -> HardwarePage.PDPT)
 
 typedef
 struct PageTrans {
-	UINT Padding[6]; /* Provide 32-byte padding for PDPT. */
-	ULONGLONG PDPT[4];
+	unsigned int Padding[6]; /* Provide 32-byte padding for PDPT. */
+	unsigned long long PDPT[4];
 } PAGE_TRANSALATOR;
 
 import_asm void EraseIdentityPage(Void);

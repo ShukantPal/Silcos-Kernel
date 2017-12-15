@@ -8,14 +8,14 @@
 #include <HAL/Processor.h>
 #include <Types.h>
 
-VOID SyTID(VOID);
-VOID SyCreateThread(VOID);
-VOID SyExitThread(VOID);
-VOID SyWaitForThread(VOID);
-VOID SySleepThread(VOID);
-VOID SyWaitForThreadTill(VOID);
-VOID SyDeleteThread(VOID);
-VOID SyStopThread(VOID);
-VOID SyWakeupThread(VOID);
+void SyTID(void);
+void SyCreateThread(void);
+void SyExitThread(void);
+void SyWaitForThread(void);
+void SySleepThread(void);
+void SyWaitForThreadTill(void);
+void SyDeleteThread(void);
+void SyStopThread(void);
+void SyWakeupThread(void);
 
 #endif /* BranchSymbols.h */

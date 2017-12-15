@@ -19,28 +19,28 @@ enum GateType
 
 struct IDTEntry
 {
-	USHORT LowOffset;	
-	USHORT Selector;
-	UCHAR ReservedSpace;
-	UCHAR GateType : 4;
-	UCHAR StorageSegment : 1;
-	UCHAR DPL : 2;
-	UCHAR Present : 1;
-	USHORT HighOffset;
+	unsigned short LowOffset;	
+	unsigned short Selector;
+	unsigned char ReservedSpace;
+	unsigned char GateType : 4;
+	unsigned char StorageSegment : 1;
+	unsigned char DPL : 2;
+	unsigned char Present : 1;
+	unsigned short HighOffset;
 } __attribute__((__packed__));
 
 struct IDTPointer {
-	USHORT Limit;
-	UINT Base;
+	unsigned short Limit;
+	unsigned int Base;
 } __attribute__((__packed__));
 
 #else
 	struct IDTEntry;
 #endif/* NAMESPACE_IDT */
 
-decl_c void MapHandler(
-	USHORT handlerNo,
-	UINT handlerAddress,
+extern "C" void MapHandler(
+	unsigned short handlerNo,
+	unsigned int handlerAddress,
 	IDTEntry *pIDT
 );
 

@@ -22,7 +22,7 @@ DECLARE_TYPE(MessageQueueTp, sizeof(MESSAGE_QUEUE));
 DECLARE_TYPE(MessageTp, sizeof(MESSAGE));
 DECLARE_TYPE(AVLNodeTp, sizeof(AVL_NODE));
 DECLARE_TYPE(AVLTreeTp, sizeof(AVL_TREE));
-DECLARE_TYPE(LinkedListTp, sizeof(LINKED_LIST));
+DECLARE_TYPE(LinkedListTp, sizeof(LinkedList));
 KVECTOR_CONTAINER msgQueueVector = NEW_KVECTOR_CONTAINER;
 
 MESSAGE_QUEUE mq;
@@ -33,19 +33,19 @@ ID CreateMsgQueue(SIZE queueMaxBytes, SIZE queueMaxMessages)
 	memsetf(msgQueue, 0, sizeof(MESSAGE_QUEUE));
 	msgQueue->UsageLimit = (queueMaxMessages > 128) ? 128 : queueMaxMessages;
 	msgQueue->SizeLimit = (queueMaxBytes > KB(16)) ? KB(16) : queueMaxBytes;
-	msgQueue->PriorityMsgTree.FreeNode = (VOID (*) (AVL_NODE*)) &KDeleteObject;
+	msgQueue->PriorityMsgTree.FreeNode = (void (*) (AVL_NODE*)) &KDeleteObject;
 	return (SetKVector((KVECTOR *) msgQueue, &msgQueueVector));
 }
 
-LONG ReadMsg(ID queueID, VOID *bufferPointer, USHORT bufferSize, USHORT msgTag, USHORT minPriority, ULONG msgFlags, USHORT timeOut)
+long ReadMsg(ID queueID, void *bufferPointer, unsigned short bufferSize, unsigned short msgTag, unsigned short minPriority, unsigned long msgFlags, unsigned short timeOut)
 {
 	CONTEXT *pContext = GetContext();
 
-	if(!CheckUsability((VIRTUAL_T) bufferPointer, pContext))
+	if(!CheckUsability((ADDRESS) bufferPointer, pContext))
 		return (-1);
 
 	MESSAGE_QUEUE *msgQueue = ReadKVector(MESSAGE_QUEUE, queueID, &msgQueueVector);
-	BOOL queueUsable = CheckUsability((VIRTUAL_T) msgQueue, pContext);
+	bool queueUsable = CheckUsability((ADDRESS) msgQueue, pContext);
 
 	if(queueUsable) {
 		
@@ -54,7 +54,7 @@ LONG ReadMsg(ID queueID, VOID *bufferPointer, USHORT bufferSize, USHORT msgTag, 
 	return (-1);
 }
 
-LONG SendMsg(ID queueID, VOID *bufferPointer, USHORT bufferSize, USHORT msgTag, USHORT msgPriority, ULONG msgFlags, USHORT timeOut)
+long SendMsg(ID queueID, void *bufferPointer, unsigned short bufferSize, unsigned short msgTag, unsigned short msgPriority, unsigned long msgFlags, unsigned short timeOut)
 {
 	PROCESSOR *pInfo = GetProcessorById(PROCESSOR_ID);
 	KTHREAD *pThread = pInfo->PoExT;
@@ -64,7 +64,7 @@ LONG SendMsg(ID queueID, VOID *bufferPointer, USHORT bufferSize, USHORT msgTag, 
 		return (-1);
 	else {
 		MESSAGE_QUEUE *msgQueue = ReadKVector(MESSAGE_QUEUE, queueID, &msgQueueVector);
-		BOOL queueUsable = CheckUsability((ADDRESS) msgQueue, pContext);
+		bool queueUsable = CheckUsability((ADDRESS) msgQueue, pContext);
 
 		MESSAGE *msgPtr = KNewObject(&MessageTp);
 	}

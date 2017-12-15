@@ -31,8 +31,7 @@ unsigned int Object::hashCode()
 	return Integer::hashCode((unsigned long)this / 2);
 }
 
-bool Object::equals(
-		Object *anotherObject
-){
+bool Object::equals(Object *anotherObject)
+{
 	return (this == anotherObject);
 }

@@ -5,7 +5,7 @@
 #include <IA32/PageExplorer.h>
 #include <Memory/KFrameManager.h>
 
-U64 *GetDirectory(ULONG dirOffset, ULONG frFlags, CONTEXT *Context){
+U64 *GetDirectory(unsigned long dirOffset, unsigned long frFlags, CONTEXT *Context){
 	if(dirOffset == 3)
 		return (GlobalDirectory);
 
@@ -18,7 +18,7 @@ U64 *GetDirectory(ULONG dirOffset, ULONG frFlags, CONTEXT *Context){
 	return (U64*) (GB(3) + MB(2 * 511) + KB(4 * (508 + dirOffset)));
 }
 
-U64 *GetPageTable(USHORT dirOffset, USHORT tableOffset, ULONG frFlags, CONTEXT *Context){
+U64 *GetPageTable(unsigned short dirOffset, unsigned short tableOffset, unsigned long frFlags, CONTEXT *Context){
 	U64 *pgDirectory = GetDirectory(dirOffset, frFlags, Context);
 	if(dirOffset == 3){
 		if(!(pgDirectory[tableOffset] & 1)){

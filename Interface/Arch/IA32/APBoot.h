@@ -29,7 +29,7 @@ import_asm void APBoot
 import_asm void APBootSequenceStart
 ();/* Only a exported symbol */
 
-import_asm ULONG APBootSequenceEnd
+import_asm unsigned long APBootSequenceEnd
 ();/* Only a exported symbol */
 
 import_asm void apSetupInfo

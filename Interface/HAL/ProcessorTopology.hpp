@@ -34,8 +34,7 @@
 #include <Util/CircularList.h>
 #include <Util/Memory.h>
 
-struct _PROCESSOR;
-typedef _PROCESSOR Processor;
+struct Processor;
 
 namespace HAL
 {
@@ -110,11 +109,11 @@ public:
 	static void unplug();
 	static void del(unsigned long id);
 
-struct Iterator
-{
-	static void ofEach(Processor *initialCPU,
-			void (*domainUpdater)(Domain *), unsigned long limit);
-};
+	struct Iterator
+	{
+		static void ofEach(Processor *initialCPU,
+				void (*domainUpdater)(Domain *), unsigned long limit);
+	};
 
 private:
 	ProcessorTopology();// No usage as object is statically used

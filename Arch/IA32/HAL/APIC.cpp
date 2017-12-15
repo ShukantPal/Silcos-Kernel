@@ -16,7 +16,7 @@
 #include <IA32/APIC.h>
 #include <IA32/IDT.h>
 
-UINT VAPICBase;
+unsigned int VAPICBase;
 extern IDTEntry defaultIDT[256];
 import_asm void TimerUpdate();
 
@@ -26,10 +26,10 @@ import_asm void TimerUpdate();
  * Summary:
  * Handles the tick related to clock on ticked kernel configurations.
  */
-import_asm void KiClockRespond(VOID);
+import_asm void KiClockRespond(void);
 
-VOID SetupAPICTimer(){
-	MapHandler(0x20, (UINT) &TimerUpdate, defaultIDT);
+void SetupAPICTimer(){
+	MapHandler(0x20, (unsigned int) &TimerUpdate, defaultIDT);
 	WtApicRegister(APIC_REGISTER_SIVR, 0xFE | (1 << 8));
 	WtApicRegister(APIC_REGISTER_TIMER_DCR, 128);
 	WtApicRegister(APIC_REGISTER_LVT_TR, (1 << 17) | 0x20);
@@ -46,27 +46,30 @@ VOID SetupAPICTimer(){
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID SetupTick(VOID){
+void SetupTick(void)
+{
 	extern U32 BSP_ID;
 	if(RdApicRegister(APIC_REGISTER_ID) == BSP_ID)
-		MapHandler(0x20, (UINT) &KiClockRespond, (IDTEntry*) &defaultIDT);
+		MapHandler(0x20, (unsigned int) &KiClockRespond, (IDTEntry*) &defaultIDT);
 	WtApicRegister(APIC_REGISTER_SIVR, 0xFE | (1 << 8));
 	WtApicRegister(APIC_REGISTER_TIMER_DCR, 32);
 	WtApicRegister(APIC_REGISTER_LVT_TR, (1 << 17) | 0x20);
 	WtApicRegister(APIC_REGISTER_TIMER_ICR, 1 << 24);
 }
 
-void TriggerIPI(U32 destination, U32 controlSet){
+void TriggerIPI(unsigned int destination, unsigned int controlSet)
+{
 	WtApicRegister(APIC_REGISTER_ICR_HIGH, (destination << 24));
 	WtApicRegister(APIC_REGISTER_ICR_LOW, controlSet);
 }
 
-VOID TriggerManualIPI(U32 lowerICR, U32 higherICR){
+void TriggerManualIPI(U32 lowerICR, U32 higherICR)
+{
 	WtApicRegister(APIC_REGISTER_ICR_HIGH, higherICR | RdApicRegister(APIC_REGISTER_ICR_HIGH));
 	WtApicRegister(APIC_REGISTER_ICR_LOW, lowerICR | RdApicRegister(APIC_REGISTER_ICR_LOW));
 }
 
-VOID SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex){
+void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex){
 	WtApicRegister(APIC_REGISTER_ICR_HIGH, ((U8) apicId << 24) | RdApicRegister(APIC_REGISTER_ICR_HIGH));
 	WtApicRegister(APIC_REGISTER_ICR_LOW, vectorIndex | LAPIC_DM_FIXED | RdApicRegister(APIC_REGISTER_ICR_LOW));
 }

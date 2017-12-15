@@ -15,24 +15,24 @@
 
 struct DebugStream
 {
-	ULONG Status;
-	CHAR *CurrentBuffer;
+	unsigned long Status;
+	char *CurrentBuffer;
 	Void (*Write) (const char *);
 	Void (*WriteLine) (const char *);
 };
 
-decl_c
+extern "C"
 {
 void Dbg(const char *dbgString);
-void DbgInt(SIZE_T);
-void DbgErro(SIZE_T, ULONG Digits);
-void DbgDump(void *Pointer, ULONG DumpByteSize);
-void DbgBinOut(Void *Pointer, ULONG DumpByteSize);
+void DbgInt(SIZE);
+void DbgErro(SIZE, unsigned long Digits);
+void DbgDump(void *Pointer, unsigned long DumpByteSize);
+void DbgBinOut(Void *Pointer, unsigned long DumpByteSize);
 void DbgLine(const char *String);
 
-	/* Debug-stream g/s interface */
-ULONG AddStream(struct DebugStream *);
-void RemoveStream(ULONG Index);
+/* Debug-stream g/s interface */
+unsigned long AddStream(struct DebugStream *);
+void RemoveStream(unsigned long Index);
 
 U8 InitConsole(U8* videoRAM);
 void Write(const char *consoleASCIIString);

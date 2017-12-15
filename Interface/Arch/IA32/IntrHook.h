@@ -7,10 +7,10 @@
 
 #include <TYPE.h>
 
-import_asm VOID DoubleFault();
-import_asm VOID InvalidTSS();
-import_asm VOID SegmentNotPresent();
-import_asm VOID GeneralProtectionFault();
-import_asm VOID PageFault();
+import_asm void DoubleFault();
+import_asm void InvalidTSS();
+import_asm void SegmentNotPresent();
+import_asm void GeneralProtectionFault();
+import_asm void PageFault();
 
 #endif /* IA32/IntrHook.h */

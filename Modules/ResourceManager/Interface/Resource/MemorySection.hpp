@@ -19,7 +19,7 @@
 #ifndef MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_MEMORYSECTION_HPP_
 #define MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_MEMORYSECTION_HPP_
 
-#include "Pager.h"
+#include <Memory/Pager.h>
 #include <Memory/KMemoryManager.h>
 #include <Util/LinkedList.h>
 #include <Util/RBTree.hxx>
@@ -52,8 +52,8 @@ struct MemorySection
 		LinkedListNode chainNode;// Used for linking in a list
 		struct
 		{
-			MemorySection *nextSection;
-			MemorySection *lastSection;
+			MemorySection *next;
+			MemorySection *last;
 		};
 	};
 	unsigned long initialAddress;// Initial address of region (modulo 4-8k)
@@ -70,12 +70,9 @@ struct MemorySection
 	};
 	PAGE_ATTRIBUTES pagerFlags;// Paging attributes
 
-	MemorySection(
-			unsigned long initialAddress,
-			unsigned long pageCount,
-			unsigned long cfgFlags,
-			PAGE_ATTRIBUTES pagerFlags
-	){
+	MemorySection(unsigned long initialAddress, unsigned long pageCount,
+			unsigned long cfgFlags, PAGE_ATTRIBUTES pagerFlags)
+	{
 		this->initialAddress = initialAddress;
 		this->finalAddress = initialAddress + pageCount * KPGSIZE;
 		this->pageCount = pageCount;
@@ -83,13 +80,9 @@ struct MemorySection
 		this->pagerFlags = pagerFlags;
 	}
 
-	MemorySection(
-			unsigned long initialAddress,
-			unsigned long finalAddress,
-			unsigned short typeId,
-			unsigned short ctlFlags,
-			PAGE_ATTRIBUTES pagerFlags
-	){
+	MemorySection(unsigned long initialAddress, unsigned long finalAddress,
+			unsigned short typeId, unsigned short ctlFlags, PAGE_ATTRIBUTES pagerFlags)
+	{
 		this->initialAddress = initialAddress;
 		this->finalAddress = finalAddress;
 		this->pageCount = (finalAddress - initialAddress) >> KPGOFFSET;

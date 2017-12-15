@@ -10,7 +10,7 @@
 #include "XTP.h"
 
 /* NOT a syscall. */
-VOID XNewProcess() {
+void XNewProcess() {
 	struct Thread *Caller,
 	struct RuntimeInfo Runtime
 }

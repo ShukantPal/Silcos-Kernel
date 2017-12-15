@@ -112,7 +112,7 @@ struct ElfHeader
 	#define ELFMAG2		'L' // EI_MAG2
 	#define ELFMAG3		'F' // EI_MAG3
 
-	UCHAR fileIdentifier[EI_NIDENT];// Identify the file as an object-file & provide machine-independent data
+	unsigned char fileIdentifier[EI_NIDENT];// Identify the file as an object-file & provide machine-independent data
 	ELF32_HALF fileType;// Identifies the object-file type
 	ELF32_HALF platformRequired;// Required architecture for and individual file
 	ELF32_WORD buildVersion;// Object-file version
@@ -128,8 +128,8 @@ struct ElfHeader
 	ELF32_HALF sectionStringIndex;// Section header table index of entry associated with section name-table
 };
 
-#define PROGRAM_HEADER(eHeader) ((struct ProgramHeader *) ((ULONG) eHeader + eHeader->programHeaderOffset))
-#define SECTION_HEADER(eHeader) (eHeader->sectionHeaderOffset) ? ((struct SectionHeader *) ((ULONG) eHeader + eHeader->sectionHeaderOffset)) : NULL
+#define PROGRAM_HEADER(eHeader) ((struct ProgramHeader *) ((unsigned long) eHeader + eHeader->programHeaderOffset))
+#define SECTION_HEADER(eHeader) (eHeader->sectionHeaderOffset) ? ((struct SectionHeader *) ((unsigned long) eHeader + eHeader->sectionHeaderOffset)) : NULL
 
 /* Special Section Indexes */
 enum SectionIndex
@@ -219,8 +219,8 @@ struct Symbol {
 	ELF32_WORD Name;/* Index into object file's string, holding string of symbol name (no name if 0) */
 	ELF32_ADDR Value;/* Value of associated symbol */
 	ELF32_WORD Size;/* Associated size of the symbol in bytes */
-	UCHAR Info;/* Specifies the symbol's type and binding attributes */
-	UCHAR Other;/* Currently holds 0 */
+	unsigned char Info;/* Specifies the symbol's type and binding attributes */
+	unsigned char Other;/* Currently holds 0 */
 	ELF32_HALF SectionIndex;/* Relevant section header table index */
 };
 
@@ -240,8 +240,8 @@ enum RelocationType {
 };
 
 #define ELF32_R_SYM(i) ((i) >> 8)
-#define ELF32_R_TYPE(i) ((UCHAR) (i))
-#define ELF32_R_INFO(s, t) (((s) << 8) + (UCHAR) (t))
+#define ELF32_R_TYPE(i) ((unsigned char) (i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char) (t))
 
 struct RelEntry {
 	ELF32_ADDR Offset;
@@ -335,9 +335,9 @@ struct DynamicEntry
 
 struct SymbolTable
 {
-	CHAR *nameTable;
+	char *nameTable;
 	struct Symbol *entryTable;
-	ULONG entryCount;
+	unsigned long entryCount;
 };
 
 /*
@@ -352,24 +352,24 @@ struct SymbolTable
 struct HashTable
 {
 	struct SectionHeader *hashSectionHdr;/* Section-header, optional (@Deprecated) */
-	ULONG bucketEntries;/* No. of bucket entries */
-	ULONG chainEntries;/* No. of chain entries */
-	ULONG *bucketTable;/* Pointer to bucket table */
-	ULONG *chainTable;/* Pointer to chain table */
+	unsigned long bucketEntries;/* No. of bucket entries */
+	unsigned long chainEntries;/* No. of chain entries */
+	unsigned long *bucketTable;/* Pointer to bucket table */
+	unsigned long *chainTable;/* Pointer to chain table */
 };
 
 struct RelaTable
 {
 	struct RelaEntry *entryTable;
-	ULONG entryCount;
-	ULONG entrySize;
+	unsigned long entryCount;
+	unsigned long entrySize;
 };
 
 struct RelTable
 {
 	struct RelEntry *entryTable;
-	ULONG entryCount;
-	ULONG entrySize;
+	unsigned long entryCount;
+	unsigned long entrySize;
 };
 
 struct RelocationTable
@@ -378,20 +378,20 @@ struct RelocationTable
 	{
 		struct RelaEntry *relaEntries;
 		struct RelEntry *relEntries;
-		ULONG tableLocation;
+		unsigned long tableLocation;
 	};
-	ULONG entryCount;
-	ULONG entrySize;
-	ULONG relocType;
+	unsigned long entryCount;
+	unsigned long entrySize;
+	unsigned long relocType;
 };
 
 struct DynamicTable {
 	struct ElfDynamicEntry *EntryTable;
-	ULONG EntryCount;
+	unsigned long EntryCount;
 };
 
 struct ProgramCache {
-	ULONG PageCount;/* Total number of pages */
+	unsigned long PageCount;/* Total number of pages */
 	struct ProgramHeader *Dynamic;
 	struct DynamicTable DynamicTable;
 };
@@ -429,33 +429,33 @@ struct ElfCache {
 	struct Header *eHeader;
 } KMOD_ECACHE;
 
-BOOL MdCheckELFCompat(
+bool MdCheckELFCompat(
 		struct ProgramHeader *eHeader
 );
 
 #ifdef ARCH_32
 
-VOID MdLoadELF(
+void MdLoadELF(
 		struct ElfHeader *eHeader,
 		struct Module::ModuleRecord *
 );
 
 #else // ARCH_64
 
-VOID MdLoadELF(
+void MdLoadELF(
 		ELF64_EHDR *eHeader
 );
 
 #endif
 
-ULONG
+unsigned long
 EHashSymbolName(
-		CHAR *eSymbolName
+		char *eSymbolName
 );
 
-Symbol *ESearchForSymbol(CHAR *eRequiredSymbolNme, SymbolTable *eSymbolTbl,
+Symbol *ESearchForSymbol(char *eRequiredSymbolNme, SymbolTable *eSymbolTbl,
 					struct HashTable *eHashTbl);
-Symbol * ESearchForSymbolName(CHAR *eRequiredSymbolName);
+Symbol * ESearchForSymbolName(char *eRequiredSymbolName);
 
 void ESetupLoader(void);
 

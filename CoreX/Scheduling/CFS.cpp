@@ -4,13 +4,15 @@
 #include <Exec/CFS.h>
 #include <Exec/Scheduler.h>
 
-VOID ScheduleInCFS(struct _PROCESSOR *cpu){
+void ScheduleInCFS(struct Processor *cpu)
+{
 	SCHED_CFS *cfs = &cpu->CFS;
 	KRUNNABLE *runner = MaxValueNode(cfs->RunnerMap.Root);
 	return (runner);
 }
 
-VOID InsertRunnerInCFS(KRUNNABLE *runner, struct _PROCESSOR *cpu){
+void InsertRunnerInCFS(KRUNNABLE *runner, struct Processor *cpu)
+{
 	SCHED_CFS *cfs = &cpu->CFS;
 	KSCHED_ROLLER *cfsRoller = cfs->Roller;
 
@@ -18,10 +20,11 @@ VOID InsertRunnerInCFS(KRUNNABLE *runner, struct _PROCESSOR *cpu){
 	AVLInsert(&runner->Node, &cfs->RunnerMap);
 }
 
-VOID RemoveRunnerInCFS(KRUNNABLE *runner, struct _PROCESSOR *cpu){
+void RemoveRunnerInCFS(KRUNNABLE *runner, struct Processor *cpu)
+{
 	SCHED_CFS *cfs = &cpu->CFS;
 	KSCHED_ROLLER *cfsRoller = cfs->Roller;
 
-	if(AVLDelete((ULONG) runner, &cfs->RunnerMap))
+	if(AVLDelete((unsigned long) runner, &cfs->RunnerMap))
 		cfsRoller->RunnerLoad -= 1;
 }

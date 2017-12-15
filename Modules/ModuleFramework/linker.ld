@@ -19,7 +19,15 @@ PHDRS {
 SECTIONS {
 	. = 0x00000000 + SIZEOF_HEADERS;
 	
-	.text ALIGN(0x1000):{
+	.text ALIGN(0x1000) : {
+		ctorsStart = .;
+		*(SORT(.ctors*))
+		ctorsEnd = .;
+		
+		dtorsStart = .;
+		*(SORT(.dtors*))
+		dtorsEnd = .;
+		
 		*(.text)
 		*(.text*)
 		*(.rdata)

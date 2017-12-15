@@ -22,13 +22,13 @@
 using namespace Module;
 using namespace Module::Elf;
 
-decl_c VOID elf_dbg() { Dbg("ELF PROGRAME CALLS MK");}
-CHAR elf_data;
+extern "C" void elf_dbg() { Dbg("ELF PROGRAME CALLS MK");}
+char elf_data;
 
 ObjectInfo *tKMOD_RECORD;
 
-CHAR nmElfManager[] = "Module::Elf::ElfManager";
-CHAR nmDynamicLink[] = "Module::DynamicLink";
+char nmElfManager[] = "Module::Elf::ElfManager";
+char nmDynamicLink[] = "Module::DynamicLink";
 
 /*
  * ElfManager objects are allocated dynamically
@@ -40,7 +40,7 @@ struct ObjectInfo *tElfManager;// class ElfManager - Slab-Allocator
  */
 struct ObjectInfo *tDynamicLink;// struct DynamicLink - Slab-Allocator
 
-LINKED_LIST LoadedModules;
+LinkedList LoadedModules;
 
 /**
  * Function: ModuleLoader::moveFileIntoMemory
@@ -53,11 +53,10 @@ LINKED_LIST LoadedModules;
  *
  * Author: Shukant Pal
  */
-void *ModuleLoader::moveFileIntoMemory(
-		BlobRegister &blob
-){
+void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
+{
 	blob.blobSize = NextPowerOf2(blob.blobSize);
-	ULONG fileSize = blob.blobSize;
+	unsigned long fileSize = blob.blobSize;
 
 	#ifdef ARCH_32
 		return_if(fileSize > MB(2), FALSE);
@@ -65,8 +64,8 @@ void *ModuleLoader::moveFileIntoMemory(
 		return_if(fileSize > MB(4), FALSE);
 	#endif
 
-	Void *memoryArena = (VOID *) KiPagesAllocate(HighestBitSet(fileSize >> KPGOFFSET), ZONE_KMODULE, FLG_NONE);
-	EnsureAllMappings((ULONG) memoryArena, blob.loadAddr, blob.blobSize, NULL, PRESENT | READ_WRITE);
+	Void *memoryArena = (void *) KiPagesAllocate(HighestBitSet(fileSize >> KPGOFFSET), ZONE_KMODULE, FLG_NONE);
+	EnsureAllMappings((unsigned long) memoryArena, blob.loadAddr, blob.blobSize, NULL, PRESENT | READ_WRITE);
 
 	return (memoryArena);
 }
@@ -84,11 +83,8 @@ void *ModuleLoader::moveFileIntoMemory(
  *
  * Author: Shukant Pal
  */
-ABI ModuleLoader::globalizeDynamic(
-		void *moduleMemory,
-		ModuleRecord& kmRecord,
-		BlobRegister &blob
-){
+ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob)
+{
 	if(ElfAnalyzer::validateBinary(moduleMemory)){
 		ElfManager *moduleHandler = new(tElfManager) ElfManager((ElfHeader*) moduleMemory);
 		DynamicLink *linkHandle = moduleHandler->exportDynamicLink();
@@ -97,11 +93,22 @@ ABI ModuleLoader::globalizeDynamic(
 		kmRecord.BaseAddr = moduleHandler->baseAddress;
 
 		if(moduleHandler->binaryHeader->entryAddress)
-			kmRecord.entryAddr =
-					kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
+			kmRecord.entryAddr = kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
+
+		DynamicEntry* dynamicIniter = moduleHandler->getDynamicEntry(DT_INIT);
+		if(dynamicIniter){
+			kmRecord.init = (void (*)())(kmRecord.BaseAddr + dynamicIniter->refPointer);
+		} else {
+			Symbol *__initer = moduleHandler->getStaticSymbol("__init");
+			if(__initer)
+				kmRecord.init = (void (*)())(kmRecord.BaseAddr + __initer->Value);
+		}
+
+		DynamicEntry* dynamicFinier = moduleHandler->getDynamicEntry(DT_FINI);
+		if(dynamicFinier)
+			kmRecord.fini = (void (*)())(kmRecord.BaseAddr + dynamicFinier->refPointer);
 
 		blob.manager = moduleHandler;
-
 		return (ABI::ELF);
 	} else
 		return (ABI::INVALID);
@@ -118,10 +125,8 @@ ABI ModuleLoader::globalizeDynamic(
  *
  * Author: Shukant Pal
  */
-void ModuleLoader::linkFile(
-		ABI binaryIfc,
-		BlobRegister& blob
-){
+void ModuleLoader::linkFile(ABI binaryIfc, BlobRegister& blob)
+{
 	ElfManager *manager;
 	switch(binaryIfc)
 	{
@@ -150,23 +155,23 @@ void ModuleLoader::linkFile(
  * Args:
  * PADDRESS moduleAddress - Physical address of the loaded module
  * PADDRESS moduleSIze - Size of the module, in bytes
- * CHAR *cmdLine - Command line option loaded for the module
+ * char *cmdLine - Command line option loaded for the module
  * struct ModuleRecord *record - Optional, a module record for the binary
  *
  * Version: 1
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-void ModuleLoader::loadFile(
-		BlobRegister &blob
-){
+void ModuleLoader::loadFile(BlobRegister &blob)
+{
 	Void *modMemory = ModuleLoader::moveFileIntoMemory(blob);
 
 	blob.regForm->linkerInfo = NULL;
 	RecordManager::registerRecord(blob.regForm);
 
 	blob.abiFound =
-			ModuleLoader::globalizeDynamic(modMemory, *blob.regForm, blob);
+			ModuleLoader::globalizeDynamic(modMemory,
+							*blob.regForm, blob);
 
 	ModuleLoader::linkFile(blob.abiFound, blob);
 }
@@ -190,7 +195,7 @@ void ModuleLoader::loadBundle(
 	BlobRegister *blob = (BlobRegister*) blobList.Head;
 
 	while(blob != NULL){
-		blob->fileAddr = (ULONG) ModuleLoader::moveFileIntoMemory(*blob);
+		blob->fileAddr = (unsigned long) ModuleLoader::moveFileIntoMemory(*blob);
 		blob->regForm->linkerInfo = NULL;
 		RecordManager::registerRecord(blob->regForm);
 		blob->abiFound =
@@ -213,23 +218,19 @@ const char *nmElf_ABI_Exitor_Func_ = "Elf::ABI::ExitorFunc (__cxa)";
 /* @See(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
 ObjectInfo *tElf_ABI_ExitorFunc_;
 
-VOID MdSetupLoader()
+void MdSetupLoader()
 {
-	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD", sizeof(KMOD_RECORD),
-					sizeof(ULONG), NULL, NULL);
+	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD", sizeof(KMOD_RECORD), sizeof(unsigned long), NULL, NULL);
 
-	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager),
-					sizeof(ULONG), NULL, NULL);
+	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager), sizeof(unsigned long), NULL, NULL);
 
-	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink),
-					sizeof(unsigned long), NULL, NULL);
+	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink), sizeof(unsigned long), NULL, NULL);
 
-	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_,
-				sizeof(::Elf::ABI::ExitorFunction),
-				sizeof(long), NULL, NULL);
+	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_, sizeof(::Elf::ABI::ExitorFunction),
+						sizeof(long), NULL, NULL);
 }
 
-KMOD_RECORD *MdCreateModule(CHAR *moduleName, ULONG moduleVersion, ULONG moduleType){
+KMOD_RECORD *MdCreateModule(char *moduleName, unsigned long moduleVersion, unsigned long moduleType){
 	KMOD_RECORD *mdRecord = (KMOD_RECORD*) KNew(tKMOD_RECORD, KM_SLEEP);
 	memcpy(moduleName, &mdRecord->buildName, 16);
 	mdRecord->buildVersion = moduleVersion;

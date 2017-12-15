@@ -169,12 +169,12 @@ union {
 } IA32_APIC_BASE_MSR;
 
 static inline
-VOID ReadMSR(U32 msrOffset, U64 *msrValue){
+void ReadMSR(U32 msrOffset, U64 *msrValue){
 	asm volatile("RDMSR" : "=a"(*((U32*) msrValue)), "=d"(*((U32*) ((UBYTE*) msrValue + sizeof(U32)))) : "c"(msrOffset));
 }
 
 static inline
-VOID WriteMSR(U32 msrOffset, U64 msrValue){
+void WriteMSR(U32 msrOffset, U64 msrValue){
 	asm volatile("WRMSR" : : "a"((U32) msrValue), "d"(*((U32*) ((UBYTE*) &msrValue + sizeof(U32)))), "c"(msrOffset));
 }
 

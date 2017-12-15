@@ -19,7 +19,7 @@ ObjectInfo tObjectInfo;
 const char *nmSlab = "@KObjectManager::Slab"; /* Name of OBSLAB */
 ObjectInfo tSlab;
 ObjectInfo *tAVLNode;
-CHAR nmLinkedList[] = "LinkedList";
+char nmLinkedList[] = "LinkedList";
 ObjectInfo *tLinkedList;
 
 void obSetupAllocator(Void)
@@ -65,14 +65,12 @@ CLIST tList; /* List of active kernel object managers */
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-static Slab* ObCreateSlab(
-		ObjectInfo *metaInfo,
-		unsigned long kmSleep
-){
+static Slab* ObCreateSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
+{
 	ADDRESS pageAddress;
 	Slab *newSlab;
 
-	ULONG slFlags = (kmSleep) ? (FLG_ATOMIC) : (FLG_NONE);
+	unsigned long slFlags = (kmSleep) ? (FLG_ATOMIC) : (FLG_NONE);
 	pageAddress = KiPagesAllocate(0, ZONE_KOBJECT, slFlags);
 	EnsureUsability(pageAddress, NULL, slFlags, KernelData);
 
@@ -89,21 +87,26 @@ static Slab* ObCreateSlab(
 	Stack *bufferStack = &newSlab->bufferStack;
 	void (*ctor) (void *) = metaInfo->ctor;
 
-	if(ctor != NULL){
-		while(obPtr < bufferFence) {
+	if(ctor != NULL)
+	{
+		while(obPtr < bufferFence)
+		{
 			ctor((void*) obPtr);
 			PushElement((STACK_ELEMENT *) obPtr, bufferStack);
 			obPtr += bufferSize;
 		}
-	} else {
-		while(obPtr < bufferFence){
+	}
+	else
+	{
+		while(obPtr < bufferFence)
+		{
 			PushElement((StackElement*) obPtr, bufferStack);
 			obPtr += bufferSize;
 		}
 	}
 
 	KPAGE *slabPage = KPG_AT(pageAddress);
-	slabPage->HashCode = (ULONG) metaInfo;
+	slabPage->HashCode = (unsigned long) metaInfo;
 
 	return (newSlab);
 }
@@ -124,23 +127,26 @@ static Slab* ObCreateSlab(
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-static void ObDestroySlab(
-		Slab *emptySlab,
-		ObjectInfo *metaInfo
-){
-	if(metaInfo->dtor != NULL) {
+static void ObDestroySlab(Slab *emptySlab, ObjectInfo *metaInfo)
+{
+	if(metaInfo->dtor != NULL)
+	{
 		STACK_ELEMENT *objectPtr = emptySlab->bufferStack.Head;
 		void (*destructObject)(void*)  = metaInfo->dtor;
-		while(objectPtr != NULL) {
-			destructObject((VOID *) objectPtr);
+		while(objectPtr != NULL)
+		{
+			destructObject((void *) objectPtr);
 			objectPtr = objectPtr->Next;
 		}
 	}
 
 	ADDRESS pageAddress;
-	if(metaInfo->rawSize <= (KPGSIZE / 8)) {
+	if(metaInfo->rawSize <= (KPGSIZE / 8))
+	{
 		pageAddress = (ADDRESS) emptySlab & ~((1 << KPGOFFSET) - 1);
-	} else {
+	}
+	else
+	{
 		// TODO : Get pageAddress using self-scaling hash tree
 		pageAddress = 0;
 	}
@@ -169,19 +175,19 @@ static void ObDestroySlab(
  * @Version 1
  * @Since Circuit 2.03
  */
-static Slab *ObFindSlab(
-		ObjectInfo *metaInfo,
-		unsigned long kmSleep
-){
-	if(metaInfo->partialList.ClnCount){
+static Slab *ObFindSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
+{
+	if(metaInfo->partialList.ClnCount)
+	{
 		return (Slab *) (metaInfo->partialList.ClnMain);
-	} else {
+	}
+	else
+	{
 		Slab *emptySlab = metaInfo->emptySlab;
 		if(emptySlab == NULL)
 			emptySlab = ObCreateSlab(metaInfo, kmSleep);
 
-		ClnInsert((CircularListNode*) emptySlab, CLN_LAST,
-				&metaInfo->partialList);
+		ClnInsert((CircularListNode*) emptySlab, CLN_LAST, &metaInfo->partialList);
 		return (emptySlab);
 	}
 }
@@ -203,10 +209,8 @@ static Slab *ObFindSlab(
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-static void ObPlaceSlab(
-		Slab *slab,
-		ObjectInfo *metaInfo
-){
+static void ObPlaceSlab(Slab *slab, ObjectInfo *metaInfo)
+{
 	if(slab->freeCount == 0) {
 		ClnRemove((CLNODE *) slab, &metaInfo->partialList);
 		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->fullList);
@@ -235,12 +239,15 @@ static void ObPlaceSlab(
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-static
-VOID ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo){
-	if(slab->freeCount == 1) { // Came from full list
+static void ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo)
+{
+	if(slab->freeCount == 1)
+	{ // Came from full list
 		ClnRemove((CLNODE *) slab, &metaInfo->fullList);
 		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->partialList);
-	} else if(slab->freeCount == metaInfo->bufferPerSlab) {
+	}
+	else if(slab->freeCount == metaInfo->bufferPerSlab)
+	{
 		ClnRemove((CLNODE *) slab, &metaInfo->partialList);
 
 		Slab *oldEmptySlab = metaInfo->emptySlab;
@@ -266,15 +273,14 @@ VOID ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo){
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-decl_c void *KNew(
-		ObjectInfo *metaInfo,
-		unsigned long kmSleep
-){
+extern "C" void *KNew(ObjectInfo *metaInfo, unsigned long kmSleep)
+{
 	SpinLock(&metaInfo->lock);
 	Slab *freeSlab = ObFindSlab(metaInfo, kmSleep);
-	VOID *object = NULL;
+	void *object = NULL;
 
-	if(freeSlab != NULL) {
+	if(freeSlab != NULL)
+	{
 		void *freeObject = PopElement(&freeSlab->bufferStack);
 		--(freeSlab->freeCount);
 		ObPlaceSlab(freeSlab, metaInfo);
@@ -298,14 +304,11 @@ decl_c void *KNew(
  *
  * Author: Shukant Pal
  */
-decl_c void KDelete(
-		void *object,
-		ObjectInfo *metaInfo
-){
+extern "C" void KDelete(void *object, ObjectInfo *metaInfo)
+{
 	SpinLock(&metaInfo->lock);
 
-	Slab *slab = (Slab *) (((unsigned long) object & ~(KPGSIZE - 1))
-			+ (KPGSIZE - sizeof(Slab)));
+	Slab *slab = (Slab *) (((unsigned long) object & ~(KPGSIZE - 1)) + (KPGSIZE - sizeof(Slab)));
 	PushElement((STACK_ELEMENT *) object, &slab->bufferStack);
 	++(slab->freeCount);
 	ObRecheckSlab(slab, metaInfo);
@@ -331,13 +334,9 @@ decl_c void KDelete(
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-decl_c ObjectInfo *KiCreateType(
-		const char *tName,
-		unsigned long tSize,
-		unsigned long tAlign,
-		void (*ctor) (void *),
-		void (*dtor) (void *)
-){
+extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize, unsigned long tAlign,
+					void (*ctor) (void *), void (*dtor) (void *))
+{
 	ObjectInfo *typeInfo = (ObjectInfo*) KNew(&tObjectInfo, 1);
 
 	if(typeInfo == NULL) DbgLine("NULLIFED");
@@ -376,12 +375,14 @@ decl_c ObjectInfo *KiCreateType(
  *
  * Author: Shukant Pal
  */
-decl_c unsigned long KiDestroyType(
-		ObjectInfo *typeInfo
-){
-	if(typeInfo->partialList.ClnCount != 0 || typeInfo->fullList.ClnCount != 0) {
+extern "C" unsigned long KiDestroyType(ObjectInfo *typeInfo)
+{
+	if(typeInfo->partialList.ClnCount != 0 || typeInfo->fullList.ClnCount != 0)
+	{
 		return (FALSE);
-	} else {
+	}
+	else
+	{
 		ClnRemove((CLNODE*) typeInfo, &tList);
 
 		Slab *emptySlab = (Slab*) typeInfo->emptySlab;

@@ -22,14 +22,9 @@ import_asm int ExecuteLGDT(GDTPointer *);
  *
  * Author: Shukant Pal
  */
-void SetGateOn(
-		unsigned short gateNo,
-		unsigned int segBase,
-		unsigned int segLimit,
-		unsigned char segAccess,
-		unsigned char segGranularity,
-		GDTEntry *pGDT
-){
+void SetGateOn(unsigned short gateNo, unsigned int segBase, unsigned int segLimit,
+		unsigned char segAccess, unsigned char segGranularity, GDTEntry *pGDT)
+{
 	pGDT[gateNo].baseLow = (segBase & 0xffff);
 	pGDT[gateNo].baseMiddle = (segBase >> 16) & 0xff;
 	pGDT[gateNo].baseHigh = (segBase >> 24) & 0xff;
@@ -40,16 +35,15 @@ void SetGateOn(
 }
 
 /* Part of processor initialization series. */
-decl_c void SetupGDT(
-		ProcessorInfo *processorInfo
-){
+extern "C" void SetupGDT(ProcessorInfo *processorInfo)
+{
 	GDTEntry *pGDT = &(processorInfo->GDT[0]);
 	GDTPointer *pGDTPointer = &(processorInfo->GDTR);
 
 	pGDTPointer->Limit = (sizeof(GDTEntry) * 6) - 1;
-	pGDTPointer->Base = (UINT) pGDT;
+	pGDTPointer->Base = (unsigned int) pGDT;
 
-	DbgInt((ULONG) pGDT); Dbg(" ");
+	DbgInt((unsigned long) pGDT); Dbg(" ");
 
 	SetGateOn(0, 0, 0, 0, 0, pGDT);
 	SetGateOn(1, 0, 0xffffffff, 0x9a, 0xcf, pGDT);

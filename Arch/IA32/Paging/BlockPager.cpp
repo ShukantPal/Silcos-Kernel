@@ -15,29 +15,34 @@
 extern PADDRESS mmTotal;
 
 /* x86-specific paging structures */
-import_asm U64 PDPT[4];
-import_asm U64 GlobalDirectory[512];
-import_asm U64 IdentityDirectory[512];
-import_asm U64 GlobalTable[512];
+extern "C" U64 PDPT[4];
+extern "C" U64 GlobalDirectory[512];
+extern "C" U64 IdentityDirectory[512];
+extern "C" U64 GlobalTable[512];
+extern unsigned long memFrameTableSize;
 
-extern ULONG memFrameTableSize;
-
-VOID MTMap2mb(PHYSICAL_T Address, VIRTUAL_T Vad){
-	GlobalDirectory[(Vad % GB(1)) / MB(2)] = Address | (1 << 7) | KernelData;
-	FlushTLB(Vad);
+void MTMap2mb(PADDRESS paddr, ADDRESS vaddr)
+{
+	GlobalDirectory[(vaddr % GB(1)) / MB(2)] = paddr | (1 << 7) | KernelData;
+	FlushTLB(vaddr);
 }
 
-PADDRESS KiMapTables(){
+PADDRESS KiMapTables()
+{
 	PADDRESS frameMapper = MB(16);
-	ULONG framePtr = KFRAMEMAP;
-	ULONG frameTableEnd = KFRAMEMAP + sizeof(MMFRAME) * (mmTotal >> 12);
-	while(framePtr < frameTableEnd) {
+	unsigned long framePtr = KFRAMEMAP;
+	unsigned long frameTableEnd = KFRAMEMAP + sizeof(MMFRAME) * (mmTotal >> 12);
+
+	while(framePtr < frameTableEnd)
+	{
 		MTMap2mb(frameMapper, framePtr);
 		frameMapper += MB(2);
 		framePtr += MB(2);
 	}
+
 	memFrameTableSize = frameTableEnd - KFRAMEMAP;
-	memsetf((VOID*) KFRAMEMAP, 0, memFrameTableSize);
+	memsetf((void*) KFRAMEMAP, 0, memFrameTableSize);
+
 	return (MB(16));
 }
 

@@ -1,4 +1,4 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: KFrameManager.c
  *
  * Summary: This file contains the code to implement the PMA, and interfaces with the zone allocator
@@ -19,7 +19,7 @@
  * zone allocator, freeing all available memory
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 
 /** @Prefix m - Multiboot */
 
@@ -44,40 +44,40 @@ using namespace Memory::Internal;
 
 #define KFRAME_ZONE_COUNT	5
 
-PADDRESS KiMapTables(VOID);
+PADDRESS KiMapTables(void);
 PADDRESS mmLow;
 PADDRESS mmHigh;
 PADDRESS mmUsable;
 PADDRESS mmTotal;
-ULONG pgUsable;
-ULONG pgTotal;
+unsigned long pgUsable;
+unsigned long pgTotal;
 
-ULONG memFrameTableSize;
+unsigned long memFrameTableSize;
 
 SPIN_LOCK kfLock;
 
 // Vector (bit-fields) for use by (buddy) allocator
-static USHORT allocatorVectors[(1 + FRAME_VECTORS) * 5];
+static unsigned short allocatorVectors[(1 + FRAME_VECTORS) * 5];
 
 // Allocation lists used by (buddy) allocator for all 5 zones
-static struct LinkedList allocatorLists[FRAME_VECTORS * 5];
+static LinkedList allocatorLists[FRAME_VECTORS * 5];
 
 // You know there are five frame-zones - DMA, Driver, Kernel
 // Code & Data.
-static struct Zone frameZones[5];
+static Zone frameZones[5];
 
 // There are three zonal preferences for frame-allocation
 // 1. DMA, which means addresses usable by DMA devices
 // 2. Drivers, which means address fitting under 32/64-bits
 // 3. Code, Data & Kernel, which all imply normal data
-static struct ZonePreference framePreferences[3];
+static ZonePreference framePreferences[3];
 
 // This ZoneAllocator is the 'core' allocation engine for the
 // KFrameManager. It may use more allocators in the future.
 static class ZoneAllocator coreEngine;
 
-CHAR msgSetupKFrameManager[] = "Setting up KFrameManager...";
-CHAR msgMemoryTooLow[] = "At least 128MB of memory is required to run the kernel.";
+char msgSetupKFrameManager[] = "Setting up KFrameManager...";
+char msgMemoryTooLow[] = "At least 128MB of memory is required to run the kernel.";
 
 /**
  * Function: KeFrameAllocate()
@@ -99,46 +99,51 @@ CHAR msgMemoryTooLow[] = "At least 128MB of memory is required to run the kernel
  * @See ZNSYS, ZNINFO, ZnAllocateBlock() - "ZoneManager.h"
  * // TODO:@Deprecated - Use System::getMemoryFrame()
  */
-PADDRESS KeFrameAllocate(ULONG fOrder, ULONG prefZone, ULONG znFlags)
+PADDRESS KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long znFlags)
 {
 	SpinLock(&kfLock);
-	struct Zone *frDomain = frameZones + prefZone;
+	Zone *frDomain = frameZones + prefZone;
 
 	__INTR_OFF
-	ULONG bInfo = (ULONG) FRADDRESS(coreEngine.allocateBlock(fOrder, 0, frDomain, znFlags));
-	if(!FLAG_SET(znFlags, OFFSET_NOINTR)) { // Turn interrupts if allowed
+	unsigned long bInfo = (unsigned long) FRADDRESS(coreEngine.allocateBlock(fOrder, 0, frDomain, znFlags));
+	if(!FLAG_SET(znFlags, OFFSET_NOINTR))
+	{ // Turn interrupts if allowed
 		__INTR_ON
 	}
 	SpinUnlock(&kfLock);
 	return (bInfo);
 }
 
-ULONG KeFrameFree(PADDRESS pAddress)
+unsigned long KeFrameFree(PADDRESS pAddress)
 {
 	SpinLock(&kfLock);
-	coreEngine.freeBlock((struct BuddyBlock *) FRAME_AT(pAddress));
+	coreEngine.freeBlock((BuddyBlock *) FRAME_AT(pAddress));
 	SpinUnlock(&kfLock);
 	return (1);
 }
 
-void TypifyMRegion(ULONG typeValue, ULONG regionStartKFrame, ULONG regionEndKFrame)
+void TypifyMRegion(unsigned long typeValue, unsigned long regionStartKFrame, unsigned long regionEndKFrame)
 {
-	if(regionEndKFrame > pgTotal) regionEndKFrame = pgTotal;// BUG: pgTotal is less than memory
-	struct BuddyBlock *pfCurrent = (struct BuddyBlock *) FROPAGE(regionStartKFrame);
-	struct BuddyBlock *pfLimit = (struct BuddyBlock *) FROPAGE(regionEndKFrame);
+	if(regionEndKFrame > pgTotal)
+		regionEndKFrame = pgTotal;// BUG: pgTotal is less than memory
+
+	BuddyBlock *pfCurrent = (BuddyBlock *) FROPAGE(regionStartKFrame);
+	BuddyBlock *pfLimit = (BuddyBlock *) FROPAGE(regionEndKFrame);
 	
-	while((ULONG) pfCurrent < (ULONG) pfLimit){
+	while((unsigned long) pfCurrent < (unsigned long) pfLimit)
+	{
 		pfCurrent->BdType = typeValue;
-		pfCurrent = (struct BuddyBlock *) ((ULONG ) pfCurrent + sizeof(MMFRAME));
+		pfCurrent = (BuddyBlock *) ((unsigned long ) pfCurrent + sizeof(MMFRAME));
 	}
 }
 
 void KfReserveModules()
 {
 	MULTIBOOT_TAG_MODULE *muModule =
-			(MULTIBOOT_TAG_MODULE*)
-			SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
-	while(muModule != NULL){
+			(MULTIBOOT_TAG_MODULE*) SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
+
+	while(muModule != NULL)
+	{
 		#ifdef ADM_MULTIBOOT_MODULE_DEBUGGER/* Debug *::Multiboot::Module Support */
 			Dbg("Module ::ModuleStart "); DbgInt(muModule->ModuleStart); DbgLine(";"); 
 		#endif
@@ -151,17 +156,20 @@ void KfReserveModules()
 /* Free all memory available by parsing the BdType field for every kfpage */
 void KfParseMemory()
 {
-	struct BuddyBlock *kfPointer = (struct BuddyBlock *) FROPAGE(0);
-	struct BuddyBlock *kfWall = (struct BuddyBlock *) FROPAGE(pgTotal);
+	BuddyBlock *kfPointer = (BuddyBlock *) FROPAGE(0);
+	BuddyBlock *kfWall = (BuddyBlock *) FROPAGE(pgTotal);
 
-	ULONG last_bdtype = 10101001;
+	unsigned long last_bdtype = 10101001;
 	
-	while((ADDRESS) kfPointer <= (ADDRESS) kfWall){
+	while((ADDRESS) kfPointer <= (ADDRESS) kfWall)
+	{
 		if(kfPointer->BdType == MULTIBOOT_MEMORY_AVAILABLE)
 			coreEngine.freeBlock(kfPointer);
-		kfPointer = (struct BuddyBlock *) ((ULONG) kfPointer + sizeof(MMFRAME));
+
+		kfPointer = (BuddyBlock *) ((unsigned long) kfPointer + sizeof(MMFRAME));
 		
-		if(last_bdtype != kfPointer->BdType){
+		if(last_bdtype != kfPointer->BdType)
+		{
 			last_bdtype = kfPointer->BdType;
 		}
 	}
@@ -195,14 +203,15 @@ void SetupKFrameManager()
 	mmHigh = mInfo->MmUpper;
 
 	MULTIBOOT_MMAP_ENTRY *regionEntry  = (MULTIBOOT_MMAP_ENTRY*) ((U32) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
-	ULONG regionLimit = (U32) mmMap + mmMap->Size - mmMap->EntrySize;
+	unsigned long regionLimit = (U32) mmMap + mmMap->Size - mmMap->EntrySize;
 
 { // Setup Memory Statistics:
 	PADDRESS mRegionSize;
 	PADDRESS usableMemory = 0;
 	PADDRESS totalMemory = 0;
 
-	while((ULONG) regionEntry < regionLimit) {
+	while((unsigned long) regionEntry < regionLimit)
+	{
 		mRegionSize = (PADDRESS) regionEntry->Length;
 		totalMemory += mRegionSize;
 		if(regionEntry->Type == MULTIBOOT_MEMORY_AVAILABLE)
@@ -214,7 +223,8 @@ void SetupKFrameManager()
 	mmUsable = usableMemory;
 	mmTotal = totalMemory & ~((1 << (FRSIZE_ORDER + MAX_FRAME_ORDER)) - 1);
 
-	if(mmTotal < MB(128)) {
+	if(mmTotal < MB(128))
+	{
 		DbgLine(msgMemoryTooLow);
 		while(TRUE) asm("nop");
 	}
@@ -227,7 +237,7 @@ void SetupKFrameManager()
 
 	// INIT coreEngine
 
-	coreEngine.resetAllocator((struct BuddyBlock *) KFRAMEMAP, framePreferences, 3, frameZones, 5);
+	coreEngine.resetAllocator((BuddyBlock *) KFRAMEMAP, framePreferences, 3, frameZones, 5);
 	ZoneAllocator::configureZones(sizeof(MMFRAME), MAX_FRAME_ORDER, allocatorVectors, allocatorLists, frameZones, 5);
 	ZoneAllocator::configurePreference(frameZones, framePreferences, 1);
 	ZoneAllocator::configurePreference(frameZones + 1, framePreferences + 1, 1);
@@ -239,48 +249,60 @@ void SetupKFrameManager()
 	// This section resets the memory boundaries of the frame-zones to the optimized
 	// values. ZONE_DMA has a fixed address & size, while ZONE_DRIVER has a fixed
 	// address (platform-specific)
-	UBYTE *entTable = (UBYTE *) KFRAMEMAP;
+	unsigned char *entTable = (unsigned char *) KFRAMEMAP;
 	frameZones[ZONE_DMA].memoryAllocator.setEntryTable(entTable);
 	frameZones[ZONE_DMA].memorySize = MB(16) >> KPGOFFSET;
-	frameZones[ZONE_DRIVER].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FRAME_AT(MB(16))));
+	frameZones[ZONE_DRIVER].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FRAME_AT(MB(16))));
 
-	if(pgTotal < MB(3584) >> KPGOFFSET){
+	if(pgTotal < MB(3584) >> KPGOFFSET)
+	{
 		// When memory is less than 3.5 GB, it is divided into four chunks, where ZONE_DMA
 		// and ZONE_DRIVER share a chunk, while others get a full chunk.
-		ULONG pgDomSize = (pgTotal / 4) & ~((1 << 9) - 1); // Align 2m, no. of pages for 4 zones
+		unsigned long pgDomSize = (pgTotal / 4) & ~((1 << 9) - 1); // Align 2m, no. of pages for 4 zones
+
 		frameZones[ZONE_DRIVER].memorySize = pgDomSize - (MB(16) >> KPGOFFSET);
-		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(pgDomSize)));
+
+		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(pgDomSize)));
 		frameZones[ZONE_CODE].memorySize = pgDomSize;
-		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(2 * pgDomSize)));
+
+		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(2 * pgDomSize)));
 		frameZones[ZONE_DATA].memorySize = pgDomSize;
-		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(3 * pgDomSize)));
+
+		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(3 * pgDomSize)));
 		frameZones[ZONE_KERNEL].memorySize = pgTotal - 3 * pgDomSize;
-	} else {
+	}
+	else
+	{
 		// When memory is more than 3.5 GB, ZONE_DMA + ZONE_DRIVER take up only MB(896). The
 		// remaining memory is divided into three chunks for all zones.
 		frameZones[ZONE_DRIVER].memorySize = MB(880) >> KPGOFFSET;
 		unsigned long pgRemaining = pgTotal - (MB(896) >> KPGOFFSET);
 		unsigned long pgDomSize = pgRemaining / 3;
-		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(896)));
+
+		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(896)));
 		frameZones[ZONE_CODE].memorySize = pgDomSize;
-		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(MB(896) + pgDomSize)));
+
+		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(MB(896) + pgDomSize)));
 		frameZones[ZONE_DATA].memorySize = pgDomSize;
-		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(reinterpret_cast<UBYTE *>(FROPAGE(MB(896) + 2 * pgDomSize)));
+
+		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(
+						reinterpret_cast<unsigned char *>(FROPAGE(MB(896) + 2 * pgDomSize)));
 		frameZones[ZONE_KERNEL].memorySize = pgRemaining - 2 * pgDomSize;
 	}
 
 	// All buddy-block's zone-index field should be mapped to the right zone.
 	ZoneAllocator::configureZoneMappings(frameZones, 5);
 
-	regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((ULONG) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
+	regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((unsigned long) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
 {
 	PADDRESS pRegionStart;
 	PADDRESS pRegionEnd;
 
-	ULONG regionStartKFrame;
-	ULONG regionEndKFrame;
+	unsigned long regionStartKFrame;
+	unsigned long regionEndKFrame;
 
-	while((ULONG) regionEntry < regionLimit) {
+	while((unsigned long) regionEntry < regionLimit)
+	{
 		pRegionStart = regionEntry->Address;
 		pRegionEnd = pRegionStart + regionEntry->Length;
 	
@@ -298,13 +320,17 @@ void SetupKFrameManager()
 				++regionStartKFrame;
 
 		TypifyMRegion(regionEntry->Type, regionStartKFrame, regionEndKFrame);
-		regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((ULONG) regionEntry + mmMap->EntrySize);
+		regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((unsigned long) regionEntry + mmMap->EntrySize);
 	}
 }
-	ULONG admMultibootTableStartKFrame = admMultibootTableStart >> KPGOFFSET;
-	ULONG admMultibootTableEndKFrame = ((admMultibootTableEnd % KPGSIZE) ? admMultibootTableEnd + KPGSIZE - admMultibootTableEnd % KPGSIZE : admMultibootTableEnd) >> KPGOFFSET;
+	unsigned long admMultibootTableStartKFrame = admMultibootTableStart >> KPGOFFSET;
+	unsigned long admMultibootTableEndKFrame = ((admMultibootTableEnd % KPGSIZE) ?
+							admMultibootTableEnd + KPGSIZE - admMultibootTableEnd % KPGSIZE :
+							admMultibootTableEnd) >> KPGOFFSET;
+
 	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, admMultibootTableStartKFrame, admMultibootTableEndKFrame);// Reserved multiboot struct
 	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, MB(16), memFrameTableSize);
+
 	KfReserveModules();// Reserve modules, as they are not in mmap
 	KfParseMemory();// Free all available memory!!!
 

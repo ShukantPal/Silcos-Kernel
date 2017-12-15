@@ -22,6 +22,7 @@
 #include "BinaryTree.hxx"
 #include <TYPE.h>
 include_kobject(tRBNode)
+include_kobject(tRBTree)
 
 enum RBColor
 {

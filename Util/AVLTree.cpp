@@ -16,7 +16,8 @@
  * @Since Circuit 2.01 
  */
 static
-AVL_LINKER *AVLRotateRight(AVL_LINKER *node){
+AVL_LINKER *AVLRotateRight(AVL_LINKER *node)
+{
 	AVL_LINKER *X = node->Left;
 	AVL_LINKER *Y = X->Right;
 
@@ -42,7 +43,8 @@ AVL_LINKER *AVLRotateRight(AVL_LINKER *node){
  * @Since Circuit 2.01
  */
 static
-AVL_LINKER *AVLRotateLeft(AVL_LINKER *newNode){
+AVL_LINKER *AVLRotateLeft(AVL_LINKER *newNode)
+{
 	AVL_LINKER *Y = AVLRight(newNode);
 	AVL_LINKER *X = AVLLeft(Y);
 
@@ -71,39 +73,52 @@ AVL_LINKER *AVLRotateLeft(AVL_LINKER *newNode){
  * @Since Circuit 2.01
  */
 static
-AVLNODE *InsertNodeInBranch(AVLNODE *newNode, ULONG *insertionStatus, AVLNODE *rootNode){
-	if(rootNode == NULL){
+AVLNODE *InsertNodeInBranch(AVLNODE *newNode, unsigned long *insertionStatus, AVLNODE *rootNode)
+{
+	if(rootNode == NULL)
+	{
 		*insertionStatus = NODE_INSERTED;
 		return (newNode);
 	}
 
-	if(newNode->Indicator < rootNode->Indicator) {
+	if(newNode->Indicator < rootNode->Indicator)
+	{
 		rootNode->Left = InsertNodeInBranch(newNode, insertionStatus, rootNode->Left);
-	} else if(newNode->Indicator > rootNode->Indicator) {
+	}
+	else if(newNode->Indicator > rootNode->Indicator)
+	{
 		rootNode->Right = InsertNodeInBranch(newNode, insertionStatus, rootNode->Right);
-	} else {
+	}
+	else
+	{
 		*insertionStatus = NODE_FOUND;
 		return (rootNode); // Indicate that matching root is found.
 	}
 
 	AVLNODE *leftChild = rootNode->Left;
 	AVLNODE *rightChild = rootNode->Right;
-	ULONG nodeIndicator = newNode->Indicator;
+	unsigned long nodeIndicator = newNode->Indicator;
 
 	rootNode->Height = Max(AVLHeight(leftChild), AVLHeight(rightChild)) + 1;
-	LONG nodeBalance = AVLBalance(rootNode);
+	long nodeBalance = AVLBalance(rootNode);
 
-	if(nodeBalance >  1) {
+	if(nodeBalance > 1)
+	{
 		if(nodeIndicator < leftChild->Indicator){
 			return (AVLNODE*) (AVLRotateRight((AVL_LINKER*) rootNode));
 		} else if(nodeIndicator > leftChild->Indicator){
 			rootNode->Left = (AVLNODE*) AVLRotateLeft((AVL_LINKER*) leftChild);
 			return (AVLNODE*) (AVLRotateRight((AVL_LINKER*) rootNode));
 		}
-	} else if(nodeBalance < -1) {
-		if(nodeIndicator > rightChild->Indicator){
+	}
+	else if(nodeBalance < -1)
+	{
+		if(nodeIndicator > rightChild->Indicator)
+		{
 			return (AVLNODE*) AVLRotateLeft((AVL_LINKER*) rootNode);
-		} else if(nodeIndicator < rightChild->Indicator){
+		}
+		else if(nodeIndicator < rightChild->Indicator)
+		{
 			rootNode->Right = (AVLNODE*) AVLRotateRight((AVL_LINKER*) rightChild);
 			return (AVLNODE*) AVLRotateLeft((AVL_LINKER*) rootNode);
 		}
@@ -112,7 +127,8 @@ AVLNODE *InsertNodeInBranch(AVLNODE *newNode, ULONG *insertionStatus, AVLNODE *r
 	return (rootNode); // newNode could not be inserted
 }
 
-AVLNODE *AVLSearch_(SIZE_T Indicator, AVLNODE *newNode){
+AVLNODE *AVLSearch_(SIZE Indicator, AVLNODE *newNode)
+{
 	if(newNode == NULL)
 		return (NULL);
 
@@ -124,7 +140,8 @@ AVLNODE *AVLSearch_(SIZE_T Indicator, AVLNODE *newNode){
 		return (newNode);
 }
 
-AVLNODE *MinValueNode(AVLNODE *newNode){
+AVLNODE *MinValueNode(AVLNODE *newNode)
+{
 	AVLNODE *Current = newNode;
 	if(Current == NULL) return NULL;
 
@@ -134,7 +151,8 @@ AVLNODE *MinValueNode(AVLNODE *newNode){
 	return (Current);
 }
 
-AVLNODE *MaxValueNode(AVLNODE *newNode){
+AVLNODE *MaxValueNode(AVLNODE *newNode)
+{
 	AVLNODE *Current = newNode;
 	if(Current == NULL) return (NULL);
 
@@ -161,28 +179,39 @@ AVLNODE *MaxValueNode(AVLNODE *newNode){
  * @Since Circuit 2.01
  */
 static
-AVLNODE *DeleteNodeInBranch(SIZE_T Indicator, AVLNODE **deletedNode, AVLNODE *rootNode){
+AVLNODE *DeleteNodeInBranch(SIZE Indicator, AVLNODE **deletedNode, AVLNODE *rootNode){
 	if(rootNode == NULL)
 		return (rootNode);
 
-	if(Indicator < rootNode->Indicator){
+	if(Indicator < rootNode->Indicator)
+	{
 		rootNode->Left= DeleteNodeInBranch(Indicator, deletedNode, rootNode->Left);
-	} else if(Indicator > rootNode->Indicator){
+	}
+	else if(Indicator > rootNode->Indicator)
+	{
 		rootNode->Right = DeleteNodeInBranch(Indicator, deletedNode, rootNode->Right);
-	} else {
+	}
+	else
+	{
 		*deletedNode = rootNode;
 		AVLNODE *childNode; // This node is to be deleted (freed).
-		if((rootNode->Left == NULL) || (rootNode->Right == NULL)) {
+		if((rootNode->Left == NULL) || (rootNode->Right == NULL))
+		{
 			childNode = (rootNode->Left) ? rootNode->Left : rootNode->Right;
 
-			if(childNode == NULL) {
+			if(childNode == NULL)
+			{
 				childNode = rootNode;
 				rootNode = NULL;
-			} else {
+			}
+			else
+			{
 				rootNode = childNode;
 				childNode = rootNode;
 			}
-		} else {
+		}
+		else
+		{
 			AVLNODE *rightHalver = MinValueNode(rootNode->Right);
 			AVLNODE *newRoot = DeleteNodeInBranch(rightHalver->Indicator, deletedNode, rootNode->Right);
 			rightHalver->Right = newRoot;
@@ -197,17 +226,26 @@ AVLNODE *DeleteNodeInBranch(SIZE_T Indicator, AVLNODE **deletedNode, AVLNODE *ro
 	rootNode->Height = Max(AVLHeight(rootNode->Left), AVLHeight(rootNode->Right)) + 1;
 	SSIZE_T nodeBalance = AVLBalance(rootNode);
 
-	if(nodeBalance > 1) {
-		if(AVLBalance(rootNode->Left) >= 0) {
+	if(nodeBalance > 1)
+	{
+		if(AVLBalance(rootNode->Left) >= 0)
+		{
 			return (AVLNODE*) AVLRotateRight((AVL_LINKER*) rootNode);
-		} else if(AVLBalance(rootNode->Left) < 0){
+		}
+		else if(AVLBalance(rootNode->Left) < 0)
+		{
 			rootNode->Left = (AVLNODE*) AVLRotateLeft((AVL_LINKER*) rootNode->Left);
 			return (AVLNODE*) AVLRotateRight((AVL_LINKER*) rootNode);
 		}
-	} else if(nodeBalance < -1) {
-		if(AVLBalance(rootNode->Right) <= 0) {
+	}
+	else if(nodeBalance < -1)
+	{
+		if(AVLBalance(rootNode->Right) <= 0)
+		{
 			return (AVLNODE*) AVLRotateLeft((AVL_LINKER*) rootNode);
-		} else if(AVLBalance(rootNode->Right) > 0) {
+		}
+		else if(AVLBalance(rootNode->Right) > 0)
+		{
 			rootNode->Right = (AVLNODE*) AVLRotateRight((AVL_LINKER*) rootNode->Right);
 			return (AVLNODE*) AVLRotateLeft((AVL_LINKER*) rootNode);
 		}
@@ -216,18 +254,21 @@ AVLNODE *DeleteNodeInBranch(SIZE_T Indicator, AVLNODE **deletedNode, AVLNODE *ro
 	return (rootNode);
 }
 
-AVLNODE *AVLFindGTE(ULONG nodeValue, AVLTREE *tree){
+AVLNODE *AVLFindGTE(unsigned long nodeValue, AVLTREE *tree)
+{
 	AVLNODE *curNode = tree->Root;
 	AVLNODE *closestNode = NULL;
 
-	ULONG curValue;
-	ULONG curDiff = 0;
-	ULONG lastDiff = 0xFFFFFFFF;
+	unsigned long curValue;
+	unsigned long curDiff = 0;
+	unsigned long lastDiff = 0xFFFFFFFF;
 
-	while(curNode != NULL){
+	while(curNode != NULL)
+	{
 		curValue = curNode->Indicator;
 		curDiff = curValue - nodeValue;
-		if(curDiff < lastDiff) {
+		if(curDiff < lastDiff)
+		{
 			closestNode = curNode;
 			if(curDiff == 0)
 				break;
@@ -243,8 +284,9 @@ AVLNODE *AVLFindGTE(ULONG nodeValue, AVLTREE *tree){
 	return (closestNode);
 }
 
-ULONG AVLInsert(AVLNODE *newNode, AVL_TREE *Tree){
-	ULONG insertionStatus;
+unsigned long AVLInsert(AVLNODE *newNode, AVL_TREE *Tree)
+{
+	unsigned long insertionStatus;
 
 	Tree ->Root = InsertNodeInBranch(newNode, &insertionStatus, Tree -> Root);
 	if(insertionStatus == NODE_INSERTED){
@@ -254,7 +296,8 @@ ULONG AVLInsert(AVLNODE *newNode, AVL_TREE *Tree){
 	return (insertionStatus);
 }
 
-AVLNODE *AVLDelete(SIZE_T Indicator, AVL_TREE *nodeTree){
+AVLNODE *AVLDelete(SIZE Indicator, AVL_TREE *nodeTree)
+{
 	AVLNODE *deletedNode = NULL;
 
 	nodeTree->Root = DeleteNodeInBranch(Indicator, &deletedNode, nodeTree->Root);
@@ -265,6 +308,7 @@ AVLNODE *AVLDelete(SIZE_T Indicator, AVL_TREE *nodeTree){
 	return (deletedNode);
 }
 
-AVLNODE *AVLSearch(SIZE_T Indicator, AVL_TREE *Tree){
+AVLNODE *AVLSearch(SIZE Indicator, AVL_TREE *Tree)
+{
 	return AVLSearch_(Indicator, Tree -> Root);
 }

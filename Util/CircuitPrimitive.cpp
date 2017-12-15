@@ -6,7 +6,7 @@
 #include <Types.h>
 #include <Util/CtPrim.h>
 
-Void ASSERT(BOOL c, CHAR *String)
+Void ASSERT(bool c, char *String)
 {
 	if(!c)
 	{
@@ -20,25 +20,25 @@ Void ASSERT(BOOL c, CHAR *String)
 Void memset(Void *bPointer, UBYTE btValue, SIZE bSize){
 	UBYTE *btBuffer = (UBYTE *) bPointer;/* Transfer bytes */
 	UBYTE *btPointer = (UBYTE *) bPointer + bSize;/* Transfer serially */
-	while((ULONG) btPointer > (ULONG) btBuffer) {
+	while((unsigned long) btPointer > (unsigned long) btBuffer) {
 		--(btPointer);
 		 *btPointer = btValue;
 	}
 }
 
-Void memsetf(Void *bPointer, SIZE_T lgsValue, SIZE_T bSize){
+Void memsetf(Void *bPointer, SIZE lgsValue, SIZE bSize){
 	unsigned long *lgBuffer = (unsigned long*) bPointer;
 	bSize &= ~(3);
-	unsigned long *lgPointer = (ULONG *) ((UBYTE *) bPointer + bSize);
-	while((ULONG) lgPointer > (ULONG) lgBuffer){
+	unsigned long *lgPointer = (unsigned long *) ((UBYTE *) bPointer + bSize);
+	while((unsigned long) lgPointer > (unsigned long) lgBuffer){
 		--(lgPointer);
 		*lgPointer = lgsValue;
 	}
 }
 
-Void memcpy(const Void *Obj1, Void *Obj2, SIZE_T ObjSize){
-	CHAR *O1 = (CHAR *) Obj1;
-	CHAR *O2 = (CHAR *) Obj2;
+Void memcpy(const Void *Obj1, Void *Obj2, SIZE ObjSize){
+	char *O1 = (char *) Obj1;
+	char *O2 = (char *) Obj2;
 	while(ObjSize){
 		--ObjSize;
 		O2[ObjSize] = O1[ObjSize];
@@ -47,8 +47,8 @@ Void memcpy(const Void *Obj1, Void *Obj2, SIZE_T ObjSize){
 
 Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize){
 	if(bufferSize){
-		ULONG *cPointerSource = (ULONG *) ((UBYTE *) bPointerI + bufferSize);
-		ULONG *cPointerDest = (ULONG *) ((UBYTE *) bPointerII + bufferSize);
+		unsigned long *cPointerSource = (unsigned long *) ((UBYTE *) bPointerI + bufferSize);
+		unsigned long *cPointerDest = (unsigned long *) ((UBYTE *) bPointerII + bufferSize);
 		bufferSize /= sizeof(SIZE);
 		while(bufferSize){
 			--(bufferSize);
@@ -59,10 +59,10 @@ Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize){
 	}
 }
 
-BOOL memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
+bool memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
 	unsigned char *bCounterI  = (unsigned char*) bPointerI;
 	unsigned char *bCounterII = (unsigned char*) bPointerII;
-	LONG bOffset = (LONG) bSize;
+	long bOffset = (long) bSize;
 	while(bOffset > 0) {
 		--(bOffset);
 		if(*bCounterI != *bCounterII)
@@ -74,9 +74,9 @@ BOOL memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
 	return (true);
 }
 
-BOOL strcmp(const CHAR *s1, const CHAR *s2)
+bool strcmp(const char *s1, const char *s2)
 {
-	BOOL equ = TRUE;
+	bool equ = TRUE;
 	while(TRUE) {
 		if(*s1 != *s2) {
 			equ = FALSE;

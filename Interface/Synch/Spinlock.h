@@ -7,8 +7,8 @@
 
 #include <Types.h>
 
-typedef volatile UINT Spinlock;
-typedef volatile UINT SPIN_LOCK;
+typedef volatile unsigned int Spinlock;
+typedef volatile unsigned int SPIN_LOCK;
 
 import_asm void SpinLock(volatile SPIN_LOCK *);
 import_asm void SpinUnlock(volatile SPIN_LOCK *);

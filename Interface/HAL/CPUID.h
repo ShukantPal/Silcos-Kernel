@@ -145,7 +145,7 @@ enum CPUIDRequest{
  * @Version 1
  * @Since Circuit 2.03
  ******************************************************************************/
-import_asm ULONG TestCPUID(void);
+import_asm unsigned long TestCPUID(void);
 
 /******************************************************************************
  * Function: CPUID()
@@ -155,9 +155,9 @@ import_asm ULONG TestCPUID(void);
  * of the specific platform.
  *
  * Args:
- * ULONG EAX - No. to put in EAX before invocation
- * ULONG ECX - No. to put in ECX before invocation
- * ULONG *destinationPointer - Memory buffer to load results
+ * unsigned long EAX - No. to put in EAX before invocation
+ * unsigned long ECX - No. to put in ECX before invocation
+ * unsigned long *destinationPointer - Memory buffer to load results
  *
  * @Version 1
  * @Since Circuit 2.03

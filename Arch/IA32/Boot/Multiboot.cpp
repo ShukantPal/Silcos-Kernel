@@ -17,7 +17,7 @@ export_asm Void *SearchMultibootTag(U32 tagType){
 
 	while((U32) curTag < tagLimit){
 		if(curTag->Type == tagType) {
-			return (VOID*) (curTag);
+			return (void*) (curTag);
 		}
 
 		tagOffset = curTag->Size;
@@ -48,7 +48,7 @@ export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType){
 
 	while((U32) curTag < tagLimit){
 		if(curTag->Type == tagType){
-			return (VOID*) (curTag);
+			return (void*) (curTag);
 		}
 
 		tagOffset = curTag->Size;
@@ -75,7 +75,7 @@ export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType){
  * @Since Circuit 2.03
  */
 export_asm void LoadMultibootTags(U32 pTagAddress){
-	InitConsole((UCHAR *) 0xc00b8000);
+	InitConsole((unsigned char *) 0xc00b8000);
 
 	SwitchContext(&SystemCxt);
 	EnsureMapping(MULTIBOOT_INTERFACE, (PADDRESS) pTagAddress, NULL, 0, KernelData);

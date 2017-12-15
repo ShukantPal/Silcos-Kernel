@@ -11,10 +11,10 @@
  
 #include <HAL/Processor.h>
 
-VOID LoadRunTransferBuffer(){
+void LoadRunTransferBuffer(){
 	
 }
 
-VOID InduceFromRunqueue(SCHED_ROLLER *roller, PROCESSOR *cpu){
+void InduceFromRunqueue(SCHED_ROLLER *roller, PROCESSOR *cpu){
 	
 }

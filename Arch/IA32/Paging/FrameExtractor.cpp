@@ -9,10 +9,11 @@
 #include <IA32/PageExplorer.h>
 #include <Util/Stack.h>
 
-MMFRAME *GetFrames(VIRTUAL_T Address, VIRTUAL_T Pages, CONTEXT *pageContext){
-	ULONG pageCounter;
+MMFRAME *GetFrames(ADDRESS Address, ADDRESS Pages, CONTEXT *pageContext)
+{
+	unsigned long pageCounter;
 	U64 *pageTable;
-	ULONG tableOffset;
+	unsigned long tableOffset;
 	PADDRESS frameAddress;
 	MMFRAME *frame;
 	STACK frameStack = NEW_STACK;
@@ -32,10 +33,11 @@ MMFRAME *GetFrames(VIRTUAL_T Address, VIRTUAL_T Pages, CONTEXT *pageContext){
 	return (MMFRAME *) (frameStack.Head);
 }
 
-VOID SetFrames(ADDRESS addressEnd, MMFRAME *frameHead, CONTEXT *pageContext){
+void SetFrames(ADDRESS addressEnd, MMFRAME *frameHead, CONTEXT *pageContext)
+{
 	MMFRAME *frame = frameHead;
 	PADDRESS frameAddress;
-	ULONG tableOffset;
+	unsigned long tableOffset;
 	U64 *pageTable;
 
 	addressEnd -= KB(4);

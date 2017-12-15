@@ -27,39 +27,39 @@
  */
 typedef
 struct _KSCHED_ROLLER {
-	ULONG RunnerLoad;
+	unsigned long RunnerLoad;
 	SPIN_LOCK RunqueueLock;
 
 	STACK RqTransferBuffer;
-	ULONG RqLoadRequired;
-	ULONG RqTransferDiff;
+	unsigned long RqLoadRequired;
+	unsigned long RqTransferDiff;
 	
 	KRUNNABLE *(*ScheduleRunner)(
 		TIME curTime,
-		struct _PROCESSOR *
+		struct Processor *
 	);/* Actual scheduling algorithm*/
 
-	VOID *(*SaveRunner)(
+	void *(*SaveRunner)(
 		TIME curTime,
-		struct _PROCESSOR *
+		struct Processor *
 	);/* Save state for switching to other scheduler */
 
 	/* Clock-tick occured, thus, update the runner (if required) */
-	KRUNNABLE *(*UpdateRunner)(TIME curTime, struct _PROCESSOR *);
+	KRUNNABLE *(*UpdateRunner)(TIME curTime, struct Processor *);
 
 	/* Used for inserting a new runner */
-	VOID (*InsertRunner) (KRUNNABLE *runner, struct _PROCESSOR *);
+	void (*InsertRunner) (KRUNNABLE *runner, struct Processor *);
 
 	/* Used for removing a runner */
-	VOID (*RemoveRunner) (KRUNNABLE *runner);
+	void (*RemoveRunner) (KRUNNABLE *runner);
 
 	/* Used for transfering of load (SMP). */
-	VOID (*TransferRunners) (struct _KSCHED_ROLLER *roller); 
+	void (*TransferRunners) (struct _KSCHED_ROLLER *roller); 
 } KSCHED_ROLLER;
 
 typedef
 struct {
-	UINT DomainLoad;
+	unsigned int DomainLoad;
 	TIME BalanceInterval;
 } KSCHED_ROLLER_DOMAIN;
 

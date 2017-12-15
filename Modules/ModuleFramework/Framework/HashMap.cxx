@@ -49,7 +49,14 @@ class NullHash : public Object
 {
 public:
 	unsigned int hashCode();
+	NullHash();
 };
+
+
+NullHash::NullHash()
+{
+
+}
 
 unsigned int NullHash::hashCode()
 {
@@ -88,9 +95,8 @@ HashMap::HashMap()
  *
  * Author: Shukant Pal
  */
-HashMap::HashMap(
-		unsigned long initialCapacity
-){
+HashMap::HashMap(unsigned long initialCapacity)
+{
 	if(initialCapacity > 128)
 		initialCapacity = 128;
 	else if(initialCapacity < 16)
@@ -117,10 +123,8 @@ HashMap::HashMap(
  *
  * Author: Shukant Pal
  */
-HashMap::HashMap(
-		unsigned long initialCapacity,
-		unsigned long loadFactor
-){
+HashMap::HashMap(unsigned long initialCapacity, unsigned long loadFactor)
+{
 	if(loadFactor < 25)
 		loadFactor =  25;
 	else if(loadFactor > 95)
@@ -148,9 +152,7 @@ HashMap::HashMap(
  *
  * Author: Shukant Pal
  */
-void* HashMap::get(
-		Object& key
-){
+void* HashMap::get(Object& key){
 	Entry *ent = getEntry(key);
 	return (ent != NULL) ? ent->getValue() : NULL;
 }
@@ -170,10 +172,8 @@ void* HashMap::get(
  *
  * Author: Shukant Pal
  */
-void* HashMap::put(
-		Object& key,
-		void *value
-){
+void* HashMap::put(Object& key, void *value)
+{
 	unsigned int hash = key.hashCode();
 	Entry *ent = bucketTable[indexFor(hash)];
 	while(ent != NULL){
@@ -195,9 +195,8 @@ void* HashMap::put(
 	return (NULL);
 }
 
-void* HashMap::putForNullKey(
-		void *value
-){
+void* HashMap::putForNullKey(void *value)
+{
 	return put(nullHash, value);
 }
 
@@ -212,9 +211,8 @@ void* HashMap::putForNullKey(
  *
  * Author: Shukant Pal
  */
-void* HashMap::remove(
-		Object& key
-){
+void* HashMap::remove(Object& key)
+{
 	Entry *pair = removeEntryForKey(key);
 	kobj_free((kobj*) pair, tHashMap_Entry);
 	return (pair != NULL) ? pair->getValue() : NULL;
@@ -244,12 +242,13 @@ void HashMap::init()
 
 		tHashMap = KiCreateType(nmHashMap, sizeof(HashMap),
 				sizeof(unsigned long), NULL, NULL);
+
+		new(&nullHash) NullHash();
 	}
 }
 
-bool HashMap::Entry::equals(
-		Entry *other
-){
+bool HashMap::Entry::equals(Entry *other)
+{
 	if(other != NULL){
 		Object& k1 = other->getKey();
 		Object& k2 = other->getKey();
@@ -272,9 +271,8 @@ bool HashMap::Entry::equals(
  *
  * Author: Shukant Pal
  */
-void HashMap::Entry::unlink(
-		Entry **slot
-){
+void HashMap::Entry::unlink(Entry **slot)
+{
 	if(next)
 		next->previous = previous;
 
@@ -295,9 +293,8 @@ void HashMap::Entry::unlink(
  *
  * Author: Shukant Pal
  */
-void HashMap::addEntry(
-		Entry *ent
-){
+void HashMap::addEntry(Entry *ent)
+{
 	Entry **bucketSlot = bucketTable + indexFor(ent->hashCode());
 
 	ent->link(*bucketSlot);
@@ -319,9 +316,8 @@ void HashMap::addEntry(
  *
  * Author: Shukant Pal
  */
-HashMap::Entry* HashMap::getEntry(
-		Object& key
-){
+HashMap::Entry* HashMap::getEntry(Object& key)
+{
 	unsigned int hash = key.hashCode();
 	Entry *ent = bucketTable[indexFor(key.hashCode())];
 	while(ent != NULL){
@@ -349,9 +345,8 @@ HashMap::Entry* HashMap::getEntry(
  *
  * Author: Shukant Pal
  */
-HashMap::Entry* HashMap::removeEntryForKey(
-		Object& key
-){
+HashMap::Entry* HashMap::removeEntryForKey(Object& key)
+{
 	unsigned long hash = key.hashCode();
 	unsigned long slotIndex = indexFor(key.hashCode());
 	Entry **slot = bucketTable + slotIndex;
@@ -386,9 +381,8 @@ HashMap::Entry* HashMap::removeEntryForKey(
  *
  * Author: Shukant Pal
  */
-bool HashMap::resize(
-		unsigned long newSize
-){
+bool HashMap::resize(unsigned long newSize)
+{
 	Entry **oldTable = bucketTable;
 	if(capacity == MAXIMUM_CAPACITY){
 		threshold = MAXIMUM_CAPACITY;
@@ -417,10 +411,8 @@ bool HashMap::resize(
  *
  * Author: Shukant Pal
  */
-void HashMap::transfer(
-		Entry *dislocEntry,
-		Entry **oldSlot
-){
+void HashMap::transfer(Entry *dislocEntry, Entry **oldSlot)
+{
 	dislocEntry->unlink(oldSlot);
 
 	Entry **newSlot = bucketTable + indexFor(dislocEntry->hashCode());
@@ -442,10 +434,8 @@ void HashMap::transfer(
  *
  * Author: Shukant Pal
  */
-void HashMap::transferAll(
-		Entry **newTable,
-		unsigned long newSize
-){
+void HashMap::transferAll(Entry **newTable, unsigned long newSize)
+{
 	unsigned long oldSize = capacity;
 	capacity = newSize;
 

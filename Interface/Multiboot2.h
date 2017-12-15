@@ -175,7 +175,7 @@ typedef
 struct _MULTIBOOT_TAG_STRING {
 	U32 Type;
 	U32 Size;
-	CHAR String[0];
+	char String[0];
 } MULTIBOOT_TAG_STRING;
 
 /**
@@ -198,7 +198,7 @@ struct MultibootTagModule {
 	U32 Size;/* Size of the module descriptor, including CMDLine */
 	U32 ModuleStart;/* Physical load-address of the module */
 	U32 ModuleEnd;/* Physical address of the end-of-module */
-	CHAR CMDLine[0];/* Text associated with the module at load-time */
+	char CMDLine[0];/* Text associated with the module at load-time */
 } MULTIBOOT_TAG_MODULE;
 
 /**
@@ -333,7 +333,7 @@ typedef struct _MULTIBOOT_TAG_ELF_SECTIONS {
 	U32 Number;/* Number of sections present in the kernel */
 	U32 EntrySize;/* Size of each section-header-entry */
 	U32 ShstrIndex;/* Index of the section containing string table for all section names */
-	CHAR Sections[0];/* Section-header-table raw data */
+	char Sections[0];/* Section-header-table raw data */
 } MULTIBOOT_TAG_ELF_SECTIONS;
 
 typedef struct _MULTIBOOT_TAG_APM {

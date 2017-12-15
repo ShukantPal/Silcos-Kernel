@@ -68,9 +68,8 @@ String::String()
  *
  * Author: Shukant Pal
  */
-String::String(
-		const char *value
-){
+String::String(const char *value)
+{
 	this->count = String::lengthOf((char*) value);
 	this->hash = DEFAULT_HASH;
 	this->offset = 0;
@@ -94,10 +93,8 @@ String::String(
  *
  * Author: Shukant Pal
  */
-String::String(
-		const char *value_,
-		unsigned int length
-){
+String::String(const char *value_, unsigned int length)
+{
 	this->count = length;
 	this->hash = DEFAULT_HASH;
 	this->offset = 0;
@@ -122,11 +119,8 @@ String::String(
  *
  * Author: Shukant Pal
  */
-String::String(
-		const char *value,
-		unsigned int offset,
-		unsigned int length
-){
+String::String(const char *value, unsigned int offset, unsigned int length)
+{
 	this->count = length;
 	this->offset = offset;
 	this->ownerPool = NULL;
@@ -144,9 +138,8 @@ String::String(
  * Summary:
  * Copies the string data to this & shares the character contents.
  */
-String::String(
-		String& anotherString
-){
+String::String(String& anotherString)
+{
 	this->count = anotherString.count;
 	this->offset = anotherString.offset;
 	this->ownerPool = anotherString.ownerPool;
@@ -166,9 +159,8 @@ String::~String()
 		kfree((void*) source);
 }
 
-bool String::endsWith(
-		String& suffix
-){
+bool String::endsWith(String& suffix)
+{
 	return startsWith(suffix, count - suffix.count);
 }
 
@@ -184,9 +176,8 @@ bool String::endsWith(
  *
  * Author: Shukant Pal
  */
-ULONG String::lengthOf(
-		char *chSeq
-){
+unsigned long String::lengthOf(char *chSeq)
+{
 	for(long index=0; index<480; index++){
 		if(*chSeq == '\0')
 			return (index);
@@ -211,10 +202,8 @@ ULONG String::lengthOf(
  *
  * Author: Shukant Pal
  */
-int String::compare(
-		String& firstString,
-		String& secondString
-){
+int String::compare(String& firstString, String& secondString)
+{
 	return firstString.compareTo(secondString);
 }
 
@@ -233,9 +222,8 @@ int String::compare(
  *
  * Author: Shukant Pal
  */
-int String::compareTo(
-		String& anotherString
-){
+int String::compareTo(String& anotherString)
+{
 	int len1 = count;
 	int len2 = anotherString.count;
 	int srhCount = Math::min(len1, len2);
@@ -270,11 +258,8 @@ int String::compareTo(
  *
  * Author: Shukant Pal
  */
-bool String::getChars(
-		unsigned int srcBegin,
-		unsigned int srcEnd,
-		char *dst
-){
+bool String::getChars(unsigned int srcBegin, unsigned int srcEnd, char *dst)
+{
 	if(srcEnd >= count || srcEnd <= srcBegin)
 		return (false);
 
@@ -344,10 +329,8 @@ bool String::startsWith(String& prefix, unsigned int offset)
  *
  * Author: Shukant Pal
  */
-String *String::substring(
-		unsigned int beginIndex,
-		unsigned int endIndex
-){
+String *String::substring(unsigned int beginIndex, unsigned int endIndex)
+{
 	if(beginIndex >= count || endIndex >= count
 			|| endIndex <= beginIndex)
 		return (NULL);
@@ -358,9 +341,8 @@ String *String::substring(
 
 #define FNV_PRIME 0x811C9DC5
 
-unsigned int String::hashCode(
-		const char *value
-){
+unsigned int String::hashCode(const char *value)
+{
 	unsigned int hashValue = 0;
 
 	while(*value){
@@ -411,10 +393,8 @@ unsigned int String::hashCode()
  *
  * Author: Shukant Pal
  */
-unsigned int String::indexOf(
-		char ch,
-		unsigned int fromIndex
-){
+unsigned int String::indexOf(char ch, unsigned int fromIndex)
+{
 	if(fromIndex >= count)
 		return (-1);
 
@@ -430,10 +410,8 @@ unsigned int String::indexOf(
 	return (-1);
 }
 
-unsigned int String::indexOf(
-		String& searchPhrase,
-		unsigned int fromIndex
-){
+unsigned int String::indexOf(String& searchPhrase, unsigned int fromIndex)
+{
 	return indexOf(value + fromIndex, count, searchPhrase.value, searchPhrase.count);
 }
 
@@ -458,12 +436,9 @@ unsigned int String::indexOf(
  *
  * Author: Shukant Pal
  */
-unsigned int String::indexOf(
-		const char *source,
-		unsigned int sourceCount,
-		const char *target,
-		unsigned int targetCount
-){
+unsigned int String::indexOf(const char *source, unsigned int sourceCount, const char *target,
+				unsigned int targetCount)
+{
 	char first = *target;
 	unsigned int max = sourceCount - targetCount;
 
@@ -503,10 +478,8 @@ unsigned int String::indexOf(
  *
  * Author: Shukant Pal
  */
-unsigned int String::lastIndexOf(
-		char ch,
-		unsigned int fromIndex
-){
+unsigned int String::lastIndexOf(char ch, unsigned int fromIndex)
+{
 	if(fromIndex >= count)
 		return (-1);
 
@@ -541,12 +514,9 @@ unsigned int String::lastIndexOf(
  *
  * Author: Shukant Pal
  */
-bool String::regionMatches(
-		unsigned int thisOffset,
-		String& otherString,
-		unsigned int otherOffset,
-		unsigned int length
-){
+bool String::regionMatches(unsigned int thisOffset, String& otherString, unsigned int otherOffset,
+				unsigned int length)
+{
 	if(thisOffset + length > count || otherOffset + length > count ||
 							count > 0)
 		return (false);

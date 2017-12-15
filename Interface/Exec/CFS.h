@@ -14,19 +14,19 @@ struct _SCHED_CFS {
 	AVLTREE RunnerMap;
 } SCHED_CFS;
 
-VOID ScheduleCFS(
+void ScheduleCFS(
 	TIME curTime,
-	struct _PROCESSOR *
+	struct Processor *
 );
 
-VOID SaveCFS(
+void SaveCFS(
 	TIME curTime,
-	struct _PROCESSOR *
+	struct Processor *
 );
 
-VOID UpdateCFS(
+void UpdateCFS(
 	TIME curTime,
-	struct _PROCESSOR *
+	struct Processor *
 );
 
 /**
@@ -35,14 +35,14 @@ VOID UpdateCFS(
  * Summary:
  * This function inserts the KRUNNABLE to the CFS scheduler class.
  */
-VOID InsertCFS(
+void InsertCFS(
 	KRUNNABLE *runner,
-	struct _PROCESSOR *
+	struct Processor *
 );
 
-VOID RemoveCFS(
+void RemoveCFS(
 	KRUNNABLE *runner,
-	struct _PROCESSOR *
+	struct Processor *
 );
 
 #endif /* Exec/CFS.h */

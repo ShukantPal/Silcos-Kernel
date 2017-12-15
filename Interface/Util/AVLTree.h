@@ -12,10 +12,10 @@
 
 #define AVLLeft(N) (N -> Left)
 #define AVLRight(N) (N -> Right)
-#define AVLHeight(N) (LONG) (N ? (N -> Height) : -1)
+#define AVLHeight(N) (long) (N ? (N -> Height) : -1)
 
-#define BALANCE_HEIGHT(N) (LONG) (N ? (N->Height) : -1)
-#define AVLBalance(N) (LONG) (N ? (BALANCE_HEIGHT(N -> Left) - BALANCE_HEIGHT(N -> Right)) : 0)
+#define BALANCE_HEIGHT(N) (long) (N ? (N->Height) : -1)
+#define AVLBalance(N) (long) (N ? (BALANCE_HEIGHT(N -> Left) - BALANCE_HEIGHT(N -> Right)) : 0)
 #define AVLIndicator(N) (N -> Indicator)
 #define AVLReferer(N) (N -> Referer)
 
@@ -24,7 +24,7 @@ struct AvlLinker
 {
 	struct AvlLinker *Left;
 	struct AvlLinker *Right;
-	ULONG Height;
+	unsigned long Height;
 } AVL_LINKER;
 
 /**
@@ -48,8 +48,8 @@ struct AvlNode
 {
 	struct AvlNode *Left;
 	struct AvlNode *Right;
-	ULONG Height;
-	ULONG Indicator;
+	unsigned long Height;
+	unsigned long Indicator;
 } AVLNODE;
 
 #define AVLRoot(T) (T -> Root)
@@ -60,12 +60,12 @@ struct AvlNode
 typedef
 struct _AVL_TREE
 {
-	VOID *Metadata;
+	void *Metadata;
 	AVLNODE *Root;
 	SIZE Size;
-	ULONG NodeConfig;
-	VOID (*AllocateNode) (ULONG Indicator); /* Used in inter-module comm. */
-	VOID (*FreeNode) (AVLNODE *nodePointer); /* Used inter-module comm. */
+	unsigned long NodeConfig;
+	void (*AllocateNode) (unsigned long Indicator); /* Used in inter-module comm. */
+	void (*FreeNode) (AVLNODE *nodePointer); /* Used inter-module comm. */
 } AVL_TREE;
 
 typedef AVL_TREE AVLTREE;
@@ -91,7 +91,7 @@ typedef AVL_TREE AVLTREE;
  * @Version 1.1
  * @Since Circuit 2.01
  */
-ULONG AVLInsert(
+unsigned long AVLInsert(
 	AVLNODE *Node,
 	AVL_TREE *Root
 );
@@ -112,12 +112,12 @@ ULONG AVLInsert(
  * @Since Circuit 2.01
  */
 AVLNODE *AVLDelete(
-	SIZE_T Indicator,
+	SIZE Indicator,
 	AVL_TREE *Tree
 );
 
 AVLNODE *AVLSearch(
-	SIZE_T Indicator, 
+	SIZE Indicator, 
 	AVL_TREE *Tree
 );
 
@@ -132,7 +132,7 @@ AVLNODE *MaxValueNode(
 );
 
 AVLNODE *AVLFindGTE(
-	ULONG nodeValue,
+	unsigned long nodeValue,
 	AVLTREE *tree
 );
 

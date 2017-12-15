@@ -64,13 +64,13 @@ MMFRAME *GetFrames(
  * 1. The state of the context given
  * 2. Current address space (if context is current one)
  *
- * Returns: VOID
+ * Returns: void
  *
  * @Version 1
  * @Since Circuit 2.03
  * @Author Shukant Pal
  ******************************************************************************/
-VOID SetFrames(
+void SetFrames(
 	ADDRESS address,
 	MMFRAME *frameHead,
 	CONTEXT *pageContext

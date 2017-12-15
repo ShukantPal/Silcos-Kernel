@@ -70,12 +70,12 @@ struct ObjectInfo {
 	SPIN_LOCK lock;// Serialization lock
 };
 
-decl_c ObjectInfo *KiCreateType(const char *tName, unsigned long tSize,
+extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize,
 			unsigned long tAlign, void (*tConstruct) (Void *),
 				void (*tDestruct) (Void *));
-decl_c void *KNew(ObjectInfo *typeInfo, ULONG kmSleep);
-decl_c void KDelete(void *object, ObjectInfo *objectInfo);
-decl_c unsigned long KiDestroyType(ObjectInfo *);
+extern "C" void *KNew(ObjectInfo *typeInfo, unsigned long kmSleep);
+extern "C" void KDelete(void *object, ObjectInfo *objectInfo);
+extern "C" unsigned long KiDestroyType(ObjectInfo *);
 
 void obSetupAllocator(Void);
 void SetupPrimitiveObjects(void);

@@ -12,9 +12,9 @@
 #include <Heap.hxx>
 #include <TYPE.h>
 
-UCHAR ModuleName[16] = "KTERM";
-ULONG ModuleVersion = 1001000;
-ULONG ModuleType = 0;
+unsigned char ModuleName[16] = "KTERM";
+unsigned long ModuleVersion = 1001000;
+unsigned long ModuleType = 0;
 
 /**
  * Function: KModuleMain
@@ -26,7 +26,7 @@ ULONG ModuleType = 0;
  * Version: 1.0
  * Author: Shukant Pal
  */
-decl_c void KModuleMain(){
+extern "C" void KModuleMain(){
 	DbgLine("Loaded package com.silcos.obmgr");
 
 	//char *kmal = (char*) kmalloc(12);

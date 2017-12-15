@@ -19,8 +19,8 @@ namespace System
 // Raw Ideas
 struct NotficationClient
 {
-	CHAR clientName[10];
-	ULONG accessIdx;
+	char clientName[10];
+	unsigned long accessIdx;
 	Void *memoryBuffer;
 };
 
@@ -28,25 +28,25 @@ struct NotficationClient
 class NotificationManager
 {
 public:
-	NotificationManager(CHAR &nName);
+	NotificationManager(char &nName);
 };
 
 // For System Integration
 class SystemBoard
 {
 public:
-	static ULONG kernelVersion;
-	static ULONG kernelType;
-	static ULONG kernelHardConfig;
-	static CHAR *kernelName;
+	static unsigned long kernelVersion;
+	static unsigned long kernelType;
+	static unsigned long kernelHardConfig;
+	static char *kernelName;
 
-	static ULONG getKernelPage();
-	static ULONG retKernelPage();
+	static unsigned long getKernelPage();
+	static unsigned long retKernelPage();
 
-	static VOID getMemoryFrame();
-	static VOID retMemoryFrame();
+	static void getMemoryFrame();
+	static void retMemoryFrame();
 
-	static Void *getModule(CHAR &moduleName);
+	static Void *getModule(char &moduleName);
 
 };
 

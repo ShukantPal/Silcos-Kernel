@@ -3,28 +3,33 @@
 #include <HAL/Processor.h>
 #include <Memory/CacheRegister.h>
 
-LINODE *ChDataAllocate(CHSYS *chInfo, ULONG *statusFilter){
-	ULONG curProcessor = (ULONG) GetProcessorById(PROCESSOR_ID);
+LinkedListNode *ChDataAllocate(CHSYS *chInfo, unsigned long *statusFilter)
+{
+	unsigned long curProcessor = (unsigned long) GetProcessorById(PROCESSOR_ID);
 	CHREG *chReg = (CHREG *) (curProcessor + chInfo->ChMemoryOffset);
 
-	if(chReg->DCount != 0) {
-		LINODE *dNode = chReg->DList.Head;
+	if(chReg->DCount != 0)
+	{
+		LinkedListNode *dNode = chReg->DList.Head;
 		RemoveElement(dNode, &chReg->DList);
 
 		if(chReg->DCount == 0)
-			*statusFilter = (ULONG) chReg | (1 << CH_POPULATE);
+			*statusFilter = (unsigned long) chReg | (1 << CH_POPULATE);
 		else
 			*statusFilter = 0;
 
 		return (dNode);
-	} else {
-		*statusFilter = (ULONG) chReg | (1 << CH_POPULATE);
+	}
+	else
+	{
+		*statusFilter = (unsigned long) chReg | (1 << CH_POPULATE);
 		return (NULL);
 	}
 }
 
-LINODE *ChDataFree(LINODE *dNode, CHSYS *chInfo){
-	ULONG curProcessor = (ULONG) GetProcessorById(PROCESSOR_ID);
+LinkedListNode *ChDataFree(LinkedListNode *dNode, CHSYS *chInfo)
+{
+	unsigned long curProcessor = (unsigned long) GetProcessorById(PROCESSOR_ID);
 	CHREG *chReg = (CHREG *) (curProcessor + chInfo->ChMemoryOffset);
 	PushHead(dNode, &chReg->DList);
 

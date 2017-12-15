@@ -55,10 +55,8 @@ BinaryTree::~BinaryTree()
  * Since: MDFRWK 1.0
  * Author: Shukant Pal
  */
-bool BinaryTree::insert(
-		BinaryNode& node,
-		BinaryTree& bst
-){
+bool BinaryTree::insert(BinaryNode& node, BinaryTree& bst)
+{
 	if(bst.isNil(bst.treeRoot)){
 		bst.treeRoot = &node;
 	} else {
@@ -100,11 +98,14 @@ bool BinaryTree::insert(
  * Args:
  * unsigned long key - the value to which the required key should <,=
  *
+ * Returns:
+ * the value of the node having a key which is the closest and less than the
+ * given, if any or NULL;
+ *
  * Author: Shukant Pal
  */
-void* BinaryTree::getLowerBoundFor(
-		unsigned long key
-){
+void* BinaryTree::getLowerBoundFor(unsigned long key)
+{
 	BinaryNode *tNode = treeRoot;
 	BinaryNode *closestNode = NULL;
 
@@ -137,11 +138,14 @@ void* BinaryTree::getLowerBoundFor(
  * Args:
  * unsigned long key - the reference value for which the nodes key is >,=
  *
+ * Returns:
+ * the value of the node having a key more than and closest to the given, if
+ * any, or NULL;
+ *
  * Author: Shukant Pal
  */
-void* BinaryTree::getUpperBoundFor(
-		unsigned long key
-){
+void* BinaryTree::getUpperBoundFor(unsigned long key)
+{
 	BinaryNode* tNode = treeRoot;
 	BinaryNode* closestNode = NULL;
 
@@ -176,9 +180,8 @@ void* BinaryTree::getUpperBoundFor(
  *
  * Author: Shukant Pal
  */
-void* BinaryTree::getClosestOf(
-		unsigned long key
-){
+void* BinaryTree::getClosestOf(unsigned long key)
+{
 	BinaryNode* tNode = treeRoot;
 	BinaryNode* closestNode = NULL;
 	bool isClosestNodeLower = false;// no meaning when closestNode is NULL
@@ -237,10 +240,8 @@ void* BinaryTree::getClosestOf(
  * Since: MDFRWK 1.0
  * Author: Shukant Pal
  */
-BinaryNode *BinaryTree::search(
-		unsigned long key,
-		BinaryTree& bst
-){
+BinaryNode *BinaryTree::search(unsigned long key, BinaryTree& bst)
+{
 	BinaryNode *tnode = bst.treeRoot;
 	while(!bst.isNil(tnode)){
 		if(key < tnode->key())

@@ -50,68 +50,65 @@ namespace Elf {
 class ElfManager
 {
 public:
-	ElfManager(struct ElfHeader *binaryHeader);
+	ElfManager(ElfHeader *binaryHeader);
 	~ElfManager();
 
-	inline struct SymbolTable *getSymbolTable(){
+	inline SymbolTable *getSymbolTable(){
 		return (&dynamicSymbols);
 	}
 
-	inline struct Symbol *getSymbol(CHAR *symName){
+	inline Symbol *getSymbol(char *symName){
 		return ElfAnalyzer::querySymbol(symName, &dynamicSymbols, &dynamicHash);
 	}
 
-	inline struct SymbolTable *getStaticSymbolTable(){
+	inline SymbolTable *getStaticSymbolTable(){
 		return (staticSymbols);
 	}
 
-	struct Symbol *getStaticSymbol(CHAR *symName);
-	struct Symbol *getStaticSymbol(ULONG symIdx);
-
-	inline struct ProgramHeader *getPhdrTable(){ return (phdrTable); }
-	struct ProgramHeader *getProgramHeader(enum PhdrType type);
-	inline struct ProgramHeader *getProgramHeader(ULONG phdrIdx){ return (phdrTable + phdrIdx); }
-	inline struct SectionHeader *getShdrTable(){ return (shdrTable); }
-	struct SectionHeader *getSectionHeader(enum SectionType type);
-	struct SectionHeader *getSectionHeader(ULONG shdrIdx);
-	struct DynamicEntry *getDynamicEntry(enum DynamicTag tag);
-
-	static ULONG getSymbolHash(CHAR &symName);
-	static ULONG getGNUSymbolHash(CHAR &symName);
-
-	struct DynamicLink *exportDynamicLink();
+	Symbol *getStaticSymbol(const char *symName);
+	Symbol *getStaticSymbol(unsigned long symIdx);
+	inline ProgramHeader *getPhdrTable(){ return (phdrTable); }
+	ProgramHeader *getProgramHeader(enum PhdrType type);
+	inline ProgramHeader *getProgramHeader(unsigned long phdrIdx){ return (phdrTable + phdrIdx); }
+	inline SectionHeader *getShdrTable(){ return (shdrTable); }
+	SectionHeader *getSectionHeader(enum SectionType type);
+	SectionHeader *getSectionHeader(unsigned long shdrIdx);
+	DynamicEntry *getDynamicEntry(enum DynamicTag tag);
+	static unsigned long getSymbolHash(char &symName);
+	static unsigned long getGNUSymbolHash(char &symName);
+	DynamicLink *exportDynamicLink();
 private:
 	// Elf-header present in the file. This exists in the file-only, and
 	// may/not be loaded into program segments. Thus, ElfManger should be
 	// destroyed before unloading the raw-binary file.
-	struct ElfHeader *binaryHeader;
+	ElfHeader *binaryHeader;
 
 	// Program-headers MUST be present. If someone malicious tries to
 	// load a misleading module, it will be NULL. All operations will
 	// fail, if NULL, but not fault.
-	struct ProgramHeader *phdrTable;
-	ULONG phdrCount;
-	ULONG phdrSize;
+	ProgramHeader *phdrTable;
+	unsigned long phdrCount;
+	unsigned long phdrSize;
 
 	// If the section-table is loaded into the binary alongside then,
 	// this will exist otherwise 0
-	struct SectionHeader *shdrTable;
-	ULONG shdrCount;
-	ULONG shdrSize;
+	SectionHeader *shdrTable;
+	unsigned long shdrCount;
+	unsigned long shdrSize;
 
 	// Dynamic segment pointers
-	struct DynamicEntry *dynamicTable;
-	ULONG dynamicEntryCount;
+	DynamicEntry *dynamicTable;
+	unsigned long dynamicEntryCount;
 
 	// Dynamic & static symbol tables
-	struct SymbolTable dynamicSymbols;
-	struct HashTable dynamicHash;
-	struct SymbolTable *staticSymbols;
+	SymbolTable dynamicSymbols;
+	HashTable dynamicHash;
+	SymbolTable *staticSymbols;
 
 	// Relocation tables
-	struct RelTable relTable;
-	struct RelaTable relaTable;
-	struct RelocationTable pltRelocTable;
+	RelTable relTable;
+	RelaTable relaTable;
+	RelocationTable pltRelocTable;
 
 	// Values related to the program loaded into memory during construction
 	// of ElfManager. If no program segments are found, then it will be 0.
@@ -120,13 +117,10 @@ private:
 	PADDRESS loadAddress;
 
 	void fillBlankDsm();
-
 	inline void fillBlankRel(){ relTable.entryCount = 0; }
 	inline void fillBlankRela(){ relaTable.entryCount = 0; }
-
-	void loadBinary(ULONG address);
-
-	static ULONG getLimitAddress(class ElfManager *mgr);
+	void loadBinary(unsigned long address);
+	static unsigned long getLimitAddress(class ElfManager *mgr);
 
 	friend class ElfAnalyzer;
 	friend class ElfLinker;

@@ -76,7 +76,7 @@ struct {
  * @Since Circuit 2.03 
  ******************************************************************************/
 RSDP *ScanRsdp(
-	VOID
+	void
 );
 
 extern RSDP *SystemRsdp;/* RSDP found during setup */
@@ -94,10 +94,10 @@ extern RSDP2 *SystemRsdp2;/* RSDP2 found during setup (if x64 architecture) */
  * @Since Circuit 2.03
  ******************************************************************************/
 static inline
-BOOL VerifyRsdpChecksum(RSDP *Rsdp) {
+bool VerifyRsdpChecksum(RSDP *Rsdp) {
 	U8 Sum = 0;
 
-	for(ULONG Counter = 0; Counter < sizeof(RSDP); Counter++) {
+	for(unsigned long Counter = 0; Counter < sizeof(RSDP); Counter++) {
 		Sum += ((U8*) Rsdp)[Counter];
 	}
 

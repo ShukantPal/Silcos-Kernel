@@ -45,7 +45,7 @@ KRUNNABLE *Schedule_RR(TIME XMilliTime, PROCESSOR *cpu){
 	return (nextRunner);
 }
 
-VOID SaveRunner_RR(TIME XMilliTime, PROCESSOR *cpu){
+void SaveRunner_RR(TIME XMilliTime, PROCESSOR *cpu){
 	SCHED_RR *rr = &cpu->RR;
 	rr->LastRunner = cpu->PoExT;
 }
@@ -57,7 +57,7 @@ KRUNNABLE *UpdateRunner_RR(TIME XMilliTime, PROCESSOR *cpu){
 	return (Schedule_RR(XMilliTime, cpu));
 }
 
-VOID InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu){
+void InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu){
 	SCHED_RR *rr = &cpu->RR;
 	KSCHED_ROLLER *roller = rr->Roller;
 	SpinLock(&(roller->RunqueueLock));
@@ -69,7 +69,7 @@ VOID InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu){
 	SpinUnlock(&(roller->RunqueueLock));
 }
 
-VOID RemoveRunner_RR(KRUNNABLE *runner){
+void RemoveRunner_RR(KRUNNABLE *runner){
 	SCHED_RR *rr = &runner->Processor->RR;
 	KSCHED_ROLLER *roller = rr->Roller;
 	SpinLock(&(roller->RunqueueLock));
@@ -81,7 +81,7 @@ VOID RemoveRunner_RR(KRUNNABLE *runner){
 }
 
 static inline
-VOID RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue, ULONG domainDiff, PROCESSOR *highCPU){
+void RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue, unsigned long domainDiff, PROCESSOR *highCPU){
 	KTASK *runner = (KTASK *) sourceRunqueue->Runqueue.ClnMain;
 	if(runner == highCPU->PoExT){
 		runner = runner->RightLinker;
@@ -100,14 +100,14 @@ VOID RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue, ULONG
 	ProcessorTopology::Iterator::ofEach(highCPU, &RrDecreaseLoad, 4);
 }
 
-VOID TransferBatchRunners(ULONG transferCount, PROCESSOR *lowCPU, PROCESSOR *highCPU, ULONG domainDiff){
+void TransferBatchRunners(unsigned long transferCount, PROCESSOR *lowCPU, PROCESSOR *highCPU, unsigned long domainDiff){
 	SCHED_RR *lowRunqueue = &lowCPU->RR;
 	SCHED_RR *highRunqueue = &highCPU->RR;
 	SpinLock(&lowRunqueue->Roller->RunqueueLock);
 	SpinLock(&highRunqueue->Roller->RunqueueLock);
 
 	CLIST *runnerList = (&highRunqueue->Runqueue);
-	ULONG deltaLimit = (runnerList->ClnCount + transferCount) / 2;
+	unsigned long deltaLimit = (runnerList->ClnCount + transferCount) / 2;
 	deltaLimit = LESS(deltaLimit, runnerList->ClnCount / 2);
 	while(runnerList->ClnMain && deltaLimit > 0){
 		RrMoveRunner(lowRunqueue, highRunqueue, domainDiff, highCPU);
@@ -146,7 +146,7 @@ PROCESSOR *RrFindBusiestProcessor(Domain *busyGroup){
 	return (PROCESSOR *) (searchDomain->children.ClnMain);
 }
 
-VOID RrBalanceRoutine(PROCESSOR *pCPU)
+void RrBalanceRoutine(PROCESSOR *pCPU)
 {
 	Domain *searchDomain = pCPU->DomainInfo->parent;/* Start search for CPUs in same core/lowest toplogy*/
 	CLIST *searchList;
@@ -155,7 +155,7 @@ VOID RrBalanceRoutine(PROCESSOR *pCPU)
 	Domain *ourGroup = pCPU->DomainInfo;
 	KSCHED_ROLLER_DOMAIN *searchRoller;
 	KSCHED_ROLLER_DOMAIN *ourRoller;
-	ULONG balancingLevel = 1;
+	unsigned long balancingLevel = 1;
 
 	while(searchDomain != NULL){
 		searchList = &(searchDomain->children);

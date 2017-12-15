@@ -80,7 +80,7 @@
 #define TRAMPOLINE_LOW 			0x467
 #define TRAMPOLINE_HIGH 			0x469
 
-extern UINT VAPICBase;
+extern unsigned int VAPICBase;
 
 typedef U32 APIC_ID;
 typedef U8 APIC_VECTOR;
@@ -95,23 +95,23 @@ static inline void MapAPIC(){
 #define ReadX2APICRegister ReadMSR
 #define WriteX2APICRegister WriteMSR
 
-static inline unsigned int RdApicRegister(UINT Reg){
-	 return *((UINT volatile*) (VAPICBase + Reg));
+static inline unsigned int RdApicRegister(unsigned int Reg){
+	 return *((unsigned int volatile*) (VAPICBase + Reg));
 }
 
 static inline void WtApicRegister(
 		unsigned int Reg,
 		unsigned int Value
 ){
-	UINT volatile *VirtualAPICReg = (UINT*) (VAPICBase + Reg); 
+	unsigned int volatile *VirtualAPICReg = (unsigned int*) (VAPICBase + Reg); 
  	*VirtualAPICReg = Value;
 }
 
-VOID SetupTick();
+void SetupTick();
 
 void TriggerIPI(U32, U32);
 void DisablePIC(void);
-decl_c VOID MapIDT(void);
+extern "C" void MapIDT(void);
 
 
 #endif /* IA32/APIC.h */

@@ -16,15 +16,15 @@
 /* NOTE : XTID be implemented in assembly. */
 
 /* Create Thread */
-ULONG XCreateThread(
+unsigned long XCreateThread(
 	KTHREAD *Caller,
-	VOID (*Entry) (),
+	void (*Entry) (),
 	RUNTIME_INFO Runtime,
-	ULONG StackBase // If CustomStack Flag is set.
+	unsigned long StackBase // If CustomStack Flag is set.
 );
 
-VOID KiExitThread(
-	ULONG exitStatus
+void KiExitThread(
+	unsigned long exitStatus
 );
 
 /**
@@ -39,50 +39,50 @@ VOID KiExitThread(
  * callerThread - The thread exiting
  * exitStatus - Exit status
  *
- * Returns: VOID
+ * Returns: void
  *
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID XExitThread(
+void XExitThread(
 	KTHREAD *callerThread,
-	ULONG exitStatus
+	unsigned long exitStatus
 );
 
 /* Wait upon thread for exiting. */
-VOID XWaitForThread(
+void XWaitForThread(
 	KTHREAD *Caller,
 	ID TID
 );
 
 /* Sleep for a number of kernel ticks. */
-VOID XSleepThread(
+void XSleepThread(
 	KTHREAD *Caller,
 	TIME SleepTime // Millisecond 
 );
 
 /* Wait for thread for a period of time. */
-VOID XWaitForThreadTill(
+void XWaitForThreadTill(
 	KTHREAD *Caller,
 	ID TID,
 	TIME SleepTime
 );
 
 /* Kill a thread */
-ULONG XDeleteThread(
+unsigned long XDeleteThread(
 	KTHREAD *Caller,
 	ID TID
 );
 
 /* Pause a thread for some time (or until manually woken) */
-VOID XStopThread(
+void XStopThread(
 	KTHREAD *Caller,
 	ID TID,
 	TIME StopTime
 );
 
 /* Waken a stopped or sleeping thread. */
-VOID XWakeupThread(
+void XWakeupThread(
 	KTHREAD *Caller,
 	ID TID
 );

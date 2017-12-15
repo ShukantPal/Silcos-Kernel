@@ -53,23 +53,23 @@ struct _MM_REGION {
 		struct {
 			struct _MM_REGION *LeftLinker;
 			struct _MM_REGION *RightLinker;
-			ULONG NodeHeight;
-			ULONG Address;
+			unsigned long NodeHeight;
+			unsigned long Address;
 		};
 	};
 	union {
-		LINODE LiLinker;
+		LinkedListNode LiLinker;
 		struct {
 			struct _MM_REGION *PreviousLinker;
 			struct _MM_REGION *NextLinker;
 		};
 	};
-	ULONG Size;
+	unsigned long Size;
 	union {
-		ULONG Flags;
+		unsigned long Flags;
 		struct {
-			USHORT TypeNo;
-			USHORT ControlFlags;
+			unsigned short TypeNo;
+			unsigned short ControlFlags;
 		};
 	};
 	PAGE_ATTRIBUTES PagerFlags;
@@ -104,15 +104,15 @@ struct _MM_REGION {
  */
 typedef
 struct _MM_MANAGER {
-	CHAR *MgrName;
-	ULONG MgrTp;
-	ULONG ReferCount;
+	char *MgrName;
+	unsigned long MgrTp;
+	unsigned long ReferCount;
 	MM_REGION *CODE; /* Set by client */
 	MM_REGION *DATA; /* Set by client */
 	MM_REGION *BSS; /* Set by client */
 	MM_REGION *HEAP; /* Set by client */
 	MM_REGION *STACK; /* Set by client */
-	LINKED_LIST RegionList;
+	LinkedList RegionList;
 	AVLTREE RegionMap;
 
 	#define RG_INSERT 0xFFFF /* Successfully added */
@@ -136,10 +136,10 @@ struct _MM_MANAGER {
 	 * @Version 1
 	 * @Since Circuit 2.03
  	 ******************************************************************************/
-	ULONG (*MmInsertRegion)(
-		ULONG rgAddress,
-		ULONG rgSize,
-		ULONG rgFlags,
+	unsigned long (*MmInsertRegion)(
+		unsigned long rgAddress,
+		unsigned long rgSize,
+		unsigned long rgFlags,
 		PAGE_ATTRIBUTES pgFlags,
 		struct _MM_MANAGER *mgr
 	);
@@ -165,10 +165,10 @@ struct _MM_MANAGER {
 	 * @Version 1
  	 * @Since Circuit 2.03
 	 ******************************************************************************/
-	ULONG (*MmRemoveRegion)(
-		ULONG rgAddress,
-		ULONG rgSize,
-		USHORT rgType,
+	unsigned long (*MmRemoveRegion)(
+		unsigned long rgAddress,
+		unsigned long rgSize,
+		unsigned short rgType,
 		struct _MM_MANAGER *mgr
 	);
 
@@ -188,9 +188,9 @@ struct _MM_MANAGER {
 	 * @Version 1
 	 * @Since Circuit 2.03
  	 */
-	ULONG (*MmExtendRegion)(
-		ULONG rgAddress,
-		ULONG exAddress,
+	unsigned long (*MmExtendRegion)(
+		unsigned long rgAddress,
+		unsigned long exAddress,
 		struct _MM_MANAGER *mgr
 	);
 
@@ -207,7 +207,7 @@ struct _MM_MANAGER {
 	 * @Since Circuit 2.03
 	 */
 	MM_REGION *(*MmValidateAddress)(
-		ULONG address,
+		unsigned long address,
 		struct _MM_MANAGER *pmgr
 	);
 } MM_MANAGER;

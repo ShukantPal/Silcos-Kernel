@@ -71,13 +71,13 @@ struct BuddyBlock
 	};
 	union
 	{
-		USHORT DescriptorFlags;
+		unsigned short DescriptorFlags;
 		struct
 		{
-			USHORT BdFree:1;
-			USHORT BdLinked:1;
-			USHORT ZnOffset:11;
-			USHORT BdType:3;
+			unsigned short BdFree:1;
+			unsigned short BdLinked:1;
+			unsigned short ZnOffset:11;
+			unsigned short BdType:3;
 		};
 	};
 };
@@ -102,19 +102,19 @@ class BuddyAllocator final
 {
 public:
 	BuddyAllocator();
-	BuddyAllocator(ULONG entrySize, UBYTE *entryTable, ULONG highestOrder, USHORT *listInfo, LINKED_LIST *blockLists);
+	BuddyAllocator(unsigned long entrySize, UBYTE *entryTable, unsigned long highestOrder, unsigned short *listInfo, LinkedList *blockLists);
 	struct BuddyBlock *allocateBlock(unsigned long blockOrder);
 	unsigned long freeBlock(struct BuddyBlock *);
-	struct BuddyBlock *exchangeBlock(struct BuddyBlock *dataBlock, ULONG *status);
+	struct BuddyBlock *exchangeBlock(struct BuddyBlock *dataBlock, unsigned long *status);
 
-	inline ULONG getEntrySize(){ return entrySize; }
-	inline void setEntrySize(ULONG entrySize){ this->entrySize = entrySize; }
+	inline unsigned long getEntrySize(){ return entrySize; }
+	inline void setEntrySize(unsigned long entrySize){ this->entrySize = entrySize; }
 	inline UBYTE *getEntryTable(){ return entryTable; }
 	inline void setEntryTable(UBYTE *entryTable){ this->entryTable = entryTable; }
 private:
 	#define SIZEOF_ORDER(n) (unsigned long)(1 << n) // Size of order-block n
 	#define SIZEOF_DIFF(u, l) (SIZEOF_ORDER(u) - SIZEOF_ORDER(l)) // Diff. b/w two blocks of order u,l
-	#define BlockAtOffsetOf(orgBlock, offsetValue) ((struct BuddyBlock *) ((ULONG) orgBlock + offsetValue * entrySize))
+	#define BlockAtOffsetOf(orgBlock, offsetValue) ((struct BuddyBlock *) ((unsigned long) orgBlock + offsetValue * entrySize))
 
 	unsigned long entrySize;// Size of total size of block-descriptor (including BuddyBlock)
 	unsigned char *entryTable;// Table containing entries of block-descriptions
@@ -124,15 +124,15 @@ private:
 	unsigned long freeBuddies;// Blocks available in the allocator
 	unsigned long allocatedBuddies;// Blocks that have been pushed out of the allocator
 
-	struct BuddyBlock *getBuddyBlock(ULONG blockOrder, struct BuddyBlock *);
-	struct LinkedList *getBuddyList(ULONG optimalOrder);
-	struct LinkedList *getBuddyList(ULONG lowerOrder, ULONG upperOrder);
+	struct BuddyBlock *getBuddyBlock(unsigned long blockOrder, struct BuddyBlock *);
+	struct LinkedList *getBuddyList(unsigned long optimalOrder);
+	struct LinkedList *getBuddyList(unsigned long lowerOrder, unsigned long upperOrder);
 	struct LinkedList *getBuddyList(struct BuddyBlock *);
 	Void addBuddyBlock(struct BuddyBlock *);
 	Void removeBuddyBlock(struct BuddyBlock *);
 	Void removeBuddyBlock(struct BuddyBlock *, struct LinkedList *);
-	struct BuddyBlock *splitSuperBlock(ULONG newOrder, struct BuddyBlock *bInfo, struct BuddyBlock **lowerSuperBlock, struct BuddyBlock **upperSuperBlock);
-	struct BuddyBlock *mergeSuperBlock(struct BuddyBlock *, ULONG maxBlockOrder);
+	struct BuddyBlock *splitSuperBlock(unsigned long newOrder, struct BuddyBlock *bInfo, struct BuddyBlock **lowerSuperBlock, struct BuddyBlock **upperSuperBlock);
+	struct BuddyBlock *mergeSuperBlock(struct BuddyBlock *, unsigned long maxBlockOrder);
 };
 
 } // namespace Internal

@@ -2,7 +2,7 @@
 
 #include <Util/Stack.h>
 
-VOID PushElement(STACK_ELEMENT *Element, STACK *Stack)
+void PushElement(STACK_ELEMENT *Element, STACK *Stack)
 {
 	Element->Next = Stack->Head;
 	Stack->Head = Element;

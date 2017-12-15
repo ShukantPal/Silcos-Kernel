@@ -8,3 +8,4 @@
 KModule_Make:
 	make -C ./ObjectManager ObMake
 	make -C ./ModuleFramework MfMake
+	make -C ./ResourceManager RsMake

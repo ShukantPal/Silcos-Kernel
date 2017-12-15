@@ -7,8 +7,7 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-
-#define NAMESPACE_PROCESSOR
+#define NAMESPACEProcessor
 
 #include <IA32/APBoot.h>
 #include <IA32/APIC.h>
@@ -26,31 +25,33 @@
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
 
-UINT BSP_ID;
-UINT BSP_HID;
+unsigned int BSP_ID;
+unsigned int BSP_HID;
 
-BOOL x2APICModeEnabled;
+bool x2APICModeEnabled;
 
 SPIN_LOCK apPermitLock = 0;
 
-ULONG APBootSequenceBuffer;
+unsigned long APBootSequenceBuffer;
 
-VOID SetupAPICTimer();
+void SetupAPICTimer();
 import_asm void TimerWait(U32 t);
 
-VOID *RunqueueBalancers[3];
+void *RunqueueBalancers[3];
 
 using namespace HAL;
 
-PROCESSOR_SETUP_INFO *ConstructTrampoline(){
-	ULONG apTrampoline = ALLOCATE_TRAMPOLINE();
-	VOID *apBoot = (VOID *) PADDR_TO_VADDR(apTrampoline);
+PROCESSOR_SETUP_INFO *ConstructTrampoline()
+{
+	unsigned long apTrampoline = ALLOCATE_TRAMPOLINE();
+	void *apBoot = (void *) PADDR_TO_VADDR(apTrampoline);
 	memcpy((const void*) &APBoot, apBoot,
 			(U32) &APBootSequenceEnd - (U32) &APBoot);
 	
-	PROCESSOR_SETUP_INFO *setupInfo
-			= (VOID*) ((U32) apBoot + ((U32)&apSetupInfo - (U32)&APBoot));
-	if(setupInfo->BootStatusRegister != AP_STATUS_INIT){
+	PROCESSOR_SETUP_INFO *setupInfo = (PROCESSOR_SETUP_INFO*) ((U32) apBoot + ((U32)&apSetupInfo - (U32)&APBoot));
+
+	if(setupInfo->BootStatusRegister != AP_STATUS_INIT)
+	{
 	//	BUG_ADM_CONST_ERR("IA32::BOOT::SMP.apSetupInfo.BootStatusRegister");
 		DbgLine("ERR: SMP_BUG; ADM: COMPILE-TIME CONSTANT (PROCES \
 			SOR_SETUP_INFO.StatusRegister) MODIFIED");
@@ -66,44 +67,49 @@ PROCESSOR_SETUP_INFO *ConstructTrampoline(){
 	return (PROCESSOR_SETUP_INFO *) (apBoot);
 }
 
-VOID DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline){
+void DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline)
+{
 	// TODO: FREE_TRAMPOLINE()
 }
 
-VOID ConstructProcessor(PROCESSOR *processorInfo){
-	processorInfo->ProcessorStack =
-		(U32) ((VIRTUAL_T) &processorInfo->Hardware.ProcessorStack + PROCESSOR_STACK_SIZE);
+void ConstructProcessor(Processor *proc)
+{
+	proc->ProcessorStack = (U32) ((ADDRESS) &proc->Hardware.ProcessorStack + PROCESSOR_STACK_SIZE);
 	
-	KSCHED_ROLLER *rrRoller = &(processorInfo->ScheduleClasses[RR_SCHED]);
+	KSCHED_ROLLER *rrRoller = &(proc->ScheduleClasses[RR_SCHED]);
 	rrRoller->ScheduleRunner = &Schedule_RR;
 	rrRoller->SaveRunner = &SaveRunner_RR;
 	rrRoller->UpdateRunner = &UpdateRunner_RR;
 	rrRoller->InsertRunner = &InsertRunner_RR;
 	rrRoller->RemoveRunner = &RemoveRunner_RR;
 	rrRoller->TransferRunners = NULL;
-	processorInfo->RR.Roller = rrRoller;
+	proc->RR.Roller = rrRoller;
 	
-	KSCHEDINFO *cpuScheduler = &(processorInfo->SchedulerInfo);
+	KSCHEDINFO *cpuScheduler = &(proc->SchedulerInfo);
 	cpuScheduler->CurrentRoller = rrRoller;
 }
 
-VOID AddProcessorInfo(MADTEntryLAPIC *PE){
+void AddProcessorInfo(MADTEntryLAPIC *PE)
+{
 	PROCESSOR *cpu = GetProcessorById(PE->apicID);
 	PROCESSOR_INFO *platformInfo = &cpu->Hardware;
-	ULONG apicID = PE->apicID;
+	unsigned long apicID = PE->apicID;
 	
-	if(apicID != BSP_ID){
+	if(apicID != BSP_ID)
+	{
 		EnsureUsability((ADDRESS) cpu, NULL, FLG_NOCACHE, KernelData | PageCacheDisable);
 		memset(cpu, 0, sizeof(PROCESSOR));
 	}
 
 	platformInfo->APICID = apicID;
 	platformInfo->ACPIID = PE->acpiID;
+
 	if(apicID != BSP_ID)
 		ConstructProcessor(cpu);
 
-	if(cpu->Hardware.APICID != BSP_ID){
-		(VOID) ConstructTrampoline();
+	if(cpu->Hardware.APICID != BSP_ID)
+	{
+		(void) ConstructTrampoline();
 		TriggerIPI(PE->apicID, LAPIC_DM_INIT | LAPIC_LEVEL_ASSERT);
 		TimerWait(1);
 		TriggerIPI(PE->apicID, APBootSequenceBuffer | LAPIC_DM_STARTUP);
@@ -115,7 +121,8 @@ VOID AddProcessorInfo(MADTEntryLAPIC *PE){
 const char *nmPROCESSOR_TOPOLOGY = "@SMP::ProcessorTopology";
 ObjectInfo *tPROCESSOR_TOPOLOGY;
 
-decl_c void SetupBSP(){
+extern "C" void SetupBSP()
+{
 	BSP_HID = PROCESSOR_ID;
 	BSP_ID = PROCESSOR_ID;
 
@@ -137,7 +144,7 @@ decl_c void SetupBSP(){
 	DbgInt(PROCESSOR_ID);
 	CPUID(0xB, 2, &CPUIDBuffer[0]);
 
-	PROCESSOR *cpu = GetProcessorById(PROCESSOR_ID);
+	Processor *cpu = GetProcessorById(PROCESSOR_ID);
 	EnsureUsability((ADDRESS) cpu, NULL, KF_NOINTR | FLG_NOCACHE, KernelData | PageCacheDisable);
 	memset(cpu, 0, sizeof(PROCESSOR));
 	ConstructProcessor(cpu);
@@ -152,21 +159,23 @@ decl_c void SetupBSP(){
 	FlushTLB(0);
 	
 	WriteCMOSRegister(0xF, 0xA);
-	ULONG startEIP = APBootSequenceBuffer * KB(4);
-	*((volatile USHORT *) PADDR_TO_VADDR(TRAMPOLINE_HIGH)) = (startEIP >> 4);
-	*((volatile USHORT *) PADDR_TO_VADDR(TRAMPOLINE_LOW)) = (startEIP & 0xF);
+	unsigned long startEIP = APBootSequenceBuffer * KB(4);
+	*((volatile unsigned short *) PADDR_TO_VADDR(TRAMPOLINE_HIGH)) = (startEIP >> 4);
+	*((volatile unsigned short *) PADDR_TO_VADDR(TRAMPOLINE_LOW)) = (startEIP & 0xF);
 
 	ProcessorTopology::init();
 	ProcessorTopology::plug();
 }
 
-decl_c void SetupAPs(){
+extern "C" void SetupAPs()
+{
 	EnumerateMADT(&AddProcessorInfo, NULL, NULL);
 }
 
-decl_c struct ProcessorInfo *SetupProcessor(){
-	PROCESSOR *pCPU = GetProcessorById(PROCESSOR_ID);
-	PROCESSOR_INFO *pInfo = &(pCPU->Hardware);
+extern "C" ProcessorInfo *SetupProcessor()
+{
+	Processor *pCPU = GetProcessorById(PROCESSOR_ID);
+	ProcessorInfo *pInfo = &(pCPU->Hardware);
 
 	SetupGDT(pInfo);
 	SetupIDT();
@@ -175,13 +184,14 @@ decl_c struct ProcessorInfo *SetupProcessor(){
 	return (pInfo);
 }
 
-export_asm void APMain(){
+extern "C" void APMain()
+{
 	PROCESSOR *sceProcessor = GetProcessorById(PROCESSOR_ID);
 	SetupProcessor();
 	ProcessorTopology::plug();
 	SetupRunqueue();
 
-	extern VOID APWaitForPermit();
+	extern void APWaitForPermit();
 	APWaitForPermit();
 
 	FlushTLB(0);

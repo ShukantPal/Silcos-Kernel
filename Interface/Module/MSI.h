@@ -34,12 +34,12 @@ struct MultibootElfCache {
 	U32 SectionHeaderCount;
 	U32 SectionHeaderEntrySize;
 	U32 SectionNameIndex;
-	CHAR *SectionNames;
+	char *SectionNames;
 	MSI_SHDR *SectionHeaderTable;
 	struct {
-		CHAR *DynamicSymbolNames;
+		char *DynamicSymbolNames;
 		struct Symbol *DynamicSymbolTable;
-		ULONG DynamicSymbolCount;
+		unsigned long DynamicSymbolCount;
 	};
 	struct SymbolTable eSymbolTbl;
 	struct HashTable eSymbolHashTbl;
@@ -76,7 +76,7 @@ public:
 	static void loadBootModules();
 };
 
-VOID MsiSetupKernelForLinking(
+void MsiSetupKernelForLinking(
 		struct ElfCache *coreCache
 );
   

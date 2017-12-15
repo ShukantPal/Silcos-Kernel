@@ -71,10 +71,10 @@
  */
 typedef
 struct _CONTEXT {
-	UINT OwnerId;/* RRM_ID of the owner resource-handler */
-	UINT Flags;/* Context-handling flags, provided by macros */
+	unsigned int OwnerId;/* RRM_ID of the owner resource-handler */
+	unsigned int Flags;/* Context-handling flags, provided by macros */
 	PAGE_TRANSALATOR HardwarePage;/* Hardware-impl of the paging mechanism */
-	UINT UsedBy;/* Number of resource-handlers referencing this context */
+	unsigned int UsedBy;/* Number of resource-handlers referencing this context */
 	SPIN_LOCK ContextLock;/* Lock for concurrent accesses*/
 } CONTEXT;
 
@@ -98,7 +98,7 @@ CONTEXT SystemCxt;
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-VOID SwitchContext(
+void SwitchContext(
 	CONTEXT *pgContext
 );
 
@@ -120,17 +120,17 @@ VOID SwitchContext(
  * frFlags - PMA flags for allocation of page tables
  * pgAttr - Page attributes to apply on the address
  *
- * Returns: VOID
+ * Returns: void
  *
  * @Version 1
  * @Since Circuit 2.03
  * @Author Shukant  Pal
  */
-VOID EnsureMapping(
+void EnsureMapping(
 	ADDRESS address,
 	PADDRESS pAddress,
 	CONTEXT *pgContext,
-	ULONG frFlags,
+	unsigned long frFlags,
 	PAGE_ATTRIBUTES pgAttr
 );
 
@@ -146,16 +146,16 @@ VOID EnsureMapping(
  * frFlags - PMA flags for allocating the frame, and page tables (if any)
  * pgAttr - Page attributes to apply
  *
- * Returns: VOID
+ * Returns: void
  *
  * @Version 2
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-VOID EnsureUsability(
+void EnsureUsability(
 	ADDRESS address,
 	CONTEXT *pgContext,
-	ULONG frFlags,
+	unsigned long frFlags,
 	PAGE_ATTRIBUTES pgAttr
 );
 
@@ -175,15 +175,15 @@ VOID EnsureUsability(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-BOOL CheckUsability(
+bool CheckUsability(
 	ADDRESS address,
 	CONTEXT *pgContext
 );
 
-VOID EnsureAllMappings(
-	ULONG address,
+void EnsureAllMappings(
+	unsigned long address,
 	PADDRESS pAddress,
-	ULONG mapSize,
+	unsigned long mapSize,
 	CONTEXT *pgContext,
 	PAGE_ATTRIBUTES pgAttr
 );
@@ -196,9 +196,9 @@ ADDRESS AtStack(
 	CONTEXT *
 );
 
-VOID DtStack(
+void DtStack(
 	CONTEXT *,
-	ULONG StackBase
+	unsigned long StackBase
 );
 
 #endif /* Memory/Pager.h */

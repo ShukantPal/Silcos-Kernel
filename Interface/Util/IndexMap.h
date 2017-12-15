@@ -13,7 +13,7 @@ U32 GtIndex(
 );
 
 static inline
-VOID StIndex(U32 BitIndex, XArray *X)
+void StIndex(U32 BitIndex, XArray *X)
 {
 	*((U32*) &X -> ArrayData[BitIndex / 32]) &= ~(1 << (BitIndex % 32));
 }

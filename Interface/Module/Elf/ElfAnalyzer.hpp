@@ -27,15 +27,15 @@ namespace Elf
 class ElfAnalyzer
 {
 public:
-	static BOOL validateBinary(Void *fileBinary);
+	static bool validateBinary(Void *fileBinary);
 	static class ElfManager *getSecureManager();
 
-	static ULONG getSymbolHash(CHAR *symbolName);
+	static unsigned long getSymbolHash(char *symbolName);
 
 	// Not implemented yet!
-	static ULONG getGNUSymbolHash(CHAR *symbolName);
-	static struct Symbol* querySymbol(CHAR *name, struct SymbolTable *symbolTable, struct HashTable *hashTable);
-	static struct Symbol* querySymbol(CHAR *name, struct SymbolTable *symbolTable, struct GNUHashTable *gnuHash);
+	static unsigned long getGNUSymbolHash(char *symbolName);
+	static struct Symbol* querySymbol(char *name, struct SymbolTable *symbolTable, struct HashTable *hashTable);
+	static struct Symbol* querySymbol(char *name, struct SymbolTable *symbolTable, struct GNUHashTable *gnuHash);
 };
 
 }

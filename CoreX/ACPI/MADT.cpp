@@ -6,11 +6,9 @@
 #include <ACPI/MADT.h>
 #include <Memory/KMemorySpace.h>
 
-void EnumerateMADT(
-		void (*handleLAPIC)(MADTEntryLAPIC *),
-		void (*handleIOAPIC)(MADTEntryIOAPIC *),
-		void (*handleISR)(MADTEntryISR *)
-){
+void EnumerateMADT(void (*handleLAPIC)(MADTEntryLAPIC *), void (*handleIOAPIC)(MADTEntryIOAPIC *),
+			void (*handleISR)(MADTEntryISR *))
+{
 	MADT *madtPtr = (MADT*) RetrieveConfiguration((RSDT*)SystemRsdt, "APIC", ConfigBlock);
 	U8 *entryBytes = &madtPtr->SystemInfo[0];
 	unsigned long jump;

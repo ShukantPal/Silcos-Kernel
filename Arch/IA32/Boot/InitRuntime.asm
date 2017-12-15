@@ -163,15 +163,15 @@ SECTION .text
 		PUSH EAX
 		PUSH EBX
 		MOV EBX, ctorsStart
-		JMP .InitializeGlobalObjects
+		JMP InitializeGlobalObjects
 
-		.CallConstructor:
+		CallConstructor:
 		CALL [EBX]
 		ADD EBX, 4
 
-		.InitializeGlobalObjects:
+		InitializeGlobalObjects:
 		CMP EBX, ctorsEnd
-		JB .CallConstructor
+		JB CallConstructor
 
 		CALL LoadMultibootTags
 		CALL Main
@@ -185,7 +185,7 @@ SECTION .bss
 	global admMultibootTable
 	global admMultibootTableStart
 	global admMultibootTableEnd
-	admMultibootTableStart: 	RESB 4										; VOID *admMultibootTable
+	admMultibootTableStart: 	RESB 4										; void *admMultibootTable
 	admMultibootTableEnd: 	RESB 4										; U32 admMultibootTableSize
 	admBoundaryStart:		RESB 8										; U32 admBoundaryStart (PADDR)
 	admBoundaryEnd:		RESB 8										; U32 admBoundaryEnd	(PADDR)

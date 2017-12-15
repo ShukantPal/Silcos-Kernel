@@ -7,7 +7,7 @@
  *
  * Buddy-allocation uses a table of block-descriptors. These descriptors record the
  * status of a memory block. Although the size of these entries are variable, they
- * always start with the (struct BuddyBlock) block-header. The core buddy-allocator
+ * always start with the (BuddyBlock) block-header. The core buddy-allocator
  * only uses the header.
  *
  * NOTE:
@@ -15,7 +15,6 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-
 #include <Memory/BuddyManager.h>
 #include <Memory/Pager.h>
 #include <KERNEL.h>
@@ -34,13 +33,9 @@ BuddyAllocator::BuddyAllocator()
 			this->allocatedBuddies = 0;
 }
 
-BuddyAllocator::BuddyAllocator(
-		ULONG entrySize,
-		UBYTE *entryTable,
-		ULONG highestOrder,
-		USHORT *listInfo,
-		LINKED_LIST *buddyLists
-){
+BuddyAllocator::BuddyAllocator(unsigned long entrySize, unsigned char *entryTable, unsigned long highestOrder,
+				unsigned short *listInfo, LinkedList *buddyLists)
+{
 	this->entrySize = entrySize;
 	this->entryTable = entryTable;
 	this->highestOrder = highestOrder;
@@ -50,17 +45,15 @@ BuddyAllocator::BuddyAllocator(
 	this->allocatedBuddies = 0;
 }
 
-struct BuddyBlock *BuddyAllocator::getBuddyBlock(
-		ULONG blockOrder,
-		struct BuddyBlock *orgBlock
-){
-	ULONG descOffset = ((ADDRESS) orgBlock - (ADDRESS) this->entryTable) / this->entrySize;
+BuddyBlock *BuddyAllocator::getBuddyBlock(unsigned long blockOrder, BuddyBlock *orgBlock)
+{
+	unsigned long descOffset = ((ADDRESS) orgBlock - (ADDRESS) this->entryTable) / this->entrySize;
 	descOffset = FLIP_BIT(descOffset, blockOrder);
-	return (struct BuddyBlock *) (this->entryTable + descOffset * this->entrySize);
+	return (BuddyBlock *) (this->entryTable + descOffset * this->entrySize);
 }
 
-static CHAR msgNoBuddyBlockAvail[] = "BuddyAllocator::getBuddyList - No block avail";
-static CHAR msgListRecordInternalErr[] = "BuddyAllocator - Impl error FIXME (getBuddyList)";
+static char msgNoBuddyBlockAvail[] = "BuddyAllocator::getBuddyList - No block avail";
+static char msgListRecordInternalErr[] = "BuddyAllocator - Impl error FIXME (getBuddyList)";
 
 /**
  * Function: BuddyAllocator::getBuddyList
@@ -75,19 +68,19 @@ static CHAR msgListRecordInternalErr[] = "BuddyAllocator - Impl error FIXME (get
  * block.`
  *
  * Args:
- * ULONG optimalOrder - The order of the block which is required.
+ * unsigned long optimalOrder - The order of the block which is required.
  *
  * Version: 1.1
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-struct LinkedList *BuddyAllocator::getBuddyList(
-		ULONG optimalOrder
-){
+LinkedList *BuddyAllocator::getBuddyList(unsigned long optimalOrder)
+{
 	// Find the list containing superblocks having a
 	// upper order >= optimalOrder
-	USHORT mainVector = listInfo[LV_MAIN];
-	while(optimalOrder <= highestOrder){
+	unsigned short mainVector = listInfo[LV_MAIN];
+	while(optimalOrder <= highestOrder)
+	{
 		if(mainVector >> optimalOrder & 1)
 			break;
 		++(optimalOrder);
@@ -95,16 +88,18 @@ struct LinkedList *BuddyAllocator::getBuddyList(
 
 	// Error: No block list is free containing a block
 	// of this order
-	if(optimalOrder > highestOrder){
+	if(optimalOrder > highestOrder)
+	{
 		DbgLine(msgNoBuddyBlockAvail);
 		return (NULL);
 	}
 
 	// Find the list containing the smallest superblocks
 	// of minimum lowest order (optimalOrder)
-	USHORT listVector = listInfo[LV_SUB(optimalOrder)];
-	ULONG sbUpperOrder = optimalOrder;
-	while(sbUpperOrder <= highestOrder){
+	unsigned short listVector = listInfo[LV_SUB(optimalOrder)];
+	unsigned long sbUpperOrder = optimalOrder;
+	while(sbUpperOrder <= highestOrder)
+	{
 		if(listVector >> sbUpperOrder & 1)
 			break;
 		++(sbUpperOrder);
@@ -113,7 +108,8 @@ struct LinkedList *BuddyAllocator::getBuddyList(
 	// Error: Internal data was incorrect that a block list
 	// is not-empty with a superblock of min-order (optimalOrder).
 	// (Should not happen) [sbUpperOrder is always <= highestOrder]
-	if(sbUpperOrder > highestOrder){
+	if(sbUpperOrder > highestOrder)
+	{
 		Dbg(msgListRecordInternalErr);
 		return (NULL);
 	}
@@ -128,11 +124,9 @@ struct LinkedList *BuddyAllocator::getBuddyList(
  * This function will return the list containing superblock of type
  * (lowerOrder, upperOrder).
  */
-struct LinkedList *BuddyAllocator::getBuddyList(
-		ULONG lowerOrder,
-		ULONG upperOrder
-){
-	ULONG listOffset = (lowerOrder
+LinkedList *BuddyAllocator::getBuddyList(unsigned long lowerOrder, unsigned long upperOrder)
+{
+	unsigned long listOffset = (lowerOrder
 			* (this->highestOrder + 1 - (lowerOrder - 1) / 2))
 			+ upperOrder - lowerOrder;
 	return (this->blockLists + listOffset);
@@ -150,9 +144,8 @@ struct LinkedList *BuddyAllocator::getBuddyList(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-LinkedList *BuddyAllocator::getBuddyList(
-		BuddyBlock *bBlock
-){
+LinkedList *BuddyAllocator::getBuddyList(BuddyBlock *bBlock)
+{
 	return getBuddyList(bBlock->LowerOrder, bBlock->UpperOrder);
 }
 
@@ -169,7 +162,7 @@ LinkedList *BuddyAllocator::getBuddyList(
  */
 void BuddyAllocator::addBuddyBlock(BuddyBlock *bBlock)
 {
-	AddElement((struct LinkedListNode *) bBlock, getBuddyList(bBlock));
+	AddElement((LinkedListNode *) bBlock, getBuddyList(bBlock));
 	BDLINK(bBlock);
 
 	listInfo[LV_MAIN] |= (1 << bBlock->LowerOrder);
@@ -193,14 +186,13 @@ void BuddyAllocator::removeBuddyBlock(BuddyBlock *bBlock)
 	removeBuddyBlock(bBlock, getBuddyList(bBlock));
 }
 
-void BuddyAllocator::removeBuddyBlock(
-		BuddyBlock *bBlock,
-		LinkedList *containerList
-){
+void BuddyAllocator::removeBuddyBlock(BuddyBlock *bBlock, LinkedList *containerList)
+{
 	RemoveElement((LinkedListNode *) bBlock, containerList);
 
 	BDUNLINK(bBlock);
-	if(containerList->Count == 0){
+	if(containerList->Count == 0)
+	{
 		listInfo[LV_SUB(bBlock->LowerOrder)] &= ~(1 << bBlock->UpperOrder);
 		// No superblocks for given lower-order exist then
 		if(listInfo[LV_SUB(bBlock->LowerOrder)] == 0)
@@ -227,35 +219,36 @@ void BuddyAllocator::removeBuddyBlock(
  *
  * Args:
  * unsigned long newOrder - Order of required-block
- * struct BuddyBlock *orgSuperBlock - Original super-block to be split
- * struct BuddyBlock **lowerSuperBlock - Pointer to pointer of lower superblock
- * struct BuddyBlock **upperSuperBlock - Pointer to pointer of upper superblock
+ * BuddyBlock *orgSuperBlock - Original super-block to be split
+ * BuddyBlock **lowerSuperBlock - Pointer to pointer of lower superblock
+ * BuddyBlock **upperSuperBlock - Pointer to pointer of upper superblock
  *
  * Returns: A pointer to the required-block
  * Version: 1.1.0
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-BuddyBlock *BuddyAllocator::splitSuperBlock(
-		unsigned long newOrder,
-		BuddyBlock *orgSuperBlock,
-		BuddyBlock **lowerSuperBlock,
-		BuddyBlock **upperSuperBlock
-){
-	if(newOrder > orgSuperBlock->LowerOrder){
+BuddyBlock *BuddyAllocator::splitSuperBlock(unsigned long newOrder, BuddyBlock *orgSuperBlock, BuddyBlock **lowerSuperBlock,
+						BuddyBlock **upperSuperBlock)
+{
+	if(newOrder > orgSuperBlock->LowerOrder)
+	{
 		// The block of the required order is contained in the superblock given and
 		// thus the structure is - [lower super-block][block-required][upper super-block]
 		BuddyBlock *newBlock = BlockAtOffsetOf(orgSuperBlock, SIZEOF_DIFF(newOrder, orgSuperBlock->LowerOrder));
 		BuddyBlock *lowerChunk = orgSuperBlock;
 
-		if(newOrder != orgSuperBlock->UpperOrder){
+		if(newOrder != orgSuperBlock->UpperOrder)
+		{
 			// Here, we know that a upper super-block will be created
 			BuddyBlock *upperChunk =
 					BlockAtOffsetOf(newBlock, SIZEOF_ORDER(newOrder));
 			upperChunk->UpperOrder = orgSuperBlock->UpperOrder;
 			upperChunk->LowerOrder = newOrder + 1;
 			*upperSuperBlock = upperChunk;
-		} else {
+		}
+		else
+		{
 			// No upper super-block, cause block required is the largest
 			*upperSuperBlock = NULL;
 		}
@@ -268,32 +261,41 @@ BuddyBlock *BuddyAllocator::splitSuperBlock(
 	} else {
 		// The block of the required order will be cut of the smallest block in the
 		// super-blocks set & result - [block-required][lower chunk][upper chunk]
-		BOOL orgIsBlock = (orgSuperBlock->LowerOrder == orgSuperBlock->UpperOrder);
-		if(orgSuperBlock->UpperOrder != newOrder){
+		bool orgIsBlock = (orgSuperBlock->LowerOrder == orgSuperBlock->UpperOrder);
+		if(orgSuperBlock->UpperOrder != newOrder)
+		{
 			BuddyBlock *upperChunk;
-			if(orgIsBlock){
+			if(orgIsBlock)
+			{
 				// newOrder < orgSuperBlock->LowerOrder (must be satisfied)
 				upperChunk = BlockAtOffsetOf(orgSuperBlock, SIZEOF_ORDER(newOrder));
 				upperChunk->UpperOrder = orgSuperBlock->UpperOrder - 1;
 				upperChunk->LowerOrder = newOrder;
-			} else {
+			}
+			else
+			{
 				// newOrder = orgSuperBlock->LowerOrder (must be correct)
 				upperChunk = BlockAtOffsetOf(orgSuperBlock, SIZEOF_ORDER(orgSuperBlock->LowerOrder));
 				upperChunk->UpperOrder = orgSuperBlock->UpperOrder;
 				upperChunk->LowerOrder = orgSuperBlock->LowerOrder + 1;
 			}
 			*upperSuperBlock = upperChunk;
-		} else {
+		}
+		else
+		{
 			*upperSuperBlock = NULL;
 		}
 
-		if(!orgIsBlock && newOrder != orgSuperBlock->LowerOrder){
+		if(!orgIsBlock && newOrder != orgSuperBlock->LowerOrder)
+		{
 			BuddyBlock *lowerChunk =
 					BlockAtOffsetOf(orgSuperBlock, SIZEOF_ORDER(newOrder));
 			lowerChunk->UpperOrder = orgSuperBlock->LowerOrder - 1;
 			lowerChunk->LowerOrder = newOrder;
 			*lowerSuperBlock = lowerChunk;
-		} else {
+		}
+		else
+		{
 			*lowerSuperBlock = NULL;
 		}
 
@@ -321,29 +323,32 @@ BuddyBlock *BuddyAllocator::splitSuperBlock(
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-BuddyBlock *BuddyAllocator::mergeSuperBlock(
-		BuddyBlock *orgSuperBlock,
-		ULONG maxMergeOrder
-){
+BuddyBlock *BuddyAllocator::mergeSuperBlock(BuddyBlock *orgSuperBlock, unsigned long maxMergeOrder)
+{
 	// Recursion is being used here
-	if(orgSuperBlock->UpperOrder < maxMergeOrder){
+	if(orgSuperBlock->UpperOrder < maxMergeOrder)
+	{
 		BuddyBlock *orgBuddyBlock;
 		BuddyBlock *orgLeftBlock;
 		BuddyBlock *orgRightBlock;
 
 		orgBuddyBlock = getBuddyBlock(orgSuperBlock->Order, orgSuperBlock);
-		if(TBDFREE(orgBuddyBlock)){
+
+		if(TBDFREE(orgBuddyBlock))
+		{
 			// Remember, the left block will become the parent block.
-			orgLeftBlock = ((ULONG) orgBuddyBlock > (ULONG) orgSuperBlock)
+			orgLeftBlock = ((unsigned long) orgBuddyBlock > (unsigned long) orgSuperBlock)
 					? orgSuperBlock : orgBuddyBlock;
 			orgRightBlock = (orgLeftBlock == orgSuperBlock)
 					? orgBuddyBlock : orgSuperBlock;
 
 			// Merging only occurs when both adjacent super-block of the
 			// same lower-order.
-			if(orgLeftBlock->LowerOrder == orgRightBlock->LowerOrder){
+			if(orgLeftBlock->LowerOrder == orgRightBlock->LowerOrder)
+			{
 				if(TBDLINKED(orgSuperBlock))
 					removeBuddyBlock(orgSuperBlock);
+
 				removeBuddyBlock(orgBuddyBlock);// Buddy-block must be freed
 
 				++(orgRightBlock->UpperOrder);
@@ -352,10 +357,14 @@ BuddyBlock *BuddyAllocator::mergeSuperBlock(
 								orgRightBlock->UpperOrder;
 
 				return mergeSuperBlock(orgLeftBlock, maxMergeOrder);
-			} else {
+			}
+			else
+			{
 				return (orgSuperBlock);
 			}
-		} else {
+		}
+		else
+		{
 			return (orgSuperBlock);
 		}
 	}
@@ -378,17 +387,20 @@ BuddyBlock *BuddyAllocator::mergeSuperBlock(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-BuddyBlock *BuddyAllocator::allocateBlock(
-		unsigned long blockOrder
-){
+BuddyBlock *BuddyAllocator::allocateBlock(unsigned long blockOrder)
+{
 	if(freeBuddies < SIZEOF_ORDER(blockOrder))
-		return (struct BuddyBlock *) (BD_MEMORY_LOW);// Package err to front-end
+		return (BuddyBlock *) (BD_MEMORY_LOW);// Package err to front-end
 
-	struct LinkedList *optimalList = getBuddyList(blockOrder);
-	if(optimalList == NULL){
-		return (struct BuddyBlock *) (BD_FRAGMENTATION);
-	} else {
-		BuddyBlock *paSuperBlock = (struct BuddyBlock*) optimalList->Head;
+	LinkedList *optimalList = getBuddyList(blockOrder);
+
+	if(optimalList == NULL)
+	{
+		return (BuddyBlock *) (BD_FRAGMENTATION);
+	}
+	else
+	{
+		BuddyBlock *paSuperBlock = (BuddyBlock*) optimalList->Head;
 		removeBuddyBlock(paSuperBlock, optimalList);
 
 
@@ -418,23 +430,27 @@ BuddyBlock *BuddyAllocator::allocateBlock(
  * the merged block to the buddy-lists.
  *
  * Args:
- * struct BuddyBlock *blockGiven - Pointer to descriptor of the given block
+ * BuddyBlock *blockGiven - Pointer to descriptor of the given block
  *
  * Version: 1.1
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-unsigned long BuddyAllocator::freeBlock(
-		struct BuddyBlock *blockGiven
-){
-	if(TBDLINKED(blockGiven)){
+unsigned long BuddyAllocator::freeBlock(BuddyBlock *blockGiven)
+{
+	if(TBDLINKED(blockGiven))
+	{
 		return (BD_USED);
-	} else if(blockGiven->Order != blockGiven->UpperOrder){
+	}
+	else if(blockGiven->Order != blockGiven->UpperOrder)
+	{
 		return (BD_ORDER_CORRUPT);
-	} else {
+	}
+	else
+	{
 		freeBuddies += SIZEOF_ORDER(blockGiven->Order);
 
-		struct BuddyBlock *mergedBlock = mergeSuperBlock(blockGiven, highestOrder);
+		BuddyBlock *mergedBlock = mergeSuperBlock(blockGiven, highestOrder);
 		BLOCK_FREE(mergedBlock);// Mark FREE flag
 		addBuddyBlock(mergedBlock);
 
@@ -462,40 +478,41 @@ unsigned long BuddyAllocator::freeBlock(
  * happens less (because superblocks are located at right-side).
  *
  * Args:
- * struct BuddyInfo *dataBlock - Block containing the data requiring expansion
- * ULONG *status - *status contains TRUE/FALSE whether parent block was free/not.
+ * BuddyInfo *dataBlock - Block containing the data requiring expansion
+ * unsigned long *status - *status contains TRUE/FALSE whether parent block was free/not.
  *
  * Version: 1.1
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-struct BuddyBlock *BuddyAllocator::exchangeBlock(
-		struct BuddyBlock *orgBlock,
-		ULONG *statusRegister
-){
+BuddyBlock *BuddyAllocator::exchangeBlock(BuddyBlock *orgBlock, unsigned long *statusRegister)
+{
 	if(TBDFREE(orgBlock))
-		return (struct BuddyBlock *) (BD_ERR_FREE);
+		return (BuddyBlock *) (BD_ERR_FREE);
 	else if(orgBlock->Order != orgBlock->UpperOrder)
-		return (struct BuddyBlock *) (BD_ORDER_CORRUPT);
-	else {
-		struct BuddyBlock *orgBuddy = getBuddyBlock(orgBlock->Order, orgBlock);
+		return (BuddyBlock *) (BD_ORDER_CORRUPT);
+	else
+	{
+		BuddyBlock *orgBuddy = getBuddyBlock(orgBlock->Order, orgBlock);
 
-		if(TBDFREE(orgBuddy) && orgBuddy->Order == orgBlock->Order){
+		if(TBDFREE(orgBuddy) && orgBuddy->Order == orgBlock->Order)
+		{
 			// Here, the lower super-block is not added, cause it doesn't exist. But
 			// we don't pass a NULL pointer to splitSuperBlock() and instead pass the
 			// statusRegister* allowing it to have a garbage value.
 			removeBuddyBlock(orgBuddy);
-			struct BuddyBlock *upperPortion;
-			struct BuddyBlock *buddySplitBlock =
-					splitSuperBlock(orgBlock->Order, orgBuddy, (struct BuddyBlock **) statusRegister, &upperPortion);
+			BuddyBlock *upperPortion;
+			BuddyBlock *buddySplitBlock = splitSuperBlock(orgBlock->Order, orgBuddy,
+									(BuddyBlock **) statusRegister, &upperPortion);
 
-			if(upperPortion != NULL){
+			if(upperPortion != NULL)
+			{
 				BLOCK_FREE(upperPortion);
 				addBuddyBlock(upperPortion);
 			}
 
-			struct BuddyBlock *mergedBlock =
-					((ULONG) buddySplitBlock > (ULONG) orgBlock) ? orgBlock : buddySplitBlock;
+			BuddyBlock *mergedBlock = ((unsigned long) buddySplitBlock > (unsigned long) orgBlock) ?
+							orgBlock : buddySplitBlock;
 			BLOCK_UNFREE(mergedBlock);
 			++(mergedBlock->UpperOrder);
 			++(mergedBlock->LowerOrder);
@@ -503,7 +520,9 @@ struct BuddyBlock *BuddyAllocator::exchangeBlock(
 			// Expansion has occurred externally, in the allocator itself
 			*statusRegister = BD_EXTERNAL;
 			return (mergedBlock);
-		} else {
+		}
+		else
+		{
 			// Expansion will occur internally, in the client by copying
 			*statusRegister = BD_INTERNAL;
 			return (NULL);

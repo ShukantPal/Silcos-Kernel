@@ -25,7 +25,7 @@ KRUNNABLE *Schedule_RR(
 	PROCESSOR *cpu
 );
 
-VOID SaveRunner_RR(
+void SaveRunner_RR(
 	TIME curTime,
 	PROCESSOR *cpu
 );
@@ -35,12 +35,12 @@ KRUNNABLE *UpdateRunner_RR(
 	PROCESSOR *cpu
 );
 
-VOID InsertRunner_RR(
+void InsertRunner_RR(
 	KRUNNABLE *runner,
 	PROCESSOR *cpu
 );
 
-VOID RemoveRunner_RR(
+void RemoveRunner_RR(
 	KRUNNABLE *runner
 );
 

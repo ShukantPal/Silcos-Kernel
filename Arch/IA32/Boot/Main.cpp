@@ -57,7 +57,7 @@ PROCESSOR_SETUP_INFO *dInfo;
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID ValidateSupport(){
+void ValidateSupport(){
 	if(TestCPUID() != 0) {
 		// TODO: Implement CPUID feature searching through ADM subset.
 	} else
@@ -100,7 +100,7 @@ void printStatic()
  * bootInfo - virtual address of the multiboot header
  * magicNo - the identification number given by the loader
  *
- * Returns: VOID
+ * Returns: void
  *
  * @See Init.c, InitRuntime.asm
  * @Version 13

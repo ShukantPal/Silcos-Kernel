@@ -98,18 +98,18 @@ typedef struct EThreadInfo ETI;
 #define TdWaiting(T) (T -> ExTI.ExecWaiters)
 #define TdLock(T) (T -> Lock)
 
-typedef VOID KTD_PARAMS;
+typedef void KTD_PARAMS;
 
 typedef
 struct {
 	KTD_PARAMS *ParamList;
 	SIZE ParamSize;
-	VOID *ThreadEntry;
+	void *ThreadEntry;
 } KTHREAD_PARAMS;
 
 typedef
 struct {
-	ULONG EntryMode;
+	unsigned long EntryMode;
 	
 } KTHREAD_ENTRY;
 
@@ -147,9 +147,9 @@ struct _KTHREAD {
 	KRUNNABLE Gate;
 	UBYTE Priority;
 	UBYTE Privelege;
-	USHORT Flags;
-	ULONG Status;
-	VOID (*ProgramCounter)();
+	unsigned short Flags;
+	unsigned long Status;
+	void (*ProgramCounter)();
 	KSTACKINFO UserStack;
 	KSTACKINFO KernelStack;
 	ID ParentID;//48
@@ -158,7 +158,7 @@ struct _KTHREAD {
 	SPIN_LOCK Lock;
 } KTHREAD;
 
-typedef ULONG KTHREAD_HANDLE;
+typedef unsigned long KTHREAD_HANDLE;
 
 extern KTHREAD *kIdlerThread;
 extern KTHREAD *kInitThread;
@@ -182,9 +182,9 @@ KTHREAD *KeGetThread(
 	ID threadID
 );
 
-VOID InitTTable(VOID);
+void InitTTable(void);
 
-VOID SetupRunqueue();
+void SetupRunqueue();
 
 KTHREAD* KThreadCreate(void *entry);
 

@@ -73,20 +73,20 @@ struct _PSMM_MANAGER {
 	MM_REGION *LastUsed;/* Cache for last used region */
 	
 	#define PM_MAP 0
-	ULONG PmFlags;/* Internal state flags */
-	ULONG UsedMemory;/* Amount of memory usable by the process (mapped in regions) */
-	ULONG CodeBounds[2];/* Executable Code */
-	ULONG DataBounds[2];/* Static Data */
-	ULONG BSSBounds[2];/* Uninitialized Data */
-	ULONG HeapBounds[2];/* Heap given by kernel */
-	ULONG StackBounds[2];/* Stack provided by kernel */
-	ULONG CodePages;/* Pages mapped to executable code */
-	ULONG DataPages;
-	ULONG BSSPages;
-	ULONG HeapPages;
-	ULONG SharedPages;/* Pages mapped for shm-IPC */
-	ULONG PinnedPages;
-	ULONG DLLCount;
+	unsigned long PmFlags;/* Internal state flags */
+	unsigned long UsedMemory;/* Amount of memory usable by the process (mapped in regions) */
+	unsigned long CodeBounds[2];/* Executable Code */
+	unsigned long DataBounds[2];/* Static Data */
+	unsigned long BSSBounds[2];/* Uninitialized Data */
+	unsigned long HeapBounds[2];/* Heap given by kernel */
+	unsigned long StackBounds[2];/* Stack provided by kernel */
+	unsigned long CodePages;/* Pages mapped to executable code */
+	unsigned long DataPages;
+	unsigned long BSSPages;
+	unsigned long HeapPages;
+	unsigned long SharedPages;/* Pages mapped for shm-IPC */
+	unsigned long PinnedPages;
+	unsigned long DLLCount;
 } PSMM_MANAGER;
 
 #define convert_psmm PSMM_MANAGER*
@@ -100,50 +100,50 @@ struct _PSMM_MANAGER {
  * process program.
  *
  * Args:
- * ULONG codeBounds[2] - Bounds for the code section
- * ULONG dataBounds[2] - Bounds for the data section
- * ULONG bssBounds[2] - Bounds for the BSS section
+ * unsigned long codeBounds[2] - Bounds for the code section
+ * unsigned long dataBounds[2] - Bounds for the data section
+ * unsigned long bssBounds[2] - Bounds for the BSS section
  *
  * @Version 1
  * @Since Circuit 2.03
  */
 PSMM_MANAGER *PMgrCreate(
-	ULONG codeBounds[2],
-	ULONG dataBounds[2],
-	ULONG bssBounds[2]
+	unsigned long codeBounds[2],
+	unsigned long dataBounds[2],
+	unsigned long bssBounds[2]
 );
 
 /** @Interface MM_MANAGER.MmInsertRegion() */
-ULONG PInsertRegion(
-	ULONG rgAddress,
-	ULONG rgSize,
-	ULONG rgFlags,
+unsigned long PInsertRegion(
+	unsigned long rgAddress,
+	unsigned long rgSize,
+	unsigned long rgFlags,
 	PAGE_ATTRIBUTES pgFlags,
 	MM_MANAGER *mgr
 );
 
 /** @Interface MM_MANAGER.MmRemoveRegion() */
-ULONG PRemoveRegion(
-	ULONG rgAddress,
-	ULONG rgSize,
-	USHORT rgType,
+unsigned long PRemoveRegion(
+	unsigned long rgAddress,
+	unsigned long rgSize,
+	unsigned short rgType,
 	MM_MANAGER *mgr
 );
 
 /** @Interface MM_MANAGER.MmExtendRegion() */
-ULONG PExtendRegion(
-	ULONG rgAddress,
-	ULONG exAddress,
+unsigned long PExtendRegion(
+	unsigned long rgAddress,
+	unsigned long exAddress,
 	MM_MANAGER *mgr
 );
 
 /** @Interface MM_MANAGER.MmValidateAddress() */
 MM_REGION *PValidateAddress(
-	ULONG address,
+	unsigned long address,
 	MM_MANAGER *mgr
 );
 
-VOID PMgrDipose(
+void PMgrDipose(
 	PSMM_MANAGER *mgr
 );
 

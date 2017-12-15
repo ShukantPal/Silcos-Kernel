@@ -51,30 +51,6 @@ extern U32 BSP_HID;
 #define PROCESSOR_HIEARCHY_CLUSTER				10
 #define PROCESSOR_HIEARCHY_PACKAGE				
 #define PROCESSOR_HIERARCHY_LOGICAL_CPU 1
-/*
-typedef
-struct _PROCESSOR_TOPOLOGY
-{
-	union {
-		LINODE LiLinker;///* Used for participating in lists *
-		CLNODE ClnLinker;
-		struct {
-			struct _PROCESSOR_TOPOLOGY *NextDomain;
-			struct _PROCESSOR_TOPOLOGY *PreviousDomain;
-		};
-	};
-	UINT DomainID;///* ID for this group *
-	UINT Level;///* Topology Level (inside processor package) *
-	UINT Type;///* Topology Type (outside the package) *
-	UINT ProcessorCount;///* No. of processors in the domain *
-	KSCHED_ROLLER_DOMAIN SchedDomain[3];///* Scheduler Domain Info *
-	CLIST DomainList;///* (Sorted) List of SCHED_GROUPs *
-	struct _PROCESSOR_TOPOLOGY *ParentDomain;///* Parent SCHED_DOMAIN *
-	SPIN_LOCK WriteLock;///* Lock for manipulating stats *
-} PROCESSOR_TOPOLOGY;
-*/
-struct _PROCESSOR;
-typedef _PROCESSOR Processor;
 
 
 //typedef PROCESSOR_TOPOLOGY SCHED_DOMAIN;/* Scheduling Domain */
@@ -84,7 +60,7 @@ typedef _PROCESSOR Processor;
 #define MXRS_PROCESSOR_ALREADY_EXISTS	0xFAE0
 #define MXRS_PROCESSOR_STRUCT_INVALID	0xFAE1
 #define MXRS_PROCESSOR_REGISTERED		0xFAEF
-typedef ULONG MX_REGISTER_STATUS;
+typedef unsigned long MX_REGISTER_STATUS;
 
 /**
  * enum PoS - 
@@ -136,13 +112,13 @@ enum
 
 typedef
 struct _KSCHEDINFO {
-	ULONG Load;
-	ULONG RunnerPopulation;
+	unsigned long Load;
+	unsigned long RunnerPopulation;
 	KSCHED_ROLLER *CurrentRoller;/* Current task's scheduler */
-	ULONG CurrentQuanta;/* Quanta given to current runner */
-	ULONG RunnerInterruptable;/* Is pre-emption allowed */
-	ULONG LeftQuanta;/* Amount of quanta left-over */
-	ULONG FlagSet;/* Runtime-FLAGS */
+	unsigned long CurrentQuanta;/* Quanta given to current runner */
+	unsigned long RunnerInterruptable;/* Is pre-emption allowed */
+	unsigned long LeftQuanta;/* Amount of quanta left-over */
+	unsigned long FlagSet;/* Runtime-FLAGS */
 	ExecList SchedQueue;/* Queue immediate look */
 } KSCHEDINFO;
 
@@ -158,17 +134,17 @@ struct _KSCHEDINFO {
 #endif
 
 typedef
-struct _PROCESSOR {
-	LINODE LiLinker;/* Participate in lists */
-	UINT ProcessorCluster;/* NUMA Domain */
-	USHORT PoLoad;
-	UCHAR ProcessorStatus;
-	UCHAR PoFreq;
-	UINT PoType;
-	USHORT PoStk;
-	USHORT Padding;
-	VOID *PoExT;/* Current Runner */
-	UINT ProcessorStack;/* UPKS */
+struct Processor {
+	LinkedListNode LiLinker;/* Participate in lists */
+	unsigned int ProcessorCluster;/* NUMA Domain */
+	unsigned short PoLoad;
+	unsigned char ProcessorStatus;
+	unsigned char PoFreq;
+	unsigned int PoType;
+	unsigned short PoStk;
+	unsigned short Padding;
+	void *PoExT;/* Current Runner */
+	unsigned int ProcessorStack;/* UPKS */
 	KSCHEDINFO SchedulerInfo;/* Scheduler Status */
 	CHREG FrameCache[5];/* KFrameManager::CacheRegister */
 	CHREG PageCache[2];/* KMemoryManager::CacheRegister */
@@ -180,7 +156,7 @@ struct _PROCESSOR {
 	void *IdlerThread;/* Task for idle CPU */
 	void *SetupThread;/* Maintenance and setup task */
 	HAL::Domain *DomainInfo;/* Processor Topology & Scheduling Domains */
-	PROCESSOR_INFO Hardware;/* Platform-specific data */
+	ProcessorInfo Hardware;/* Platform-specific data */
 } PROCESSOR;
 
 extern PROCESSOR *CPUArray;
@@ -189,4 +165,4 @@ void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
 void AddProcessorInfo(MADTEntryLAPIC *madtEntry);
 void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
 
-#endif /* HAL/Processor.h */
+#endif/* HAL/Processor.h */

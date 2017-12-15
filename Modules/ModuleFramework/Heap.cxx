@@ -48,10 +48,8 @@ ObjectInfo* heapEngines[5];
  *
  * Author: Shukant Pal
  */
-Void* kmalloc(
-		unsigned int memSize,
-		unsigned int initialUsers
-){
+void* kmalloc(unsigned int memSize, unsigned int initialUsers)
+{
 	memSize += sizeof(BlockContainer);
 
 	if(memSize < 32)
@@ -86,10 +84,8 @@ Void* kmalloc(
  *
  * Author: Shukant Pal
  */
-bool kfree(
-		void* memGiven,
-		bool forceDelete
-){
+bool kfree(void* memGiven, bool forceDelete)
+{
 	BlockContainer *memBlock = BlockFor(memGiven);
 
 	if(memBlock->magicNo != HEAP_MAGIC)
@@ -106,10 +102,8 @@ bool kfree(
 	}
 }
 
-void* kralloc(
-		void *heap_mem,
-		unsigned long new_size
-){
+void* kralloc(void *heap_mem, unsigned long new_size)
+{
 	BlockContainer *heap_block = BlockFor(heap_mem);
 	unsigned long org_size = 1 << heap_block->blockOrder;
 
@@ -120,10 +114,8 @@ void* kralloc(
 	}
 }
 
-void *krcalloc(
-		void *heap_mem,
-		unsigned long new_size
-){
+void *krcalloc(void *heap_mem, unsigned long new_size)
+{
 	BlockContainer *heap_block = BlockFor(heap_mem);
 	unsigned long org_size = (1 << heap_block->blockOrder);
 

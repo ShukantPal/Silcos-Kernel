@@ -14,14 +14,16 @@
 #include "ModuleRecord.h"
 #include <Memory/Pager.h> // For PADDRESS type
 
-struct Module::DynamicLink *MdLoadFile(PADDRESS moduleAddress, ULONG moduleSize, CHAR *cmdLine, Module::ModuleRecord *kmRecord);
+struct Module::DynamicLink *MdLoadFile(PADDRESS moduleAddress, unsigned long moduleSize, char *cmdLine, Module::ModuleRecord *kmRecord);
 
-VOID MdSetupLoader(
-	VOID
+void MdSetupLoader(
+	void
 );
 
 namespace Module
 {
+
+#define NO_ENTRY_ADDR 0xDBDAFEFC
 
 /**
  * Struct: BlobRegister
@@ -44,9 +46,9 @@ struct BlobRegister
 {
 	LinkedListNode liLinker;/* Used for participating in blob lists */
 	PADDRESS loadAddr;/* Load address in physical memory */
-	ULONG blobSize;/* Size of file/blob loaded */
-	ULONG fileAddr;/* Used by loader for recording file's address in kernel-mem */
-	CHAR *cmdLine;/* Command-line provided by client/NULL */
+	unsigned long blobSize;/* Size of file/blob loaded */
+	unsigned long fileAddr;/* Used by loader for recording file's address in kernel-mem */
+	char *cmdLine;/* Command-line provided by client/NULL */
 	ModuleRecord *regForm;/* Registration-forum given by client */
 	ABI abiFound;/* Filled by loader - type of abi found */
 	Void *manager;/* ABI-manager for the module (elf->ElfManager)*/
@@ -71,7 +73,6 @@ class ModuleLoader
 public:
 	static void loadFile(BlobRegister &blob);
 	static void loadBundle(LinkedList &blobList);
-
 private:
 	static void *moveFileIntoMemory(BlobRegister &blob);
 	static ABI globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob);

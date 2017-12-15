@@ -8,42 +8,15 @@
 #include <Types.h>
 
 /* mem-management functions (primitive & independent) */
-VOID memset(
-	VOID *Pointer,
-	UCHAR Value,
-	SIZE_T Size
-);
-
-VOID memsetf(
-	VOID *Pointer,
-	SIZE_T Value,
-	SIZE_T ByteSize
-);
-
-VOID memcpy(
-	const VOID *Pointer,
-	VOID *Buffer,
-	SIZE_T PointerAndBufferSize
-);
-
-VOID memcpyf(
-	const VOID *Pointer,
-	VOID *Buffer,
-	SIZE_T ByteSize
-);
+void memset(void *Pointer, unsigned char Value, SIZE Size);
+void memsetf(void *Pointer, SIZE Value, SIZE ByteSize);
+void memcpy(const void *Pointer, void *Buffer, SIZE PointerAndBufferSize);
+void memcpyf(const void *Pointer, void *Buffer, SIZE ByteSize);
 
 #define MEMORY_SET memset
 #define MEMORY_SET_F memsetf
 
-BOOL memcmp(
-	const VOID *Pointer0,
-	const VOID *Pointer1,
-	SIZE_T CmpByteSize
-);
+bool memcmp(const void *from, const void *to, SIZE cpSize);
+bool strcmp(const char *str0, const char *str1);
 
-BOOL strcmp(
-	const CHAR *String0,
-	const CHAR *String1
-);
-
-#endif /* Util/CtPrim.h */
+#endif/* Util/CtPrim.h */

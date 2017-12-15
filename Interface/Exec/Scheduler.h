@@ -31,10 +31,10 @@ enum
 };
 
 extern
-LINKED_LIST Runqueue[32];
+LinkedList Runqueue[32];
 
 extern /* Sleeping threads */
-LINKED_LIST Sleepqueue;
+LinkedList Sleepqueue;
 
 extern
 SPIN_LOCK SchedSynchronizer;

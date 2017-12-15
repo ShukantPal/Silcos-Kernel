@@ -23,15 +23,15 @@ typedef struct {
 
 /* Not used anymore. Can be removed */
 typedef struct {
-	VOID ** ArrayField;
+	void ** ArrayField;
 	UINT32_T Size;
 	UINT32_T MaxSize;
 } Array;
 
 /* Add a double int */
-VOID Add(DoubleInt, ConstArray*);
+void Add(DoubleInt, ConstArray*);
 
 /* Remove double int at a index */
-VOID Remove(UINT32_T, ConstArray*);
+void Remove(UINT32_T, ConstArray*);
 
 #endif /* Util/ConstArray.h */

@@ -10,12 +10,12 @@
 
 extern U32 regInfo;
 
-export_asm VOID HandleDF(U32 zero) {
+export_asm void HandleDF(U32 zero) {
 	DbgLine("Double Fault - System Down");
 	//asm volatile("cli; hlt;");
 }
 
-export_asm VOID HandleIT(U32 v) {
+export_asm void HandleIT(U32 v) {
 	DbgLine("Internal Failure - ");
 	DbgLine("Details - x86 : TSS segment failed to load."); 
 	DbgLine("Recovery - Try to reboot this device.");
@@ -23,7 +23,7 @@ export_asm VOID HandleIT(U32 v) {
 	asm volatile("cli; hlt;");
 }
 
-export_asm VOID HandleSNP(U32 s) {
+export_asm void HandleSNP(U32 s) {
 	DbgLine("Internal Failure - ");
 	DbgLine("Details - x86 : Segment Not Present - GDT Failure");
 	DbgLine("Recovery - Try to reboot this device");
@@ -31,7 +31,7 @@ export_asm VOID HandleSNP(U32 s) {
 	asm volatile("cli; hlt;");
 }
 
-export_asm VOID HandleGPF(U32 e) {
+export_asm void HandleGPF(U32 e) {
 	Dbg("General Protection Fault - Error Code ");
 	DbgInt(e);
 	Dbg(", PROCESSOR_ID: ");
@@ -40,15 +40,15 @@ export_asm VOID HandleGPF(U32 e) {
 	asm volatile("cli; hlt;");
 }
 
-export_asm VOID HandlePF(U32 errorCode) {
+export_asm void HandlePF(U32 errorCode) {
 	//if(FixPF(regInfo))
 	//	return;
 
-	BOOL bitP = errorCode & 1;
-	BOOL bitW = errorCode & (1 << 1);
-	BOOL bitU = errorCode & (1 << 2);
-	BOOL bitR = errorCode & (1 << 3);
-	BOOL bitI = errorCode & (1 << 4);
+	bool bitP = errorCode & 1;
+	bool bitW = errorCode & (1 << 1);
+	bool bitU = errorCode & (1 << 2);
+	bool bitR = errorCode & (1 << 3);
+	bool bitI = errorCode & (1 << 4);
 
 	Dbg("Page Fault: ");
 

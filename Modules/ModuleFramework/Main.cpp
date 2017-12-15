@@ -27,12 +27,10 @@ ObjectInfo *tRBNode;
 char nmRBNode[] = "@com.silcos.circuit.mdfrwk.RBTree::RBNode";
 extern String *defaultString;
 
-void* __dso_handle;
-
-//using namespace Util;
-
-static inline void __init()
+extern "C" void __init()
 {
+	__initHeap();
+
 	tString = KiCreateType(nmString, sizeof(String), NO_ALIGN, NULL, NULL);
 	tRBTree = KiCreateType(nmRBTree, sizeof(RBTree), NO_ALIGN, NULL, NULL);
 	tRBNode = KiCreateType(nmRBNode, sizeof(RBNode), NO_ALIGN, NULL, NULL);
@@ -42,16 +40,9 @@ static inline void __init()
 	defaultString  = new(tString) String("@com.silcos.mdfrwk#Object");
 }
 
-decl_c void __cxa_pure_virtual()
+extern "C" void KModuleMain(void)
 {
-	Dbg("_verr");
-}
-
-decl_c void KModuleMain(void)
-{
-	DbgLine("Reporting Load: com.silcos.obmgr.109");
-	__initHeap();
-	__init();
+	DbgLine("Reporting Load: com.silcos.mdfrwk.109");
 
 	while(1) { asm volatile("nop"); }
 }

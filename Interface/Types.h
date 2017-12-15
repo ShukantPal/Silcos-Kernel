@@ -15,13 +15,13 @@
 		return (objectMemory);
 	}
 
-	decl_c void *KNew(struct ObjectInfo *, unsigned long km_sleep);
+	extern "C" void *KNew(struct ObjectInfo *, unsigned long km_sleep);
 	inline void *operator new(unsigned int, struct ObjectInfo *objectType)
 	{
 		return KNew(objectType, 0);
 	}
 
-	decl_c void KDelete(void *del_ptr, struct ObjectInfo *);
+	extern "C" void KDelete(void *del_ptr, struct ObjectInfo *);
 	typedef void kobj;
 	inline void kobj_free(void *del_ptr, struct ObjectInfo *useless_type)
 	{
@@ -31,7 +31,7 @@
 #else
 	#define import_asm extern
 	#define export_asm extern
-	#define decl_c
+	#define decl_c extern
 #endif
 
 #define returnv_if(boolCondition) if(boolCondition) return;
@@ -93,12 +93,11 @@
 	#endif
 
 	#define size_t unsigned long
-	#define SIZE_T unsigned long
 
 	#define signed_size_t long
 	#define SSIZE_T signed long
 
-	#define VOID void
+	#define void void
 
 	#define NULL 0
 
@@ -109,17 +108,7 @@
 
 	#define sysc void 
 
-typedef char CHAR;
-typedef short SHORT;
-typedef int INT;
-typedef long LONG;
-typedef unsigned char UCHAR;
-typedef unsigned short USHORT;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned long long ULONGLONG;
 typedef unsigned long SIZE;
-typedef UCHAR BOOL;
 typedef void Void;
 typedef SIZE Size;
 
@@ -137,13 +126,13 @@ extern unsigned int KernelBSSStart;
 extern unsigned int KernelBSSEnd;
 extern unsigned int KernelPDatStart;
 extern unsigned int KernelPDatEnd;
-extern ULONG StackAddress;
-extern CHAR *HALData;
+extern unsigned long StackAddress;
+extern char *HALData;
 
-decl_c const char *__space;// " "
-decl_c const char *__leftparen;// "("
-decl_c const char *__rightparen;// ") "
-decl_c const char *__comma;// ", "
+extern "C" const char *__space;// " "
+extern "C" const char *__leftparen;// "("
+extern "C" const char *__rightparen;// ") "
+extern "C" const char *__comma;// ", "
 
 extern void ImmatureHang(const char*);
 

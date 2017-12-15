@@ -15,8 +15,8 @@
 #include "ZoneManager.h"
 
 #ifdef NAMESPACE_MAIN
-	VOID SetupKMemoryManager(
-		VOID
+	void SetupKMemoryManager(
+		void
 	);
 #endif
 
@@ -28,7 +28,7 @@
 	typedef
 	struct _KPAGE {
 		struct Memory::Internal::BuddyBlock BInfo;
-		ULONG HashCode;
+		unsigned long HashCode;
 	} KPAGE;
 #endif
 
@@ -59,9 +59,9 @@
  * @Author Shukant Pal
  */
 ADDRESS KiPagesAllocate(
-	ULONG pgOrder,
-	ULONG prefZone,
-	ULONG pgFlags
+	unsigned long pgOrder,
+	unsigned long prefZone,
+	unsigned long pgFlags
 );
 
 /**
@@ -80,7 +80,7 @@ ADDRESS KiPagesAllocate(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-ULONG KiPagesFree(
+unsigned long KiPagesFree(
 	ADDRESS pgAddress
 );
 
@@ -101,8 +101,8 @@ ULONG KiPagesFree(
  */
 ADDRESS KiPagesExchange(
 	ADDRESS pgAddress,
-	ULONG *status,
-	ULONG znFlags
+	unsigned long *status,
+	unsigned long znFlags
 );
 
 #define KiPageAllocate(prefZone) KiPagesAllocate(0, prefZone, FLG_NONE)

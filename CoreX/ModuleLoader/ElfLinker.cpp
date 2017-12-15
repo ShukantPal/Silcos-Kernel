@@ -33,21 +33,19 @@ void* __dso_handle;
  *
  * Author: Shukant Pal
  */
-void ElfLinker::resolveRelocation(
-		RelEntry *relocEntry,
-		ElfManager &handlerService
-){
-	ULONG *relocationArena = (ULONG*) (handlerService.baseAddress + relocEntry->Offset);
+void ElfLinker::resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService)
+{
+	unsigned long *relocationArena = (unsigned long*) (handlerService.baseAddress + relocEntry->Offset);
 
-	ULONG symbolIdx = ELF32_R_SYM(relocEntry->Info);
+	unsigned long symbolIdx = ELF32_R_SYM(relocEntry->Info);
 
 //	Dbg("_relidx: "); DbgInt(relocEntry->Info); DbgLine(";");
 
 	Symbol *symbolFound = handlerService.dynamicSymbols.entryTable + symbolIdx;
 
-	CHAR *signature = handlerService.dynamicSymbols.nameTable + symbolFound->Name;
+	char *signature = handlerService.dynamicSymbols.nameTable + symbolFound->Name;
 
-	ULONG declBase;
+	unsigned long declBase;
 
 	if(*signature == '\0' &&
 			ELF32_R_TYPE(relocEntry->Info) == R_386_RELATIVE){
@@ -87,12 +85,10 @@ void ElfLinker::resolveRelocation(
  *
  * Author: Shukant Pal
  */
-void ElfLinker::resolveRelocations(
-		RelTable &relocTable,
-		ElfManager &handlerService
-){
-	ULONG relIndex = 0;
-	ULONG relCount = relocTable.entryCount;
+void ElfLinker::resolveRelocations(RelTable &relocTable, ElfManager &handlerService)
+{
+	unsigned long relIndex = 0;
+	unsigned long relCount = relocTable.entryCount;
 	RelEntry *relDesc = relocTable.entryTable;
 
 	while(relIndex < relCount){

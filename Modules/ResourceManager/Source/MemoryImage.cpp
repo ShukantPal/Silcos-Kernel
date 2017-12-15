@@ -28,50 +28,39 @@
 using namespace Resource;
 using namespace Process;
 
-RegionInsertionResult MemoryImage::insertRegion(
-		unsigned long initialAddress,
-		unsigned long pageCount,
-		unsigned short ctlFlags,
-		PAGE_ATTRIBUTES pageFlags
-){
-	MemorySection *region = new(tMemorySection) MemorySection
-				(initialAddress, pageCount,
-				(psmmManager << 16) | ctlFlags, pageFlags);
+static const char *nmMemoryImage = "Process::MemoryImage";
 
-
-}
+unsigned long NO_ENTRY = 0xDBDAFEFC;
 
 /**
- * Function: MemoryImage::findRegion
+ * Function: MemoryImage::insertRegion
  *
  * Summary:
- * Finds the region which contains the given address and uses the tree
- * or linked-list based on the treeUsed (bool) flag.
+ * Inserts a memory-region into the address-space with the given bounds.
  */
-MemorySection* MemoryImage::findRegion(
-		unsigned long address
-){
-	if(treeUsed){
-		MemorySection *closestMatch = // lower becauz starting is <
-				(MemorySection*) sectionTree->getLowerBoundFor
-								(address);
+RegionInsertionResult MemoryImage::insertRegion(unsigned long initialAddress, unsigned long pageCount,
+							unsigned long cfgFlags, PAGE_ATTRIBUTES pageFlags)
+{
+	MemorySection *newa = new(tMemorySection) MemorySection(initialAddress, pageCount, cfgFlags, pageFlags);
+	RegionInsertionResult chainOutput = add(newa);
 
-		if(closestMatch && closestMatch->finalAddress > address)
-			return (closestMatch);
-		else
-			return (NULL);
-	} else {
-		MemorySection *tSection = (MemorySection*) regionChain.Head;
+	if(chainOutput != RegionInsertionResult::InsertSuccess)
+		kobj_free((kobj*) newa, tMemorySection);
 
-		while(tSection != NULL){
-			if(tSection->initialAddress <= address &&
-					tSection->finalAddress > address){
-				return (tSection);
-			}
+	return (chainOutput);
+}
 
-			tSection = tSection->nextSection;
-		}
+MemoryImage::MemoryImage() : ContextManager(nmMemoryImage, TypeId::psmmManager)
+{
+	this->code = this->data = this->bss = NULL;
+	this->codePages = this->dataPages = this->bssPages = 0;
+	this->mainStack = NULL;
+	this->pinnedPages = 0;
+	this->libraryCount = 0;
+	this->treeUsed = false;
+}
 
-		return (NULL);
-	}
+MemoryImage::~MemoryImage()
+{
+
 }

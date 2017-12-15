@@ -6,6 +6,7 @@
 
 #include <Memory/KFrameManager.h>
 #include <Memory/ZoneManager.h>
+#include <Util/CircularList.h>
 #include <KERNEL.h>
 
 using namespace Memory;
@@ -17,13 +18,9 @@ using namespace Memory::Internal;
 #define ZONE_OVERLOAD 101
 #define ZONE_LOADED 102
 
-void ZoneAllocator::resetAllocator(
-		BuddyBlock *entryTable,
-		struct ZonePreference *prefTable,
-		unsigned long prefCount,
-		struct Zone *zoneTable,
-		unsigned long zoneCount
-){
+void ZoneAllocator::resetAllocator(BuddyBlock *entryTable, ZonePreference *prefTable, unsigned long prefCount,
+					Zone *zoneTable, unsigned long zoneCount)
+{
 	this->descriptorTable = entryTable;
 	this->prefTable = prefTable;
 	this->prefCount = prefCount;
@@ -33,7 +30,7 @@ void ZoneAllocator::resetAllocator(
 
 void ZoneAllocator::resetStatistics()
 {
-	struct Zone *zone = zoneTable;
+	Zone *zone = zoneTable;
 	for(unsigned long index = 0; index < zoneCount; index++){
 		zone->memoryAllocated = 0;
 		++(zone);
@@ -63,7 +60,7 @@ enum ZoneState
 	LOW_ON_MEMORY = 1001	// Zone is low-only-memory for required allocation
 };
 
-typedef ULONG ZNALLOC; /* Internal type - Used for testing if zone is allocable from */
+typedef unsigned long ZNALLOC; /* Internal type - Used for testing if zone is allocable from */
 
 /**
  * Function: getStatus
@@ -76,26 +73,31 @@ typedef ULONG ZNALLOC; /* Internal type - Used for testing if zone is allocable 
  *
  * Args:
  * unsigned long requiredMemory - Memory required in this allocation-case
- * struct Zone *searchZone - Zone in which the allocation (can) occur
+ * Zone *searchZone - Zone in which the allocation (can) occur
  *
  * Version: 1.1.9
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-static enum ZoneState getStatus(
-		unsigned long requiredMemory,
-		struct Zone *searchZone
-){
+static enum ZoneState getStatus(unsigned long requiredMemory, Zone *searchZone)
+{
 	unsigned long generalMemoryAvail = searchZone->memorySize - searchZone->memoryAllocated;
-	if(requiredMemory > searchZone->memorySize - searchZone->memoryAllocated){
+
+	if(requiredMemory > searchZone->memorySize - searchZone->memoryAllocated)
+	{
 		return (LOW_ON_MEMORY);
-	} else {
+	}
+	else
+	{
 		// Memory excluding reserved amount
 		generalMemoryAvail -= searchZone->memoryReserved;
 
-		if(requiredMemory <= generalMemoryAvail){
+		if(requiredMemory <= generalMemoryAvail)
+		{
 			return (ALLOCABLE);
-		} else {
+		}
+		else
+		{
 			// Memory including reserved amount (minus emergency amount)
 			generalMemoryAvail += (7 * searchZone->memoryReserved) >> 3;
 
@@ -110,7 +112,7 @@ static enum ZoneState getStatus(
 #define ZONE_ALLOCATE 0xF1
 #define ZONE_SWITCH 0xF2
 #define ZONE_FAILURE 0xFF
-typedef ULONG ZNACTION;
+typedef unsigned long ZNACTION;
 
 /**
  * Enum: AllocationAction
@@ -148,11 +150,10 @@ enum AllocationAction
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-static enum AllocationAction getAction(
-		enum ZoneState allocState,
-		ZNFLG allocFlags
-){
-	switch(allocState){
+static AllocationAction getAction(ZoneState allocState, ZNFLG allocFlags)
+{
+	switch(allocState)
+	{
 	case ALLOCABLE:
 		return (ALLOCATE);
 
@@ -187,26 +188,25 @@ static enum AllocationAction getAction(
  * unsigned long blockOrder - Order of block being requested for allocation
  * unsigned long basePref - Minimal preference-index of the allocation
  * ZoneControl allocFlags - Flags for allocating the block
- * struct Zone *zonePref - Preferred zone of allocation
+ * Zone *zonePref - Preferred zone of allocation
  *
  * Version: 1.1
  * Since: Circuit 2.03,++
  * Author: Shukant Pal
  */
-struct Zone *ZoneAllocator::getZone(
-		unsigned long blockOrder,
-		unsigned long basePref,
-		ZNFLG allocFlags,
-		struct Zone *zonePref
-){
+Zone *ZoneAllocator::getZone(unsigned long blockOrder, unsigned long basePref, ZNFLG allocFlags,
+				Zone *zonePref)
+{
 	enum ZoneState testState;
 	enum AllocationAction testAction;
-	struct Zone *trialZone = zonePref;
-	struct Zone *trialZero = zonePref;// Head of circular-list
+	Zone *trialZone = zonePref;
+	Zone *trialZero = zonePref;// Head of circular-list
 
 	unsigned long testPref = zonePref->preferenceIndex;
-	while(testPref >= basePref){
-		do {
+	while(testPref >= basePref)
+	{
+		do
+		{
 			SpinLock(&trialZone->controlLock);
 
 			testState =  getStatus(blockOrder, trialZone);
@@ -226,7 +226,7 @@ struct Zone *ZoneAllocator::getZone(
 		} while(trialZone != trialZero);
 
 		--(testPref);
-		trialZone = (struct Zone *) (prefTable[testPref].ZoneList.ClnMain);
+		trialZone = (Zone *) (prefTable[testPref].ZoneList.ClnMain);
 		trialZero = trialZone;
 	}
 
@@ -254,20 +254,21 @@ struct Zone *ZoneAllocator::getZone(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-struct BuddyBlock *ZoneAllocator::allocateBlock(
-		unsigned long blockOrder,
-		unsigned long basePref,
-		struct Zone *zonePref,
-		ZNFLG allocFlags
-){
-	struct Zone *allocatingZone = getZone(blockOrder, basePref, allocFlags, zonePref);
-	if(allocatingZone == NULL){
+BuddyBlock *ZoneAllocator::allocateBlock(unsigned long blockOrder, unsigned long basePref, Zone *zonePref,
+						ZNFLG allocFlags)
+{
+	Zone *allocatingZone = getZone(blockOrder, basePref, allocFlags, zonePref);
+
+	if(allocatingZone == NULL)
+	{
 		return (NULL);
-	} else {
+	}
+	else
+	{
 		// Try allocating from its cache, for order(0) allocations
 		// TODO: Implement the ZCache extension for alloc-internal
 
-		struct BuddyBlock *blockRequired =
+		BuddyBlock *blockRequired =
 				allocatingZone->memoryAllocator.allocateBlock(blockOrder);
 		allocatingZone->memoryAllocated += SIZEOF_ORDER(blockOrder);
 
@@ -278,8 +279,8 @@ struct BuddyBlock *ZoneAllocator::allocateBlock(
 
 
 /*
-decl_c
-BDINFO *ZnAllocateBlock(ULONG bOrder, ULONG znBasePref, ZNINFO *znInfo, ZNFLG znFlags, ZNSYS *znSys){
+extern "C"
+BDINFO *ZnAllocateBlock(unsigned long bOrder, unsigned long znBasePref, ZNINFO *znInfo, ZNFLG znFlags, ZNSYS *znSys){
 	ZNINFO *znAllocator = ZnChoose(bOrder, znBasePref, znFlags, znInfo, znSys);
 
 	if(znAllocator == NULL)
@@ -287,22 +288,22 @@ BDINFO *ZnAllocateBlock(ULONG bOrder, ULONG znBasePref, ZNINFO *znInfo, ZNFLG zn
 	else {
 		if(!FLAG_SET(znFlags, ZONE_NO_CACHE) && znSys->ZnCacheRefill != 0 && bOrder == 0) {
 			SpinUnlock(&znAllocator->Lock);
-			ULONG chStatus;
-			LINODE *chData = ChDataAllocate(&znAllocator->Cache, &chStatus);
+			unsigned long chStatus;
+			LinkedListNode *chData = ChDataAllocate(&znAllocator->Cache, &chStatus);
 
-			if(FLAG_SET((ULONG) chStatus, CH_POPULATE)) {
+			if(FLAG_SET((unsigned long) chStatus, CH_POPULATE)) {
 				SpinLock(&znAllocator->Lock);
 				chStatus &= ~1;
 				CHREG *chReg = (CHREG *) chStatus;
-				ULONG chDataSize = znAllocator->MmManager.DescriptorSize;
+				unsigned long chDataSize = znAllocator->MmManager.DescriptorSize;
 
 				BDINFO *chPopulater = BdAllocateBlock(znSys->ZnCacheRefill, &znAllocator->MmManager);
 				if(chPopulater != NULL) {
-					for(ULONG dOffset=0; dOffset<(1 << znSys->ZnCacheRefill); dOffset++) {
+					for(unsigned long dOffset=0; dOffset<(1 << znSys->ZnCacheRefill); dOffset++) {
 						chPopulater->UpperOrder = 0;
 						chPopulater->LowerOrder = 0;
-						PushHead((LINODE*) chPopulater, &chReg->DList);
-						chPopulater = (BDINFO *) ((ULONG) chPopulater + chDataSize);
+						PushHead((LinkedListNode*) chPopulater, &chReg->DList);
+						chPopulater = (BDINFO *) ((unsigned long) chPopulater + chDataSize);
 					}
 				}
 
@@ -334,10 +335,9 @@ BDINFO *ZnAllocateBlock(ULONG bOrder, ULONG znBasePref, ZNINFO *znInfo, ZNFLG zn
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-Void ZoneAllocator::freeBlock(
-		struct BuddyBlock *blockGiven
-){
-	struct Zone *owner = zoneTable + blockGiven->ZnOffset;
+Void ZoneAllocator::freeBlock(BuddyBlock *blockGiven)
+{
+	Zone *owner = zoneTable + blockGiven->ZnOffset;
 	owner->memoryAllocated -= SIZEOF_ORDER(blockGiven->Order);
 	owner->memoryAllocator.freeBlock(blockGiven);
 }
@@ -357,15 +357,10 @@ Void ZoneAllocator::freeBlock(
  * Since: Circuit 2.03++
  * Author: Shukant Pal
  */
-void ZoneAllocator::configureZones(
-		unsigned long entrySize,
-		unsigned long highestOrder,
-		unsigned short *listInfo,
-		struct LinkedList *listArray,
-		struct Zone *zoneTable,
-		unsigned long count
-){
-	struct Zone *zone = zoneTable;
+void ZoneAllocator::configureZones(unsigned long entrySize, unsigned long highestOrder, unsigned short *listInfo,
+					LinkedList *listArray, Zone *zoneTable, unsigned long count)
+{
+	Zone *zone = zoneTable;
 	class BuddyAllocator *buddySys = &zone->memoryAllocator;
 
 	unsigned long liCount = BDSYS_VECTORS(highestOrder);
@@ -380,14 +375,12 @@ void ZoneAllocator::configureZones(
 	}
 }
 
-void ZoneAllocator::configurePreference(
-		struct Zone *zoneArray,
-		struct ZonePreference *pref,
-		UINT count
-){
-	UINT index = 0;
-	while(index < count){
-		ClnInsert((struct CircularListNode *) zoneArray, CLN_LAST, &pref->ZoneList);
+void ZoneAllocator::configurePreference(Zone *zoneArray, ZonePreference *pref, unsigned int count)
+{
+	unsigned int index = 0;
+	while(index < count)
+	{
+		ClnInsert((CircularListNode *) zoneArray, CLN_LAST, &pref->ZoneList);
 		++(index);
 		++(zoneArray);
 	}
@@ -396,19 +389,20 @@ void ZoneAllocator::configurePreference(
 /**
  * Function: ZoneAllocator::configureZoneMappings
  */
-void ZoneAllocator::configureZoneMappings(
-		struct Zone *zoneArray,
-		unsigned long count
-){
-	UBYTE *blockPtr;
+void ZoneAllocator::configureZoneMappings(Zone *zoneArray, unsigned long count)
+{
+	unsigned char *blockPtr;
 	unsigned long blockIndex;
 	unsigned long blockCount;
 	unsigned long blockEntrySz = zoneArray->memoryAllocator.getEntrySize();
-	for(unsigned long index = 0; index < count; index++){
+
+	for(unsigned long index = 0; index < count; index++)
+	{
 		blockCount = zoneArray->memorySize;
 		blockPtr = (UBYTE *) zoneArray->memoryAllocator.getEntryTable();
-		for(blockIndex = 0; blockIndex < blockCount; blockIndex++){
-			((struct BuddyBlock *) blockPtr)->ZnOffset = index;
+		for(blockIndex = 0; blockIndex < blockCount; blockIndex++)
+		{
+			((BuddyBlock *) blockPtr)->ZnOffset = index;
 			blockPtr += blockEntrySz;
 		}
 
@@ -417,15 +411,15 @@ void ZoneAllocator::configureZoneMappings(
 }
 
 /*
-decl_c
-BDINFO *ZnExchangeBlock(BDINFO *bdInfo, ULONG *status, ULONG znBasePref, ULONG znFlags, ZNSYS *znSys){
+extern "C"
+BDINFO *ZnExchangeBlock(BDINFO *bdInfo, unsigned long *status, unsigned long znBasePref, unsigned long znFlags, ZNSYS *znSys){
 	ZNINFO *zone = &znSys->ZnSet[bdInfo->ZnOffset];
 	SpinLock(&zone->Lock);
 	BDINFO *ebInfo = BdExchangeBlock(bdInfo, &(zone->MmManager), status); // @Prefix eb - Exchanged Block
 	SpinUnlock(&zone->Lock);
 	if(ebInfo == NULL) {
 		return (ZnAllocateBlock(bdInfo->LowerOrder + 1, znBasePref, zone, znFlags, znSys));
-	} else if((ULONG) ebInfo == BD_ERR_FREE) {
+	} else if((unsigned long) ebInfo == BD_ERR_FREE) {
 		return (NULL);
 	} else {
 		return (ebInfo);

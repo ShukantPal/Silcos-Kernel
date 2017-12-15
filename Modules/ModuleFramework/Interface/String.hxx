@@ -84,8 +84,8 @@ public:
 	String(String& anotherString);
 	virtual ~String();
 
-	inline ULONG length(){ return (count); }
-	static ULONG lengthOf(char *chSeq);
+	inline unsigned long length(){ return (count); }
+	static unsigned long lengthOf(char *chSeq);
 
 	inline char charAt(unsigned long index)
 	{
@@ -99,7 +99,7 @@ public:
 //	String concat(String *subString);
 	bool contains(String *subString);
 	static int compare(String& firstString, String& secondString);
-//	static String copyValueOf(CHAR dataBuf[], ULONG bufSize, ULONG copyStart);
+//	static String copyValueOf(char dataBuf[], unsigned long bufSize, unsigned long copyStart);
 	bool endsWith(String& suffix);
 	bool getChars(unsigned int srcBegin, unsigned int srcEnd, char *dstBuffer);
 	static unsigned int hashCode(const char *value);

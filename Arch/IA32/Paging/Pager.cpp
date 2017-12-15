@@ -18,7 +18,7 @@
 #include <Util/CtPrim.h>
 #include <Util/IndexMap.h>
 
-import_asm VOID SwitchPaging(U32);
+import_asm void SwitchPaging(U32);
 import_asm U64 PDPT[4];
 import_asm U64 GlobalDirectory[512];
 import_asm U64 IdentityDirectory[512];
@@ -36,13 +36,13 @@ CONTEXT SystemCxt;
  * ADDRESS address - Logical address of page
  * PADDRESS pAddress - Physical address of page-frame
  * CONTEXT *pgContext - Address space being used
- * ULONG frFlags - Flags with which a page-table should be allocated (if needed)
+ * unsigned long frFlags - Flags with which a page-table should be allocated (if needed)
  * PAGE_ATTRIBUTES pgAttr - Attributes for the page-mapping
  *
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, ULONG frFlags, PAGE_ATTRIBUTES pgAttr){
+void EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, unsigned long frFlags, PAGE_ATTRIBUTES pgAttr){
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), frFlags, pgContext);
 	if(pgTable != NULL) {
 		pgTable[(address % MB(2)) / KB(4)] = pAddress | pgAttr | 3;
@@ -60,13 +60,13 @@ VOID EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, ULONG
  * Args:
  * ADDRESS address - Logical address of page
  * CONTEXT *pgContext - Address space being used
- * ULONG frFlags - KFrameManager flags to allocated page-frame and pagetable (if needed)
+ * unsigned long frFlags - KFrameManager flags to allocated page-frame and pagetable (if needed)
  * PAGE_ATTRIBUTES pgAttr - Attributes with which mapping should be done
  *
  * @Version 1
  * @Since Circuit 2.03
  */
-VOID EnsureUsability(ADDRESS address, CONTEXT *pgContext, ULONG frFlags, PAGE_ATTRIBUTES pgAttr){
+void EnsureUsability(ADDRESS address, CONTEXT *pgContext, unsigned long frFlags, PAGE_ATTRIBUTES pgAttr){
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), frFlags, pgContext);
 
 	if(pgTable != NULL && !(pgTable[(address % MB(2)) / KB(4)] & 1)) {
@@ -78,7 +78,7 @@ VOID EnsureUsability(ADDRESS address, CONTEXT *pgContext, ULONG frFlags, PAGE_AT
 	}
 }
 
-VOID EnsureAllMappings(ADDRESS address, PADDRESS pAddress, ULONG mapSize, CONTEXT *pgContext, PAGE_ATTRIBUTES pgAttr){
+void EnsureAllMappings(ADDRESS address, PADDRESS pAddress, unsigned long mapSize, CONTEXT *pgContext, PAGE_ATTRIBUTES pgAttr){
 	U64 *pgTable;
 	U32 pgEntry = (address % MB(2)) >> 12;
 	PADDRESS pMapper = pAddress;
@@ -97,7 +97,7 @@ VOID EnsureAllMappings(ADDRESS address, PADDRESS pAddress, ULONG mapSize, CONTEX
 	}
 }
 
-BOOL CheckUsability(ADDRESS Address, CONTEXT *pageContext){
+bool CheckUsability(ADDRESS Address, CONTEXT *pageContext){
 	U64 *PageTable
 		= GetPageTable(Address / (MB(2) * 512), (Address % (MB(2) * 512)) / MB(2), FLG_NONE, pageContext);
 
@@ -107,16 +107,16 @@ BOOL CheckUsability(ADDRESS Address, CONTEXT *pageContext){
 		return (FALSE);
 }
 
-VOID EraseIdentityPage(){
+void EraseIdentityPage(){
 	((U32 *) IdentityDirectory) [0] = 0;
 	FlushTLB(0);
 }
 
-VOID SwitchContext(CONTEXT *Ctx)
+void SwitchContext(CONTEXT *Ctx)
 {
-	PDPT(Ctx)[3] = (U64) (((ULONG) GlobalDirectory - 0xc0000000) | 1);
+	PDPT(Ctx)[3] = (U64) (((unsigned long) GlobalDirectory - 0xc0000000) | 1);
 
-	GlobalTable[511] = (U64) (((ULONG) GlobalDirectory - 0xc0000000) | 3);
+	GlobalTable[511] = (U64) (((unsigned long) GlobalDirectory - 0xc0000000) | 3);
 	GlobalTable[510] = PDPT(Ctx)[2] | 2;
 	GlobalTable[509] = PDPT(Ctx)[1] | 2;
 	GlobalTable[508] = PDPT(Ctx)[0] | 2;
@@ -124,16 +124,16 @@ VOID SwitchContext(CONTEXT *Ctx)
 	GlobalDirectory[510] = PDPT(Ctx)[2] | 2;
 	GlobalDirectory[509] = PDPT(Ctx)[1] | 2;
 	GlobalDirectory[508] = PDPT(Ctx)[0] | 2;
-	GlobalDirectory[507] = (U64) (((ULONG) GlobalDirectory - 0xc0000000) | 3);
+	GlobalDirectory[507] = (U64) (((unsigned long) GlobalDirectory - 0xc0000000) | 3);
 
-	SwitchPaging((ULONG) &PDPT(Ctx) - 0xc0000000);	
+	SwitchPaging((unsigned long) &PDPT(Ctx) - 0xc0000000);	
 }
 
 ADDRESS AtStack(CONTEXT *P) {
 	return (NULL);
 }
 
-VOID DtStack(CONTEXT *P, ULONG StackBase) {
+void DtStack(CONTEXT *P, unsigned long StackBase) {
 	return;
 }
 

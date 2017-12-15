@@ -11,8 +11,8 @@ RSDP2 *SystemRsdp2 = NULL;
 
 RSDP *ScanRsdp()
 {
-	UCHAR *ScanAddress = (UCHAR *) 0xc0000000;
-	CHAR *RsdpString = RsdpSignature;
+	unsigned char *ScanAddress = (unsigned char *) 0xc0000000;
+	char *RsdpString = RsdpSignature;
 
 	DbgLine("Scanning Configuration...");
 
