@@ -64,7 +64,9 @@ RBTree::~RBTree()
 bool RBTree::insert(unsigned long key, void *value)
 {
 	RBNode *newNode = new(tRBNode) RBNode(key, value, (RBNode*) nil);
-	if(!BinaryTree::insert(*newNode, *this)){
+	if(!BinaryTree::insert(*newNode, *this))
+	{
+		Dbg("_nul_");
 		kobj_free((kobj*) newNode, tRBNode);
 		return (false);
 	}
@@ -91,31 +93,47 @@ bool RBTree::insert(unsigned long key, void *value)
 void* RBTree::remove(unsigned long key)
 {
 	RBNode *tNode = (RBNode*) search(key, *this), *tnChild = NULL;
-	if(isNil(tNode) || !tNode){
+	if(isNil(tNode) || !tNode)
+	{
 		return (NULL);
-	} else {
+	}
+	else
+	{
 		void *value_found = tNode->val();
 
-		if(isNil(tNode->getRightChild())){
+		if(isNil(tNode->getRightChild()))
+		{
 			tnChild = (RBNode*) tNode->getLeftChild();
-		} else if(isNil(tNode->getLeftChild())){
+		}
+		else if(isNil(tNode->getLeftChild()))
+		{
 			tnChild = (RBNode*) tNode->getRightChild();
-		} else {
+		}
+		else
+		{
 			RBNode *tnr = (RBNode*) tNode->getRightChild();
+			
 			while(!isNil(tnr->getLeftChild()))
+			{
 				tnr = (RBNode*) tnr->getLeftChild();
+			}
+			
 			tNode->searchKey = tnr->searchKey;
 			tNode->associatedValue = tnr->associatedValue;
 			tnChild = (RBNode*) tnr->getRightChild();
 		}
 
-		tnChild = isNil(tnChild) ?
-				tNode :
-				(RBNode*) &replaceChild(*tNode, *tnChild);
+		tnChild = isNil(tnChild) ? tNode : (RBNode*) &replaceChild(*tNode, *tnChild);
+				
 		if(tNode->isBlack())
+		{
 			fixRemoval(tnChild);
+		}
+		
 		if(tNode == tnChild)
+		{
 			replaceChild(*tNode, *nil);
+		}
 
 		kobj_free((kobj*) tNode, tRBNode);
 		return (value_found);
@@ -159,18 +177,24 @@ RBNode& RBTree::rotateRight(RBNode& tNode)
 
 void RBTree::fixInsert(RBNode *tNode)
 {
-	RBNode *tnParent = NULL, *tnUncle = NULL;
-	while(!tNode->isBlack() && !tNode->isParentBlack()){
+	RBNode *tnParent, *tnUncle;
+	
+	while(!tNode->isBlack() && !tNode->isParentBlack())
+	{
 		tnParent = tNode->getColouredParent();
 		tnUncle = (RBNode*) tnParent->getSibling();
 
-		if(tnUncle->isRed()){
+		if(tnUncle->isRed())
+		{
 			tnUncle->setColour(RB_BLACK);
 			tnParent->setColour(RB_BLACK);
 			tnParent->getColouredParent()->setColour(RB_RED);
 			tNode = tnParent->getColouredParent();
-		} else { // tnUncle.isBlack()
-			if(tNode->isLeftChild() != tnParent->isLeftChild()){
+		}
+		else
+		{ // tnUncle.isBlack()
+			if(tNode->isLeftChild() != tnParent->isLeftChild())
+			{
 				tnParent = &rotateReverse(*tNode);
 			}
 			tNode = &rotateReverse(*tnParent);
@@ -178,30 +202,40 @@ void RBTree::fixInsert(RBNode *tNode)
 	}
 
 	if(isNil(tNode->getParent()))
+	{
 		tNode->setColour(RB_BLACK);
+	}
 }
 
 void RBTree::fixRemoval(RBNode *tNode)
 {
 	RBNode *tnSibling;
-	while(tNode->isBlack() && !isNil(tNode->getParent())){
+	while(tNode->isBlack() && !isNil(tNode->getParent()))
+	{
 		tnSibling = (RBNode*) tNode->getSibling();
 
-		if(tnSibling->isRed()){
+		if(tnSibling->isRed())
+		{
 			rotateReverse(*tnSibling);
 			tnSibling = (RBNode*) tNode->getSibling();
 		}
 
 		if(((RBNode*) tnSibling->getLeftChild())->isBlack() &&
-				((RBNode*)tnSibling->getRightChild())->isBlack()){
+				((RBNode*)tnSibling->getRightChild())->isBlack())
+		{
 			tnSibling->setColour(RB_RED);
 			tNode = (RBNode*) tNode->getParent();
-		} else {
+		}
+		else
+		{
 			if(tnSibling->isLeftChild() &&
-					!((RBNode*)tnSibling->getLeftChild())->isRed()){
+					!((RBNode*)tnSibling->getLeftChild())->isRed())
+			{
 				tnSibling = (RBNode*) &rotateLeft(*tnSibling);
-			} else if(tnSibling->isRightChild() &&
-					!((RBNode*)tnSibling->getRightChild())->isRed()){
+			}
+			else if(tnSibling->isRightChild() &&
+					!((RBNode*)tnSibling->getRightChild())->isRed())
+			{
 				tnSibling = (RBNode*) &rotateRight(*tnSibling);
 			}
 
@@ -213,7 +247,8 @@ void RBTree::fixRemoval(RBNode *tNode)
 	tNode->setColour(RB_BLACK);
 }
 
-static void show_it(BinaryNode *f, BinaryNode *n){
+static void show_it(BinaryNode *f, BinaryNode *n)
+{
 	if(f == n) return;
 	show_it(f->leftChild, n);
 	DbgInt(f->key()); Dbg((char*)" ");

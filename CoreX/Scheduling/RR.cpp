@@ -28,7 +28,8 @@ static void RrDecreaseLoad(Domain *rrDomain)
 	--(rrDomain->rolDom[RR_SCHED].DomainLoad);
 }
 
-KRUNNABLE *Schedule_RR(TIME XMilliTime, PROCESSOR *cpu){
+KRUNNABLE *Schedule_RR(TIME XMilliTime, PROCESSOR *cpu)
+{
 	SCHED_RR *rr = &cpu->RR;
 
 	RrBalanceRoutine(cpu);/* Balance-routine is called every tick */
@@ -36,28 +37,38 @@ KRUNNABLE *Schedule_RR(TIME XMilliTime, PROCESSOR *cpu){
 	SpinLock(&rr->Roller->RunqueueLock);	
 	KRUNNABLE *lastRunner = rr->LastRunner;
 	KRUNNABLE *nextRunner;
+	
 	if(lastRunner != NULL)
+	{
 		nextRunner = lastRunner->RightLinker;
+	}
 	else
-		{ if(PROCESSOR_ID == 1) Dbg("_e"); nextRunner = (KRUNNABLE *) rr->Runqueue.ClnMain;}
+	{
+		if(PROCESSOR_ID == 1)
+			Dbg("_e");
+		nextRunner = (KRUNNABLE *) rr->Runqueue.ClnMain;
+	}
 	SpinUnlock(&rr->Roller->RunqueueLock);
 
 	return (nextRunner);
 }
 
-void SaveRunner_RR(TIME XMilliTime, PROCESSOR *cpu){
+void SaveRunner_RR(TIME XMilliTime, PROCESSOR *cpu)
+{
 	SCHED_RR *rr = &cpu->RR;
 	rr->LastRunner = cpu->PoExT;
 }
 
-KRUNNABLE *UpdateRunner_RR(TIME XMilliTime, PROCESSOR *cpu){
+KRUNNABLE *UpdateRunner_RR(TIME XMilliTime, PROCESSOR *cpu)
+{
 	SCHED_RR *rr = &cpu->RR;
 
 	rr->LastRunner = cpu->PoExT;
 	return (Schedule_RR(XMilliTime, cpu));
 }
 
-void InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu){
+void InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu)
+{
 	SCHED_RR *rr = &cpu->RR;
 	KSCHED_ROLLER *roller = rr->Roller;
 	SpinLock(&(roller->RunqueueLock));
@@ -69,7 +80,8 @@ void InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu){
 	SpinUnlock(&(roller->RunqueueLock));
 }
 
-void RemoveRunner_RR(KRUNNABLE *runner){
+void RemoveRunner_RR(KRUNNABLE *runner)
+{
 	SCHED_RR *rr = &runner->Processor->RR;
 	KSCHED_ROLLER *roller = rr->Roller;
 	SpinLock(&(roller->RunqueueLock));
@@ -80,8 +92,9 @@ void RemoveRunner_RR(KRUNNABLE *runner){
 	SpinUnlock(&(roller->RunqueueLock));
 }
 
-static inline
-void RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue, unsigned long domainDiff, PROCESSOR *highCPU){
+static inline void RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue,
+							unsigned long domainDiff, PROCESSOR *highCPU)
+{
 	KTASK *runner = (KTASK *) sourceRunqueue->Runqueue.ClnMain;
 	if(runner == highCPU->PoExT){
 		runner = runner->RightLinker;
@@ -100,7 +113,9 @@ void RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue, unsig
 	ProcessorTopology::Iterator::ofEach(highCPU, &RrDecreaseLoad, 4);
 }
 
-void TransferBatchRunners(unsigned long transferCount, PROCESSOR *lowCPU, PROCESSOR *highCPU, unsigned long domainDiff){
+void TransferBatchRunners(unsigned long transferCount, PROCESSOR *lowCPU, PROCESSOR *highCPU,
+						unsigned long domainDiff)
+{
 	SCHED_RR *lowRunqueue = &lowCPU->RR;
 	SCHED_RR *highRunqueue = &highCPU->RR;
 	SpinLock(&lowRunqueue->Roller->RunqueueLock);
@@ -109,7 +124,9 @@ void TransferBatchRunners(unsigned long transferCount, PROCESSOR *lowCPU, PROCES
 	CLIST *runnerList = (&highRunqueue->Runqueue);
 	unsigned long deltaLimit = (runnerList->ClnCount + transferCount) / 2;
 	deltaLimit = LESS(deltaLimit, runnerList->ClnCount / 2);
-	while(runnerList->ClnMain && deltaLimit > 0){
+
+	while(runnerList->ClnMain && deltaLimit > 0)
+	{
 		RrMoveRunner(lowRunqueue, highRunqueue, domainDiff, highCPU);
 		--(deltaLimit);
 	}
@@ -118,7 +135,8 @@ void TransferBatchRunners(unsigned long transferCount, PROCESSOR *lowCPU, PROCES
 	SpinUnlock(&lowRunqueue->Roller->RunqueueLock);
 }
 
-PROCESSOR *RrFindBusiestProcessor(Domain *busyGroup){
+PROCESSOR *RrFindBusiestProcessor(Domain *busyGroup)
+{
 	Domain *searchDomain = busyGroup;
 	CLIST *searchList;
 	Domain *highestGroup;
@@ -126,15 +144,19 @@ PROCESSOR *RrFindBusiestProcessor(Domain *busyGroup){
 	Domain *tryGroupZ;
 	KSCHED_ROLLER_DOMAIN *highestRoller;
 	KSCHED_ROLLER_DOMAIN *tryRoller;
-	while(searchDomain->type != PROCESSOR_HIERARCHY_LOGICAL_CPU){
+
+	while(searchDomain->type != PROCESSOR_HIERARCHY_LOGICAL_CPU)
+	{
 		searchList = &(searchDomain->children);
 		tryGroupZ = (Domain*) searchList->ClnMain;
 		tryGroup = tryGroupZ;
 		highestGroup = NULL;
 		highestRoller = NULL;
 		tryRoller = &(tryGroup->rolDom[RR_SCHED]);
-		do {
-			if(highestGroup == NULL || (tryRoller->DomainLoad > highestRoller->DomainLoad)){
+		do
+		{
+			if(highestGroup == NULL || (tryRoller->DomainLoad > highestRoller->DomainLoad))
+			{
 				highestGroup = tryGroup;
 				highestRoller = &(highestGroup->rolDom[RR_SCHED]);
 			}
@@ -157,21 +179,27 @@ void RrBalanceRoutine(PROCESSOR *pCPU)
 	KSCHED_ROLLER_DOMAIN *ourRoller;
 	unsigned long balancingLevel = 1;
 
-	while(searchDomain != NULL){
+	while(searchDomain != NULL)
+	{
 		searchList = &(searchDomain->children);
 		tryGroupZ = (Domain *) searchList->ClnMain;
 		tryGroup = tryGroupZ;
-		do {
-			if(tryGroup != ourGroup){
+		do
+		{
+			if(tryGroup != ourGroup)
+			{
 				searchRoller = &(tryGroup->rolDom[RR_SCHED]);
 				ourRoller = &(ourGroup->rolDom[RR_SCHED]);
-				if(searchRoller->DomainLoad > (ourRoller->DomainLoad + balancingLevel * balancingLevel)){
-					TransferBatchRunners(balancingLevel * balancingLevel, pCPU, RrFindBusiestProcessor(tryGroup), balancingLevel - 1);
+				if(searchRoller->DomainLoad > (ourRoller->DomainLoad + balancingLevel * balancingLevel))
+				{
+					TransferBatchRunners(balancingLevel * balancingLevel, pCPU,
+										RrFindBusiestProcessor(tryGroup), balancingLevel - 1);
 					break;
 				}
 			}
 			tryGroup = tryGroup->nextDomain;
 		} while(tryGroup != tryGroupZ);
+		
 		ourGroup = ourGroup->parent;
 		searchDomain = searchDomain->parent;
 	}

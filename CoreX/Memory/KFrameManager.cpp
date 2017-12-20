@@ -110,6 +110,8 @@ PADDRESS KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned 
 	{ // Turn interrupts if allowed
 		__INTR_ON
 	}
+
+	//Dbg("frame: "); DbgInt(bInfo); DbgLine("");
 	SpinUnlock(&kfLock);
 	return (bInfo);
 }

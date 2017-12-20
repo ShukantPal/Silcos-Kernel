@@ -21,9 +21,9 @@
 		return KNew(objectType, 0);
 	}
 
-	extern "C" void KDelete(void *del_ptr, struct ObjectInfo *);
 	typedef void kobj;
-	inline void kobj_free(void *del_ptr, struct ObjectInfo *useless_type)
+	extern "C" void KDelete(void *del_ptr, struct ObjectInfo *);
+	static inline void kobj_free(void *del_ptr, struct ObjectInfo *useless_type)
 	{
 		KDelete(del_ptr, useless_type);
 	}

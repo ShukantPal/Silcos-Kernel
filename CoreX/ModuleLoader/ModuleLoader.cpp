@@ -85,7 +85,8 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
  */
 ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob)
 {
-	if(ElfAnalyzer::validateBinary(moduleMemory)){
+	if(ElfAnalyzer::validateBinary(moduleMemory))
+	{
 		ElfManager *moduleHandler = new(tElfManager) ElfManager((ElfHeader*) moduleMemory);
 		DynamicLink *linkHandle = moduleHandler->exportDynamicLink();
 
@@ -93,24 +94,34 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, B
 		kmRecord.BaseAddr = moduleHandler->baseAddress;
 
 		if(moduleHandler->binaryHeader->entryAddress)
+		{
 			kmRecord.entryAddr = kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
+		}
 
 		DynamicEntry* dynamicIniter = moduleHandler->getDynamicEntry(DT_INIT);
-		if(dynamicIniter){
+		if(dynamicIniter)
+		{
 			kmRecord.init = (void (*)())(kmRecord.BaseAddr + dynamicIniter->refPointer);
-		} else {
+		}
+		else
+		{
 			Symbol *__initer = moduleHandler->getStaticSymbol("__init");
 			if(__initer)
+			{
 				kmRecord.init = (void (*)())(kmRecord.BaseAddr + __initer->Value);
+			}
 		}
 
 		DynamicEntry* dynamicFinier = moduleHandler->getDynamicEntry(DT_FINI);
 		if(dynamicFinier)
+		{
 			kmRecord.fini = (void (*)())(kmRecord.BaseAddr + dynamicFinier->refPointer);
+		}
 
 		blob.manager = moduleHandler;
 		return (ABI::ELF);
-	} else
+	}
+	else
 		return (ABI::INVALID);
 }
 
@@ -189,12 +200,12 @@ void ModuleLoader::loadFile(BlobRegister &blob)
  *
  * Author: Shukant Pal
  */
-void ModuleLoader::loadBundle(
-		LinkedList &blobList
-){
+void ModuleLoader::loadBundle(LinkedList &blobList)
+{
 	BlobRegister *blob = (BlobRegister*) blobList.Head;
 
-	while(blob != NULL){
+	while(blob != NULL)
+	{
 		blob->fileAddr = (unsigned long) ModuleLoader::moveFileIntoMemory(*blob);
 		blob->regForm->linkerInfo = NULL;
 		RecordManager::registerRecord(blob->regForm);
@@ -206,7 +217,8 @@ void ModuleLoader::loadBundle(
 
 	blob = (BlobRegister*) blobList.Head;
 
-	while(blob != NULL){
+	while(blob != NULL)
+	{
 		ModuleLoader::linkFile(blob->abiFound, *blob);
 		blob = (BlobRegister*) blob->liLinker.Next;
 	}
@@ -230,7 +242,8 @@ void MdSetupLoader()
 						sizeof(long), NULL, NULL);
 }
 
-KMOD_RECORD *MdCreateModule(char *moduleName, unsigned long moduleVersion, unsigned long moduleType){
+KMOD_RECORD *MdCreateModule(char *moduleName, unsigned long moduleVersion, unsigned long moduleType)
+{
 	KMOD_RECORD *mdRecord = (KMOD_RECORD*) KNew(tKMOD_RECORD, KM_SLEEP);
 	memcpy(moduleName, &mdRecord->buildName, 16);
 	mdRecord->buildVersion = moduleVersion;

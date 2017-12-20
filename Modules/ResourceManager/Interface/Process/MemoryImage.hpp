@@ -19,8 +19,11 @@
 #ifndef MEMORYIMAGE_HPP_
 #define MEMORYIMAGE_HPP_
 
+#include <Memory/KObjectManager.h>
 #include <Resource/ContextManager.hpp>
 #include <Util/RBTree.hxx>
+
+extern ObjectInfo *tProcess_MemoryImage;
 
 namespace Process
 {
@@ -46,7 +49,7 @@ class MemoryImage : public Resource::ContextManager
 {
 public:
 	virtual Resource::RegionInsertionResult insertRegion(unsigned long initialAddress, unsigned long pageCount,
-								unsigned long cfg, PAGE_ATTRIBUTES permissions) override;
+								unsigned long cfg, PAGE_ATTRIBUTES permissions);
 
 	Resource::RegionRemovalResult removeRegion(unsigned long initialAddress, unsigned long pageCount,
 							unsigned short typeId);
@@ -61,25 +64,28 @@ public:
 					unsigned long stack[2]);
 
 	static bool deleteImage(MemoryImage*);
+
+	static void init();
+
+	inline void dub()
+	{
+		arenaTree->_dub();
+	}
+
 protected:
-	unsigned long codePages;
-	unsigned long dataPages;
-	unsigned long bssPages;
 	unsigned long pinnedPages;
 	unsigned long libraryCount;
-
-	Resource::MemorySection* findRegion(unsigned long address);
-	Resource::MemorySection* findClosestRegion(unsigned long address);
-	unsigned long carveRegion(unsigned long address, unsigned long limit,
-					Resource::MemorySection* parent);
-
-	void manifestTree();
-	void eradicateTree();
+	unsigned long filterTable[8];// Keep track of count of all pages
 
 	MemoryImage();
 	MemoryImage(unsigned long code[2], unsigned long data[2],
 			unsigned long bss[2], unsigned long stack[2]);
 	~MemoryImage();
+
+	virtual unsigned long *getIDFilter()
+	{
+		return (filterTable);
+	}
 };
 
 }

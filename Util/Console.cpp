@@ -28,56 +28,123 @@
  */
 #include <Types.h>
 #include <Debugging.h>
+#include <Synch/Spinlock.h>
 #include <Util/Memory.h>
 
 static volatile U8 *writeBuffer;
 static volatile U8 *bufferPos;
 static unsigned short writeIndex = 0;
 static DebugStream Console;
+extern Spinlock dbgLock;
 
 static inline void ClearLine(unsigned long lineIndex)
 {
-	memset((void*) bufferPos, 0, 2 * (80 - writeIndex % 80));
+	memsetf((void*) bufferPos, (0x17 << 24) | (0x17 << 8), 2 * (80 - writeIndex % 80));
 }
 
+static inline void FlushLine(unsigned long fromIndex)
+{
+	memsetf((void*) (writeBuffer + 2 * fromIndex), (0x0F << 24) | (0x0F << 8), 160);
+}
+
+static inline void FinishLine()
+{
+	memsetf((void*) bufferPos, (0x17 << 24) | (0x17 << 8), 2 * (80 - writeIndex % 80));
+}
+
+/**
+ * Function: SwitchLine
+ *
+ * Summary:
+ * Changes the write-index & buffer-position to the point where the next line
+ * starts on the console.
+ *
+ * Returns:
+ * change in the write-index (delta)
+ *
+ * Author: Shukant Pal
+ */
 static inline unsigned long SwitchLine()
 {
-	if(writeIndex % 80){
+	if(writeIndex % 80)
+	{
 		unsigned long delta = 80 - writeIndex % 80;
 		bufferPos += 2 * delta;
 		writeIndex += delta;
 
-		if(writeIndex != 80 * 25){
+		if(writeIndex != 80 * 25)
+		{
 			ClearLine(writeIndex / 80);
 			(bufferPos[0]) = '>';
-			(bufferPos[1]) = 0x07;
+			(bufferPos[1]) = 0x7;
 			(bufferPos[2]) = '>';
-			(bufferPos[3]) = 0x07;
+			(bufferPos[3]) = 0x7;
 		}
+	
 		return (delta);
-	} else
+	}
+	else
 		return (0);
+}
+
+static inline void MarkLine()
+{
+	unsigned long markerPos = (writeIndex % 80) ?
+					writeIndex + 80 - writeIndex % 80 : writeIndex;
+	FlushLine(markerPos);
+
+	volatile U8 *marker = writeBuffer + 2 * markerPos;
+	marker[0] = '>';
+	marker[2] = '>';
+	marker[4] = '>';
 }
 
 static inline void RestoreConsole()
 {
-	if(writeIndex == 80 * 25){
+	if(writeIndex == 80 * 25)
+	{
 		writeIndex = 0;
 		bufferPos = writeBuffer;
 		ClearLine(0);
 	}
 }
 
+/**
+ * Function: PrintInline
+ *
+ * Summary:
+ * Continues printing the ascii-string onto the console screen until a line has
+ * been fully written. It can switch to the next line (and reset its counter)
+ * if a '\n' (line-escape) sequence is encountered.
+ *
+ * Args:
+ * const char *asciiString - the part of the string, from which the print
+ * 				should start.
+ *
+ * Returns:
+ * the pointer to the part of the string, till which characters have been
+ * printed.
+ *
+ * Changes:
+ * # Add support for tabs, backspace and more!
+ *
+ * Author: Shukant Pal
+ */
 static const char *PrintInline(const char *asciiString)
 {
+	if(!(writeIndex % 80))
+		FinishLine();
+
 	unsigned long inlineIndex = (unsigned long) (writeIndex % 80);
 	unsigned long oldIndex = inlineIndex;
-	while(inlineIndex < 80 && *asciiString){
+	while(inlineIndex < 80 && *asciiString)
+	{
 		switch(*asciiString)
 		{
 		case '\n':
 		case '\r':
 			writeIndex += inlineIndex - oldIndex;
+			FinishLine();
 			SwitchLine();
 			inlineIndex = 0;
 			oldIndex = 0;
@@ -85,7 +152,7 @@ static const char *PrintInline(const char *asciiString)
 		case '\t':
 			for(unsigned long tabIdx = 0; tabIdx <= 8 && inlineIndex < 80; tabIdx++){
 				*(bufferPos++) = ' ';
-				*(bufferPos++) = 0x7;
+				*(bufferPos++) = 0x17;
 				++(inlineIndex);
 			}
 			break;
@@ -95,7 +162,7 @@ static const char *PrintInline(const char *asciiString)
 			break;
 		default:
 			*(bufferPos++) = *asciiString;
-			*(bufferPos++) = 0x07;
+			*(bufferPos++) = 0x17;
 			++(inlineIndex);
 			break;
 		}
@@ -109,19 +176,29 @@ static const char *PrintInline(const char *asciiString)
 
 extern "C" void ClearScreen()
 {
+	SpinLock(&dbgLock);
+
 	unsigned short currentPos = 0;
-	while(currentPos < 80 * 25 * 2) {
+	while(currentPos < 80 * 25 * 2)
+	{
 		writeBuffer[currentPos++] = ' ';
 		writeBuffer[currentPos++] = 0x07;
 	}
+
+	bufferPos = 0;
+	writeIndex = 0;
+
+	SpinUnlock(&dbgLock);
 }
 
-extern "C" U8 InitConsole(U8 *vid) {
+extern "C" U8 InitConsole(U8 *vid)
+{
 	writeBuffer = vid;
 	bufferPos = writeBuffer;
 
 	unsigned short currentPos = 0;
-	while(currentPos < 80 * 25 * 2) {
+	while(currentPos < 80 * 25 * 2)
+	{
 		writeBuffer[currentPos++] = ' ';
 		writeBuffer[currentPos++] = 0x07;
 	}
@@ -132,34 +209,32 @@ extern "C" U8 InitConsole(U8 *vid) {
 	return AddStream(&Console);
 }
 
-extern "C" void WriteTo(U8 *buf) {
+extern "C" void WriteTo(U8 *buf)
+{
 	writeBuffer = buf;
 }
 
-extern "C" void Write(const char *msg) {/*
-	const char *ch = msg;
-	while(*ch != '\0'){
-		*bufferPos = *ch;
-		++bufferPos;
-		*bufferPos = 0x07;
-		++bufferPos;
-		++ch;	
-	}
-	writeIndex += 2 * ((unsigned long) ch - (unsigned long) msg - 1);*/
-
+extern "C" void Write(const char *msg)
+{
 	RestoreConsole();
 
 	const char *ch = msg;
 	ch = PrintInline(ch);
 
 	// This part will occur only if msg overflows this line.
-	while(*ch){
+	while(*ch)
+	{
 		SwitchLine();
 		ch = PrintInline(ch);
 	}
+
+	MarkLine();
 }
 
-extern "C" void WriteLine(const char *msg) {
+extern "C" void WriteLine(const char *msg)
+{
 	Write(msg);
+	FinishLine();
 	SwitchLine();
+	MarkLine();
 }

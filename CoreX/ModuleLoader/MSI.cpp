@@ -69,9 +69,12 @@ DynamicEntry *KernelElf::getDynamicEntry(enum DynamicTag dRequiredTag)
 	unsigned long dynamicEntryCount = msiDynamicCount;
 	unsigned long dynamicEntryIndex = 0;
 
-	while(dynamicEntryIndex < dynamicEntryCount){
+	while(dynamicEntryIndex < dynamicEntryCount)
+	{
 		if(dynamicEntry->Tag == dRequiredTag)
+		{
 			return (dynamicEntry);
+		}
 
 		++(dynamicEntry);
 		++(dynamicEntryIndex);
@@ -104,7 +107,8 @@ ModuleRecord *KernelElf::registerDynamicLink()
 	DynamicEntry *dsmHashEntry = KernelElf::getDynamicEntry(DT_HASH);
 
 	if(dsmEntry != NULL && dsmNamesEntry != NULL &&
-			dsmSizeEntry != NULL && dsmHashEntry != NULL){
+			dsmSizeEntry != NULL && dsmHashEntry != NULL)
+	{
 		coreLink.dynamicSymbols.entryTable = (Symbol *) dsmEntry->refPointer;
 		coreLink.dynamicSymbols.nameTable = (char *) dsmNamesEntry->refPointer;
 
@@ -122,7 +126,9 @@ ModuleRecord *KernelElf::registerDynamicLink()
 
 		RecordManager::registerRecord(coreRecord);
 		return (coreRecord);
-	} else {
+	}
+	else
+	{
 		DbgLine("ERROR: DYNAMIC SYMBOLS NOT FOUND IN MICROKERNEL");
 		return (NULL);
 	}
@@ -162,7 +168,8 @@ void KernelElf::loadBootModules()
 	ModuleRecord *bmRecord = NULL;
 	MultibootTagModule *foundModule = (MultibootTagModule*) SearchMultibootTag(MULTIBOOT_TAG_TYPE_MODULE);
 
-	while(foundModule != NULL){
+	while(foundModule != NULL)
+	{
 		bmRecord = RecordManager::createRecord(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
 
 		blob = new(tBlobRegister) BlobRegister();
@@ -184,8 +191,10 @@ void KernelElf::loadBootModules()
 	BlobRegister *nextBlob;
 
 	blob = (BlobRegister*) bmRecordList->Head;
-	while(blob != NULL){
-		if(blob->regForm->init){
+	while(blob != NULL)
+	{
+		if(blob->regForm->init)
+		{
 			blob->regForm->init();
 		}
 
@@ -195,11 +204,17 @@ void KernelElf::loadBootModules()
 	DbgLine("Initialized all kernel boot modules");
 
 	blob = (BlobRegister*) bmRecordList->Head;
-	while(blob != NULL){
+	while(blob != NULL)
+	{
 		if(blob->regForm->entryAddr && *(unsigned long*) blob->regForm->entryAddr != NO_ENTRY_ADDR)
+		{
 			KThreadCreate((void*) blob->regForm->entryAddr);
+		}
 		else
+		{
 			DbgLine("DKDKDK");
+		}
+		
 		nextBlob = (BlobRegister*) blob->liLinker.Next;
 		kobj_free((kobj*) blob, tBlobRegister);
 		blob = nextBlob;

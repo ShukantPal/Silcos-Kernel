@@ -5,8 +5,9 @@
 # Build: AUTO
 
 CC = g++ # C Compiler
-CFLAGS = -m32 -I"." -I"./Interface" -I"../../Interface" -I"../../Interface/Arch" -c -ffreestanding -nostdlib -nostdinc \
- -Wall -O2 -fPIC -L../../circuitk-1.02 -fno-exceptions -fno-rtti # -fno-strict-aliasing
+CFLAGS = -m32 -I"." -I"./Interface" -I"../../Interface" -I"../../Interface/Arch" -I"../ResourceManager/Interface" -c \
+ -ffreestanding -nostdlib \
+ -nostdinc -Wall -O2 -fPIC -L../../circuitk-1.02 -fno-exceptions -fno-rtti # -fno-strict-aliasing
 
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags

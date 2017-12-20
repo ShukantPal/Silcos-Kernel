@@ -20,23 +20,29 @@
  * @Version 1
  * @Since Circuit 2.03
  */
-void AddElement(LIST_ELEMENT *New, LinkedList *List){
+void AddElement(LIST_ELEMENT *New, LinkedList *List)
+{
 	LIST_ELEMENT *lHead = List->Head;
 
 	if(lHead != NULL)
 	{
 		LIST_ELEMENT *lTail = List->Tail;
 
-		if(lTail != NULL) {
+		if(lTail != NULL)
+		{
 			New->Previous = lTail;
 			lTail->Next = New;
-		} else {
+		}
+		else
+		{
 			New->Previous = lHead;
 			lHead->Next = New;
 		}
 
 		List->Tail = New;
-	} else {
+	}
+	else
+	{
 		New->Previous = NULL;
 		List->Head = New;
 	}
@@ -60,8 +66,10 @@ void AddElement(LIST_ELEMENT *New, LinkedList *List){
  * newNode - Node to be added
  * list - List is on which the operation is being done
  */
-void RemoveElement(LIST_ELEMENT *oldElement, LinkedList *lList){
-	if(lList->Count){
+void RemoveElement(LIST_ELEMENT *oldElement, LinkedList *lList)
+{
+	if(lList->Count)
+	{
 		LIST_ELEMENT *oldNext = oldElement->Next;
 		LIST_ELEMENT *oldPrevious = oldElement->Previous;
 
@@ -77,17 +85,21 @@ void RemoveElement(LIST_ELEMENT *oldElement, LinkedList *lList){
 
 		--(lList->Count);
 
-		if(lList->Count == 1) {
+		if(lList->Count == 1)
+		{
 			lList->Head->Next = NULL;
 			lList->Tail = NULL;
-		} else if(lList->Count == 0) {
+		}
+		else if(lList->Count == 0)
+		{
 			lList->Head = NULL;
 			lList->Tail = NULL;
 		}
 	}
 }
 
-void InsertElementAfter(LIST_ELEMENT *Old, LIST_ELEMENT *New, LinkedList *List){
+void InsertElementAfter(LIST_ELEMENT *Old, LIST_ELEMENT *New, LinkedList *List)
+{
 	NextElement(New) = NextElement(Old);
 	PreviousElement(New) = Old;
 
@@ -100,7 +112,8 @@ void InsertElementAfter(LIST_ELEMENT *Old, LIST_ELEMENT *New, LinkedList *List){
 	++(Count(List));
 }
 
-void InsertElementBefore(LinkedListNode *oldElement, LinkedListNode *newElement, LinkedList *list){
+void InsertElementBefore(LinkedListNode *oldElement, LinkedListNode *newElement, LinkedList *list)
+{
 	LinkedListNode *previousElement = oldElement->Previous;
 	if(previousElement == NULL)
 		list->Head = newElement;
@@ -120,12 +133,14 @@ void PushHead(LIST_ELEMENT *New, LinkedList *List)
 
 	if(lHead == NULL)
 		New->Next = NULL;
-	else {
+	else
+	{
 		New->Next = lHead;
 		lHead->Previous = New;
 
 		LIST_ELEMENT *lTail = List->Tail;
-		if(lTail == NULL) {
+		if(lTail == NULL)
+		{
 			List->Tail = New;
 		}
 	}
@@ -140,16 +155,22 @@ LIST_ELEMENT *PullTail(LinkedList *List)
 	LIST_ELEMENT *oldTail = List->Tail;
 	LIST_ELEMENT *oldHead = List->Head;
 
-	if(oldTail != NULL) {
-		if(oldHead->Next == oldTail) {
+	if(oldTail != NULL)
+	{
+		if(oldHead->Next == oldTail)
+		{
 			oldHead->Next = NULL;
 			List->Tail = NULL;
-		} else {
+		}
+		else
+		{
 			List->Tail = oldTail->Previous;
 			if(List->Tail)
 				List->Tail->Next = NULL;
 		}
-	} else {
+	}
+	else
+	{
 		oldTail = oldHead;
 		List->Head = NULL;
 	}

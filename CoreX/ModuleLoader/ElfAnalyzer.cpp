@@ -6,6 +6,7 @@
 
 #include <Module/Elf/ElfAnalyzer.hpp>
 #include <Util/Memory.h>
+#include <KERNEL.h>
 
 using namespace Module;
 using namespace Module::Elf;
@@ -32,7 +33,9 @@ bool ElfAnalyzer::validateBinary(void *binaryFile){
 unsigned long ElfAnalyzer::getSymbolHash(char *symbolName)
 {
 	unsigned long hashKey = 0, testHolder;
-	while(*symbolName){
+	
+	while(*symbolName)
+	{
 		hashKey = (hashKey << 4) + *symbolName++;
 		testHolder = hashKey & 0xF0000000;
 		if(testHolder)
@@ -43,21 +46,26 @@ unsigned long ElfAnalyzer::getSymbolHash(char *symbolName)
 	return (hashKey);
 }
 
-#include <KERNEL.h>
 Symbol *ElfAnalyzer::querySymbol(char *requiredSymbolName, SymbolTable *symbolRecord, HashTable *hashTable)
 {
 	unsigned long hashKey = ElfAnalyzer::getSymbolHash(requiredSymbolName);
 	unsigned long chainIndex = hashTable->bucketTable[hashKey % hashTable->bucketEntries];
 	unsigned long *chainEntry;
 	Symbol *relevantSymbol;
-	do {
+
+	do
+	{
 		chainEntry = hashTable->chainTable + chainIndex;
 		relevantSymbol = symbolRecord->entryTable + chainIndex;
 
 		if(strcmp(requiredSymbolName, symbolRecord->nameTable + relevantSymbol->Name))
+		{
 			return (relevantSymbol);
+		}
 		else
+		{
 			chainIndex = *chainEntry;
+		}
 	} while(chainIndex != STN_UNDEF);
 
 	return (NULL);

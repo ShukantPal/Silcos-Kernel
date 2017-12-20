@@ -51,7 +51,7 @@ public:
 };
 
 #define internal static
-#define include_kobject(name) extern struct ObjectInfo *name;
+#define include_kobject(name) extern struct ObjectInfo * name;
 
 typedef int (*Comparator)(void* m1, void* m2);
 typedef long (*Hasher)(void *m);

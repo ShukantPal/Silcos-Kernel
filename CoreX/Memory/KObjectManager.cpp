@@ -74,16 +74,15 @@ static Slab* ObCreateSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 	pageAddress = KiPagesAllocate(0, ZONE_KOBJECT, slFlags);
 	EnsureUsability(pageAddress, NULL, slFlags, KernelData);
 
+	memsetf((void*) pageAddress, 0, KPGSIZE);
+
 	newSlab = (Slab *) (pageAddress + KPGSIZE - sizeof(Slab));
 	newSlab->colouringOffset = metaInfo->colorScheme;
 	newSlab->bufferStack.Head = NULL;
 	newSlab->freeCount = metaInfo->bufferPerSlab;
 
 	unsigned long obPtr = pageAddress, bufferSize = metaInfo->bufferSize;
-	unsigned long bufferFence =
-				pageAddress + ((bufferSize > (KPGSIZE / 8)) ?
-					KPGSIZE :
-					(KPGSIZE - sizeof(Slab))) - bufferSize;
+	unsigned long bufferFence = pageAddress + (KPGSIZE - sizeof(Slab)) - bufferSize;
 	Stack *bufferStack = &newSlab->bufferStack;
 	void (*ctor) (void *) = metaInfo->ctor;
 
@@ -105,7 +104,9 @@ static Slab* ObCreateSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 		}
 	}
 
-	KPAGE *slabPage = KPG_AT(pageAddress);
+//	Dbg("slab: "); DbgInt(pageAddress); DbgLine("");
+
+	KPAGE *slabPage = (KPAGE*) KPG_AT(pageAddress);
 	slabPage->HashCode = (unsigned long) metaInfo;
 
 	return (newSlab);
@@ -153,7 +154,10 @@ static void ObDestroySlab(Slab *emptySlab, ObjectInfo *metaInfo)
 
 	MMFRAME *mmFrame = GetFrames(pageAddress, 1, NULL);
 	KeFrameFree(FRADDRESS(mmFrame));
+	EnsureFaulty(pageAddress, NULL);
 	KiPagesFree(pageAddress);
+
+	Dbg("destroy slab: "); DbgInt(pageAddress); DbgLine("");
 }
 
 /**
@@ -186,6 +190,8 @@ static Slab *ObFindSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 		Slab *emptySlab = metaInfo->emptySlab;
 		if(emptySlab == NULL)
 			emptySlab = ObCreateSlab(metaInfo, kmSleep);
+		else
+			metaInfo->emptySlab = NULL;
 
 		ClnInsert((CircularListNode*) emptySlab, CLN_LAST, &metaInfo->partialList);
 		return (emptySlab);
@@ -355,6 +361,8 @@ extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize, unsi
 	typeInfo->fullList.ClnMain = NULL;
 	typeInfo->fullList.ClnCount= 0;
 	ClnInsert((CLNODE*) typeInfo, CLN_LAST, &tList);
+
+	Dbg("kobj Created: "); Dbg(tName); Dbg(" Size:"); DbgInt(tSize); Dbg(" "); DbgInt(tList.ClnCount); DbgLine("");
 
 	return (typeInfo);
 }

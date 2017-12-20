@@ -126,13 +126,8 @@ void SwitchContext(
  * @Since Circuit 2.03
  * @Author Shukant  Pal
  */
-void EnsureMapping(
-	ADDRESS address,
-	PADDRESS pAddress,
-	CONTEXT *pgContext,
-	unsigned long frFlags,
-	PAGE_ATTRIBUTES pgAttr
-);
+void EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext,
+			unsigned long frFlags, PAGE_ATTRIBUTES pgAttr);
 
 /**
  * Function: EnsureUsability()
@@ -152,12 +147,10 @@ void EnsureMapping(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-void EnsureUsability(
-	ADDRESS address,
-	CONTEXT *pgContext,
-	unsigned long frFlags,
-	PAGE_ATTRIBUTES pgAttr
-);
+void EnsureUsability(ADDRESS address, CONTEXT *pgContext, unsigned long frFlags,
+			PAGE_ATTRIBUTES pgAttr);
+
+void EnsureFaulty(ADDRESS address, CONTEXT *c);
 
 /**
  * Function: CheckUsability()
@@ -175,18 +168,10 @@ void EnsureUsability(
  * @Since Circuit 2.03
  * @Author Shukant Pal
  */
-bool CheckUsability(
-	ADDRESS address,
-	CONTEXT *pgContext
-);
+bool CheckUsability(ADDRESS address, CONTEXT *pgContext);
 
-void EnsureAllMappings(
-	unsigned long address,
-	PADDRESS pAddress,
-	unsigned long mapSize,
-	CONTEXT *pgContext,
-	PAGE_ATTRIBUTES pgAttr
-);
+void EnsureAllMappings(unsigned long address, PADDRESS pAddress, unsigned long mapSize,
+			CONTEXT *pgContext, PAGE_ATTRIBUTES pgAttr);
 
 /* Used to expand heaps by size HEAP_EXTENSION_SIZE (PageTrans) */
 ADDRESS RtDynamicMemory(

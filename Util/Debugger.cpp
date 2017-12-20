@@ -24,12 +24,17 @@ SPIN_LOCK dbgLock;
 
 char digitMapping[36] = "0123456789ABCDEFGHIJK";
 char digitZero[2] = "0";
-static void ToString(SIZE n, char* buffer, unsigned char d){
-	if(d < 2 || d > 36) {
+static void ToString(SIZE n, char* buffer, unsigned char d)
+{
+	if(d < 2 || d > 36)
+	{
 		buffer = "";
 		return;			
-	} else {
-		if(n == 0) {
+	}
+	else
+	{
+		if(n == 0)
+		{
 			buffer[0] = '0';
 			buffer[1] = '\0';
 			return;
@@ -38,12 +43,14 @@ static void ToString(SIZE n, char* buffer, unsigned char d){
 		char reverseBuffer[1 + (sizeof(unsigned long) * 8)];
 		long charIndex = 0;
 		bool neg = FALSE;
-		if(n < 0) {
+		if(n < 0)
+		{
 			neg = TRUE;
 			n *= -1;
 		}
 
-		while(n > 0) {
+		while(n > 0)
+		{
 			reverseBuffer[charIndex++] = digitMapping[n % d];
 			n /= d;
 		}
@@ -62,11 +69,15 @@ static void ToString(SIZE n, char* buffer, unsigned char d){
 
 static void ToFillString(SIZE n, char *buffer, unsigned char d)
 {
-	if(d < 2 || d > 36) {
+	if(d < 2 || d > 36)
+	{
 		buffer[32] = '\0';
 		return;			
-	} else {
-		if(n == 0) {
+	}
+	else
+	{
+		if(n == 0)
+		{
 			memset(buffer, '0', 32);
 			buffer[32] = '\0';
 			return;
@@ -75,12 +86,14 @@ static void ToFillString(SIZE n, char *buffer, unsigned char d)
 		char reverseBuffer[65];
 		long charIndex = 0;
 		bool neg = FALSE;
-		if(n < 0) {
+		if(n < 0)
+		{
 			neg = TRUE;
 			n *= -1;
 		}
 
-		while(n > 0) {
+		while(n > 0)
+		{
 			reverseBuffer[charIndex++] = digitMapping[n % d];
 			n /= d;
 		}
@@ -93,17 +106,17 @@ static void ToFillString(SIZE n, char *buffer, unsigned char d)
 		--charIndex;
 
 		long org_c = 0;
-		while(charIndex >= 0) {
+		while(charIndex >= 0)
+		{
 			buffer[org_c++] = reverseBuffer[charIndex--];
-		} 
-//buffer[org_c] = '\0';
+		}
+
 		buffer[32] = '\0';
 	}
 }
 
-extern "C" void Dbg(
-		const char *msg
-){
+extern "C" void Dbg(const char *msg)
+{
 	SpinLock(&dbgLock);
 	unsigned char Stream = 0;
 	for( ; Stream <= StreamNo; Stream++)
@@ -111,7 +124,7 @@ extern "C" void Dbg(
 	SpinUnlock(&dbgLock);
 }
 
-export_asm void DbgInt(SIZE n)
+extern "C" void DbgInt(SIZE n)
 {
 	if(n) {
 		char buf[33];
@@ -120,7 +133,7 @@ export_asm void DbgInt(SIZE n)
 	} else Dbg(digitZero);
 }
 
-export_asm void DbgErro(SIZE n, unsigned long sy)
+extern "C" void DbgErro(SIZE n, unsigned long sy)
 {
 	//if(n) {
 		char buf[65];
@@ -129,7 +142,7 @@ export_asm void DbgErro(SIZE n, unsigned long sy)
 	//} else Dbg("0");
 }
 
-export_asm void DbgDump(void *c_, unsigned long s)
+extern "C" void DbgDump(void *c_, unsigned long s)
 {
 	char c[s + 1];
 	memcpy(c_, c, s);
@@ -137,7 +150,7 @@ export_asm void DbgDump(void *c_, unsigned long s)
 	Dbg(c);
 }
 
-export_asm void DbgBinOut(void *c_, unsigned long s) // s must be multiple of 4 (to dump all)
+extern "C" void DbgBinOut(void *c_, unsigned long s) // s must be multiple of 4 (to dump all)
 {
 	unsigned long s_ = s / 4;
 	long i = s_ - 1;
@@ -148,9 +161,8 @@ export_asm void DbgBinOut(void *c_, unsigned long s) // s must be multiple of 4 
 	}
 }
 
-export_asm void DbgLine(
-		const char  *msg
-){
+extern "C" void DbgLine(const char  *msg)
+{
 	SpinLock(&dbgLock);
 	char Stream = 0;
 	for( ; Stream <= StreamNo; Stream++)
@@ -158,18 +170,23 @@ export_asm void DbgLine(
 	SpinUnlock(&dbgLock);
 }
 
-unsigned long AddStream(DebugStream *dbg){
+unsigned long AddStream(DebugStream *dbg)
+{
 	++StreamNo;
-	if(StreamNo == 10) {
+	if(StreamNo == 10)
+	{
 		--StreamNo;
 		return -1;
-	} else {
+	}
+	else
+	{
 		Streams[(unsigned long) StreamNo] = dbg;
 		return StreamNo;
 	}
 }
 
-void RemoveStream(unsigned long dbgNo){
+void RemoveStream(unsigned long dbgNo)
+{
 	unsigned long dbg = dbgNo;
 	--StreamNo;
 	for( ; (char) dbg < StreamNo; dbg++)

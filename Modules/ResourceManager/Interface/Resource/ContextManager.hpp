@@ -115,15 +115,15 @@ public:
 			unsigned long pageCount, unsigned long cfgFlags,
 			PAGE_ATTRIBUTES permissions) = 0;
 
-//	virtual RegionRemovalResult removeRegion(unsigned long initialAddress,
-//			unsigned long pageCount, unsigned short typeId) = 0;
+	virtual RegionRemovalResult removeRegion(unsigned long initialAddress,
+			unsigned long pageCount, unsigned short typeId) = 0;
 
 //	virtual unsigned long includeInRegion(unsigned long initialAddress,
 //			unsigned long addressExtension) = 0;
 
 //	virtual MemorySection* validateRegion(unsigned long address) = 0;
 
-	static void init();
+	void printAll();
 protected:
 	MemorySection *code;
 	MemorySection *data;
@@ -133,17 +133,26 @@ protected:
 	unsigned long referCount;
 	unsigned long regionCount;
 
+	bool treePopulated;
 	MemorySection *firstArena;
 	MemorySection *lastArena;
 	RBTree *arenaTree;
-	bool treeUsed;
-
-	static ObjectInfo *tMemorySection;
 
 	ContextManager(const char *name, const int typeId);
 	virtual ~ContextManager();
+
 	RegionInsertionResult add(MemorySection *sec);
-	//void remove(MemorySection *sec);
+	void carve(MemorySection *arena, unsigned long iaddr, unsigned long faddr);
+	void split(MemorySection *arena, unsigned long laddr, unsigned long raddr);
+	bool populateTree();
+	void remove(MemorySection *sec);
+	unsigned long removeAll(MemorySection *from, MemorySection *till,
+					unsigned short typeId, unsigned long &pageCount);
+
+	virtual unsigned long * getIDFilter()
+	{
+		return (NULL);
+	}
 };
 
 }

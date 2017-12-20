@@ -12,10 +12,13 @@ CFLAGS = -m32 -I"." -I"./Interface" -I"../../Interface" -I"../../Interface/Arch"
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
 
-RS = Compile/ContextManager.o Compile/MemoryImage.o
+RS = Compile/ContextManager.o Compile/Init.o Compile/MemoryImage.o
 
 Compile/ContextManager.o: Source/ContextManager.cpp
 	$(CC) $(CFLAGS) Source/ContextManager.cpp -o Compile/ContextManager.o
+
+Compile/Init.o: Source/Init.cpp
+	$(CC) $(CFLAGS) Source/Init.cpp -o Compile/Init.o
 	
 Compile/MemoryImage.o: Source/MemoryImage.cpp
 	$(CC) $(CFLAGS) Source/MemoryImage.cpp -o Compile/MemoryImage.o

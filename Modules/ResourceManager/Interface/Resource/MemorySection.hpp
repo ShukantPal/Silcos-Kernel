@@ -27,6 +27,12 @@
 namespace Resource
 {
 
+#ifdef ARCH_32
+	#define GetConfigFlags(type, ctl) (type | (ctl << 16))
+#else
+	#define GetConfigFlags(type, ctl) (type | (ctl << 32))
+#endif
+
 /**
  * Struct: MemorySection
  *
@@ -42,20 +48,30 @@ namespace Resource
  * # RBTree is used instead of AvlTree allowing seperation of nodes
  * # pageCount is added into the struct, reducing overhead of subtraction
  *
+ * TODO: Create a internal subsystem in MemorySection for the management of stupid
+ * 		memory-pages & their physical mappings. Mostly used for the future
+ * 		of PFRA ______________________+++++.
+ *
  * Version: 2.1
  * Author: Shukant Pal
  */
 struct MemorySection
 {
-	union
+	enum Type
 	{
-		LinkedListNode chainNode;// Used for linking in a list
-		struct
-		{
-			MemorySection *next;
-			MemorySection *last;
-		};
+		Any = NULL,
+		Code = 0x1,
+		Data = 0x2,
+		BSS = 0x3,
+		Stack = 0x4,
+		Heap = 0x5,
+		Shared = 0x6,
+		Unknown = 0x7,
+		Boundary = 0x8
 	};
+
+	MemorySection *next;
+	MemorySection *last;
 	unsigned long initialAddress;// Initial address of region (modulo 4-8k)
 	unsigned long finalAddress;// Final address of region (modulo 4-8k)
 	unsigned long pageCount;// Count of pages in the region
@@ -70,8 +86,10 @@ struct MemorySection
 	};
 	PAGE_ATTRIBUTES pagerFlags;// Paging attributes
 
+	MemorySection(){}// Dummy ctor (for useless purpose, nil)
+
 	MemorySection(unsigned long initialAddress, unsigned long pageCount,
-			unsigned long cfgFlags, PAGE_ATTRIBUTES pagerFlags)
+			unsigned long cfgFlags, PAGE_ATTRIBUTES pagerFlags) : next(NULL), last(NULL)
 	{
 		this->initialAddress = initialAddress;
 		this->finalAddress = initialAddress + pageCount * KPGSIZE;
@@ -89,6 +107,7 @@ struct MemorySection
 		this->typeId = typeId;
 		this->ctlFlags = ctlFlags;
 		this->pagerFlags = pagerFlags;
+		this->next = this->last = NULL;
 	}
 };
 

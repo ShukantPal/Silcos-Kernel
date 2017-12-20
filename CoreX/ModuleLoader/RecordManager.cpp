@@ -83,12 +83,15 @@ Symbol *RecordManager::querySymbol(char *requiredSymbolName, unsigned long &base
 	DynamicLink *qLink;
 	Symbol *foundSymbol;
 
-	while(qRecordIndex < qRecordCount){
+	while(qRecordIndex < qRecordCount)
+	{
 		qLink = qRecord->linkerInfo;
 		foundSymbol = ElfAnalyzer::querySymbol(requiredSymbolName, &qLink->dynamicSymbols, &qLink->symbolHash);
 
-		if(foundSymbol != NULL){
-			if(foundSymbol->Value != 0){
+		if(foundSymbol != NULL)
+		{
+			if(foundSymbol->Value != 0)
+			{
 				baseAddress = qRecord->BaseAddr;
 				return (foundSymbol);
 			}

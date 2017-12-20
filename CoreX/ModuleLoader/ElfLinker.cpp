@@ -35,41 +35,41 @@ void* __dso_handle;
  */
 void ElfLinker::resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService)
 {
-	unsigned long *relocationArena = (unsigned long*) (handlerService.baseAddress + relocEntry->Offset);
-
-	unsigned long symbolIdx = ELF32_R_SYM(relocEntry->Info);
-
-//	Dbg("_relidx: "); DbgInt(relocEntry->Info); DbgLine(";");
-
-	Symbol *symbolFound = handlerService.dynamicSymbols.entryTable + symbolIdx;
-
-	char *signature = handlerService.dynamicSymbols.nameTable + symbolFound->Name;
-
+	unsigned long *field = (unsigned long*) (handlerService.baseAddress + relocEntry->Offset);
+	unsigned long sindex = ELF32_R_SYM(relocEntry->Info);
+	Symbol *symbolReferred = handlerService.dynamicSymbols.entryTable + sindex;
+	char *signature = handlerService.dynamicSymbols.nameTable + symbolReferred->Name;
 	unsigned long declBase;
+	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
 
-	if(*signature == '\0' &&
-			ELF32_R_TYPE(relocEntry->Info) == R_386_RELATIVE){
-		*relocationArena = (unsigned long) relocationArena;
+	if(*signature == '\0' && ELF32_R_TYPE(relocEntry->Info) == R_386_RELATIVE)
+	{
+		*field += handlerService.baseAddress;
 		return;
 	}
 
-	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
-	if(declarer != NULL){
-		switch(ELF32_R_TYPE(relocEntry->Info)){
+	if(declarer != NULL)
+	{
+		switch(ELF32_R_TYPE(relocEntry->Info))
+		{
 		case R_386_JMP_SLOT:
 		case R_386_GLOB_DAT:
-			*relocationArena = declarer->Value + declBase;
+			*field = declarer->Value + declBase;
 			break;
 		case R_386_32:
-			*relocationArena = declarer->Value + declBase + *relocationArena;
+			*field += declarer->Value + declBase;
 			break;
 		default:
 			DbgLine("Error 40A: TODO:: Build code (elf-linkage-reloc-switch");
+			while(TRUE){ asm volatile("nop"); }
 			break;
 		}
-	} else {
+	}
+	else
+	{
 		Dbg("__notfound ");
-		DbgLine(handlerService.dynamicSymbols.nameTable + symbolFound->Name);
+		DbgLine(handlerService.dynamicSymbols.nameTable + symbolReferred->Name);
+		while(TRUE){ asm volatile("nop"); }
 	}
 }
 
@@ -91,7 +91,8 @@ void ElfLinker::resolveRelocations(RelTable &relocTable, ElfManager &handlerServ
 	unsigned long relCount = relocTable.entryCount;
 	RelEntry *relDesc = relocTable.entryTable;
 
-	while(relIndex < relCount){
+	while(relIndex < relCount)
+	{
 		ElfLinker::resolveRelocation(relDesc, handlerService);
 
 		++(relIndex);

@@ -17,33 +17,37 @@ const char *sysRSDTNotFound = "RSDT NOT FOUND";
 
 void SetupRsdt()
 {
-	if(SystemRsdp->Revision == 0){
+	if(SystemRsdp->Revision == 0)
+	{
 		EnsureMapping(ConfigBlock * 4096, SystemRsdp -> RsdtAddress & 0xfffff000, NULL, KF_NOINTR, 3);
 
 		RSDT *Rsdt = (RSDT *) (ConfigBlock * 4096 + (SystemRsdp -> RsdtAddress % 4096));
 		SystemRsdt = Rsdt;
 		++ConfigBlock;
 
-		if(!VerifySdtChecksum(&(SystemRsdt -> RootHeader))) {
+		if(!VerifySdtChecksum(&(SystemRsdt -> RootHeader)))
+		{
 			DbgLine(sysRSDTNotFound);
 			asm volatile("cli; hlt;");
 		}
 	}
 }
 
-void* RetrieveConfiguration(
-		RSDT *RootSDT,
-		const char *Signature,
-		U32 MappingBlk
-){
+void *RetrieveConfiguration(RSDT *RootSDT, const char *Signature, U32 MappingBlk)
+{
 	U32 ConfigEntries = (SystemRsdt -> RootHeader.Length - sizeof(SDT_HEADER)) / 4;
 	SDT_HEADER *Sdt = NULL;  
 
-    	for (U32 Index = 0; Index < ConfigEntries; Index++){
-		EnsureMapping(MappingBlk * 4096, SystemRsdt -> ConfigurationTables[Index] & 0xfffff000, NULL, KF_NOINTR, KernelData);
+    	for (U32 Index = 0; Index < ConfigEntries; Index++)
+    	{
+		EnsureMapping(MappingBlk * 4096, SystemRsdt -> ConfigurationTables[Index] & 0xfffff000,
+					NULL, KF_NOINTR, KernelData);
 		Sdt = (SDT_HEADER *) (MappingBlk* 4096 + SystemRsdt -> ConfigurationTables[Index] % 4096);
+		
 		if(memcmp(Sdt, Signature, 4))
+		{
 			return (void*) (Sdt);
+		}
 	}
  
 	return (NULL);

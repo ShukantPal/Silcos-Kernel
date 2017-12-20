@@ -89,11 +89,15 @@ bool kfree(void* memGiven, bool forceDelete)
 	BlockContainer *memBlock = BlockFor(memGiven);
 
 	if(memBlock->magicNo != HEAP_MAGIC)
+	{
 		return (false);
-	else {
+	}
+	else
+	{
 		--(memBlock->referenceCount);
 
-		if(memBlock->referenceCount == 0 || forceDelete){
+		if(memBlock->referenceCount == 0 || forceDelete)
+		{
 			ObjectInfo *requiredAllocator = heapEngines[memBlock->blockOrder - 5];
 			KDelete((void*) memBlock, requiredAllocator);
 		}
@@ -108,8 +112,11 @@ void* kralloc(void *heap_mem, unsigned long new_size)
 	unsigned long org_size = 1 << heap_block->blockOrder;
 
 	if(org_size >= new_size)
-		return (heap_mem);
-	else {
+	{
+			return (heap_mem);
+	}
+	else
+	{
 		return kmalloc(new_size);
 	}
 }
@@ -119,12 +126,18 @@ void *krcalloc(void *heap_mem, unsigned long new_size)
 	BlockContainer *heap_block = BlockFor(heap_mem);
 	unsigned long org_size = (1 << heap_block->blockOrder);
 
-	if(org_size >= new_size){
+	if(org_size >= new_size)
+	{
 		if(org_size> new_size)
+		{
 			memsetf(heap_mem + org_size, 0, new_size - org_size);
+		}
 		return (heap_mem);
-	} else
+	}
+	else
+	{
 		return (kcalloc(new_size));
+	}
 }
 
 char engineName[] = "heap_sv";
@@ -141,7 +154,8 @@ char engineName[] = "heap_sv";
 void __initHeap()
 {
 	unsigned int engineIndex = 0;
-	while(engineIndex < 5){
+	while(engineIndex < 5)
+	{
 		heapEngines[engineIndex] = KiCreateType(engineName, 32 << engineIndex, NO_ALIGN, NULL, NULL);
 
 		++(engineIndex);

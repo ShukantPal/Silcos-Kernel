@@ -7,7 +7,7 @@
 #include <Memory/KMemorySpace.h>
 
 void EnumerateMADT(void (*handleLAPIC)(MADTEntryLAPIC *), void (*handleIOAPIC)(MADTEntryIOAPIC *),
-			void (*handleISR)(MADTEntryISR *))
+				void (*handleISR)(MADTEntryISR *))
 {
 	MADT *madtPtr = (MADT*) RetrieveConfiguration((RSDT*)SystemRsdt, "APIC", ConfigBlock);
 	U8 *entryBytes = &madtPtr->SystemInfo[0];
@@ -15,7 +15,8 @@ void EnumerateMADT(void (*handleLAPIC)(MADTEntryLAPIC *), void (*handleIOAPIC)(M
 
 	for(unsigned long tableOffset = 0;
 			tableOffset<(madtPtr->baseHeader.Length-sizeof(MADT)-8)
-			;){
+			;)
+	{
 		switch(*entryBytes)
 		{
 		case 0:

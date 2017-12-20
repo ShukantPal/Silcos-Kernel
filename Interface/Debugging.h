@@ -37,6 +37,7 @@ void RemoveStream(unsigned long Index);
 U8 InitConsole(U8* videoRAM);
 void Write(const char *consoleASCIIString);
 void WriteLine(const char *consoleASCIIString);
+void ClearScreen();
 }
 
 #endif /* Debugging.h */

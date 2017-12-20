@@ -2,27 +2,31 @@
 
 #include <Util/CircularList.h>
 
-extern "C" void ClnInsert(
-		CircularListNode *clnNode,
-		unsigned long clnPosition,
-		CircularList *clList
-){
+extern "C" void ClnInsert(CircularListNode *clnNode, unsigned long clnPosition,
+						CircularList *clList)
+{
 	CLNODE *clnMain = clList->ClnMain;
-	if(clnMain != NULL){
-		if(clnPosition == CLN_FIRST){
+	if(clnMain != NULL)
+	{
+		if(clnPosition == CLN_FIRST)
+		{
 			clnNode->ClnNext = clnMain->ClnNext;
 			clnNode->ClnNext->ClnLast = clnNode;// Make sure back-linkage is correct!!! (ERR: Fixed)
 
 			clnNode->ClnLast = clnMain;
 			clnMain->ClnNext = clnNode;
-		} else {
+		}
+		else
+		{
 			clnNode->ClnNext = clnMain;
 			clnMain->ClnLast = clnNode;
 			
 			clnNode->ClnLast = clnMain->ClnLast;
 			clnNode->ClnLast->ClnNext = clnNode;// Make sure forward-linkage is correct!!! (ERR: Fixed)
 		}
-	} else {
+	}
+	else
+	{
 		clnNode->ClnNext = clnNode;
 		clnNode->ClnLast = clnNode;
 		clList->ClnMain = clnNode;
@@ -31,13 +35,14 @@ extern "C" void ClnInsert(
 	++(clList->ClnCount);
 }
 
-extern "C" void ClnRemove(
-		CircularListNode *clnNode,
-		CircularList *clList
-){
+extern "C" void ClnRemove(CircularListNode *clnNode, CircularList *clList)
+{
 	unsigned long clnCount = clList->ClnCount;
-	if(clnCount > 0){/* Eliminate blind-removals */
-		if(clnCount > 1) {
+	
+	if(clnCount > 0)
+	{/* Eliminate blind-removals */
+		if(clnCount > 1)
+		{
 			CLNODE *clnNext = clnNode->ClnNext;
 			CLNODE *clnLast = clnNode->ClnLast;
 
@@ -45,8 +50,12 @@ extern "C" void ClnRemove(
 			clnLast->ClnNext = clnNext;
 
 			if(clnNode == clList->ClnMain)
-			{ clList->ClnMain = clnNext; }
-		} else {
+			{
+				clList->ClnMain = clnNext;
+			}
+		}
+		else
+		{
 			clList->ClnMain = NULL;
 		}
 

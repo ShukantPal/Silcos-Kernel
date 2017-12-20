@@ -169,11 +169,17 @@ KTHREAD *KThreadCreate(void *entry){
 	newThread->Gate.RRM_ID = log_id++;
 	
 	KSTACKINFO *threadStack = &(newThread->KernelStack);
-	unsigned long stackAddress = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
-	threadStack->Base = stackAddress + KPGSIZE - 4;
-	threadStack->Pointer = stackAddress + KPGSIZE - 64;
-	EnsureUsability(stackAddress, NULL, FLG_ATOMIC, KernelData);
+	unsigned long stackAddress = KiPagesAllocate(2, ZONE_KMODULE, FLG_ATOMIC);
+	threadStack->Base = stackAddress + 8 * KPGSIZE - 4;
+	threadStack->Pointer = stackAddress + 8 * KPGSIZE - 64;
 	
+	unsigned long offset = 0;
+	while(offset < 8)
+	{
+		EnsureUsability(stackAddress + offset * KPGSIZE, NULL, FLG_ATOMIC, KernelData);
+		++offset;
+	}
+
 	KSCHED_ROLLER *rrRoller = &(currentProcessor->ScheduleClasses[RR_SCHED]);
 	rrRoller->InsertRunner((KTASK *) newThread, currentProcessor);
 	return (newThread);

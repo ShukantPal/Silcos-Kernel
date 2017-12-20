@@ -4,7 +4,7 @@
 #include <Exec/CFS.h>
 #include <Exec/Scheduler.h>
 
-void ScheduleInCFS(struct Processor *cpu)
+KRUNNABLE *ScheduleInCFS(struct Processor *cpu)
 {
 	SCHED_CFS *cfs = &cpu->CFS;
 	KRUNNABLE *runner = MaxValueNode(cfs->RunnerMap.Root);

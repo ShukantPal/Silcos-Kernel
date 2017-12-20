@@ -1,15 +1,20 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: Pager.c
  *
  * Summary: Here IA32-PAE paging is implemented alongwith the paging stubs.
  *
  * Functions:
- * EnsureMapping() - Used for logical-to-physical address mapping
- * EnsureUsability() - Used for allocating page-frame to logical address
- * CheckValidity() - Used for check whether the address is mapped
+ * EnsureMapping() - used for logical-to-physical address mapping
+ * EnsureUsability() - used for allocating page-frame to logical address
+ * EnsureFaulty() - unmaps a kernel-page from its physical address
+ * CheckValidity() - used for check whether the address is mapped
+ *
+ * Changes:
+ * # EnsureFaulty added for use by the slab-allocator to unmap a slab before
+ * 	disposing it.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 
 #include <IA32/PageExplorer.h>
 #include <Memory/Address.h>
@@ -42,9 +47,12 @@ CONTEXT SystemCxt;
  * @Version 1
  * @Since Circuit 2.03
  */
-void EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, unsigned long frFlags, PAGE_ATTRIBUTES pgAttr){
+void EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext,
+					unsigned long frFlags, PAGE_ATTRIBUTES pgAttr)
+{
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), frFlags, pgContext);
-	if(pgTable != NULL) {
+	if(pgTable != NULL)
+	{
 		pgTable[(address % MB(2)) / KB(4)] = pAddress | pgAttr | 3;
 		FlushTLB(address);
 	}
@@ -66,45 +74,71 @@ void EnsureMapping(ADDRESS address, PADDRESS pAddress, CONTEXT *pgContext, unsig
  * @Version 1
  * @Since Circuit 2.03
  */
-void EnsureUsability(ADDRESS address, CONTEXT *pgContext, unsigned long frFlags, PAGE_ATTRIBUTES pgAttr){
+void EnsureUsability(ADDRESS address, CONTEXT *pgContext, unsigned long frFlags, PAGE_ATTRIBUTES pgAttr)
+{
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), frFlags, pgContext);
 
-	if(pgTable != NULL && !(pgTable[(address % MB(2)) / KB(4)] & 1)) {
+	if(pgTable != NULL && !(pgTable[(address % MB(2)) / KB(4)] & 1))
+	{
 		PADDRESS pAddress = KeFrameAllocate(0, ZONE_KERNEL, frFlags);
 		pgTable[(address % MB(2)) / KB(4)] = pAddress | pgAttr;
 		FlushTLB(address);
-	} else {
+	}
+	else
+	{
+		DbgLine("Ensure use: already mapped");
 		pgTable[(address % MB(2)) / KB(4)] |= pgAttr;
 	}
 }
 
-void EnsureAllMappings(ADDRESS address, PADDRESS pAddress, unsigned long mapSize, CONTEXT *pgContext, PAGE_ATTRIBUTES pgAttr){
+void EnsureFaulty(ADDRESS address, CONTEXT *pgContext)
+{
+	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2), ATOMIC, pgContext);
+
+	if(pgTable != NULL)
+	{
+		pgTable[(address % MB(2)) / KB(4)] = 0;
+	}
+}
+
+void EnsureAllMappings(ADDRESS address, PADDRESS pAddress, unsigned long mapSize,
+					CONTEXT *pgContext, PAGE_ATTRIBUTES pgAttr)
+{
 	U64 *pgTable;
 	U32 pgEntry = (address % MB(2)) >> 12;
 	PADDRESS pMapper = pAddress;
 	S32 mapCounter = mapSize >> 12;
 	
-	while(mapCounter >= 0){
+	while(mapCounter >= 0)
+	{
 		pgTable = GetPageTable(address >> 30, (address % GB(1)) >> 21, FLG_ATOMIC, pgContext);
-		while(mapCounter >= 0 && pgEntry < 512){
+		
+		while(mapCounter >= 0 && pgEntry < 512)
+		{
 			pgTable[pgEntry++] = pMapper | pgAttr;
 			pMapper += KB(4);
 			address += KB(4);
 			FlushTLB(address);
 			--(mapCounter);
 		}
+		
 		pgEntry = 0;
 	}
 }
 
-bool CheckUsability(ADDRESS Address, CONTEXT *pageContext){
+bool CheckUsability(ADDRESS Address, CONTEXT *pageContext)
+{
 	U64 *PageTable
 		= GetPageTable(Address / (MB(2) * 512), (Address % (MB(2) * 512)) / MB(2), FLG_NONE, pageContext);
 
 	if(PageTable)
+	{
 		return PageTable[(Address % MB(2)) / KB(4)] & 1;
+	}
 	else
+	{
 		return (FALSE);
+	}
 }
 
 void EraseIdentityPage(){

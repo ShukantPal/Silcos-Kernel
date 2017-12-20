@@ -130,12 +130,14 @@ extern "C" void SetupBSP()
 	CPUIDBuffer[CPUID_ECX] = 1 << 21;
 	CPUID(0x1, 0, &CPUIDBuffer[0]);
 
-	if((CPUIDBuffer[CPUID_ECX] >> 21) & 1){
+	if((CPUIDBuffer[CPUID_ECX] >> 21) & 1)
+	{
 		DbgLine("x2APIC Supported");
 		x2APICModeEnabled = TRUE;
 	}
 	
-	if((CPUIDBuffer[CPUID_EDX] >> 28) & 1){
+	if((CPUIDBuffer[CPUID_EDX] >> 28) & 1)
+	{
 		DbgLine("HTT Supported");
 	}
 	

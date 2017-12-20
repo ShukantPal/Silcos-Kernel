@@ -34,11 +34,12 @@ typedef unsigned long ADDRESS;
 #define PDPT(ptran) (ptran -> HardwarePage.PDPT)
 
 typedef
-struct PageTrans {
+struct PageTrans
+{
 	unsigned int Padding[6]; /* Provide 32-byte padding for PDPT. */
 	unsigned long long PDPT[4];
 } PAGE_TRANSALATOR;
 
-import_asm void EraseIdentityPage(Void);
+extern "C" void EraseIdentityPage(Void);
 
 #endif/* Memory/PageTrans.h */

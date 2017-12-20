@@ -17,40 +17,52 @@ Void ASSERT(bool c, char *String)
 	}
 }
 
-Void memset(Void *bPointer, UBYTE btValue, SIZE bSize){
+Void memset(Void *bPointer, UBYTE btValue, SIZE bSize)
+{
 	UBYTE *btBuffer = (UBYTE *) bPointer;/* Transfer bytes */
 	UBYTE *btPointer = (UBYTE *) bPointer + bSize;/* Transfer serially */
-	while((unsigned long) btPointer > (unsigned long) btBuffer) {
+	while((unsigned long) btPointer > (unsigned long) btBuffer)
+	{
 		--(btPointer);
 		 *btPointer = btValue;
 	}
 }
 
-Void memsetf(Void *bPointer, SIZE lgsValue, SIZE bSize){
+Void memsetf(Void *bPointer, SIZE lgsValue, SIZE bSize)
+{
 	unsigned long *lgBuffer = (unsigned long*) bPointer;
 	bSize &= ~(3);
 	unsigned long *lgPointer = (unsigned long *) ((UBYTE *) bPointer + bSize);
-	while((unsigned long) lgPointer > (unsigned long) lgBuffer){
+	
+	while((unsigned long) lgPointer > (unsigned long) lgBuffer)
+	{
 		--(lgPointer);
 		*lgPointer = lgsValue;
 	}
 }
 
-Void memcpy(const Void *Obj1, Void *Obj2, SIZE ObjSize){
+Void memcpy(const Void *Obj1, Void *Obj2, SIZE ObjSize)
+{
 	char *O1 = (char *) Obj1;
 	char *O2 = (char *) Obj2;
-	while(ObjSize){
+	
+	while(ObjSize)
+	{
 		--ObjSize;
 		O2[ObjSize] = O1[ObjSize];
 	}
 }
 
-Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize){
-	if(bufferSize){
+Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize)
+{
+	if(bufferSize)
+	{
 		unsigned long *cPointerSource = (unsigned long *) ((UBYTE *) bPointerI + bufferSize);
 		unsigned long *cPointerDest = (unsigned long *) ((UBYTE *) bPointerII + bufferSize);
 		bufferSize /= sizeof(SIZE);
-		while(bufferSize){
+		
+		while(bufferSize)
+		{
 			--(bufferSize);
 			--(cPointerSource);
 			--(cPointerDest);
@@ -59,15 +71,19 @@ Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize){
 	}
 }
 
-bool memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
+bool memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize)
+{
 	unsigned char *bCounterI  = (unsigned char*) bPointerI;
 	unsigned char *bCounterII = (unsigned char*) bPointerII;
 	long bOffset = (long) bSize;
-	while(bOffset > 0) {
+	
+	while(bOffset > 0) 
+	{
 		--(bOffset);
 		if(*bCounterI != *bCounterII)
 			return (false);
-		else {
+		else 
+		{
 			++(bCounterI); ++(bCounterII);
 		}
 	}
@@ -77,11 +93,14 @@ bool memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize){
 bool strcmp(const char *s1, const char *s2)
 {
 	bool equ = TRUE;
-	while(TRUE) {
-		if(*s1 != *s2) {
+	while(TRUE) 
+	{
+		if(*s1 != *s2) 
+		{
 			equ = FALSE;
 			break;
-		} else if(*s1 == '\0')
+		}
+		else if(*s1 == '\0')
 			break;
 		++s1;
 		++s2;

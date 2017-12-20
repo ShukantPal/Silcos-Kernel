@@ -152,7 +152,8 @@ HashMap::HashMap(unsigned long initialCapacity, unsigned long loadFactor)
  *
  * Author: Shukant Pal
  */
-void* HashMap::get(Object& key){
+void* HashMap::get(Object& key)
+{
 	Entry *ent = getEntry(key);
 	return (ent != NULL) ? ent->getValue() : NULL;
 }
@@ -176,10 +177,12 @@ void* HashMap::put(Object& key, void *value)
 {
 	unsigned int hash = key.hashCode();
 	Entry *ent = bucketTable[indexFor(hash)];
-	while(ent != NULL){
+	while(ent != NULL)
+	{
 		if(ent->hashCode() == hash &&
 				(&ent->getKey() == &key ||
-						key.equals(&ent->getKey()))){
+						key.equals(&ent->getKey())))
+		{
 			void *oldValue = ent->getValue();
 			ent->setValue(value);
 			Dbg("__value_found");
@@ -235,13 +238,13 @@ static bool isHashMapInitialized = false;
  */
 void HashMap::init()
 {
-	if(!isHashMapInitialized){
-		tHashMap_Entry = KiCreateType(nmHashMap_Entry,
-				sizeof(HashMap::Entry), sizeof(unsigned long),
-				NULL, NULL);
+	if(!isHashMapInitialized)
+	{
+		tHashMap_Entry = KiCreateType(nmHashMap_Entry, sizeof(HashMap::Entry), sizeof(unsigned long),
+									NULL, NULL);
 
-		tHashMap = KiCreateType(nmHashMap, sizeof(HashMap),
-				sizeof(unsigned long), NULL, NULL);
+		tHashMap = KiCreateType(nmHashMap, sizeof(HashMap), sizeof(unsigned long),
+									NULL, NULL);
 
 		new(&nullHash) NullHash();
 	}
@@ -249,7 +252,8 @@ void HashMap::init()
 
 bool HashMap::Entry::equals(Entry *other)
 {
-	if(other != NULL){
+	if(other != NULL)
+	{
 		Object& k1 = other->getKey();
 		Object& k2 = other->getKey();
 		if(&k1 == &k2 || k1.hashCode() == k2.hashCode())
@@ -300,7 +304,8 @@ void HashMap::addEntry(Entry *ent)
 	ent->link(*bucketSlot);
 	*bucketSlot = ent;
 
-	if(size++ > threshold){
+	if(size++ > threshold)
+	{
 		resize(capacity * 2);
 	}
 }
@@ -320,10 +325,12 @@ HashMap::Entry* HashMap::getEntry(Object& key)
 {
 	unsigned int hash = key.hashCode();
 	Entry *ent = bucketTable[indexFor(key.hashCode())];
-	while(ent != NULL){
+	while(ent != NULL)
+	{
 		if(ent->hashCode() == hash &&
 				(&key == &ent->getKey() ||
-						key.equals(&ent->getKey()))){
+						key.equals(&ent->getKey())))
+		{
 			return (ent);
 		}
 
@@ -352,10 +359,12 @@ HashMap::Entry* HashMap::removeEntryForKey(Object& key)
 	Entry **slot = bucketTable + slotIndex;
 	Entry *ent = *slot;
 	Entry *tcache;
-	while(ent){
+	while(ent)
+	{
 		if(ent->hashCode() == hash &&
 				(&key == &ent->getKey() ||
-						key.equals(&ent->getKey()))){
+						key.equals(&ent->getKey())))
+		{
 			--(size);
 
 			tcache = ent;
@@ -363,7 +372,8 @@ HashMap::Entry* HashMap::removeEntryForKey(Object& key)
 			ent->unlink(slot);
 
 			return (ent);
-		} else
+		}
+		else
 			ent = ent->iterate();
 	}
 
@@ -384,16 +394,21 @@ HashMap::Entry* HashMap::removeEntryForKey(Object& key)
 bool HashMap::resize(unsigned long newSize)
 {
 	Entry **oldTable = bucketTable;
-	if(capacity == MAXIMUM_CAPACITY){
+	if(capacity == MAXIMUM_CAPACITY)
+	{
 		threshold = MAXIMUM_CAPACITY;
 		return (false);
-	} else {
+	}
+	else
+	{
 		Entry **newTable = (Entry**) krcalloc(oldTable, newSize);
-		if(newTable){
+		if(newTable)
+		{
 			transferAll(newTable, newSize);
 			bucketTable = newTable;
 			return (true);
-		} else
+		}
+		else
 			return (false);
 	}
 }
@@ -444,24 +459,33 @@ void HashMap::transferAll(Entry **newTable, unsigned long newSize)
 	Entry *ent = NULL;
 	Entry *copy;
 
-	if(src == newTable){
-		for(unsigned long slotIndex = 0; slotIndex < oldSize; slotIndex++){
+	if(src == newTable)
+	{
+		for(unsigned long slotIndex = 0; slotIndex < oldSize; slotIndex++)
+		{
 			ent = *slot;
-			while(ent){
-				if(indexFor(ent->hashCode()) != slotIndex){
+			while(ent)
+			{
+				if(indexFor(ent->hashCode()) != slotIndex)
+				{
 					copy = ent;
 					ent = ent->iterate();
 					transfer(copy, slot);
-				} else
+				}
+				else
 					ent = ent->iterate();
 			}
 
 			++(slot);
 		}
-	} else {
-		for(unsigned long slotIndex = 0; slotIndex < oldSize; slot++){
+	}
+	else
+	{
+		for(unsigned long slotIndex = 0; slotIndex < oldSize; slot++)
+		{
 			ent = *slot;
-			while(ent){
+			while(ent)
+			{
 				copy = ent;
 				ent = ent->iterate();
 				transfer(copy, slot);

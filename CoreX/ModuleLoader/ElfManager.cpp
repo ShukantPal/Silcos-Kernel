@@ -31,16 +31,19 @@ void ElfLinker::__fill_edbg(RelEntry *rel, class ElfManager &programContainer){
 unsigned long ElfManager::getLimitAddress(ElfManager *mgr)
 {
 	unsigned long maxAddrFound = 0, curAddrFound;
-
 	unsigned long phdrIndex = 0;
 	unsigned long phdrCount = mgr->phdrCount;
 	ProgramHeader *programHeader = mgr->phdrTable;
 
-	while(phdrIndex < phdrCount){
-		if(programHeader->entryType == PT_LOAD || programHeader->entryType == PT_DYNAMIC){
+	while(phdrIndex < phdrCount)
+	{
+		if(programHeader->entryType == PT_LOAD || programHeader->entryType == PT_DYNAMIC)
+		{
 			curAddrFound = programHeader->virtualAddress + programHeader->memorySize;
 			if(maxAddrFound < curAddrFound)
+			{
 				maxAddrFound = curAddrFound;
+			}
 		}
 
 		++(programHeader);
@@ -55,12 +58,16 @@ void ElfManager::loadBinary(unsigned long address)
 	// This part loads the module's binary into kernel memory & places
 	// all segments into the correct areas.
 	unsigned long limitVAddr = ElfManager::getLimitAddress(this);
-	if(limitVAddr){
+	if(limitVAddr)
+	{
 		pageCount = NextPowerOf2(limitVAddr) >> KPGOFFSET;
 
-		if(address == 0){
+		if(address == 0)
+		{
 			baseAddress = KiPagesAllocate(HighestBitSet(pageCount), ZONE_KMODULE, FLG_NONE);
-		} else {
+		}
+		else
+		{
 			baseAddress = address;
 		}
 
@@ -70,8 +77,10 @@ void ElfManager::loadBinary(unsigned long address)
 		unsigned long segIndex = 0;
 		unsigned long segCount = phdrCount;
 		ProgramHeader *segHdr = phdrTable;
-		while(segIndex < segCount){
-			if(segHdr->entryType == PT_LOAD || segHdr->entryType == PT_DYNAMIC){
+		while(segIndex < segCount)
+		{
+			if(segHdr->entryType == PT_LOAD || segHdr->entryType == PT_DYNAMIC)
+			{
 				memcpyf(
 						(const Void *) ((UBYTE *) binaryHeader + segHdr->fileOffset),
 						(Void *) (baseAddress + segHdr->virtualAddress),
@@ -80,7 +89,8 @@ void ElfManager::loadBinary(unsigned long address)
 
 				// Segments like BSS have extra space at the end which needs all
 				// set to zeros
-				if(segHdr->fileSize < segHdr->memorySize){
+				if(segHdr->fileSize < segHdr->memorySize)
+				{
 					memsetf(
 							(Void *) ((UBYTE *) baseAddress + segHdr->virtualAddress + segHdr->fileSize),
 							0,
@@ -92,7 +102,9 @@ void ElfManager::loadBinary(unsigned long address)
 			++(segIndex);
 			++(segHdr);
 		}
-	} else {
+	}
+	else
+	{
 		// This should rarely happen, but the kernel is ready for malicious modules
 		// and module-loading fails.
 		pageCount = 0;
@@ -127,7 +139,8 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 	// A dynamic segment should be present in all kernel modules, because they
 	// need to be linked with the kernel.
 	ProgramHeader *dynamicSegment = getProgramHeader(PT_DYNAMIC);
-	if(dynamicSegment != NULL){
+	if(dynamicSegment != NULL)
+	{
 		dynamicTable = (DynamicEntry *) (baseAddress + dynamicSegment->virtualAddress);
 		dynamicEntryCount = dynamicSegment->fileSize / sizeof(DynamicEntry);
 
@@ -139,7 +152,8 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		DynamicEntry *dsmHashEntry = getDynamicEntry(DT_HASH);
 
 		if(dsmEntry != NULL && dsmCountEntry != NULL
-				&& dsmNamesEntry != NULL && dsmHashEntry != NULL){
+				&& dsmNamesEntry != NULL && dsmHashEntry != NULL)
+		{
 			// Fill dynamic symbol table field
 			dynamicSymbols.entryTable = (Symbol *) ((UBYTE *) binaryHeader + dsmEntry->refPointer);
 			dynamicSymbols.nameTable = (char *) ((UBYTE *) binaryHeader + dsmNamesEntry->refPointer);
@@ -152,7 +166,8 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 			dynamicHash.chainTable = dsmHashContents + 2 + dynamicHash.bucketEntries;
 
 			dynamicSymbols.entryCount = dynamicHash.chainEntries;
-		} else
+		}
+		else
 			fillBlankDsm();
 
 		// This section searches for the relocation tables of both types (RELA &
@@ -162,40 +177,51 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		DynamicEntry *dRelTableSizeEntry = getDynamicEntry(DT_RELSZ);
 		DynamicEntry *dRelSizeEntry = getDynamicEntry(DT_RELENT);
 
-		if(dRelEntry != NULL && dRelTableSizeEntry != NULL && dRelSizeEntry != NULL){
-			Dbg("_rel ");
+		if(dRelEntry != NULL && dRelTableSizeEntry != NULL && dRelSizeEntry != NULL)
+		{
+			DbgLine("Boot Module - Linking (rel-type Elf) ");
 			relTable.entryTable = (RelEntry *) (baseAddress + dRelEntry->refPointer);
 			relTable.entrySize = dRelSizeEntry->refValue;
 			relTable.entryCount = dRelTableSizeEntry->refValue / relTable.entrySize;
-		} else
+		}
+		else
 			relTable.entryCount = 0;
 
 		DynamicEntry *dRelaEntry = getDynamicEntry(DT_RELA);
 		DynamicEntry *dRelaTableSizeEntry = getDynamicEntry(DT_RELASZ);
 		DynamicEntry *dRelaSizeEntry = getDynamicEntry(DT_RELAENT);
 
-		if(dRelaEntry != NULL && dRelaTableSizeEntry != NULL && dRelaSizeEntry != NULL){
-			Dbg("_rela ");
+		if(dRelaEntry != NULL && dRelaTableSizeEntry != NULL && dRelaSizeEntry != NULL)
+		{
+			DbgLine("Boot Module - Linking (rela-type Elf) ");
 			relaTable.entryTable = (RelaEntry *) (baseAddress + dRelaEntry->refPointer);
 			relaTable.entrySize = dRelaSizeEntry->refValue;
 			relaTable.entryCount = dRelaTableSizeEntry->refValue / relaTable.entrySize;
-		} else
+		}
+		else
 			relaTable.entryCount = 0;
 
 		DynamicEntry *dPltRelEntry = getDynamicEntry(DT_PLTREL);
 		DynamicEntry *dPltRelSzEntry = getDynamicEntry(DT_PLTRELSZ);
 		DynamicEntry *dPltJmpEntry = getDynamicEntry(DT_JMPREL);
 
-		if(dPltRelEntry != NULL && dPltRelSzEntry != NULL && dPltJmpEntry != NULL){
+		if(dPltRelEntry != NULL && dPltRelSzEntry != NULL && dPltJmpEntry != NULL)
+		{
 			pltRelocTable.relocType = dPltRelEntry->refValue;
 			pltRelocTable.tableLocation = baseAddress + dPltJmpEntry->refPointer;
 
 			if(pltRelocTable.relocType == DT_REL)
+			{
 				pltRelocTable.entryCount = dPltRelSzEntry->refValue / sizeof(RelEntry);
+			}
 			else
+			{
 				pltRelocTable.entryCount = dPltRelSzEntry->refValue / sizeof(RelaEntry);
+			}
 		}
-	} else {
+	}
+	else
+	{
 		DbgLine(msgDynamicSegmentMissing);
 		dynamicTable = NULL;
 		dynamicEntryCount = 0;
@@ -207,7 +233,8 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 	}
 
 	DynamicEntry *init = this->getDynamicEntry(DT_INIT);
-	if(init){
+	if(init)
+	{
 		Dbg("init: ");
 		DbgInt(init->refPointer);
 		DbgLine(" ");
@@ -235,15 +262,19 @@ Symbol* ElfManager::getStaticSymbol(const char *name)
  */
 ProgramHeader *ElfManager::getProgramHeader(PhdrType typeRequired)
 {
-	if(phdrTable){
+	if(phdrTable)
+	{
 		unsigned long testIndex = 0;
 		unsigned long testCount = phdrCount;
 		ProgramHeader *testPhdr = phdrTable;
 
-		while(testIndex < testCount){
+		while(testIndex < testCount)
+		{
 			if(testPhdr->entryType == typeRequired)
+			{
 				return (testPhdr);
-
+			}
+			
 			++(testPhdr);
 			++(testIndex);
 		}
@@ -266,13 +297,18 @@ ProgramHeader *ElfManager::getProgramHeader(PhdrType typeRequired)
  */
 DynamicEntry *ElfManager::getDynamicEntry(DynamicTag tag)
 {
-	if(dynamicTable){
+	if(dynamicTable)
+	{
 		unsigned long entryIndex = 0;
 		DynamicEntry *entry = dynamicTable;
 
-		while(entryIndex < dynamicEntryCount){
+		while(entryIndex < dynamicEntryCount)
+		{
 			if(entry->Tag == tag)
+			{
 				return (entry);
+			}
+			
 			++(entryIndex);
 			++(entry);
 		}

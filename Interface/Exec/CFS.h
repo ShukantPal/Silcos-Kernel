@@ -35,7 +35,7 @@ void UpdateCFS(
  * Summary:
  * This function inserts the KRUNNABLE to the CFS scheduler class.
  */
-void InsertCFS(
+KRUNNABLE *InsertCFS(
 	KRUNNABLE *runner,
 	struct Processor *
 );

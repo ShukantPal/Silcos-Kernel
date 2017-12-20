@@ -43,14 +43,16 @@
 	#define L1_CACHE_ALIGN 64
 #endif
 
-struct Slab {
+struct Slab
+{
 	LinkedListNode liLinker;
 	STACK bufferStack;
 	unsigned long colouringOffset;
 	unsigned long freeCount;
 };
 
-struct ObjectInfo {
+struct ObjectInfo
+{
 	LinkedListNode liLinker;// Used for listing this, for pressurizing vmm
 	const char *name;// Name of the object, used for debugging
 	unsigned long rawSize;// Raw size of the object
@@ -67,7 +69,7 @@ struct ObjectInfo {
 	Slab *emptySlab;// Cache for a empty slab
 	CircularList partialList;// List of partial slabs
 	CircularList fullList;// List of complete slabs
-	SPIN_LOCK lock;// Serialization lock
+	Spinlock lock;// Serialization lock
 };
 
 extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize,

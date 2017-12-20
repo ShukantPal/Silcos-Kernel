@@ -57,28 +57,40 @@ BinaryTree::~BinaryTree()
  */
 bool BinaryTree::insert(BinaryNode& node, BinaryTree& bst)
 {
-	if(bst.isNil(bst.treeRoot)){
+	if(bst.isNil(bst.treeRoot))
+	{
 		bst.treeRoot = &node;
-	} else {
+	}
+	else
+	{
 		unsigned long nkey = node.key();
 		BinaryNode *parent = NULL;
 		BinaryNode *leaf = bst.treeRoot;
-		while(!bst.isNil(leaf)){
+		while(!bst.isNil(leaf))
+		{
 			parent = leaf;
 
-			if(nkey < parent->key()){
+			if(nkey < parent->key())
+			{
 				leaf = parent->getLeftChild();
-			} else if(nkey > parent->key()){
+			}
+			else if(nkey > parent->key())
+			{
 				leaf = parent->getRightChild();
-			} else {
+			}
+			else
+			{
 				parent->associatedValue = node.val();
 				return (false);
 			}
 		}
 
-		if(nkey < parent->key()){
+		if(nkey < parent->key())
+		{
 			parent->leftChild = &node;
-		} else {
+		}
+		else
+		{
 			parent->rightChild = &node;
 		}
 
@@ -107,24 +119,30 @@ bool BinaryTree::insert(BinaryNode& node, BinaryTree& bst)
 void* BinaryTree::getLowerBoundFor(unsigned long key)
 {
 	BinaryNode *tNode = treeRoot;
-	BinaryNode *closestNode = NULL;
+	BinaryNode *closestNode = nil;
 
-	while(tNode != NULL){
+	while(!isNil(tNode))
+	{
 		if(tNode->key() == key)
+		{
 			return (tNode->val());
-		else if(key < tNode->key()){
+		}
+		else if(key < tNode->key())
+		{
 			tNode = tNode->getLeftChild();
-		} else {
-			if(!closestNode ||
-					key - closestNode->key() <
-							key - tNode->key()){
+		}
+		else
+		{
+			if(isNil(closestNode) || key - closestNode->key() > key - tNode->key())
+			{
 				closestNode = tNode;
 			}
+			
 			tNode = tNode->getRightChild();
 		}
 	}
 
-	return (closestNode) ? closestNode->val() : NULL;
+	return (!isNil(closestNode)) ? closestNode->val() : NULL;
 }
 
 /**
@@ -147,24 +165,34 @@ void* BinaryTree::getLowerBoundFor(unsigned long key)
 void* BinaryTree::getUpperBoundFor(unsigned long key)
 {
 	BinaryNode* tNode = treeRoot;
-	BinaryNode* closestNode = NULL;
+	BinaryNode* closestNode = nil;
 
-	while(tNode != NULL){
+	while(!isNil(tNode))
+	{
 		if(tNode->key() == key)
+		{
 			return (tNode->val());
-		else if(key < tNode->key()){
-			if(!closestNode ||
-					closestNode->key() - key <
-						tNode->key() - key){
+		}
+		else if(key < tNode->key())
+		{
+			if(isNil(closestNode) || closestNode->key() - key > tNode->key() - key)
+			{
+				Dbg("/w");
 				closestNode = tNode;
 			}
 			tNode = tNode->getLeftChild();
-		} else {
+			Dbg("-l");
+		}
+		else
+		{
+			Dbg("-r");
 			tNode = tNode->getRightChild();
 		}
 	}
 
-	return (closestNode) ? closestNode->val() : NULL;
+	if(!isNil(closestNode))
+		DbgLine("nnil");
+	return (!isNil(closestNode)) ? closestNode->val() : NULL;
 }
 
 /**
@@ -183,36 +211,44 @@ void* BinaryTree::getUpperBoundFor(unsigned long key)
 void* BinaryTree::getClosestOf(unsigned long key)
 {
 	BinaryNode* tNode = treeRoot;
-	BinaryNode* closestNode = NULL;
+	BinaryNode* closestNode = nil;
 	bool isClosestNodeLower = false;// no meaning when closestNode is NULL
 
-	while(tNode != NULL){
-		if(tNode->key() == key){
+	while(!isNil(tNode))
+	{
+		if(tNode->key() == key)
+		{
 			return (tNode->val());
-		} else if(key < tNode->key()){
-			if(!closestNode){
-				if(isClosestNodeLower && tNode->key() - key <
-						key - closestNode->key()){
+		}
+		else if(key < tNode->key())
+		{
+			if(isNil(closestNode))
+			{
+				if(isClosestNodeLower && tNode->key() - key < key - closestNode->key())
+				{
 					closestNode = tNode;
 					isClosestNodeLower = false;
 				}
-				else if(tNode->key() - key <
-						closestNode->key() - key){
+				else if(tNode->key() - key < closestNode->key() - key)
+				{
 					closestNode = tNode;
 					isClosestNodeLower = false;
 				}
 			}
 
 			tNode = tNode->getLeftChild();
-		} else {
-			if(!closestNode){
-				if(isClosestNodeLower && key - tNode->key() <
-						key - closestNode->key()){
+		}
+		else
+		{
+			if(isNil(closestNode))
+			{
+				if(isClosestNodeLower && key - tNode->key() < key - closestNode->key())
+				{
 					closestNode = tNode;
 					isClosestNodeLower = true;
 				}
-				else if(key - tNode->key() <
-						closestNode->key() - key){
+				else if(key - tNode->key() < closestNode->key() - key)
+				{
 					closestNode = tNode;
 					isClosestNodeLower = true;
 				}
@@ -220,7 +256,19 @@ void* BinaryTree::getClosestOf(unsigned long key)
 		}
 	}
 
-	return (closestNode) ? (closestNode->val()) : NULL;
+	return (!isNil(closestNode)) ? (closestNode->val()) : NULL;
+}
+
+void *BinaryTree::getMaximum()
+{
+	BinaryNode *tNode = treeRoot;
+
+	while(!isNil(tNode->getRightChild()))
+	{
+		tNode = tNode->getRightChild();
+	}
+
+	return (isNil(tNode)) ? NULL : tNode->val();
 }
 
 /**
@@ -243,13 +291,20 @@ void* BinaryTree::getClosestOf(unsigned long key)
 BinaryNode *BinaryTree::search(unsigned long key, BinaryTree& bst)
 {
 	BinaryNode *tnode = bst.treeRoot;
-	while(!bst.isNil(tnode)){
+	while(!bst.isNil(tnode))
+	{
 		if(key < tnode->key())
+		{
 			tnode = tnode->getLeftChild();
+		}
 		else if(key > tnode->key())
+		{
 			tnode = tnode->getRightChild();
+		}
 		else
+		{
 			return (tnode);
+		}
 	}
 
 	return (NULL);

@@ -178,7 +178,8 @@ bool String::endsWith(String& suffix)
  */
 unsigned long String::lengthOf(char *chSeq)
 {
-	for(long index=0; index<480; index++){
+	for(long index=0; index<480; index++)
+	{
 		if(*chSeq == '\0')
 			return (index);
 
@@ -231,7 +232,8 @@ int String::compareTo(String& anotherString)
 	const char *val1 = value;
 	const char *val2 = anotherString.value;
 
-	for(; srhCount > 0; srhCount--){
+	for(; srhCount > 0; srhCount--)
+	{
 		if(*val1 != *val2){
 			return (*val1 - *val2);
 		}
@@ -294,7 +296,8 @@ bool String::startsWith(String& prefix, unsigned int offset)
 	const char *pChar = prefix.value;
 
 	unsigned int counter = prefix.count;
-	while(--counter >= 0){
+	while(--counter >= 0)
+	{
 		if(*tChar != *pChar)
 			return (false);
 
@@ -331,10 +334,12 @@ bool String::startsWith(String& prefix, unsigned int offset)
  */
 String *String::substring(unsigned int beginIndex, unsigned int endIndex)
 {
-	if(beginIndex >= count || endIndex >= count
-			|| endIndex <= beginIndex)
+	if(beginIndex >= count || endIndex >= count || endIndex <= beginIndex)
+	{
 		return (NULL);
-	else {
+	}
+	else
+	{
 		return new(tString) String(value, beginIndex, endIndex - beginIndex + 1);
 	}
 }
@@ -345,7 +350,8 @@ unsigned int String::hashCode(const char *value)
 {
 	unsigned int hashValue = 0;
 
-	while(*value){
+	while(*value)
+	{
 		hashValue *= FNV_PRIME;
 		hashValue ^= *value;
 
@@ -363,7 +369,8 @@ unsigned int String::hashCode()
 	unsigned int hashValue = 0;
 	const char *indexedChar = value;
 
-	for(unsigned int i = 0; i < count; i++){
+	for(unsigned int i = 0; i < count; i++)
+	{
 		hashValue *= FNV_PRIME;
 		hashValue ^= *indexedChar;
 
@@ -400,7 +407,8 @@ unsigned int String::indexOf(char ch, unsigned int fromIndex)
 
 	unsigned int schCounter = count - fromIndex + 1;
 	const char *tCharacter = value + fromIndex;
-	while(schCounter-- > 0){
+	while(schCounter-- > 0)
+	{
 		if((char) *tCharacter == ch)
 			return (fromIndex + count - schCounter - 1);
 
@@ -442,16 +450,21 @@ unsigned int String::indexOf(const char *source, unsigned int sourceCount, const
 	char first = *target;
 	unsigned int max = sourceCount - targetCount;
 
-	for(unsigned int i = 0; i < max; i++){
-		if(source[i] != first){
+	for(unsigned int i = 0; i < max; i++)
+	{
+		if(source[i] != first)
+		{
 			while(++i <= max && source[i] != first){}
 		}
 
-		if(i <= max){
+		if(i <= max)
+		{
 			int sidx = i + 1;
 			int endx = sidx + targetCount - 1;
-			for(unsigned int tidx = 1; sidx < endx && source[sidx] ==
-					target[tidx]; sidx++, tidx++);
+			for(unsigned int tidx = 1;
+					sidx < endx && source[sidx] == target[tidx];
+					sidx++, tidx++)
+			{}
 
 			if(sidx == endx)
 				return (i);
@@ -485,8 +498,10 @@ unsigned int String::lastIndexOf(char ch, unsigned int fromIndex)
 
 	unsigned int schCounter = fromIndex + 1;
 	const char *tchar = value +  fromIndex;
-	while(schCounter--  > 0){
-		if(*tchar == ch){
+	while(schCounter--  > 0)
+	{
+		if(*tchar == ch)
+		{
 			return (schCounter - 1);
 		}
 		--(tchar);
@@ -521,7 +536,8 @@ bool String::regionMatches(unsigned int thisOffset, String& otherString, unsigne
 							count > 0)
 		return (false);
 
-	while(length-- > 0){
+	while(length-- > 0)
+	{
 		if(value[thisOffset++] != otherString.value[otherOffset++])
 			return (false);
 	}

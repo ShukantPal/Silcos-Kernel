@@ -33,7 +33,8 @@ void Arrays::copy(const void *org, void *dst, unsigned int copySize)
 {
 	const byte *orgPtr = (const byte*) org;
 	byte *dstPtr = (byte*) dst;
-	while(copySize-- > 0){
+	while(copySize-- > 0)
+	{
 		*dstPtr = *orgPtr;
 	}
 }

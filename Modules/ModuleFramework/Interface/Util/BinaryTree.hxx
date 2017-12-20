@@ -202,7 +202,8 @@ public:
 	 */
 	inline void *get(unsigned long key)
 	{
-		if(treeRoot){
+		if(treeRoot)
+		{
 			BinaryNode *tNode = search(key, *this);
 			if(tNode != NULL)
 				return tNode->val();
@@ -216,9 +217,11 @@ public:
 	 */
 	inline bool set(unsigned long key, void *value)
 	{
-		if(treeRoot){
+		if(treeRoot)
+		{
 			BinaryNode *tNode = search(key, *this);
-			if(tNode != NULL){
+			if(tNode != NULL)
+			{
 				tNode->associatedValue = value;
 				return (true);
 			}
@@ -234,6 +237,7 @@ public:
 	void* getLowerBoundFor(unsigned long key);
 	void* getUpperBoundFor(unsigned long key);
 	void* getClosestOf(unsigned long key);
+	void* getMaximum();
 
 	//virtual String& toString();
 protected:
@@ -243,19 +247,15 @@ protected:
 	inline bool isNil(BinaryNode *node){ return (node == nil); }
 	inline bool isNil(BinaryNode& node){ return (&node == nil); }
 
-	inline void assignLeft(
-			BinaryNode& tNode,
-			BinaryNode& tnChild
-	){
+	inline void assignLeft(BinaryNode& tNode, BinaryNode& tnChild)
+	{
 		tNode.leftChild = &tnChild;
 		if(!isNil(tnChild))
 			tnChild.directParent = &tNode;
 	}
 
-	inline void assignRight(
-			BinaryNode& tNode,
-			BinaryNode& tnChild
-	){
+	inline void assignRight(BinaryNode& tNode, BinaryNode& tnChild)
+	{
 		tNode.rightChild = &tnChild;
 		if(!isNil(tnChild))
 			tnChild.directParent = &tNode;
@@ -277,18 +277,23 @@ protected:
 	 *
 	 * Author: Shukant Pal
 	 */
-	inline BinaryNode& replaceChild(
-			BinaryNode& tNode,
-			BinaryNode& nNode
-	){
-		if(isNil(tNode.getParent())){
+	inline BinaryNode& replaceChild(BinaryNode& tNode, BinaryNode& nNode)
+	{
+		if(isNil(tNode.getParent()))
+		{
 			treeRoot = &nNode;
 			nNode.directParent = nil;
-		} else {
+		}
+		else
+		{
 			if(tNode.isLeftChild())
+			{
 				assignLeft(*tNode.getParent(), nNode);
+			}
 			else
+			{
 				assignRight(*tNode.getParent(), nNode);
+			}
 		}
 
 		return (nNode);
