@@ -154,19 +154,26 @@
 #define IA32_L3_MASK_0								0xC90
 #define IA32_L3_MASK(n)								IA32_L3_MASK + n
 
+namespace IA32
+{
+
 typedef
-union {
-	struct {
+union APICBaseMSR
+{
+	struct
+	{
 		U64 R1		: 8;
 		U64 BSP		: 1;/* Set if this is the BSP */
 		U64 R2		: 1;
-		U64 EXTD		: 1;/* x2APIC Extension Flag */
+		U64 EXTD	: 1;/* x2APIC Extension Flag */
 		U64 EN		: 1;/* Global APIC Enable/Disable Flag s*/
-		U64 APICBase	: 24;/* Base of xAPIC registers */
+		U64 apicBase	: 24;/* Base of xAPIC registers */
 		U64 RESERVED	: 28;
 	};
-	U64 MSRValue;
+	U64 msrValue;
 } IA32_APIC_BASE_MSR;
+
+}
 
 static inline
 void ReadMSR(U32 msrOffset, U64 *msrValue){

@@ -1,8 +1,0 @@
-# CircuitKernel Methodology
-
-# Ways to load data files in kernel-module executable.
-
-# 1. Place a string in code
-
-# 2. Add another segment (any name, 'KtermConfigurationFile') in which the file in added
-# in a section .ktermConfigurationSection

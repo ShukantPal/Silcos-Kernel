@@ -9,7 +9,7 @@
 #ifndef EXEC_DPC_H
 #define EXEC_DPC_H
 
-#include "Exec.h"
+#include <Exec/KTask.h>
 
 typedef
 struct {

@@ -47,6 +47,12 @@ void ImmatureHang(const char *dbgString){
 	while(TRUE){ asm("hlt"); }
 }
 
+extern "C" void __cxa_pure_virtual()
+{
+	DbgLine("compiler err: __cxa_pure_virtual() called, c++ virtual function problem!");
+}
+
+
 PROCESSOR_SETUP_INFO *dInfo;
 /**
  * Function: ValidateSupport()
@@ -135,9 +141,7 @@ export_asm void Main(
 
 	SetupAPs();
 	SetupTick();
-	ImmatureHang("ap-done");
 
 	BSPGrantPermit();
-
-	EraseIdentityPage();
+//	EraseIdentityPage();
 }

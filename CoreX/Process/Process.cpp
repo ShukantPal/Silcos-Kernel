@@ -52,7 +52,7 @@ void InitPTable(){
 CONTEXT *GetContext()
 {
 	PROCESSOR *pCPU = GetProcessorById(PROCESSOR_ID);
-	KTHREAD *pThread = pCPU->PoExT;
+	KTHREAD *pThread = pCPU->ctask;
 	KPROCESS *pProcess = KeGetProcess(pThread->ParentID);
 	return (pProcess->AddressSpace);
 }

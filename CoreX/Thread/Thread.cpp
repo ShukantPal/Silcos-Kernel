@@ -42,10 +42,10 @@ KTHREAD *KeGetThread(ID threadID){
 
 void KiThreadConstruct(void *kthreadPtr){
 	KTHREAD *thread = (KTHREAD*) kthreadPtr;
-	thread->Gate.ID = (unsigned long) kthreadPtr;
-	thread->Gate.UserStack = &thread->UserStack;
-	thread->Gate.KernelStack = &thread->KernelStack;	
-	thread->Gate.Run = NULL;
+	thread->Gate.id = (unsigned long) kthreadPtr;
+	thread->Gate.userStack = &thread->UserStack;
+	thread->Gate.kernelStack = &thread->KernelStack;	
+	thread->Gate.run = NULL;
 }
 
 char *msgInitThread = "Setting up kInitThread...";
@@ -59,9 +59,9 @@ void InitTTable(void){
 	/* Initialize Fields */
 	KTHREAD *kInit = kInitThread;
 	KiSetupRunnable((KRUNNABLE*) kInit, (ADDRESS) kInit, ThreadTp);
-	kInit->Gate.TaskFlags = (1 << 0) | (1 << 1);
-	kInit->Gate.EIP = (void*) &Init;
-	kInit->Gate.Context = NULL;
+	kInit->Gate.taskFlags = (1 << 0) | (1 << 1);
+	kInit->Gate.eip = (void*) &Init;
+	kInit->Gate.mmu = NULL;
 	kInit->Priority = 0xFF;
 	kInit->Privelege = 0xFF;
 	kInit->Flags = 0;
@@ -72,19 +72,19 @@ void InitTTable(void){
 	/* Setup Stack */
 	KSTACKINFO *kInitStack = &(kInit->KernelStack);
 	ADDRESS kisBase = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
-	kInitStack->Base = kisBase + KPGSIZE - 4;
-	kInitStack->Pointer = kisBase + KPGSIZE - 64;
+	kInitStack->base = kisBase + KPGSIZE - 4;
+	kInitStack->pointer = kisBase + KPGSIZE - 64;
 	EnsureUsability(kisBase, NULL, FLG_ATOMIC, KernelData);
 
 	PROCESSOR *cpu = GetProcessorById(PROCESSOR_ID);
-	cpu->PoExT = (void*) kIdlerThread;
-	kIdlerThread->Gate.RightLinker = (KRUNNABLE*) kInitThread;
+	cpu->ctask = (void*) kIdlerThread;
+	kIdlerThread->Gate.next = (KRUNNABLE*) kInitThread;
 
-	KSCHEDINFO *bspSched = &cpu->SchedulerInfo;
+	KSCHEDINFO *bspSched = &cpu->crolStatus;
 	bspSched->CurrentQuanta = 10;
 	bspSched->LeftQuanta = 10;
 
-	KSCHED_ROLLER *rrRoller = &cpu->ScheduleClasses[RR_SCHED];
+	KSCHED_ROLLER *rrRoller = &cpu->scheduleClasses[RR_SCHED];
 	rrRoller->InsertRunner((KRUNNABLE*) kInitThread, cpu);
 }
 
@@ -119,32 +119,32 @@ void SetupRunqueue(){
 	idlerThread->Gate.RRM_ID = 100;
 		
 	KiSetupRunnable((KRUNNABLE*) setupThread, (ADDRESS) setupThread, ThreadTp);
-	setupThread->Gate.TaskFlags = (1 << 0) | (1 << 1);
-	setupThread->Gate.EIP = (void*) &APInitService;
-	setupThread->Gate.Context = NULL;
+	setupThread->Gate.taskFlags = (1 << 0) | (1 << 1);
+	setupThread->Gate.eip = (void*) &APInitService;
+	setupThread->Gate.mmu = NULL;
 	setupThread->Flags = 0;
 	setupThread->Status = Thread_Runnable;
 	setupThread->ParentID = (ID) NULL;
 	setupThread->Gate.RRM_ID = 9;
 	
 	KSTACKINFO *idlerStack = &(idlerThread->KernelStack);
-	idlerStack->Base = processor->ProcessorStack;
-	idlerStack->Pointer = processor->ProcessorStack - 64;
+	idlerStack->base = processor->ProcessorStack;
+	idlerStack->pointer = processor->ProcessorStack - 64;
 
 	KSTACKINFO *setupStack = &(setupThread->KernelStack);
 	unsigned long ssb = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
-	setupStack->Base = ssb + KPGSIZE - 4;
-	setupStack->Pointer = ssb + KPGSIZE - 64;
+	setupStack->base = ssb + KPGSIZE - 4;
+	setupStack->pointer = ssb + KPGSIZE - 64;
 	EnsureUsability(ssb, NULL, FLG_ATOMIC, KernelData);
 	
-	processor->PoExT = idlerThread;
-	idlerThread->Gate.RightLinker = (EXEC *) setupThread;
+	processor->ctask = idlerThread;
+	idlerThread->Gate.next = (EXEC *) setupThread;
 	
-	KSCHEDINFO *apSched = &processor->SchedulerInfo;
+	KSCHEDINFO *apSched = &processor->crolStatus;
 	apSched->CurrentQuanta = 10;
 	apSched->LeftQuanta = 10;
 	
-	KSCHED_ROLLER *rrRoller = &processor->ScheduleClasses[RR_SCHED];
+	KSCHED_ROLLER *rrRoller = &processor->scheduleClasses[RR_SCHED];
 	rrRoller->InsertRunner((KRUNNABLE*) setupThread, processor);
 }
 
@@ -160,9 +160,9 @@ int log_id = 2;
 KTHREAD *KThreadCreate(void *entry){
 	PROCESSOR *currentProcessor = GetProcessorById(PROCESSOR_ID);
 	KTHREAD *newThread = KNew(tdInfo, KM_SLEEP);
-	newThread->Gate.TaskFlags = (1 << 0) | (1 << 1);
-	newThread->Gate.EIP = entry;
-	newThread->Gate.Context = NULL;
+	newThread->Gate.taskFlags = (1 << 0) | (1 << 1);
+	newThread->Gate.eip = entry;
+	newThread->Gate.mmu = NULL;
 	newThread->Flags = 0;
 	newThread->Status = Thread_Runnable;
 	newThread->ParentID = (NULL);
@@ -170,8 +170,8 @@ KTHREAD *KThreadCreate(void *entry){
 	
 	KSTACKINFO *threadStack = &(newThread->KernelStack);
 	unsigned long stackAddress = KiPagesAllocate(2, ZONE_KMODULE, FLG_ATOMIC);
-	threadStack->Base = stackAddress + 8 * KPGSIZE - 4;
-	threadStack->Pointer = stackAddress + 8 * KPGSIZE - 64;
+	threadStack->base = stackAddress + 8 * KPGSIZE - 4;
+	threadStack->pointer = stackAddress + 8 * KPGSIZE - 64;
 	
 	unsigned long offset = 0;
 	while(offset < 8)
@@ -180,7 +180,7 @@ KTHREAD *KThreadCreate(void *entry){
 		++offset;
 	}
 
-	KSCHED_ROLLER *rrRoller = &(currentProcessor->ScheduleClasses[RR_SCHED]);
+	KSCHED_ROLLER *rrRoller = &(currentProcessor->scheduleClasses[RR_SCHED]);
 	rrRoller->InsertRunner((KTASK *) newThread, currentProcessor);
 	return (newThread);
 }

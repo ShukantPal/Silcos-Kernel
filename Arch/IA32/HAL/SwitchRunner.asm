@@ -1,173 +1,148 @@
 ; Copyright (C) - Shukant Pal
-
-; SwitchRunner.asm provides the dispatcher module for the CircuitScheduler
-; and consists of a intricate branching code. It provides services of the BSP
-; such as kTime, RRTS (Runner's Realtime Status), etc.
 ;
-; This file can be configured easily for -
-; 1. Which register's to save in context switch?
-; 2. BSP Services
+; provides the implementation for a scheduler-invoker on the ia32 arch, and
+; is called when ever the apic-timer 'ticks'.
 ;
-
 SECTION .bss
 	global ef
 	ef : resb 4
 
 SECTION .text
 
-	extern VAPICBase
-	extern BSP_ID
-	extern XMilliTime
-	global KiClockRespond
-	KiClockRespond:
-		MFENCE ; Finish all memory operations
+extern VAPICBase
+extern BSP_ID
+extern XMilliTime
+global KiClockRespond
+KiClockRespond:
+	MFENCE
 
-		PUSH EAX
-		PUSH EBX
-		PUSH ECX
-		PUSH EDX
-		PUSH ESI
-		PUSH EDI
-		PUSH EBP
+	PUSH EAX
+	PUSH EBX
+	PUSH ECX
+	PUSH EDX
+	PUSH ESI
+	PUSH EDI
+	PUSH EBP
 
-		MOV EBP, ESP 			; Load ESP into EBP
-		ADD EBP, 28 			; Load Interrupt Stack Frame
+	MOV EBP, ESP 							; load the stack-frame in EBP
+	ADD EBP, 28 							; go to the stack-frame with interrupt-context
 
-		MOV EDX, [VAPICBase] 	; Use APIC Registers
-		MOV EDX, [EDX + 0x20] 	; Load PROCESSOR_ID << 24
-		SHR EDX, 24				; Get APIC_ID
-		CMP [BSP_ID], EDX 		; Compare for BSP_ID
-		JNE KiScheduleEntry 	; If not the BSP, don't update time
+	MOV EDX, [VAPICBase]
+	MOV EDX, [EDX + 0x20] 					; load PROCESSOR_ID << 24
+	SHR EDX, 24								; load APIC_ID
+	CMP [BSP_ID], EDX 						; test if the cpu is the BSP
+	JNE KiScheduleEntry
 
-		; Update kTime
-		PUSH EDX				; Save PROCESSOR_ID on stack
-		MOV EDX, 1				; Load 1 for incrementing time
-		XADD [XMilliTime], EDX 	; Update time and load old time into EDX
-		CMP [XMilliTime], EDX	; Test for overflow in lower 32-bits
-		POP EDX					; Restore PROCESSOR_ID into EDX
-		JLE Incro				; If overflow occured, increment upper-32bits
-		JMP KiRunnerUpdate		; Else, continue
+	; Update kTime
+	PUSH EDX								; save PROCESSOR_ID on stack
+	MOV EDX, 1								; load 1 for incrementing time
+	XADD [XMilliTime], EDX 					; update time and load old time into EDX
+	CMP [XMilliTime], EDX					; test for overflow in lower 32-bits
+	POP EDX									; restore PROCESSOR_ID into EDX
+	JLE Incro								; if overflow occured, increment upper-32bits
+	JMP KiRunnerUpdate
 
-		Incro:
-		LOCK INC DWORD [XMilliTime + 4]
+Incro:
+	LOCK INC DWORD [XMilliTime + 4]			; increment upper-32 bits
 
-	KiRunnerUpdate:
-		
+KiRunnerUpdate:
 
-	; KiScheduleEntry() - 
-	;
-	; Summary:
-	; This function is used for invoking the scheduler in secure way. It is internal
-	; here and is directly used in APs. It assumes the registers to be PUSHed on the
-	; stack and the PROCESSOR_ID to be stored in the EDX register.
-	;
-	; It will grab the processor info, and then pass on the required information to the
-	; scheduler. From, there the scheduler will return to the KiScheduleExit code.
-	;
-	; This function operates inside the kernel stack of the thread.
-	;
-	; @Before PreemptAndScheduler, @Tick.asm
-	; @Version 1.2
-	; @Since Circuit 2.03
-	extern Schedule
-	KiScheduleEntry:
-		SHL EDX, 12								; Get KPAGE offset for the PROCESSOR struct
-		ADD EDX, 0xc0000000 + 20 * 1024 * 1024	; Add offset to KCPUINFO to get the PROCESSOR struct
+;-F-F-F-F-F-
+;
+; store the eip and save user-mode & kernel-mode stack-frame pointers for
+; later reference. invoke the scheduler by storing the cpu-struct in edx.
+;
+extern Schedule
+KiScheduleEntry:
+	SHL EDX, 12								; get the offset of the cpu-struct
+	ADD EDX, 0xc0000000 + 20 * 1024 * 1024	; load the address of cpu-struct
 
-		MOV EBX, [EDX + 24] 	; Runner Info
-		MOV EDI, [EBX + 32] 	; Runner's KernelStack
+	MOV EBX, [EDX + 24] 					; load the current kernel-task
+	MOV EDI, [EBX + 32] 					; cache the task's kernel-mode stack
 
-		MOV ECX, [EBP]
-		MOV [EBX + 16], ECX 	; Runner's EIP
+	MOV ECX, [EBP]							; load the eip from which interrupt has occured
+	MOV [EBX + 16], ECX 					; store eip into task->eip
 
-		CMP DWORD [EBP + 4], 0x8
-		je KiScheduleKernel
+	CMP DWORD [EBP + 4], 0x8				; test whether we came from a kernel/user context
+	JE KiScheduleKernel						; we have seperate handlers for each case
 
-		KiScheduleUser:
-			MOV ECX, [EBP + 12] ; UserStack.Pointer
-			MOV ESI, [EBX + 28]	; Store the UserStack
-			MOV [ESI + 4], ECX 	; Save UserStack.Pointer
-			SUB EBP, 28			; Load Save-Register StackFrame
-			MOV [EDI + 4], EBP	; Save KernelStack.Pointer
-			JMP KiInvokeScheduler ; Invoke the scheduler
+	KiScheduleUser:
+		MOV ECX, [EBP + 12] 				; load the user-mode stack pointer (from interrupt-frame)
+		MOV ESI, [EBX + 28]					; cache the user-mode struct
+		MOV [ESI + 4], ECX 					; save the user-mode pointer
+	KiScheduleKernel:
+		SUB EBP, 28							; come to the frame holding the saved registers
+		MOV [EDI + 4], EBP					; save the kernel-mode stack-pointer
 
-		KiScheduleKernel:
-			SUB EBP, 28			; Load Save-Register StackFrame
-			MOV [EDI + 4], EBP	; Save KernelStack.Pointer
+KiInvokeScheduler:
+	PUSH EDX								; save EDX (to avoid changes)
+	PUSH EDX								; pass cpu-argument
+	CALL Schedule
 
-		KiInvokeScheduler:
-		PUSH EDX
-		PUSH EDX				; Pass Arg-pCPU
-		CALL Schedule			; Scheduler the next Runner
+;-F-F-F-F-F-
+;
+; executes after the core-scheduler runs and the next kernel-task is stored
+; in the cpu-struct. calls task->run() for further execution of the system
+; software.
+;
+KiScheduleExit:
+	ADD ESP, 4								; go to previous stack-frame (before args)
+	POP EDX									; restore the cpu-struct
 
-	; KiScheduleExit() -
-	;
-	; Summary:
-	; It invokes the Run() command in the Runner's info.
-	;
-	; @Version1
-	; @Since Circuit 2.03
-	KiScheduleExit:
-		ADD ESP, 4
-		POP EDX
+	MOV EBX, [EDX + 24] 					; load the new-task
+	MOV EDI, [EBX + 32] 					; cache the task's kernel-stack struct
 
-		MOV EBX, [EDX + 24] ; New Runner
-		MOV EDI, [EBX + 32] ; Runner->KernelStack (*)
+	MOV ESP, [EDI + 4] 						; store the kernel-mode stack pointer
+	PUSH EBX								; save the task-struct on stack
+	ADD ESP, 4								; restore the stupid stack
 
-		MOV ESP, [EDI + 4] ; Runner.KernelStack->Pointer
-		PUSH EBX	; Save Runner
-		ADD ESP, 4
+	CMP DWORD [EBX + 20], 0					; test whether task->run() is 0
+	JE KiDispatchStatus						; if 0, do default execution, else below
+	PUSH EBX								; pass the task-arg
+	CALL [EBX + 20]							; call task->run()
 
-		CMP DWORD [EBX + 20], 0
-		JE KiDispatchStatus
-		PUSH EBX
-		CALL [EBX + 20] ; Runner.Run()	
+	KiDispatchStatus:
+		BTR DWORD [EBX + 24], 0				; check the dispatch status (new/already executed)
+		JC KiJumpNew						; if new, go to the new-task handler
 
-		KiDispatchStatus:
-		BTR DWORD [EBX + 24], 0
-		JC KiJumpNew
-		; EBX (Runner) = ESP - 32
+	; NOTE:::: EBX (Runner) = ESP - 32
 
+	CALL EOI								; ensure other interrupts are allowed (without overwriting edx)
+	POP EBP
+	POP EDI
+	POP ESI
+	POP EDX
+	POP ECX
+	POP EBX
+	POP EAX
+	IRET
+
+;-F-F-F-F-
+;
+; invokes a newly-created task which does not have any register stack-frame.
+;
+KiJumpNew:
+	BT DWORD [EBX + 24], 1					; test for kernel/user-mode dispatch
+	JC KiJumpKernel
+
+	KiJumpUser:
+		; //TODO: Implement user-mode intr return
+		PUSH DWORD 0x23
+		PUSH DWORD [EBX + 32]
+		PUSH DWORD (1 << 9) 				; push and eflags with IF=1
+		PUSH DWORD 0x0 ; CS
+		PUSH DWORD [EBX + 16]
 		CALL EOI
-		POP EBP
-		POP EDI
-		POP ESI
-		POP EDX
-		POP ECX
-		POP EBX
-		POP EAX
 		IRET
 
-	; KiJumpNew() -
-	;
-	; Summary - 
-	; This function is used to return to freshly made runners, because their interrupt state is not saved
-	; on the stack.
-	;
-	; @Version 1
-	; @Since Circuit 2.03
-	KiJumpNew:
-		BT DWORD [EBX + 24], 1
-		JC KiJumpKernel
+	KiJumpKernel:
+		PUSH DWORD (1 << 1) | (1 << 9) 		; push an eflags with IF=1
+		PUSH DWORD 0x8
+		PUSH DWORD [EBX + 16]
+		CALL EOI
+		IRET
 
-		KiJumpUser:
-			; //TODO: Implement user-mode intr return
-			PUSH DWORD 0x23
-			PUSH DWORD [EBX + 32]
-			PUSH DWORD (1 << 9) ; EFLAGS with IF
-			PUSH DWORD 0x0 ; CS
-			PUSH DWORD [EBX + 16]
-			CALL EOI
-			IRET
-
-		KiJumpKernel:
-			xchg bx, bx
-			PUSH DWORD (1 << 1) | (1 << 9) ; EFLAGS with IF
-			PUSH DWORD 0x8
-			PUSH DWORD [EBX + 16]
-			CALL EOI
-			IRET
-
+	; end-of-intr
 	global EOI
 	EOI:
 		MOV EDX, [VAPICBase]

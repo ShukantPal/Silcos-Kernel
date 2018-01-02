@@ -4,7 +4,7 @@
 #ifndef EXEC_CFS_H
 #define EXEC_CFS_H
 
-#include "Exec.h"
+#include <Exec/KTask.h>
 #include "ScheduleClass.h"
 #include <Util/AVLTree.h>
 

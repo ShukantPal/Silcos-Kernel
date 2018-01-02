@@ -5,7 +5,7 @@
 #ifndef MESSAGE_PASSING_H
 #define MESSAGE_PASSING_H
 
-#include <Exec/Exec.h>
+#include <Exec/KTask.h>
 #include "IPC.h"
 
 #include <Util/AVLTree.h>

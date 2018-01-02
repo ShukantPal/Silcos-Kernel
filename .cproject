@@ -70,7 +70,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Source|Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
 					</sourceEntries>
@@ -127,7 +127,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Source|Framework|Modules/ProcessManager/Interface/Process|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
 					</sourceEntries>

@@ -31,14 +31,14 @@
 typedef
 struct CircularListNode
 {
-	CircularListNode *ClnNext;
-	CircularListNode *ClnLast;
+	CircularListNode *next;
+	CircularListNode *last;
 } CLNODE;
 
 typedef
 struct CircularList {
-	unsigned long ClnCount;
-	CLNODE *ClnMain;
+	unsigned long count;
+	CircularListNode *lMain;
 } CLIST;
 
 #define CLN_LAST 0

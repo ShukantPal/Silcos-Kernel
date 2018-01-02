@@ -33,10 +33,10 @@ InitObjects = Compile/InitRuntime.o Compile/86InitPaging.o Compile/BlockPager.o 
 
 # IA32 Objects 
 ArchObjects = Compile/APBoot.o Compile/CMOS.o Compile/CPUID.o \
-Compile/FrameExtractor.o Compile/Pager.o Compile/Processor.o \
-Compile/TableManipulator.o Compile/APIC.o Compile/GDT.o Compile/IDT.o \
-Compile/IntrHook.o Compile/Load.o Compile/TSS.o \
-Compile/SwitchRunner.o Compile/ProcessorTopology.o
+Compile/CPUDriver.o Compile/FrameExtractor.o Compile/Pager.o \
+Compile/Processor.o Compile/TableManipulator.o Compile/APIC.o \
+Compile/GDT.o Compile/IDT.o Compile/IntrHook.o Compile/Load.o \
+Compile/TSS.o Compile/SwitchRunner.o Compile/ProcessorTopology.o
 
 ConfigObjects = Compile/RSDP.o Compile/RSDT.o Compile/MADT.o # ACPI tables
 
@@ -56,7 +56,8 @@ ProcessObjects = Compile/Process.o
 ThreadObjects = Compile/Thread.o
 
 # Core Scheduler + Scheduler Classes/Rollers
-SchedulerObjects = Compile/Scheduler.o Compile/RR.o #Compile/SchedList.o
+SchedulerObjects = Compile/Scheduler.o Compile/ScheduleRoller.o Compile/RR.o \
+Compile/RoundRobin.o Compile/RunqueueBalancer.o #Compile/SchedList.o
 
 UtilObjects = Compile/AVLTree.o Compile/CircuitPrimitive.o Compile/CircularList.o \
 Compile/Console.o Compile/Debugger.o Compile/LinkedList.o Compile/Stack.o
@@ -95,6 +96,9 @@ Compile/APBoot.o: $(ArchDir)/HAL/APBoot.asm
 
 Compile/CMOS.o: $(ArchDir)/HAL/CMOS.cpp
 	$(CC) $(CFLAGS) $(ArchDir)/HAL/CMOS.cpp -o Compile/CMOS.o
+
+Compile/CPUDriver.o: $(ArchDir)/HAL/CPUDriver.cpp
+	$(CC) $(CFLAGS) $(ArchDir)/HAL/CPUDriver.cpp -o Compile/CPUDriver.o
 
 Compile/CPUID.o: $(ArchDir)/HAL/CPUID.asm
 	$(AS) $(ASFLAGS) $(ArchDir)/HAL/CPUID.asm -o Compile/CPUID.o
@@ -206,7 +210,16 @@ BuildProcess: $(ProcessObjects)
 Compile/Scheduler.o: CoreX/Scheduling/Scheduler.cpp
 	$(CC) $(CFLAGS) CoreX/Scheduling/Scheduler.cpp -o Compile/Scheduler.o
 
-Compile/RR.o: $(IfcHAL)/Processor.h $(IfcRunnable)/Scheduler.h $(IfcRunnable)/RR.h CoreX/Scheduling/RR.cpp
+Compile/ScheduleRoller.o: CoreX/Scheduling/ScheduleRoller.cpp
+	$(CC) $(CFLAGS) CoreX/Scheduling/ScheduleRoller.cpp -o Compile/ScheduleRoller.o
+
+Compile/RoundRobin.o: CoreX/Scheduling/RoundRobin.cpp
+	$(CC) $(CFLAGS) CoreX/Scheduling/RoundRobin.cpp -o Compile/RoundRobin.o
+
+Compile/RunqueueBalancer.o: CoreX/Scheduling/RunqueueBalancer.cpp
+	$(CC) $(CFLAGS) CoreX/Scheduling/RunqueueBalancer.cpp -o Compile/RunqueueBalancer.o
+
+Compile/RR.o: $(IfcHAL)/Processor.h $(IfcRunnable)/Scheduler.h $(IfcRunnable)/RoundRobin.h CoreX/Scheduling/RR.cpp
 	$(CC) $(CFLAGS) CoreX/Scheduling/RR.cpp -o Compile/RR.o
 
 BuildScheduler: $(SchedulerObjects)
@@ -268,7 +281,7 @@ Link: Compile/IO.o
 	grub-mkrescue -o os.iso ../circuit-iso --modules="iso9660 part_msdos multiboot"
 
 q: BuildChain
-	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=1,cores=1,sockets=1 -display sdl
+	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=8,cores=1,sockets=1 -display sdl
 
 b: BuildChain
 	bochs

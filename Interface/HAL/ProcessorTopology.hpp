@@ -52,14 +52,21 @@ namespace HAL
  */
 struct Domain
 {
+	enum TransferMode
+	{
+		PushMigration,
+		PullMigration,
+		None
+	};
+
 	union
 	{
 		LinkedListNode liLinker;
 		CLNODE clnLinker;
 		struct
 		{
-			Domain *nextDomain;
-			Domain *previousDomain;
+			Domain *next;
+			Domain *last;
 		};
 	};
 	CircularList children;
@@ -69,7 +76,11 @@ struct Domain
 	unsigned int type;
 	unsigned int cpuCount;
 	KSCHED_ROLLER_DOMAIN rolDom[3];
-	SPIN_LOCK lock;
+	Executable::ScheduleDomain taskInfo[3];
+	TransferMode trmode;
+	Spinlock queueLock;// Lock for executing balance-routine with this domain
+	Spinlock searchLock;// Serializing searches for direct child-domains for balancing
+	Spinlock lock;// for changes to domain data
 
 	Domain()
 	{
@@ -78,7 +89,9 @@ struct Domain
 		this->level = 0;
 		this->type = 0;
 		this->cpuCount = 0;
-		this->lock = 0;
+		this->trmode = TransferMode::None;
+		SpinUnlock(&queueLock);
+		SpinUnlock(&lock);
 	}
 
 	Domain(unsigned int id, unsigned int level, unsigned int type,
@@ -91,10 +104,31 @@ struct Domain
 		this->cpuCount = 0;
 		memsetf((void*) &rolDom[0], 0,
 				sizeof(KSCHED_ROLLER_DOMAIN) * 3);
-		this->lock = 0;
+		this->trmode = TransferMode::None;
+		SpinUnlock(&queueLock);
+		SpinUnlock(&lock);
 	}
 };
 
+/**
+ * Class: ProcessorTopology
+ *
+ * Summary:
+ * Manages the topological relationships of hardware-processors and provides
+ * lookups based on various criteria.
+ *
+ * Function:
+ * init - setup the basic functionality for starting up the static-class
+ * plug - register a cpu in the topology
+ * unplug - remove a cpu from the topology
+ * del - (not impl)
+ *
+ * Sub-classes:
+ * Iterator - used for iterating over the topological tree (vertical/horizontal fashion)
+ * DomainBinding - search for various things in a specific domain
+ *
+ * Author: Shukant Pal
+ */
 class ProcessorTopology final
 {
 public:
@@ -111,14 +145,26 @@ public:
 
 	struct Iterator
 	{
-		static void ofEach(Processor *initialCPU,
-				void (*domainUpdater)(Domain *), unsigned long limit);
+		static void toggleLoad(Processor *initialCPU, Executable::ScheduleClass cls, long mag);
+
+		static void ofEach(Processor *initialCPU, void (*domainUpdater)(Domain *),
+					unsigned long limit);
+
+		static void forAll(Domain *in, void (*action)(Processor *proc));
 	};
 
 private:
 	ProcessorTopology();// No usage as object is statically used
 	static Domain *systemDomain;
 	static ObjectInfo *tDomain;
+};
+
+struct DomainBinding
+{
+	static Processor *getIdlest(Executable::ScheduleClass cls, Domain *pdom);
+	static Processor *getBusiest(Executable::ScheduleClass cls, Domain *pdom);
+	static Domain *findIdlestGroup(Executable::ScheduleClass cls, Domain *client);
+	static Domain *findBusiestGroup(Executable::ScheduleClass cls, Domain *client);
 };
 
 }

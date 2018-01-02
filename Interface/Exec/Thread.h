@@ -13,7 +13,7 @@
 #ifndef EXEC_THREAD_H
 #define EXEC_THREAD_H
 
-#include "Exec.h"
+#include <Exec/KTask.h>
 #include "SchedList.h"
 #include "Stack.h"
 #include <Memory/Pager.h>

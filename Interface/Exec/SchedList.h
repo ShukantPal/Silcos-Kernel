@@ -5,12 +5,12 @@
 #ifndef EXEC_SCHED_LIST_H
 #define EXEC_SCHED_LIST_H
 
-#include "Exec.h"
+#include <Exec/KTask.h>
 #include <Types.h>
 #include <Util/LinkedList.h>
 
 /* Scheduling Entities - All ExecTp's except ProcessGroupTp. */
-typedef struct Exec SchedEntity;
+typedef struct KTask SchedEntity;
 
 /* Helper macros */
 #define OwnerList(Ex) ((struct SchedulerList*) Ex -> OwnerList)

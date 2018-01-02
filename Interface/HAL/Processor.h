@@ -28,10 +28,11 @@
 #ifndef HAL_PROCESSOR_H
 #define HAL_PROCESSOR_H
 
+#include <IA32/APIC.h>
 #include "ProcessorTopology.hpp"
 #include <ACPI/MADT.h>
 #include <Exec/CFS.h>
-#include <Exec/RR.h>
+#include <Exec/RoundRobin.h>
 #include <Memory/CacheRegister.h>
 #include <Memory/KMemorySpace.h>
 #include <Exec/SchedList.h>
@@ -44,6 +45,14 @@
 #ifdef x86
 	#include <IA32/Processor.h>
 #endif
+
+struct ObjectInfo;
+
+namespace Executable
+{
+	class ScheduleRoller;
+	class RoundRobin;
+}
 
 extern U32 BSP_HID;
 
@@ -111,10 +120,12 @@ enum
 #define ExecProcess(P) ((struct Process *) &PTable[ExecThread(P) -> ParentID])
 
 typedef
-struct _KSCHEDINFO {
+struct ScheduleInfo
+{
 	unsigned long Load;
 	unsigned long RunnerPopulation;
-	KSCHED_ROLLER *CurrentRoller;/* Current task's scheduler */
+	//KSCHED_ROLLER *CurrentRoller;/* Current task's scheduler */
+	Executable::ScheduleRoller *presRoll;// presently running schedule-roller
 	unsigned long CurrentQuanta;/* Quanta given to current runner */
 	unsigned long RunnerInterruptable;/* Is pre-emption allowed */
 	unsigned long LeftQuanta;/* Amount of quanta left-over */
@@ -133,8 +144,74 @@ struct _KSCHEDINFO {
 	#define SLBCH_OFFSET SLBCH_OFFSET + 2 * sizeof(CHREG)
 #endif
 
-typedef
-struct Processor {
+namespace HAL
+{
+
+/**
+ * Enum: RequestType
+ *
+ * Summary:
+ * When a processor recieves an IPI on the 254th vector then the act-on-request
+ * handler executes which takes the following input paramaters (on the
+ * actionRequests list).
+ *
+ * Author: Shukant Pal
+ */
+enum RequestType
+{
+	/*
+	 * When a overloaded processor transfers tasks to another processor,
+	 * then it will send a 'AcceptTask' request, which is handled by
+	 * adding the listed tasks into the recieving cpu's runqueue.
+	 *
+	 * It uses the RunqueueBalancer::Accept struct (allocated by
+	 * tRunqueueBalancer_Accept)
+	 */
+	AcceptTasks,
+
+	/*
+	 * When a underloaded processor asks for tasks to another processor,
+	 * it will send a 'RenounceTask' request, which is handled by
+	 * sending back a 'AcceptTask' request which contains a list of
+	 * transferrable tasks.
+	 *
+	 * It uses the RunqueueBalanacer::Renounce struct (allocated by
+	 * tRunqueueBalancer_Renounce)
+	 */
+	RenounceTasks
+};
+
+/**
+ * Struct: ProcessorBinding::IPIRequest
+ *
+ * Summary:
+ * This is the parent-class for all inter-processor requests sent over
+ * the Processor::actionRequests list.
+ *
+ * Variables:
+ * type - request-type sent
+ * bufferSize - size of a dynamic-memory (allocated with kmalloc) buffer
+ * source - slab-allocator for the type (used for freeing)
+ *
+ * Author: Shukant Pal
+ */
+struct IPIRequest
+{
+	CircularListNode reqlink;
+	const RequestType type;
+	const unsigned long bufferSize;// size of memory-buffer, if any used
+	const ObjectInfo *source;
+
+	IPIRequest(RequestType mtype, unsigned long bsize, ObjectInfo *src)
+			: type(mtype), bufferSize(bsize), source(src)
+	{
+	}
+};
+
+}
+
+typedef struct Processor
+{
 	LinkedListNode LiLinker;/* Participate in lists */
 	unsigned int ProcessorCluster;/* NUMA Domain */
 	unsigned short PoLoad;
@@ -143,23 +220,52 @@ struct Processor {
 	unsigned int PoType;
 	unsigned short PoStk;
 	unsigned short Padding;
-	void *PoExT;/* Current Runner */
-	unsigned int ProcessorStack;/* UPKS */
-	KSCHEDINFO SchedulerInfo;/* Scheduler Status */
-	CHREG FrameCache[5];/* KFrameManager::CacheRegister */
-	CHREG PageCache[2];/* KMemoryManager::CacheRegister */
-	CHREG SlabCache;/* KObjectManager::CacheRegister */
+	void *ctask;// presently running task on this cpu
+	unsigned int ProcessorStack;// address of the unique processor-stack
+	ScheduleInfo crolStatus;// core-roller (scheduler) status
+	CHREG frameCache[5];
+	CHREG pageCache[2];
+	CHREG slabCache;
 	SPIN_LOCK PageLock;/* Obselete */
-	KSCHED_ROLLER ScheduleClasses[3];/* Scheduler Classes */
-	SCHED_CFS CFS;/* CFS-Scheduler Status */
-	SCHED_RR RR;/* RR-Scheduler Status */
-	void *IdlerThread;/* Task for idle CPU */
-	void *SetupThread;/* Maintenance and setup task */
-	HAL::Domain *DomainInfo;/* Processor Topology & Scheduling Domains */
-	ProcessorInfo Hardware;/* Platform-specific data */
+	KSCHED_ROLLER scheduleClasses[3];
+	Executable::ScheduleRoller *lschedTable[3];// ptr-table to schedule-classes
+	Executable::RoundRobin rrsched;// round-robin scheduler
+	SCHED_CFS CFS;
+	SCHED_RR RR;
+	void *IdlerThread;// idle-task for this cpu
+	void *SetupThread;// initialization thread
+	HAL::Domain *domlink;// link into the topology tree
+	CircularList actionRequests;// list of action-request waiting for handling
+	Spinlock migrlock;// migration lock (for registering action-requests)
+	ProcessorInfo Hardware;// platform-specifics
 } PROCESSOR;
 
 extern PROCESSOR *CPUArray;
+
+namespace HAL
+{
+
+class CPUDriver
+{
+public:
+	static IPIRequest *readRequest(Processor *proc);
+	static void writeRequest(IPIRequest& state, Processor *proc);
+};
+
+}// namespace HAL
+
+
+/*
+ * (synchronized) function to register a request into the queue relevant to
+ * the given cpu.
+ */
+static inline void request(HAL::IPIRequest *req, Processor *proc)
+{
+	SpinLock(&proc->migrlock);
+	ClnInsert(&req->reqlink, CLN_LAST, &proc->actionRequests);
+	SpinUnlock(&proc->migrlock);
+	APIC::triggerIPI(proc->Hardware.APICID, 254);
+}
 
 void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
 void AddProcessorInfo(MADTEntryLAPIC *madtEntry);

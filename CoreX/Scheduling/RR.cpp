@@ -8,9 +8,9 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 
+#include <Exec/RoundRobin.h>
 #include <HAL/Processor.h>
 #include <HAL/ProcessorTopology.hpp>
-#include <Exec/RR.h>
 #include <Util/CircularList.h>
 #include <KERNEL.h>
 
@@ -40,13 +40,13 @@ KRUNNABLE *Schedule_RR(TIME XMilliTime, PROCESSOR *cpu)
 	
 	if(lastRunner != NULL)
 	{
-		nextRunner = lastRunner->RightLinker;
+		nextRunner = lastRunner->next;
 	}
 	else
 	{
 		if(PROCESSOR_ID == 1)
 			Dbg("_e");
-		nextRunner = (KRUNNABLE *) rr->Runqueue.ClnMain;
+		nextRunner = (KRUNNABLE *) rr->Runqueue.lMain;
 	}
 	SpinUnlock(&rr->Roller->RunqueueLock);
 
@@ -56,14 +56,14 @@ KRUNNABLE *Schedule_RR(TIME XMilliTime, PROCESSOR *cpu)
 void SaveRunner_RR(TIME XMilliTime, PROCESSOR *cpu)
 {
 	SCHED_RR *rr = &cpu->RR;
-	rr->LastRunner = cpu->PoExT;
+	rr->LastRunner = cpu->ctask;
 }
 
 KRUNNABLE *UpdateRunner_RR(TIME XMilliTime, PROCESSOR *cpu)
 {
 	SCHED_RR *rr = &cpu->RR;
 
-	rr->LastRunner = cpu->PoExT;
+	rr->LastRunner = cpu->ctask;
 	return (Schedule_RR(XMilliTime, cpu));
 }
 
@@ -82,7 +82,7 @@ void InsertRunner_RR(KRUNNABLE *runner, PROCESSOR *cpu)
 
 void RemoveRunner_RR(KRUNNABLE *runner)
 {
-	SCHED_RR *rr = &runner->Processor->RR;
+	SCHED_RR *rr = &runner->cpu->RR;
 	KSCHED_ROLLER *roller = rr->Roller;
 	SpinLock(&(roller->RunqueueLock));
 
@@ -95,10 +95,10 @@ void RemoveRunner_RR(KRUNNABLE *runner)
 static inline void RrMoveRunner(SCHED_RR *destinationRunqueue, SCHED_RR *sourceRunqueue,
 							unsigned long domainDiff, PROCESSOR *highCPU)
 {
-	KTASK *runner = (KTASK *) sourceRunqueue->Runqueue.ClnMain;
-	if(runner == highCPU->PoExT){
-		runner = runner->RightLinker;
-		if(runner == runner->RightLinker)
+	KTASK *runner = (KTASK *) sourceRunqueue->Runqueue.lMain;
+	if(runner == highCPU->ctask){
+		runner = runner->next;
+		if(runner == runner->next)
 			return;
 	}
 	
@@ -122,10 +122,10 @@ void TransferBatchRunners(unsigned long transferCount, PROCESSOR *lowCPU, PROCES
 	SpinLock(&highRunqueue->Roller->RunqueueLock);
 
 	CLIST *runnerList = (&highRunqueue->Runqueue);
-	unsigned long deltaLimit = (runnerList->ClnCount + transferCount) / 2;
-	deltaLimit = LESS(deltaLimit, runnerList->ClnCount / 2);
+	unsigned long deltaLimit = (runnerList->count + transferCount) / 2;
+	deltaLimit = LESS(deltaLimit, runnerList->count / 2);
 
-	while(runnerList->ClnMain && deltaLimit > 0)
+	while(runnerList->lMain && deltaLimit > 0)
 	{
 		RrMoveRunner(lowRunqueue, highRunqueue, domainDiff, highCPU);
 		--(deltaLimit);
@@ -148,7 +148,7 @@ PROCESSOR *RrFindBusiestProcessor(Domain *busyGroup)
 	while(searchDomain->type != PROCESSOR_HIERARCHY_LOGICAL_CPU)
 	{
 		searchList = &(searchDomain->children);
-		tryGroupZ = (Domain*) searchList->ClnMain;
+		tryGroupZ = (Domain*) searchList->lMain;
 		tryGroup = tryGroupZ;
 		highestGroup = NULL;
 		highestRoller = NULL;
@@ -165,16 +165,16 @@ PROCESSOR *RrFindBusiestProcessor(Domain *busyGroup)
 		searchDomain = highestGroup;
 	}
 	
-	return (PROCESSOR *) (searchDomain->children.ClnMain);
+	return (PROCESSOR *) (searchDomain->children.lMain);
 }
 
 void RrBalanceRoutine(PROCESSOR *pCPU)
 {
-	Domain *searchDomain = pCPU->DomainInfo->parent;/* Start search for CPUs in same core/lowest toplogy*/
+	Domain *searchDomain = pCPU->domlink->parent;/* Start search for CPUs in same core/lowest toplogy*/
 	CLIST *searchList;
 	Domain *tryGroup;
 	Domain *tryGroupZ;
-	Domain *ourGroup = pCPU->DomainInfo;
+	Domain *ourGroup = pCPU->domlink;
 	KSCHED_ROLLER_DOMAIN *searchRoller;
 	KSCHED_ROLLER_DOMAIN *ourRoller;
 	unsigned long balancingLevel = 1;
@@ -182,7 +182,7 @@ void RrBalanceRoutine(PROCESSOR *pCPU)
 	while(searchDomain != NULL)
 	{
 		searchList = &(searchDomain->children);
-		tryGroupZ = (Domain *) searchList->ClnMain;
+		tryGroupZ = (Domain *) searchList->lMain;
 		tryGroup = tryGroupZ;
 		do
 		{
@@ -197,7 +197,7 @@ void RrBalanceRoutine(PROCESSOR *pCPU)
 					break;
 				}
 			}
-			tryGroup = tryGroup->nextDomain;
+			tryGroup = tryGroup->next;
 		} while(tryGroup != tryGroupZ);
 		
 		ourGroup = ourGroup->parent;

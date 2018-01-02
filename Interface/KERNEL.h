@@ -17,6 +17,7 @@
 
 #include <Debugging.h>
 #include <TYPE.h>
+#include <Synch/Spinlock.h>
 #include <Util/Memory.h>
 
 #define __ADM_CONFIG__
@@ -41,11 +42,28 @@
 
 #define KLOCAL_END while(TRUE){ asm volatile("nop;"); }
 
+#ifdef IA32
+	#define __cli 		asm volatile("cli");
+	#define __mfence 	asm volatile("mfence");
+	#define __lfence 	asm volatile("lfence");
+	#define __sfence 	asm volatile("sfence");
+	#define __sti 		asm volatile("sti");
+
+	#define __no_interrupts(fcode)	\
+	{				\
+		__cli			\
+		fcode 			\
+		__sti			\
+	}
+
+	#define no_intr_ret 	asm volatile("sti"); return
+
+#endif
+
 #ifdef ARCH_32
 
-static inline unsigned long NextPowerOf2(
-		unsigned long x
-){
+static inline unsigned long NextPowerOf2(unsigned long x)
+{
 	--(x);
 	x |= (x >> 1);
 	x |= (x >> 2);
@@ -55,9 +73,8 @@ static inline unsigned long NextPowerOf2(
 	return (++x);
 }
 
-static inline unsigned long HighestBitSet(
-		unsigned long x
-){
+static inline unsigned long HighestBitSet(unsigned long x)
+{
 	unsigned long highestBit = 0;
 	while(x >>= 1)
 		++highestBit;
@@ -87,6 +104,19 @@ unsigned long HighestBitSet(unsigned long x){
 }
 
 #endif
+
+class Atomic
+{
+public:
+#ifdef ARCH_32
+	static inline void inc(unsigned long x)
+	{
+		++x; asm volatile("MFENCE");//for now, jugaad
+	}
+#else
+
+#endif
+};
 
 void ASSERT(
 	bool boolCondition,

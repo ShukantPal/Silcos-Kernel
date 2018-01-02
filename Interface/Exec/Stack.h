@@ -31,10 +31,10 @@
  * @Author Shukant Pal
  */
 typedef
-struct _KSTACKINFO
+struct CPUStack
 {
-	unsigned long Base;
-	unsigned long Pointer;
+	unsigned long base;
+	unsigned long pointer;
 } KSTACKINFO;
 
 #endif /* Exec/Stack.h */

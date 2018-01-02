@@ -181,9 +181,9 @@ static void ObDestroySlab(Slab *emptySlab, ObjectInfo *metaInfo)
  */
 static Slab *ObFindSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 {
-	if(metaInfo->partialList.ClnCount)
+	if(metaInfo->partialList.count)
 	{
-		return (Slab *) (metaInfo->partialList.ClnMain);
+		return (Slab *) (metaInfo->partialList.lMain);
 	}
 	else
 	{
@@ -356,13 +356,13 @@ extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize, unsi
 	typeInfo->dtor = dtor;
 	typeInfo->callCount = 0;
 	typeInfo->emptySlab = NULL;
-	typeInfo->partialList.ClnMain = NULL;
-	typeInfo->partialList.ClnCount = 0;
-	typeInfo->fullList.ClnMain = NULL;
-	typeInfo->fullList.ClnCount= 0;
+	typeInfo->partialList.lMain = NULL;
+	typeInfo->partialList.count = 0;
+	typeInfo->fullList.lMain = NULL;
+	typeInfo->fullList.count= 0;
 	ClnInsert((CLNODE*) typeInfo, CLN_LAST, &tList);
 
-	Dbg("kobj Created: "); Dbg(tName); Dbg(" Size:"); DbgInt(tSize); Dbg(" "); DbgInt(tList.ClnCount); DbgLine("");
+	//Dbg("kobj Created: "); Dbg(tName); Dbg(" Size:"); DbgInt(tSize); Dbg(" "); DbgInt(tList.ClnCount); DbgLine("");
 
 	return (typeInfo);
 }
@@ -385,7 +385,7 @@ extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize, unsi
  */
 extern "C" unsigned long KiDestroyType(ObjectInfo *typeInfo)
 {
-	if(typeInfo->partialList.ClnCount != 0 || typeInfo->fullList.ClnCount != 0)
+	if(typeInfo->partialList.count != 0 || typeInfo->fullList.count != 0)
 	{
 		return (FALSE);
 	}

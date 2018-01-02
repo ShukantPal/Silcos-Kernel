@@ -226,7 +226,7 @@ Zone *ZoneAllocator::getZone(unsigned long blockOrder, unsigned long basePref, Z
 		} while(trialZone != trialZero);
 
 		--(testPref);
-		trialZone = (Zone *) (prefTable[testPref].ZoneList.ClnMain);
+		trialZone = (Zone *) (prefTable[testPref].ZoneList.lMain);
 		trialZero = trialZone;
 	}
 

@@ -1,4 +1,4 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/**
  * File: APIC.c
  *
  * Summary: This file contains the code to setup scheduler ticks, trigger IPIs and much more!
@@ -9,16 +9,19 @@
  * TriggerDelay() - This function is used to wait (no-scheduling) for some time.
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 
 #define NAMESPACE_IA32_IDT
 
 #include <IA32/APIC.h>
 #include <IA32/IDT.h>
+#include <KERNEL.h>
 
 unsigned int VAPICBase;
 extern IDTEntry defaultIDT[256];
 import_asm void TimerUpdate();
+
+import_asm void TimerWait(U32 t);
 
 /**
  * Function: KiClockRespond
@@ -57,19 +60,83 @@ void SetupTick(void)
 	WtApicRegister(APIC_REGISTER_TIMER_ICR, 1 << 24);
 }
 
-void TriggerIPI(unsigned int destination, unsigned int controlSet)
+/**
+ * Function: APIC::triggerIPI
+ *
+ * Summary:
+ * Triggers a inter-processor interrupt from the running local APIC using the
+ * default values (fixed-delivery, physical-destination, level-deassert, and
+ * edge-trigger with no shorthand).
+ *
+ * Args:
+ * U32 apicId - apic-id for the destination processor
+ * U8 vect - vector number for the interrupt handler
+ *
+ * Author: Shukant Pal
+ */
+void APIC::triggerIPI(U32 apicId, U8 vect)
 {
-	WtApicRegister(APIC_REGISTER_ICR_HIGH, (destination << 24));
-	WtApicRegister(APIC_REGISTER_ICR_LOW, controlSet);
+	if(!x2APICModeEnabled)
+	{
+		Dbg("waiting for ipi-delvstatus");
+
+		while
+		(
+			((xAPICDriver::read((unsigned long) APIC_REGISTER_ICR_LOW) >> 14) & 1) != DeliveryStatus::SendPending
+		);
+
+		DbgLine(" --send done ");
+
+		ICRHigh hreg = {
+				.destField = apicId
+		};
+
+		ICRLow lreg;
+		lreg.vectorNo = vect;
+
+		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
+		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
+	}
+	else
+		Dbg("x2apic not impl sorry , expect a crash!!!");
 }
 
-void TriggerManualIPI(U32 lowerICR, U32 higherICR)
+/**
+ * Function: APIC::wakeupSequence
+ *
+ * Summary:
+ * Executes the INIT-SIPI sequence on behalf of kernel smp-init.
+ *
+ * Args:
+ * U32 apicId - apic-id of the application-processor to wakeup
+ * U8 pvect - page index for the trampoline
+ *
+ * Author: Shukant Pal
+ */
+void APIC::wakeupSequence(U32 apicId, U8 pvect)
 {
-	WtApicRegister(APIC_REGISTER_ICR_HIGH, higherICR | RdApicRegister(APIC_REGISTER_ICR_HIGH));
-	WtApicRegister(APIC_REGISTER_ICR_LOW, lowerICR | RdApicRegister(APIC_REGISTER_ICR_LOW));
+	if(!x2APICModeEnabled)
+	{
+		ICRHigh hreg = {
+				.destField = apicId
+		};
+
+		ICRLow lreg(DeliveryMode::INIT, Level::Deassert, TriggerMode::Edge);
+
+		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
+		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
+
+		lreg.vectorNo = pvect;
+		lreg.delvMode = DeliveryMode::StartUp;
+
+		Dbg("APBoot: Wakeup sequence following...");
+
+		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
+		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
+
+		DbgLine("sent");
+	}
+	else
+		Dbg("x2apic - - not imple -- no statrup epecet crash shortly!!!");
 }
 
-void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex){
-	WtApicRegister(APIC_REGISTER_ICR_HIGH, ((U8) apicId << 24) | RdApicRegister(APIC_REGISTER_ICR_HIGH));
-	WtApicRegister(APIC_REGISTER_ICR_LOW, vectorIndex | LAPIC_DM_FIXED | RdApicRegister(APIC_REGISTER_ICR_LOW));
-}

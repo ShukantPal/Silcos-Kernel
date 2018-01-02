@@ -16,7 +16,7 @@
 #ifndef EXEC_PROCESS_H
 #define EXEC_PROCESS_H
 
-#include "Exec.h"
+#include <Exec/KTask.h>
 #include <HAL/Processor.h>
 #include <Memory/Pager.h>
 #include <Memory/PMemoryManager.h>

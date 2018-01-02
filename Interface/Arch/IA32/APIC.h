@@ -53,13 +53,6 @@
 #define IA32_APIC_BASE_EXD		10
 #define IA32_APIC_BASE_BSP		7
 
-/* APIC LVT delivery modes */
-#define FIXED					0
-#define SMI 					0b01000000000
-#define NMI 					0b10000000000
-#define INIT 					0b10100000000
-#define EXT_INT 				0b11100000000
-
 #define LAPIC_DM_FIXED 			(0b000 << 8)
 #define LAPIC_DM_SMI 			(0b010 << 8)
 #define LAPIC_DM_NMI 			(0b100 << 8)
@@ -99,10 +92,8 @@ static inline unsigned int RdApicRegister(unsigned int Reg){
 	 return *((unsigned int volatile*) (VAPICBase + Reg));
 }
 
-static inline void WtApicRegister(
-		unsigned int Reg,
-		unsigned int Value
-){
+static inline void WtApicRegister(unsigned int Reg, unsigned int Value)
+{
 	unsigned int volatile *VirtualAPICReg = (unsigned int*) (VAPICBase + Reg); 
  	*VirtualAPICReg = Value;
 }
@@ -112,6 +103,153 @@ void SetupTick();
 void TriggerIPI(U32, U32);
 void DisablePIC(void);
 extern "C" void MapIDT(void);
+
+extern bool x2APICModeEnabled;
+
+class APIC final
+{
+public:
+	enum DeliveryMode
+	{
+		Fixed = 0b000,
+		LowestPriority = 0b001,
+		SMI = 0b010,
+		Reserved = 0b011,
+		NMI = 0b100,
+		INIT = 0b101,
+		INIT_Deassert = 0b101,
+		StartUp = 0b110
+	};
+
+	enum DestinationMode
+	{
+		Physical = 0,
+		Logical = 1
+	};
+
+	enum DeliveryStatus
+	{
+		Idle = 0,		// Indicates the local APIC has completed sending previous IPIs
+		SendPending = 1		// Indicates the local APIC has some IPIs pending
+	};
+
+	enum Level
+	{
+		Deassert = 0,
+		Other = 1
+	};
+
+	enum TriggerMode
+	{
+		Edge = 0,
+		Level = 1
+	};
+
+	enum DestinationShorthand
+	{
+		NoShorthand = 0b00,	// The destination should be specified
+		Self = 0b01,		// Send the IPI to the issuing local APIC
+		AllIncludingSelf = 0b10,// Send the IPI to all processors including the issuing local APIC
+		AllExcludingSelf = 0b11	// Send the IPI to all processors in the system except this one
+	};
+
+	static inline unsigned long getBase()
+	{
+		APICBaseMSR r;
+		ReadMSR(IA32_APIC_BASE, &r.msrValue);
+		return (r.apicBase);
+	}
+
+	static void triggerIPI(U32 apicId, U8 vect);
+	static void wakeupSequence(U32 apicId, U8 page);
+private:
+	class xAPICDriver
+	{
+	public:
+		static inline U32 read(unsigned long roff)
+		{
+			return *(U32 volatile*) (VAPICBase + roff);
+		}
+
+		static inline void write(unsigned long roff, U32 val)
+		{
+			U32 volatile *rptr = (U32 *volatile) (VAPICBase + roff);
+			*rptr = val;
+		}
+
+		/* not for general use guys */
+		static inline void put(unsigned long roff, U32 val)
+		{
+			U32 volatile *rptr = (U32 *volatile) VAPICBase + roff;
+			volatile U32 oval = *rptr | val;
+			*rptr = oval;
+		}
+
+	private:
+		xAPICDriver();
+	};
+
+	union ICRLow
+	{
+		struct
+		{
+			U32 vectorNo : 8;// vector
+			U32 delvMode : 3;// delivery mode
+			U32 destMode : 1;// destination mode
+			U32 delvStatus : 1;// delivery status
+			U32 r0 : 1;// Reserved (bit-13)
+			U32 level : 1;
+			U32 trigMode : 1;// trigger mode
+			U32 r1 : 2;// reserved (bit 16-17)
+			U32 destShorthand : 2;
+			U32 reserved : 12;
+		};
+		U32 value;
+
+		ICRLow()
+		{
+			value = 0;
+			this->vectorNo = 0;
+			this->delvMode = DeliveryMode::Fixed;
+			this->destMode = DestinationMode::Physical;
+			this->delvStatus = DeliveryStatus::Idle;
+			this->level = Level::Deassert;
+			this->trigMode = TriggerMode::Edge;
+			this->destShorthand = DestinationShorthand::NoShorthand;
+		}
+
+		ICRLow(DeliveryMode delmode, enum APIC::Level lev, TriggerMode trm)
+		{
+			value = 0;
+			this->vectorNo = 0;
+			this->delvMode = delmode;
+			this->destMode = DestinationMode::Physical;
+			this->level = lev;
+			this->trigMode = TriggerMode::Edge;
+			this->destShorthand = DestinationShorthand::NoShorthand;
+		}
+	};
+
+	union ICRHigh
+	{
+		struct
+		{
+			U32 reserved : 24;
+			U32 destField : 8;
+		};
+		U32 value;
+
+		ICRHigh(U32 dst)
+		{
+			value = 0;
+			this->destField = dst;
+		}
+	};
+
+
+	void dd();
+	APIC();
+};
 
 
 #endif /* IA32/APIC.h */

@@ -57,7 +57,7 @@ long ReadMsg(ID queueID, void *bufferPointer, unsigned short bufferSize, unsigne
 long SendMsg(ID queueID, void *bufferPointer, unsigned short bufferSize, unsigned short msgTag, unsigned short msgPriority, unsigned long msgFlags, unsigned short timeOut)
 {
 	PROCESSOR *pInfo = GetProcessorById(PROCESSOR_ID);
-	KTHREAD *pThread = pInfo->PoExT;
+	KTHREAD *pThread = pInfo->ctask;
 	CONTEXT *pContext = GetContext();
 
 	if(!CheckUsability((ADDRESS) bufferPointer, pContext))

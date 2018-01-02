@@ -10,13 +10,13 @@ Spinlock SchedSynchronizer;
 
 TIME XMilliTime; /* Maintain 64-bit kernel time. */
 
-unsigned long PickRoller(PROCESSOR *curProcessor)
+unsigned long PickRoller(PROCESSOR *tproc)
 {
 	unsigned long rollerIndex = 0;
 
 	while(rollerIndex < SCHED_MAX)
 	{
-		if(curProcessor->ScheduleClasses[rollerIndex].RunnerLoad > 0)
+		if(tproc->scheduleClasses[rollerIndex].RunnerLoad > 0)
 			return (rollerIndex);
 		++rollerIndex;
 	}
@@ -24,9 +24,9 @@ unsigned long PickRoller(PROCESSOR *curProcessor)
 	return (SCHED_MAX);
 }
 
-export_asm void Schedule(PROCESSOR *curProcessor)
+export_asm void Schedule(PROCESSOR *tproc)
 {
-	unsigned long kRoller = PickRoller(curProcessor);
+	unsigned long kRoller = PickRoller(tproc);
 	if(kRoller == SCHED_MAX)
 	{
 		DbgInt(PROCESSOR_ID); DbgLine("FREEZE");
@@ -34,23 +34,31 @@ export_asm void Schedule(PROCESSOR *curProcessor)
 	}
 	else
 	{
-		KSCHEDINFO *rtInfo = &curProcessor->SchedulerInfo;
-		KSCHED_ROLLER *lastRoller = rtInfo->CurrentRoller;
-		KSCHED_ROLLER *newRoller = &curProcessor->ScheduleClasses[kRoller];
+		ScheduleInfo *tsched = &tproc->crolStatus;
+		Executable::ScheduleRoller *lrol = tsched->presRoll;
+		Executable::ScheduleRoller *nrol = tproc->lschedTable[0];
 
-		rtInfo->CurrentRoller = newRoller;
-		KRUNNABLE *nextRunner;
+		tsched->presRoll = nrol;
+		KTask *ntask;
 
-		if(newRoller != lastRoller){
-			if(lastRoller)
-				lastRoller->SaveRunner(XMilliTime, curProcessor);
-			nextRunner = newRoller->ScheduleRunner(XMilliTime, curProcessor);
-		} else {
-			nextRunner = newRoller->UpdateRunner(XMilliTime, curProcessor);
+		if(nrol != lrol)
+		{
+			if(lrol != NULL)
+			{
+				lrol->free(XMilliTime, tproc);
+			}
+
+			ntask = nrol->allocate(XMilliTime, tproc);
+		}
+		else
+		{
+			ntask = nrol->update(XMilliTime, tproc);
 		}
 
-		curProcessor->PoExT = nextRunner;
-		if(nextRunner->Context != NULL)
-			SwitchContext(nextRunner->Context);
+		tproc->ctask = ntask;
+		if(ntask->mmu != NULL)
+			SwitchContext(ntask->mmu);
+
+		DbgInt(PROCESSOR_ID);
 	}
 }

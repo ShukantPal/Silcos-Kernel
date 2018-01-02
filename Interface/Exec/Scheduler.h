@@ -9,7 +9,7 @@
 
 #include <HAL/Processor.h>
 #include <Debugging.h>
-#include "Exec.h"
+#include <Exec/KTask.h>
 #include "Process.h"
 #include "SchedList.h"
 #include "Thread.h"
@@ -57,5 +57,10 @@ KTHREAD *SelectThread(U32 RunqueueNo);
 export_asm void Schedule(
 	PROCESSOR*
 );
+
+static inline TIME getSystemTime()
+{
+	return (XMilliTime);
+}
 
 #endif

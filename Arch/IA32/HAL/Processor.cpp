@@ -5,6 +5,11 @@
  * This file implements processor boot, setup, and management along with proper
  * organization of CPU topology.
  *
+ * Function:
+ * extern "C" Executable_ProcessorBinding_IPIRequest_Handler - handles incoming
+ * 				inter-processor requests on the actionRequest
+ * 				list.
+ *
  * Copyright (C) 2017 - Shukant Pal
  */
 #define NAMESPACEProcessor
@@ -13,7 +18,8 @@
 #include <IA32/APIC.h>
 #include <ACPI/MADT.h>
 #include <Exec/Scheduler.h>
-#include <Exec/RR.h>
+#include <Exec/RoundRobin.h>
+#include <Exec/RunqueueBalancer.hpp>
 #include <HAL/CPUID.h>
 #include <HAL/Processor.h>
 #include <HAL/ProcessorTopology.hpp>
@@ -24,6 +30,9 @@
 #include <Util/CtPrim.h>
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
+
+using namespace HAL;
+using namespace Executable;
 
 unsigned int BSP_ID;
 unsigned int BSP_HID;
@@ -76,7 +85,7 @@ void ConstructProcessor(Processor *proc)
 {
 	proc->ProcessorStack = (U32) ((ADDRESS) &proc->Hardware.ProcessorStack + PROCESSOR_STACK_SIZE);
 	
-	KSCHED_ROLLER *rrRoller = &(proc->ScheduleClasses[RR_SCHED]);
+	KSCHED_ROLLER *rrRoller = &(proc->scheduleClasses[RR_SCHED]);
 	rrRoller->ScheduleRunner = &Schedule_RR;
 	rrRoller->SaveRunner = &SaveRunner_RR;
 	rrRoller->UpdateRunner = &UpdateRunner_RR;
@@ -85,8 +94,10 @@ void ConstructProcessor(Processor *proc)
 	rrRoller->TransferRunners = NULL;
 	proc->RR.Roller = rrRoller;
 	
-	KSCHEDINFO *cpuScheduler = &(proc->SchedulerInfo);
-	cpuScheduler->CurrentRoller = rrRoller;
+	proc->lschedTable[0] = &proc->rrsched;
+	new((void*) proc->lschedTable[0]) Executable::RoundRobin();
+
+	proc->crolStatus.presRoll = proc->lschedTable[0];
 }
 
 void AddProcessorInfo(MADTEntryLAPIC *PE)
@@ -110,10 +121,9 @@ void AddProcessorInfo(MADTEntryLAPIC *PE)
 	if(cpu->Hardware.APICID != BSP_ID)
 	{
 		(void) ConstructTrampoline();
-		TriggerIPI(PE->apicID, LAPIC_DM_INIT | LAPIC_LEVEL_ASSERT);
-		TimerWait(1);
-		TriggerIPI(PE->apicID, APBootSequenceBuffer | LAPIC_DM_STARTUP);
-		TimerWait(1);
+
+		APIC::wakeupSequence(PE->apicID, (U8) APBootSequenceBuffer);
+
 		WriteCMOSRegister(0xF, 0);
 	}
 }
@@ -142,7 +152,7 @@ extern "C" void SetupBSP()
 	}
 	
 	IA32_APIC_BASE_MSR apicBaseMSR;
-	ReadMSR(IA32_APIC_BASE, &apicBaseMSR.MSRValue);
+	ReadMSR(IA32_APIC_BASE, &apicBaseMSR.msrValue);
 	DbgInt(PROCESSOR_ID);
 	CPUID(0xB, 2, &CPUIDBuffer[0]);
 
@@ -172,6 +182,7 @@ extern "C" void SetupBSP()
 extern "C" void SetupAPs()
 {
 	EnumerateMADT(&AddProcessorInfo, NULL, NULL);
+
 }
 
 extern "C" ProcessorInfo *SetupProcessor()
@@ -189,14 +200,70 @@ extern "C" ProcessorInfo *SetupProcessor()
 extern "C" void APMain()
 {
 	PROCESSOR *sceProcessor = GetProcessorById(PROCESSOR_ID);
+	DbgLine("ddddddd");
 	SetupProcessor();
+	Dbg("hellg");
 	ProcessorTopology::plug();
+	DbgInt((int)sceProcessor->domlink); Dbg(" <=================");
 	SetupRunqueue();
 
 	extern void APWaitForPermit();
 	APWaitForPermit();
+	DbgLine("got the permit");
 
 	FlushTLB(0);
 	SetupTick();
 	while(TRUE);
+}
+
+/*
+ * Function: CPURequestHandler
+ *
+ * Summary:
+ * Handles a inter-processor request sent by another CPU to this CPU. It
+ * has separate handlers for each request-type.
+ *
+ * Author: Shukant Pal
+ */
+extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
+{
+	Processor *tcpu = GetProcessorById(PROCESSOR_ID);
+	IPIRequest *req = CPUDriver::readRequest(tcpu);
+
+	if(req)
+	{
+		switch(req->type)
+		{
+		case AcceptTasks:
+			RunqueueBalancer::Accept *acc = (RunqueueBalancer::Accept*) req;
+			tcpu->lschedTable[acc->type]->recieve((KTask*) acc->taskList.lMain, (KTask*) acc->taskList.lMain->last,
+								acc->taskList.count);
+			break;
+		case RenounceTasks:
+			DbgLine("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+			RunqueueBalancer::Renounce *ren = (RunqueueBalancer::Renounce*) req;
+			ScheduleClass type = ren->taskType;
+
+			unsigned long loadDelta = ren->src.lschedTable[type]->load - ren->dst.lschedTable[type]->load;
+			unsigned long deltaFrac = ren->donor.level + 1;
+
+			loadDelta *= deltaFrac - 1;
+			loadDelta /= deltaFrac;
+
+			// for cpus in same domain -> transfer 1/2 of load-delta (making same load)
+			// for cpus in different domains -> transfer 2/3, 3/4, 4/5, etc.
+
+			RunqueueBalancer::Accept *reply = new(tRunqueueBalancer_Accept)
+					RunqueueBalancer::Accept(type, ren->donor, ren->taker);
+			ren->src.lschedTable[type]->send(&ren->dst, reply->taskList, loadDelta);
+			CPUDriver::writeRequest(*reply, &ren->src);
+
+			kobj_free((kobj*) ren, tRunqueueBalancer_Renounce);
+
+			DbgLine("renounce not imple yet");
+			break;
+		default:
+			return;
+		}
+	}
 }

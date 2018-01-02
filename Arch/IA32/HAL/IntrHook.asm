@@ -44,24 +44,36 @@ section .text
 	extern EOI
 	global TimerUpdate
 	TimerUpdate:
-		LOCK INC DWORD [DelayTime]				; Update current time
+		LOCK INC DWORD [DelayTime]							; Update current time
 		PUSH EDX											; Save EDX
-		CALL EOI												; Do a EOI
+		CALL EOI											; Do a EOI
 		POP EDX												; Restore EDX
 		MFENCE
-		IRET														; Go back to previous context
+		IRET
 
 	global TimerWait
 	TimerWait:
-		MOV EBX, [ESP + 4]								; Load wait time into EBX
-		ADD EBX, [DelayTime]					; Calculate stopping time
+		MOV EBX, [ESP + 4]									; Load wait time into EBX
+		ADD EBX, [DelayTime]								; Calculate stopping time
 		CompareTimer:
 		NOP
 		PAUSE
-		CMP DWORD [DelayTime], EBX	; If current time is equ to stopping
-		JNE CompareTimer								; if not, loop again
+		CMP DWORD [DelayTime], EBX							; If current time is equ to stopping
+		JNE CompareTimer									; if not, loop again
 		RET
 	
+	global Executable_ProcessorBinding_IPIRequest_Invoker
+	extern Executable_ProcessorBinding_IPIRequest_Handler
+	Executable_ProcessorBinding_IPIRequest_Invoker:
+		PUSHAD
+		PUSH ESI
+		PUSH EDI
+		CALL Executable_ProcessorBinding_IPIRequest_Handler
+		POP EDI
+		POP ESI
+		POPAD
+		IRET
+
 	global RR_BalanceRunqueue
 	extern RrBalanceRoutine
 	RR_BalanceRunqueue:

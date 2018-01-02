@@ -6,7 +6,7 @@
 #ifndef EXEC_THREAD_GROUP_H
 #define EXEC_THREAD_GROUP_H
 
-#include "Exec.h"
+#include <Exec/KTask.h>
 #include "SchedList.h"
 
 /* Helper macro(s) */
@@ -27,7 +27,7 @@
 typedef
 struct ThreadGroup
 {
-	struct Exec Gate;
+	struct KTask Gate;
 	ExecList Children;
 } KTHREAD_GROUP;
 

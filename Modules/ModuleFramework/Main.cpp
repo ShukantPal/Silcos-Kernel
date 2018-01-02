@@ -65,10 +65,16 @@ void test_rsmgr()
 	mem->printAll();
 }
 
+#include <HAL/Processor.h>
 extern "C" void KModuleMain(void)
 {
 	DbgLine("Reporting Load: com.silcos.mdfrwk.109");
 	test_rsmgr();
+
+	DbgLine("ouput::");
+	Processor *e = GetProcessorById(0);
+	DbgInt((int)e->domlink);
+	DbgLine(" ");
 
 	while(1) { asm volatile("nop"); }
 }

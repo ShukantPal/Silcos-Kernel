@@ -5,62 +5,62 @@
 extern "C" void ClnInsert(CircularListNode *clnNode, unsigned long clnPosition,
 						CircularList *clList)
 {
-	CLNODE *clnMain = clList->ClnMain;
+	CLNODE *clnMain = clList->lMain;
 	if(clnMain != NULL)
 	{
 		if(clnPosition == CLN_FIRST)
 		{
-			clnNode->ClnNext = clnMain->ClnNext;
-			clnNode->ClnNext->ClnLast = clnNode;// Make sure back-linkage is correct!!! (ERR: Fixed)
+			clnNode->next = clnMain->next;
+			clnNode->next->last = clnNode;// Make sure back-linkage is correct!!! (ERR: Fixed)
 
-			clnNode->ClnLast = clnMain;
-			clnMain->ClnNext = clnNode;
+			clnNode->last = clnMain;
+			clnMain->next = clnNode;
 		}
 		else
 		{
-			clnNode->ClnNext = clnMain;
-			clnMain->ClnLast = clnNode;
+			clnNode->next = clnMain;
+			clnMain->last = clnNode;
 			
-			clnNode->ClnLast = clnMain->ClnLast;
-			clnNode->ClnLast->ClnNext = clnNode;// Make sure forward-linkage is correct!!! (ERR: Fixed)
+			clnNode->last = clnMain->last;
+			clnNode->last->next = clnNode;// Make sure forward-linkage is correct!!! (ERR: Fixed)
 		}
 	}
 	else
 	{
-		clnNode->ClnNext = clnNode;
-		clnNode->ClnLast = clnNode;
-		clList->ClnMain = clnNode;
+		clnNode->next = clnNode;
+		clnNode->last = clnNode;
+		clList->lMain = clnNode;
 	}
 
-	++(clList->ClnCount);
+	++(clList->count);
 }
 
 extern "C" void ClnRemove(CircularListNode *clnNode, CircularList *clList)
 {
-	unsigned long clnCount = clList->ClnCount;
+	unsigned long clnCount = clList->count;
 	
 	if(clnCount > 0)
 	{/* Eliminate blind-removals */
 		if(clnCount > 1)
 		{
-			CLNODE *clnNext = clnNode->ClnNext;
-			CLNODE *clnLast = clnNode->ClnLast;
+			CLNODE *clnNext = clnNode->next;
+			CLNODE *clnLast = clnNode->last;
 
-			clnNext->ClnLast = clnLast;
-			clnLast->ClnNext = clnNext;
+			clnNext->last = clnLast;
+			clnLast->next = clnNext;
 
-			if(clnNode == clList->ClnMain)
+			if(clnNode == clList->lMain)
 			{
-				clList->ClnMain = clnNext;
+				clList->lMain = clnNext;
 			}
 		}
 		else
 		{
-			clList->ClnMain = NULL;
+			clList->lMain = NULL;
 		}
 
-		clnNode->ClnNext = NULL;
-		clnNode->ClnLast = NULL;
-		--(clList->ClnCount);
+		clnNode->next = NULL;
+		clnNode->last = NULL;
+		--(clList->count);
 	}
 }

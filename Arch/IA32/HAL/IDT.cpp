@@ -14,6 +14,7 @@ import_asm void ExecuteLIDT(IDTPointer *);
 import_asm void Spurious();
 import_asm void KiClockRespond(void);
 import_asm void RR_BalanceRunqueue(void);
+extern "C" void Executable_ProcessorBinding_IPIRequest_Invoker();
 
 IDTEntry defaultIDT[256];
 IDTPointer defaultIDTPointer;
@@ -70,6 +71,7 @@ extern "C" void MapIDT()
 	MapHandler(0xB, (unsigned int) &SegmentNotPresent, pIDT);
 	MapHandler(0xD, (unsigned int) &GeneralProtectionFault, pIDT);
 	MapHandler(0xE, (unsigned int) &PageFault, pIDT);
+	MapHandler(0xFD, (unsigned int) &Executable_ProcessorBinding_IPIRequest_Invoker, pIDT);
 	MapHandler(0xFE, (unsigned int) &Spurious, pIDT);
 	MapHandler(0x20, (unsigned int) &KiClockRespond, pIDT);
 	//MapHandler(0x21, (unsigned int) &RR_BalanceRunqueue, pIDT);
