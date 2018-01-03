@@ -14,7 +14,7 @@ import_asm void ExecuteLIDT(IDTPointer *);
 import_asm void Spurious();
 import_asm void KiClockRespond(void);
 import_asm void RR_BalanceRunqueue(void);
-extern "C" void Executable_ProcessorBinding_IPIRequest_Invoker();
+import_asm void Executable_ProcessorBinding_IPIRequest_Invoker();
 
 IDTEntry defaultIDT[256];
 IDTPointer defaultIDTPointer;

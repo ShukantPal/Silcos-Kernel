@@ -57,7 +57,7 @@ void SetupTick(void)
 	WtApicRegister(APIC_REGISTER_SIVR, 0xFE | (1 << 8));
 	WtApicRegister(APIC_REGISTER_TIMER_DCR, 32);
 	WtApicRegister(APIC_REGISTER_LVT_TR, (1 << 17) | 0x20);
-	WtApicRegister(APIC_REGISTER_TIMER_ICR, 1 << 24);
+	WtApicRegister(APIC_REGISTER_TIMER_ICR, 1 << 28);
 }
 
 /**
@@ -78,14 +78,10 @@ void APIC::triggerIPI(U32 apicId, U8 vect)
 {
 	if(!x2APICModeEnabled)
 	{
-		Dbg("waiting for ipi-delvstatus");
-
 		while
 		(
-			((xAPICDriver::read((unsigned long) APIC_REGISTER_ICR_LOW) >> 14) & 1) != DeliveryStatus::SendPending
+			((xAPICDriver::read((unsigned long) APIC_REGISTER_ICR_LOW) >> 12) & 1) == DeliveryStatus::SendPending
 		);
-
-		DbgLine(" --send done ");
 
 		ICRHigh hreg = {
 				.destField = apicId

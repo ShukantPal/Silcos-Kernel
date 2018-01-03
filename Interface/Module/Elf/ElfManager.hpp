@@ -17,7 +17,8 @@ namespace Module
 struct DynamicLink;
 class ModuleLoader;
 
-namespace Elf {
+namespace Elf
+{
 
 /**
  * Class: ElfManager

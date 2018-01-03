@@ -4,6 +4,7 @@
 
 #include <IA32/PageExplorer.h>
 #include <Memory/KFrameManager.h>
+#include <Util/Memory.h>
 
 U64 *GetDirectory(unsigned long dirOffset, unsigned long frFlags, CONTEXT *Context)
 {
@@ -30,6 +31,7 @@ U64 *GetPageTable(unsigned short dirOffset, unsigned short tableOffset, unsigned
 		if(!(pgDirectory[tableOffset] & 1))
 		{
 			pgDirectory[tableOffset] = (U64) KiFrameEntrap(frFlags) | 3;
+			memsetf((void*) (GB(3) + MB(507 * 2) + KB(tableOffset * 4)), 0, 4096);
 		}
 
 		return (U64*) (GB(3) + MB(507 * 2) + KB(tableOffset * 4));

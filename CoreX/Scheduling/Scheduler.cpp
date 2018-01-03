@@ -26,39 +26,30 @@ unsigned long PickRoller(PROCESSOR *tproc)
 
 export_asm void Schedule(PROCESSOR *tproc)
 {
-	unsigned long kRoller = PickRoller(tproc);
-	if(kRoller == SCHED_MAX)
+	ScheduleInfo *tsched = &tproc->crolStatus;
+	Executable::ScheduleRoller *lrol = tsched->presRoll;
+	Executable::ScheduleRoller *nrol = tproc->lschedTable[0];
+
+	tsched->presRoll = nrol;
+	KTask *ntask;
+
+	if(nrol != lrol)
 	{
-		DbgInt(PROCESSOR_ID); DbgLine("FREEZE");
-		while(TRUE);
+		if(lrol != NULL)
+		{
+			lrol->free(XMilliTime, tproc);
+		}
+
+		ntask = nrol->allocate(XMilliTime, tproc);
 	}
 	else
 	{
-		ScheduleInfo *tsched = &tproc->crolStatus;
-		Executable::ScheduleRoller *lrol = tsched->presRoll;
-		Executable::ScheduleRoller *nrol = tproc->lschedTable[0];
-
-		tsched->presRoll = nrol;
-		KTask *ntask;
-
-		if(nrol != lrol)
-		{
-			if(lrol != NULL)
-			{
-				lrol->free(XMilliTime, tproc);
-			}
-
-			ntask = nrol->allocate(XMilliTime, tproc);
-		}
-		else
-		{
-			ntask = nrol->update(XMilliTime, tproc);
-		}
-
-		tproc->ctask = ntask;
-		if(ntask->mmu != NULL)
-			SwitchContext(ntask->mmu);
-
-		DbgInt(PROCESSOR_ID);
+		ntask = nrol->update(XMilliTime, tproc);
 	}
+
+	tproc->ctask = ntask;
+	if(ntask->mmu != NULL)
+		SwitchContext(ntask->mmu);
+	if(PROCESSOR_ID == 1)
+		Dbg("-0");
 }

@@ -57,6 +57,7 @@ ADDRESS KiPagesAllocate(unsigned long bOrder, unsigned long prefZone, unsigned l
 	SpinLock(&kmLock);
 	Zone *znInfo = &pageZones[prefZone & 1];
 	unsigned long bInfo = (unsigned long) coreEngine.allocateBlock(bOrder, 0, znInfo, pgFlags);
+	//Dbg("Mem:"); DbgInt((KPGADDRESS(bInfo)-GB(3))/4096); DbgLine(" --");
 	SpinUnlock(&kmLock);
 	return (KPGADDRESS(bInfo));
 }
@@ -64,6 +65,7 @@ ADDRESS KiPagesAllocate(unsigned long bOrder, unsigned long prefZone, unsigned l
 unsigned long KiPagesFree(ADDRESS pgAddress)
 {
 	SpinLock(&kmLock);
+	//Dbg("FREEE:"); DbgInt((pgAddress-GB(3)) / 1024); DbgLine(" --");
 	KPAGE *page = (KPAGE*) KPG_AT(pgAddress);
 	page->HashCode = pgAddress;// Initial hash-code for the page
 	coreEngine.freeBlock((BuddyBlock *) page);
@@ -104,7 +106,8 @@ void SetupKMemoryManager(void)
 
 	kptSize = sizeof(KPAGE) * (kdmSize / KPGSIZE);
 	unsigned long kptFence = kptTable + kptSize;
-	while(kptTable < kptFence) {
+	while(kptTable < kptFence)
+	{
 		EnsureUsability(kptTable, NULL, FLG_ATOMIC | FLG_NOCACHE | KF_NOINTR, KernelData);
 		kptTable += KPGSIZE;
 	}

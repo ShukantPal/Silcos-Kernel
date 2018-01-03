@@ -192,7 +192,7 @@ void ProcessorTopology::Iterator::toggleLoad(Processor *initialCPU, Executable::
 	while(domain != NULL)
 	{
 		domain->taskInfo[cls].load += mag;
-		__lfence
+		__mfence
 		domain = domain->parent;
 	}
 }

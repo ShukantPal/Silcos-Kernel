@@ -24,6 +24,8 @@
 #include <Memory/KObjectManager.h>
 #include <KernelRoutine/Init.h>
 
+using namespace Executable;
+
 const char *tdName = "KTHREAD";
 ObjectInfo *tdInfo;
 
@@ -74,18 +76,18 @@ void InitTTable(void){
 	ADDRESS kisBase = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
 	kInitStack->base = kisBase + KPGSIZE - 4;
 	kInitStack->pointer = kisBase + KPGSIZE - 64;
-	EnsureUsability(kisBase, NULL, FLG_ATOMIC, KernelData);
+	Dbg("stk-- "); EnsureUsability(kisBase, NULL, FLG_ATOMIC, KernelData); DbgLine(" --alloced");
 
-	PROCESSOR *cpu = GetProcessorById(PROCESSOR_ID);
-	cpu->ctask = (void*) kIdlerThread;
-	kIdlerThread->Gate.next = (KRUNNABLE*) kInitThread;
+	Processor *cpu = GetProcessorById(PROCESSOR_ID);
+	cpu->ctask = (KTask*) kIdlerThread;
+	kIdlerThread->Gate.next = (KTask*) kInitThread;
 
 	KSCHEDINFO *bspSched = &cpu->crolStatus;
 	bspSched->CurrentQuanta = 10;
 	bspSched->LeftQuanta = 10;
 
-	KSCHED_ROLLER *rrRoller = &cpu->scheduleClasses[RR_SCHED];
-	rrRoller->InsertRunner((KRUNNABLE*) kInitThread, cpu);
+	//cpu->lschedTable[0]->add((KTask*) kIdlerThread);
+	cpu->lschedTable[0]->add((KTask*) kInitThread);
 }
 
 void Idle(){
@@ -99,21 +101,24 @@ void APThreadMain(){
 	while(TRUE){ asm volatile("nop"); };
 }
 
+#include <Exec/RunqueueBalancer.hpp>
 void APInitService(){
 	DbgLine("APInitService");
 
-	KThreadCreate((void*) &APThreadMain);
-	KThreadCreate((void*)&APThreadMain);
-	KThreadCreate((void*)&APThreadMain);
+//	KThreadCreate((void*) &APThreadMain);
+//	KThreadCreate((void*)&APThreadMain);
+
+	Dbg("lod:" );DbgInt(GetProcessorById(PROCESSOR_ID)->domlink->taskInfo[0].load);
 
 	while(TRUE) { asm volatile("nop"); };
 }
 
-void SetupRunqueue(){
-	PROCESSOR *processor = GetProcessorById(PROCESSOR_ID);
+void SetupRunqueue()
+{
+	Processor *ap = GetProcessorById(PROCESSOR_ID);
 
-	KTHREAD *idlerThread = KNew(tdInfo, KM_SLEEP);
-	KTHREAD *setupThread = KNew(tdInfo, KM_SLEEP);
+	KTHREAD *idlerThread = (KTHREAD*) KNew(tdInfo, KM_SLEEP);
+	KTHREAD *setupThread = (KTHREAD*) KNew(tdInfo, KM_SLEEP);
 	KiSetupRunnable((KRUNNABLE*) idlerThread, (ADDRESS) idlerThread, ThreadTp);
 		
 	idlerThread->Gate.RRM_ID = 100;
@@ -128,24 +133,27 @@ void SetupRunqueue(){
 	setupThread->Gate.RRM_ID = 9;
 	
 	KSTACKINFO *idlerStack = &(idlerThread->KernelStack);
-	idlerStack->base = processor->ProcessorStack;
-	idlerStack->pointer = processor->ProcessorStack - 64;
+	idlerStack->base = ap->ProcessorStack;
+	idlerStack->pointer = ap->ProcessorStack - 64;
 
 	KSTACKINFO *setupStack = &(setupThread->KernelStack);
 	unsigned long ssb = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
 	setupStack->base = ssb + KPGSIZE - 4;
 	setupStack->pointer = ssb + KPGSIZE - 64;
-	EnsureUsability(ssb, NULL, FLG_ATOMIC, KernelData);
+	Dbg("d--"); EnsureUsability(ssb, NULL, FLG_ATOMIC, KernelData); DbgLine("--t");
 	
-	processor->ctask = idlerThread;
-	idlerThread->Gate.next = (EXEC *) setupThread;
+	ap->ctask = (KTask*) idlerThread;
+	idlerThread->Gate.next = (KTask*) setupThread;
 	
-	KSCHEDINFO *apSched = &processor->crolStatus;
+	KSCHEDINFO *apSched = &ap->crolStatus;
 	apSched->CurrentQuanta = 10;
 	apSched->LeftQuanta = 10;
 	
-	KSCHED_ROLLER *rrRoller = &processor->scheduleClasses[RR_SCHED];
-	rrRoller->InsertRunner((KRUNNABLE*) setupThread, processor);
+//	KSCHED_ROLLER *rrRoller = &processor->scheduleClasses[RR_SCHED];
+//	rrRoller->InsertRunner((KRUNNABLE*) setupThread, processor);
+
+	//ap->lschedTable[0]->add((KTask*) idlerThread);
+	ap->lschedTable[0]->add((KTask*) setupThread);
 }
 
 int log_id = 2;
@@ -169,19 +177,24 @@ KTHREAD *KThreadCreate(void *entry){
 	newThread->Gate.RRM_ID = log_id++;
 	
 	KSTACKINFO *threadStack = &(newThread->KernelStack);
-	unsigned long stackAddress = KiPagesAllocate(2, ZONE_KMODULE, FLG_ATOMIC);
+	unsigned long stackAddress = KiPagesAllocate(3, ZONE_KMODULE, FLG_ATOMIC);
 	threadStack->base = stackAddress + 8 * KPGSIZE - 4;
 	threadStack->pointer = stackAddress + 8 * KPGSIZE - 64;
 	
 	unsigned long offset = 0;
 	while(offset < 8)
 	{
+		//Dbg("mapstk--");
 		EnsureUsability(stackAddress + offset * KPGSIZE, NULL, FLG_ATOMIC, KernelData);
+		//DbgLine("--alloced");
 		++offset;
 	}
 
-	KSCHED_ROLLER *rrRoller = &(currentProcessor->scheduleClasses[RR_SCHED]);
-	rrRoller->InsertRunner((KTASK *) newThread, currentProcessor);
+//	KSCHED_ROLLER *rrRoller = &(currentProcessor->scheduleClasses[RR_SCHED]);
+//	rrRoller->InsertRunner((KTASK *) newThread, currentProcessor);
+
+	currentProcessor->lschedTable[0]->add((KTask*)newThread);
+
 	return (newThread);
 }
 

@@ -47,6 +47,7 @@
 #endif
 
 struct ObjectInfo;
+struct KTask;
 
 namespace Executable
 {
@@ -220,7 +221,7 @@ typedef struct Processor
 	unsigned int PoType;
 	unsigned short PoStk;
 	unsigned short Padding;
-	void *ctask;// presently running task on this cpu
+	KTask *ctask;// presently running task on this cpu
 	unsigned int ProcessorStack;// address of the unique processor-stack
 	ScheduleInfo crolStatus;// core-roller (scheduler) status
 	CHREG frameCache[5];

@@ -69,7 +69,7 @@ void test_rsmgr()
 extern "C" void KModuleMain(void)
 {
 	DbgLine("Reporting Load: com.silcos.mdfrwk.109");
-	test_rsmgr();
+//	test_rsmgr();
 
 	DbgLine("ouput::");
 	Processor *e = GetProcessorById(0);

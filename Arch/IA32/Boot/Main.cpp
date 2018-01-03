@@ -22,6 +22,7 @@
 #include <HAL/CPUID.h>
 #include <HAL/Processor.h>
 #include <Exec/Process.h>
+#include <Exec/RunqueueBalancer.hpp>
 #include <Exec/Thread.h>
 #include <Memory/Pager.h>
 #include <Memory/KFrameManager.h>
@@ -36,6 +37,9 @@
 #include <TYPE.h>
 #include <KERNEL.h>
 #include <Module/Elf/ELF.h>
+
+using namespace HAL;
+using namespace Executable;
 
 extern void SetupTick();
 import_asm void BSPGrantPermit();
@@ -138,10 +142,11 @@ export_asm void Main(
 
 	InitPTable();
 	InitTTable();
+	RunqueueBalancer::init();
 
 	SetupAPs();
 	SetupTick();
 
 	BSPGrantPermit();
-//	EraseIdentityPage();
+//EraseIdentityPage();
 }

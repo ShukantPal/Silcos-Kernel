@@ -73,9 +73,15 @@ void RunqueueBalancer::balanceWork(ScheduleClass cls, Domain *client)
 	}
 	else if(busiest != client)
 	{
+		Dbg("Runqueue-balancer(for dbg only, erase later)");
 		// send a renounce request, and later we will get a accept request
 		Processor *srcCPU = DomainBinding::getBusiest(cls, busiest);
 		Processor *dstCPU = DomainBinding::getIdlest(cls, client);
+
+		DbgInt(1);
+		Dbg(",  ");
+		DbgInt(dstCPU->domlink->taskInfo[0].load);
+		DbgLine(" ");
 
 		Renounce *req = new(tRunqueueBalancer_Renounce) Renounce(cls, *busiest, *client, *srcCPU, *dstCPU);
 		CPUDriver::writeRequest(*req, srcCPU);

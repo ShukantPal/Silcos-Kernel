@@ -17,7 +17,9 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 
+#include <IA32/APIC.h>
 #include <HAL/Processor.h>
+#include <KERNEL.h>
 
 using namespace HAL;
 
@@ -43,12 +45,15 @@ IPIRequest *CPUDriver::readRequest(Processor *proc)
 	CircularList *arl = &proc->actionRequests;
 	IPIRequest *req;
 
-	if(arl->lMain)
+	if(arl->lMain != null)
 	{
 		CircularListNode *node = arl->lMain;
 		node->last->next = node->next;
 		node->next->last = node->last;
 		--(arl->count);
+
+		if(arl->count == 0)
+			arl->lMain = null;
 
 		req = (IPIRequest *) node;
 	}
@@ -75,11 +80,13 @@ IPIRequest *CPUDriver::readRequest(Processor *proc)
  */
 void CPUDriver::writeRequest(IPIRequest &req, Processor *proc)
 {
+	Dbg("Wat");
 	SpinLock(&proc->migrlock);
+	Dbg("D");
 
 	CircularList *arl = &proc->actionRequests;
 
-	if(arl->lMain)
+	if(arl->lMain != null)
 	{
 		CircularListNode *main = arl->lMain;
 
@@ -88,6 +95,8 @@ void CPUDriver::writeRequest(IPIRequest &req, Processor *proc)
 
 		main->last->next = (CircularListNode*) &req;
 		main->last = (CircularListNode*) &req;
+
+		arl->lMain = (CircularListNode*) &req;
 	}
 	else
 	{
@@ -96,5 +105,8 @@ void CPUDriver::writeRequest(IPIRequest &req, Processor *proc)
 		req.reqlink.last = (CircularListNode*) &req;
 	}
 
+	++(arl->count);
+
 	SpinUnlock(&proc->migrlock);
+	APIC::triggerIPI(proc->Hardware.APICID, 0xFD);
 }

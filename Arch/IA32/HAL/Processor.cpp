@@ -86,9 +86,9 @@ void ConstructProcessor(Processor *proc)
 	proc->ProcessorStack = (U32) ((ADDRESS) &proc->Hardware.ProcessorStack + PROCESSOR_STACK_SIZE);
 	
 	KSCHED_ROLLER *rrRoller = &(proc->scheduleClasses[RR_SCHED]);
-	rrRoller->ScheduleRunner = &Schedule_RR;
-	rrRoller->SaveRunner = &SaveRunner_RR;
-	rrRoller->UpdateRunner = &UpdateRunner_RR;
+	//rrRoller->ScheduleRunner = &Schedule_RR;
+	//rrRoller->SaveRunner = &SaveRunner_RR;
+	//rrRoller->UpdateRunner = &UpdateRunner_RR;
 	rrRoller->InsertRunner = &InsertRunner_RR;
 	rrRoller->RemoveRunner = &RemoveRunner_RR;
 	rrRoller->TransferRunners = NULL;
@@ -200,16 +200,12 @@ extern "C" ProcessorInfo *SetupProcessor()
 extern "C" void APMain()
 {
 	PROCESSOR *sceProcessor = GetProcessorById(PROCESSOR_ID);
-	DbgLine("ddddddd");
 	SetupProcessor();
-	Dbg("hellg");
 	ProcessorTopology::plug();
-	DbgInt((int)sceProcessor->domlink); Dbg(" <=================");
 	SetupRunqueue();
 
 	extern void APWaitForPermit();
 	APWaitForPermit();
-	DbgLine("got the permit");
 
 	FlushTLB(0);
 	SetupTick();
@@ -230,7 +226,7 @@ extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
 	Processor *tcpu = GetProcessorById(PROCESSOR_ID);
 	IPIRequest *req = CPUDriver::readRequest(tcpu);
 
-	if(req)
+	if(req != null)
 	{
 		switch(req->type)
 		{
@@ -240,7 +236,6 @@ extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
 								acc->taskList.count);
 			break;
 		case RenounceTasks:
-			DbgLine("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 			RunqueueBalancer::Renounce *ren = (RunqueueBalancer::Renounce*) req;
 			ScheduleClass type = ren->taskType;
 
@@ -260,9 +255,9 @@ extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
 
 			kobj_free((kobj*) ren, tRunqueueBalancer_Renounce);
 
-			DbgLine("renounce not imple yet");
 			break;
 		default:
+			Dbg("NODF");
 			return;
 		}
 	}

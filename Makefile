@@ -281,7 +281,7 @@ Link: Compile/IO.o
 	grub-mkrescue -o os.iso ../circuit-iso --modules="iso9660 part_msdos multiboot"
 
 q: BuildChain
-	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=8,cores=1,sockets=1 -display sdl
+	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=2,cores=1,sockets=1 -display sdl
 
 b: BuildChain
 	bochs

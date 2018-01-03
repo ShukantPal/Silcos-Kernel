@@ -35,15 +35,27 @@ using namespace Executable;
 
 KTask *RoundRobin::add(KTask *newTask)
 {
-	newTask->next = mainTask;
-	newTask->last = (mainTask) ? mainTask->last : NULL;
-
 	__no_interrupts
-	(
+(
+		if(mainTask != null)
+		{
+			mainTask->last = newTask;
+			mainTask->last->next = newTask;
+
+			newTask->next = mainTask;
+			newTask->last = mainTask->last;
+		}
+		else
+		{
+			newTask->last = newTask;
+			newTask->next = newTask;
+		}
+
 		mainTask = newTask;
 		++(taskCount);
+
 		ProcessorTopology::Iterator::toggleLoad(NULL, ROUND_ROBIN, 1);
-	)
+)
 
 	return (newTask);
 }
@@ -53,13 +65,9 @@ KTask *RoundRobin::allocate(TIME tstamp, Processor *proc)
 	KTask *ntask;
 
 	if(mostRecent == NULL)
-	{
 		ntask = mainTask;
-	}
 	else
-	{
 		ntask = mostRecent->next;
-	}
 
 	return (ntask);
 }
@@ -73,7 +81,7 @@ KTask *RoundRobin::update(TIME time, Processor *proc)
 
 void RoundRobin::free(TIME tstamp, Processor *proc)
 {
-	mostRecent = proc->ctask;
+	mostRecent = (KTask*) proc->ctask;
 }
 
 void RoundRobin::remove(KTask *ttask)
@@ -148,16 +156,13 @@ void *RoundRobin::transfer(ScheduleRoller& idle)
 
 RoundRobin::RoundRobin()
 {
-	this->mainTask =
-			this->mostRecent =
-					NULL;
+	this->mainTask = this->mostRecent = null;
 	this->taskCount = 0;
 	//DbgLine("__rr initialed");
 }
 
 // for the doggy compiler who requires this shit for dtor
 inline void operator delete(void *d, unsigned int r){}
-
 
 RoundRobin::~RoundRobin(){
 
@@ -191,5 +196,6 @@ KTask *RoundRobin::recieve(KTask *first, KTask *last, unsigned long load)
 
 	ProcessorTopology::Iterator::toggleLoad(NULL, ROUND_ROBIN, -load);
 
+	DbgLine("reciveing tasks gurys");
 	return (notTaken);
 }
