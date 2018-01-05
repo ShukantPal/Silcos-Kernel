@@ -98,6 +98,7 @@ void EnsureFaulty(ADDRESS address, CONTEXT *pgContext)
 	if(pgTable != NULL)
 	{
 		pgTable[(address % MB(2)) / KB(4)] = 0;
+		FlushTLB(address);
 	}
 }
 

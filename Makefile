@@ -23,7 +23,7 @@ IfcKern = Interface/KERNEL.h Interface/TYPE.h
 IfcArch = Interface/$(ArchDir)
 IfcACPI = Interface/ACPI
 IfcHAL = Interface/HAL
-IfcRunnable = Interface/Exec
+IfcRunnable = Interface/Executable
 IfcMemory = Interface/Memory
 IfcModule = Interface/Module
 IfcUtil = Interface/Util
@@ -56,7 +56,7 @@ ProcessObjects = Compile/Process.o
 ThreadObjects = Compile/Thread.o
 
 # Core Scheduler + Scheduler Classes/Rollers
-SchedulerObjects = Compile/Scheduler.o Compile/ScheduleRoller.o Compile/RR.o \
+SchedulerObjects = Compile/Scheduler.o Compile/ScheduleRoller.o \
 Compile/RoundRobin.o Compile/RunqueueBalancer.o #Compile/SchedList.o
 
 UtilObjects = Compile/AVLTree.o Compile/CircuitPrimitive.o Compile/CircularList.o \

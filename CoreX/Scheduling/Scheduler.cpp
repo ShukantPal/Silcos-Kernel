@@ -1,7 +1,7 @@
 /* Copyright (C) 2017 - Shukant Pal */
 
 #include <Debugging.h>
-#include <Exec/Scheduler.h>
+#include <Executable/Scheduler.h>
 #include <Memory/Pager.h>
 #include <Util/IndexMap.h>
 
@@ -50,6 +50,4 @@ export_asm void Schedule(PROCESSOR *tproc)
 	tproc->ctask = ntask;
 	if(ntask->mmu != NULL)
 		SwitchContext(ntask->mmu);
-	if(PROCESSOR_ID == 1)
-		Dbg("-0");
 }

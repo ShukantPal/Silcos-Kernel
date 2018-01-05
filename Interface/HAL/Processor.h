@@ -31,11 +31,11 @@
 #include <IA32/APIC.h>
 #include "ProcessorTopology.hpp"
 #include <ACPI/MADT.h>
-#include <Exec/CFS.h>
-#include <Exec/RoundRobin.h>
+#include <Executable/CFS.h>
+#include <Executable/RoundRobin.h>
+#include <Executable/SchedList.h>
 #include <Memory/CacheRegister.h>
 #include <Memory/KMemorySpace.h>
-#include <Exec/SchedList.h>
 #include <Util/AVLTree.h>
 #include <Util/CircularList.h>
 #include <Util/LinkedList.h>
@@ -57,54 +57,11 @@ namespace Executable
 
 extern U32 BSP_HID;
 
+// legacy
 #define PROCESSOR_HIEARCHY_SYSTEM 				0xFFFFFFFF
 #define PROCESSOR_HIEARCHY_CLUSTER				10
 #define PROCESSOR_HIEARCHY_PACKAGE				
 #define PROCESSOR_HIERARCHY_LOGICAL_CPU 1
-
-
-//typedef PROCESSOR_TOPOLOGY SCHED_DOMAIN;/* Scheduling Domain */
-//typedef PROCESSOR_TOPOLOGY SCHED_GROUP;/* Scheduable Groups inside a domain */
-//typedef PROCESSOR_TOPOLOGY PROCESSOR_GROUP;/* Generic #TERM */
-
-#define MXRS_PROCESSOR_ALREADY_EXISTS	0xFAE0
-#define MXRS_PROCESSOR_STRUCT_INVALID	0xFAE1
-#define MXRS_PROCESSOR_REGISTERED		0xFAEF
-typedef unsigned long MX_REGISTER_STATUS;
-
-/**
- * enum PoS - 
- *
- * This state tells about the execution
- * condition of the PoC. 
- *
- * ~ PoSRunning - Executing a valid thread
- * ~ PoSHalt - Not running or sleeping
- * ~ PoSInit - Initializing
- *
- */
-enum PoS
-{
-	PoSRunning = 0x1,
-	PoSHalt = 0x2,
-	PoSInit = 0x3
-};
-
-/**
- *
- * Tells about specific state of a PoC global
- * stack.
- *
- * The scheduler & syscall handlers use these
- * stacks to execute.
- *
- */
-enum
-{
-	PoStkNULL = 0x1,
-	PoStkUSED = 0x2,
-	PoStkEXP = 0x3
-};
 
 /* Helper macros */
 #define PoID(P) (P -> Hardware)
@@ -112,26 +69,24 @@ enum
 #define SID(P) (P -> SId)
 
 /* Use only while including Thread.h & Process.h */
-#define ExecThread_ptr(P) (P -> PoExT)
+//#define ExecThread_ptr(P) (P -> PoExT)
 
-#define ExecThread_(P) ((struct Thread *) P -> PoExT)
-#define ExecProcess_(P) ((struct Process *) &PTable[ExecThread_(P) -> ParentID])
+//#define ExecThread_(P) ((struct Thread *) P -> PoExT)
+//#define ExecProcess_(P) ((struct Process *) &PTable[ExecThread_(P) -> ParentID])
 
-#define ExecThread(P) ((struct Thread *) P -> PoExT)
-#define ExecProcess(P) ((struct Process *) &PTable[ExecThread(P) -> ParentID])
+//#define ExecThread(P) ((struct Thread *) P -> PoExT)
+//#define ExecProcess(P) ((struct Process *) &PTable[ExecThread(P) -> ParentID])
 
 typedef
 struct ScheduleInfo
 {
 	unsigned long Load;
 	unsigned long RunnerPopulation;
-	//KSCHED_ROLLER *CurrentRoller;/* Current task's scheduler */
 	Executable::ScheduleRoller *presRoll;// presently running schedule-roller
-	unsigned long CurrentQuanta;/* Quanta given to current runner */
-	unsigned long RunnerInterruptable;/* Is pre-emption allowed */
-	unsigned long LeftQuanta;/* Amount of quanta left-over */
-	unsigned long FlagSet;/* Runtime-FLAGS */
-	ExecList SchedQueue;/* Queue immediate look */
+	unsigned long CurrentQuanta;// quanta given to current runner
+	unsigned long RunnerInterruptable;// if task is pre-emptible
+	unsigned long LeftQuanta;// quanta left-over
+	unsigned long FlagSet;// runtime flags
 } KSCHEDINFO;
 
 #ifdef NAMESPACE_MEMORY_MANAGER
@@ -231,8 +186,6 @@ typedef struct Processor
 	KSCHED_ROLLER scheduleClasses[3];
 	Executable::ScheduleRoller *lschedTable[3];// ptr-table to schedule-classes
 	Executable::RoundRobin rrsched;// round-robin scheduler
-	SCHED_CFS CFS;
-	SCHED_RR RR;
 	void *IdlerThread;// idle-task for this cpu
 	void *SetupThread;// initialization thread
 	HAL::Domain *domlink;// link into the topology tree
@@ -255,21 +208,6 @@ public:
 
 }// namespace HAL
 
-
-/*
- * (synchronized) function to register a request into the queue relevant to
- * the given cpu.
- */
-static inline void request(HAL::IPIRequest *req, Processor *proc)
-{
-	SpinLock(&proc->migrlock);
-	ClnInsert(&req->reqlink, CLN_LAST, &proc->actionRequests);
-	SpinUnlock(&proc->migrlock);
-	APIC::triggerIPI(proc->Hardware.APICID, 254);
-}
-
-void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
 void AddProcessorInfo(MADTEntryLAPIC *madtEntry);
-void SendIPI(APIC_ID apicId, APIC_VECTOR vectorIndex);
 
 #endif/* HAL/Processor.h */

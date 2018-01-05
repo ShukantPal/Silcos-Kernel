@@ -65,12 +65,15 @@ section .text
 	global Executable_ProcessorBinding_IPIRequest_Invoker
 	extern Executable_ProcessorBinding_IPIRequest_Handler
 	Executable_ProcessorBinding_IPIRequest_Invoker:
-		PUSHAD
+		PUSHA
+		PUSH EBP
 		PUSH ESI
 		PUSH EDI
 		CALL Executable_ProcessorBinding_IPIRequest_Handler
+		CALL EOI
 		POP EDI
 		POP ESI
+		POP EBP
 		POPAD
 		IRET
 

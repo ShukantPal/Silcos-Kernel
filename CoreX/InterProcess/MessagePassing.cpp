@@ -7,8 +7,8 @@
 #define NAMESPACE_KVECTOR
 #define NAMESPACE_MEMORY_MANAGER
 
-#include <Exec/Process.h>
-#include <Exec/Thread.h>
+#include <Executable/Process.h>
+#include <Executable/Thread.h>
 #include <HAL/Processor.h>
 #include <InterProcess/MessagePassing.h>
 #include <Memory/Paging.h>

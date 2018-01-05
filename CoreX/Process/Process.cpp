@@ -4,8 +4,8 @@
 
 #define NS_KMEMORYMANAGER
 
-#include <Exec/Process.h>
-#include <Exec/Thread.h>
+#include <Executable/Process.h>
+#include <Executable/Thread.h>
 #include <HAL/Processor.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
@@ -52,7 +52,7 @@ void InitPTable(){
 CONTEXT *GetContext()
 {
 	PROCESSOR *pCPU = GetProcessorById(PROCESSOR_ID);
-	KTHREAD *pThread = pCPU->ctask;
+	KTHREAD *pThread = (KTHREAD*) pCPU->ctask;
 	KPROCESS *pProcess = KeGetProcess(pThread->ParentID);
 	return (pProcess->AddressSpace);
 }

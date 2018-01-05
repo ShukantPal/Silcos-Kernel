@@ -7,7 +7,6 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Exec/Thread.h>
 #include <Module/ModuleLoader.h>
 #include <Module/ModuleRecord.h>
 #include <Memory/KMemorySpace.h>
@@ -15,6 +14,7 @@
 #include <Module/MSI.h>
 #include <Util/Memory.h>
 #include <Debugging.h>
+#include <Executable/Thread.h>
 
 using namespace Module;
 using namespace Module::Elf;
@@ -209,10 +209,6 @@ void KernelElf::loadBootModules()
 		if(blob->regForm->entryAddr && *(unsigned long*) blob->regForm->entryAddr != NO_ENTRY_ADDR)
 		{
 			KThreadCreate((void*) blob->regForm->entryAddr);
-		}
-		else
-		{
-			DbgLine("DKDKDK");
 		}
 		
 		nextBlob = (BlobRegister*) blob->liLinker.Next;

@@ -162,7 +162,7 @@ void ProcessorTopology::plug()
 	}
 
 	cur->type = PROCESSOR_HIERARCHY_LOGICAL_CPU;
-	cur->children.lMain = (CircularListNode*) cur;
+	cur->children.lMain = (CircularListNode*) tproc;
 	tproc->domlink = cur;
 	Iterator::ofEach(tproc, &UpdateCoreCount, 4);
 }
@@ -328,15 +328,21 @@ Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
 	Domain *testee, *mdomain, *lloaded = NULL;
 	Executable::ScheduleDomain *lrol;
 
+	if(pdom->type == DomainType::LogicalProcessor)
+		return (Processor*) (pdom->children.lMain);
+
 	while(pdom && pdom->type != PROCESSOR_HIERARCHY_LOGICAL_CPU)
 	{
 		mdomain = (Domain*) pdom->children.lMain;
+		if(mdomain == null)
+			return (null);
+
 		testee = mdomain->next;
 
 		lloaded = mdomain;// pre-initialize ldom as it has to be something
 		lrol = mdomain->taskInfo + cls;// and prevent null-checks in loop
 
-		do
+		while(testee != mdomain)
 		{
 			if(testee->taskInfo[cls].load < lrol->load)
 			{
@@ -345,7 +351,7 @@ Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
 			}
 
 			testee = testee->next;
-		} while(testee != mdomain);
+		}
 
 		pdom = lloaded;
 	}
@@ -385,6 +391,9 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
 	Domain *testee, *mdomain, *hloaded = NULL;
 	Executable::ScheduleDomain *hrol;
 
+	if(pdom->type == DomainType::LogicalProcessor)
+		return (Processor*) (pdom->children.lMain);
+
 	while(pdom && pdom->type != PROCESSOR_HIERARCHY_LOGICAL_CPU)
 	{
 		mdomain = (Domain*) pdom->children.lMain;
@@ -393,7 +402,7 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
 		hloaded = mdomain;//pre-initialize hdom as it has to be something
 		hrol = mdomain->taskInfo + cls;// and prevent null-checks in loop
 
-		do
+		while(testee != mdomain)
 		{
 			if(testee->taskInfo[cls].load > hrol->load)
 			{
@@ -402,7 +411,7 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
 			}
 
 			testee = testee->next;
-		} while(testee != mdomain);
+		}
 
 		pdom = hloaded;
 	}
@@ -435,7 +444,7 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
  */
 Domain *DomainBinding::findIdlestGroup(Executable::ScheduleClass cls, Domain *donor)
 {
-	Domain *host = donor->parent, *test = donor->next, *bestFound = NULL;
+	Domain *test = donor->next, *bestFound = NULL;
 
 	while(test != donor)
 	{

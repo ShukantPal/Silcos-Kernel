@@ -1,3 +1,4 @@
+
 /**
  * File: Main.c
  *
@@ -21,9 +22,9 @@
 #include <HAL/ADM.h>
 #include <HAL/CPUID.h>
 #include <HAL/Processor.h>
-#include <Exec/Process.h>
-#include <Exec/RunqueueBalancer.hpp>
-#include <Exec/Thread.h>
+#include <Executable/Process.h>
+#include <Executable/RunqueueBalancer.hpp>
+#include <Executable/Thread.h>
 #include <Memory/Pager.h>
 #include <Memory/KFrameManager.h>
 #include <Memory/KMemoryManager.h>
@@ -120,7 +121,7 @@ export_asm void Main(
 		U32 bootInfo,
 		U32 magicNo
 ){
-	DbgLine("Reporting Load: @(com.silcos.circuit.2030) \nCircuit Kernel 2.03\b!");
+	DbgLine("Reporting Load: @(com.silcos.circuit.2030)\t--- Silcos Kernel 2.05! ---");
 	printStatic();
 
 	if(magicNo != MULTIBOOT2_BOOTLOADER_MAGIC){

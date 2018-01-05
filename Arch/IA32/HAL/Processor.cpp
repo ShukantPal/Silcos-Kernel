@@ -1,3 +1,4 @@
+
 /**
  * File: Processor.c
  *
@@ -17,9 +18,9 @@
 #include <IA32/APBoot.h>
 #include <IA32/APIC.h>
 #include <ACPI/MADT.h>
-#include <Exec/Scheduler.h>
-#include <Exec/RoundRobin.h>
-#include <Exec/RunqueueBalancer.hpp>
+#include <Executable/Scheduler.h>
+#include <Executable/RoundRobin.h>
+#include <Executable/RunqueueBalancer.hpp>
 #include <HAL/CPUID.h>
 #include <HAL/Processor.h>
 #include <HAL/ProcessorTopology.hpp>
@@ -81,25 +82,35 @@ void DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline)
 	// TODO: FREE_TRAMPOLINE()
 }
 
+/**
+ * Function: ConstructProccessor
+ *
+ * Summary:
+ * Constructor for struct Processor in C-style.
+ *
+ * Author: Shukant Pal
+ */
 void ConstructProcessor(Processor *proc)
 {
 	proc->ProcessorStack = (U32) ((ADDRESS) &proc->Hardware.ProcessorStack + PROCESSOR_STACK_SIZE);
-	
-	KSCHED_ROLLER *rrRoller = &(proc->scheduleClasses[RR_SCHED]);
-	//rrRoller->ScheduleRunner = &Schedule_RR;
-	//rrRoller->SaveRunner = &SaveRunner_RR;
-	//rrRoller->UpdateRunner = &UpdateRunner_RR;
-	rrRoller->InsertRunner = &InsertRunner_RR;
-	rrRoller->RemoveRunner = &RemoveRunner_RR;
-	rrRoller->TransferRunners = NULL;
-	proc->RR.Roller = rrRoller;
-	
 	proc->lschedTable[0] = &proc->rrsched;
 	new((void*) proc->lschedTable[0]) Executable::RoundRobin();
-
 	proc->crolStatus.presRoll = proc->lschedTable[0];
 }
 
+/**
+ * Function: AddProcessorInfo
+ *
+ * Summary:
+ * Adds the processor information to the processor table and does the wakeup
+ * sequence on it, assuming it is a application processor.
+ *
+ * Args:
+ * MADTEntryLAPIC *pe - the MADT entry containing information about its local
+ *                      APIC
+ *
+ * Author: Shukant Pal
+ */
 void AddProcessorInfo(MADTEntryLAPIC *PE)
 {
 	PROCESSOR *cpu = GetProcessorById(PE->apicID);
@@ -131,6 +142,24 @@ void AddProcessorInfo(MADTEntryLAPIC *PE)
 const char *nmPROCESSOR_TOPOLOGY = "@SMP::ProcessorTopology";
 ObjectInfo *tPROCESSOR_TOPOLOGY;
 
+/**
+ * Function: SetupBSP
+ *
+ * Summary:
+ * Performs all pre-SMP functions which are to be done by a single cpu in the
+ * system (namely, boot-strap processor).
+ *
+ * 1. Sets the x2APICModeEnabled trigger
+ * 2. Checks whether hyper-threading is available
+ * 3. Loads this cpu's APIC id.
+ * 4. Constructs this cpu's Processor struct.
+ * 5. Disable the programmable interrupt controller, map the IDT, and then load
+ *    the GDT, IDT, and TSS for this cpu.
+ * 6. Enable the preboot timer.
+ * 7. Initalizes the processor-topology subsystem and plug this cpu in it.
+ *
+ * Author: Shukant Pal
+ */
 extern "C" void SetupBSP()
 {
 	BSP_HID = PROCESSOR_ID;
@@ -144,11 +173,6 @@ extern "C" void SetupBSP()
 	{
 		DbgLine("x2APIC Supported");
 		x2APICModeEnabled = TRUE;
-	}
-	
-	if((CPUIDBuffer[CPUID_EDX] >> 28) & 1)
-	{
-		DbgLine("HTT Supported");
 	}
 	
 	IA32_APIC_BASE_MSR apicBaseMSR;
@@ -197,9 +221,16 @@ extern "C" ProcessorInfo *SetupProcessor()
 	return (pInfo);
 }
 
+/**
+ * Function: APMain
+ *
+ * Summary:
+ * Sort of initializer for application processors & their runqueues.
+ *
+ * Author: Shukant Pal
+ */
 extern "C" void APMain()
 {
-	PROCESSOR *sceProcessor = GetProcessorById(PROCESSOR_ID);
 	SetupProcessor();
 	ProcessorTopology::plug();
 	SetupRunqueue();
@@ -209,7 +240,11 @@ extern "C" void APMain()
 
 	FlushTLB(0);
 	SetupTick();
-	while(TRUE);
+
+	while(TRUE)
+	{
+		asm volatile("hlt;");
+	}
 }
 
 /*
@@ -231,34 +266,39 @@ extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
 		switch(req->type)
 		{
 		case AcceptTasks:
+		{
 			RunqueueBalancer::Accept *acc = (RunqueueBalancer::Accept*) req;
 			tcpu->lschedTable[acc->type]->recieve((KTask*) acc->taskList.lMain, (KTask*) acc->taskList.lMain->last,
-								acc->taskList.count);
+								acc->taskList.count, acc->load);
 			break;
+		}
 		case RenounceTasks:
+		{
 			RunqueueBalancer::Renounce *ren = (RunqueueBalancer::Renounce*) req;
 			ScheduleClass type = ren->taskType;
 
 			unsigned long loadDelta = ren->src.lschedTable[type]->load - ren->dst.lschedTable[type]->load;
 			unsigned long deltaFrac = ren->donor.level + 1;
 
-			loadDelta *= deltaFrac - 1;
-			loadDelta /= deltaFrac;
+			loadDelta *= deltaFrac;
+			loadDelta /= deltaFrac + 1;
 
 			// for cpus in same domain -> transfer 1/2 of load-delta (making same load)
 			// for cpus in different domains -> transfer 2/3, 3/4, 4/5, etc.
 
 			RunqueueBalancer::Accept *reply = new(tRunqueueBalancer_Accept)
 					RunqueueBalancer::Accept(type, ren->donor, ren->taker);
+
 			ren->src.lschedTable[type]->send(&ren->dst, reply->taskList, loadDelta);
-			CPUDriver::writeRequest(*reply, &ren->src);
+			reply->load = loadDelta;
+			CPUDriver::writeRequest(*reply, &ren->dst);
 
 			kobj_free((kobj*) ren, tRunqueueBalancer_Renounce);
-
 			break;
+		}
 		default:
 			Dbg("NODF");
-			return;
+			break;
 		}
 	}
 }

@@ -36,6 +36,7 @@ using namespace HAL;
  * Returns:
  * first request in queue, for 'proc'; NULL, if all were handled.
  *
+ * Since: Silcos 2.05
  * Author: Shukant Pal
  */
 IPIRequest *CPUDriver::readRequest(Processor *proc)
@@ -76,13 +77,12 @@ IPIRequest *CPUDriver::readRequest(Processor *proc)
  * IPIRequest& req - the request to write in the cpu's actionRequests
  * Processor *proc - the cpu to send the request to
  *
+ * Since: Silcos 2.05
  * Author: Shukant Pal
  */
 void CPUDriver::writeRequest(IPIRequest &req, Processor *proc)
 {
-	Dbg("Wat");
 	SpinLock(&proc->migrlock);
-	Dbg("D");
 
 	CircularList *arl = &proc->actionRequests;
 
@@ -107,6 +107,7 @@ void CPUDriver::writeRequest(IPIRequest &req, Processor *proc)
 
 	++(arl->count);
 
+	__mfence
 	SpinUnlock(&proc->migrlock);
 	APIC::triggerIPI(proc->Hardware.APICID, 0xFD);
 }

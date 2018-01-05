@@ -26,8 +26,8 @@
 #ifndef INTERFACE_HAL_PROCESSORTOPOLOGY_HPP_
 #define INTERFACE_HAL_PROCESSORTOPOLOGY_HPP_
 
-#include <Exec/Scheduler.h>
-#include <Exec/ScheduleClass.h>
+#include <Executable/Scheduler.h>
+#include <Executable/ScheduleRoller.h>
 #include <Memory/KObjectManager.h>
 #include <Synch/Spinlock.h>
 #include <Util/LinkedList.h>
@@ -38,6 +38,25 @@ struct Processor;
 
 namespace HAL
 {
+
+/**
+ * Enum: DomainType
+ *
+ * Summary:
+ * Specifies the type of domain for recognization of the physical significance
+ * in their topology. Better than domain->level, as the level for the same
+ * domain type in different chips --may be different--.
+ *
+ * Author: Shukant Pal
+ */
+enum DomainType
+{
+	System = 0xFFFFFFFF,
+	NUMADomain = 5,
+	Chip = 4,
+	Core = 3,
+	LogicalProcessor = 1
+};
 
 /**
  * Struct: Domain
@@ -52,13 +71,6 @@ namespace HAL
  */
 struct Domain
 {
-	enum TransferMode
-	{
-		PushMigration,
-		PullMigration,
-		None
-	};
-
 	union
 	{
 		LinkedListNode liLinker;
@@ -75,9 +87,7 @@ struct Domain
 	unsigned int level;
 	unsigned int type;
 	unsigned int cpuCount;
-	KSCHED_ROLLER_DOMAIN rolDom[3];
 	Executable::ScheduleDomain taskInfo[3];
-	TransferMode trmode;
 	Spinlock queueLock;// Lock for executing balance-routine with this domain
 	Spinlock searchLock;// Serializing searches for direct child-domains for balancing
 	Spinlock lock;// for changes to domain data
@@ -89,8 +99,8 @@ struct Domain
 		this->level = 0;
 		this->type = 0;
 		this->cpuCount = 0;
-		this->trmode = TransferMode::None;
 		SpinUnlock(&queueLock);
+		SpinUnlock(&searchLock);
 		SpinUnlock(&lock);
 	}
 
@@ -102,10 +112,8 @@ struct Domain
 		this->level = level;
 		this->type = type;
 		this->cpuCount = 0;
-		memsetf((void*) &rolDom[0], 0,
-				sizeof(KSCHED_ROLLER_DOMAIN) * 3);
-		this->trmode = TransferMode::None;
 		SpinUnlock(&queueLock);
+		SpinUnlock(&searchLock);
 		SpinUnlock(&lock);
 	}
 };

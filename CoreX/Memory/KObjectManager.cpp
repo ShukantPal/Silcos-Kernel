@@ -270,6 +270,8 @@ static void ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo)
  * Allocates a constructed object, given its static & runtime information forum
  * and has capability to wait until memory is available.
  *
+ * This function can be called in an interrupt context also.
+ *
  * Args:
  * ObjectInfo* metaInfo - static & runtime information about the object
  * unsigned long kmSleep - tells whether waiting for memory is allowed
@@ -279,8 +281,8 @@ static void ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo)
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-extern "C" void *KNew(ObjectInfo *metaInfo, unsigned long kmSleep)
-{
+extern "C" void *KNew(ObjectInfo *metaInfo, unsigned long kmSleep) __no_interrupt_func
+(
 	SpinLock(&metaInfo->lock);
 	Slab *freeSlab = ObFindSlab(metaInfo, kmSleep);
 	void *object = NULL;
@@ -294,8 +296,9 @@ extern "C" void *KNew(ObjectInfo *metaInfo, unsigned long kmSleep)
 	}
 	
 	SpinUnlock(&metaInfo->lock);
+
 	return (object);
-}
+)
 
 /**
  * Function: KDelete
@@ -304,14 +307,16 @@ extern "C" void *KNew(ObjectInfo *metaInfo, unsigned long kmSleep)
  * Simply deallocates the object and allows it to be allocated later, given its
  * runtime information.
  *
+ * This function can be called in a interrupt context.
+ *
  * Args:
  * void* object - ptr to allocated object
  * ObjectInfo* metaInfo - runtime information about the object
  *
  * Author: Shukant Pal
  */
-extern "C" void KDelete(void *object, ObjectInfo *metaInfo)
-{
+extern "C" void KDelete(void *object, ObjectInfo *metaInfo) __no_interrupt_func
+(
 	SpinLock(&metaInfo->lock);
 
 	Slab *slab = (Slab *) (((unsigned long) object & ~(KPGSIZE - 1)) + (KPGSIZE - sizeof(Slab)));
@@ -320,7 +325,7 @@ extern "C" void KDelete(void *object, ObjectInfo *metaInfo)
 	ObRecheckSlab(slab, metaInfo);
 	
 	SpinUnlock(&metaInfo->lock);
-}
+)
 
 /**
  * Function: KiCreateType

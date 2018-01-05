@@ -1,12 +1,5 @@
 /**
  * File: ScheduleRoller.cpp
- *
- * Summary:
- * 
- * Functions:
- *
- * Origin:
- *
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +16,7 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Exec/ScheduleClass.h>
+#include <Executable/ScheduleRoller.h>
 #include <HAL/ProcessorTopology.hpp>
 
 using namespace Executable;

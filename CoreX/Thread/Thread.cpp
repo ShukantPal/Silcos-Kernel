@@ -12,10 +12,10 @@
 
 #include <Debugging.h>
 #include <HAL/Processor.h>
-#include <Exec/Thread.h>
-#include <Exec/Process.h>
-#include <Exec/SchedList.h>
-#include <Exec/Scheduler.h>
+#include <Executable/Thread.h>
+#include <Executable/Process.h>
+#include <Executable/SchedList.h>
+#include <Executable/Scheduler.h>
 #include <HAL/Processor.h>
 #include <Memory/Address.h>
 #include <Memory/Pager.h>
@@ -101,15 +101,8 @@ void APThreadMain(){
 	while(TRUE){ asm volatile("nop"); };
 }
 
-#include <Exec/RunqueueBalancer.hpp>
+#include <Executable/RunqueueBalancer.hpp>
 void APInitService(){
-	DbgLine("APInitService");
-
-//	KThreadCreate((void*) &APThreadMain);
-//	KThreadCreate((void*)&APThreadMain);
-
-	Dbg("lod:" );DbgInt(GetProcessorById(PROCESSOR_ID)->domlink->taskInfo[0].load);
-
 	while(TRUE) { asm volatile("nop"); };
 }
 

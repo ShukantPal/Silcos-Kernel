@@ -8,8 +8,8 @@
  *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
  
 OUTPUT_FORMAT("elf32-i386")
-ENTRY(KModuleMain)
- 
+ENTRY(NO_ENTRY)
+
 PHDRS {
 	KmTextSegment PT_LOAD FILEHDR;/* Text segment will be read-only, execute */
 	KmDataSegment PT_LOAD;/* Data segment will be read-write, no-execute (for security) */

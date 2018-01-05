@@ -49,13 +49,6 @@
 	#define __sfence 	asm volatile("sfence");
 	#define __sti 		asm volatile("sti");
 
-	#define __no_interrupts(fcode)	\
-	{				\
-		__cli			\
-		fcode 			\
-		__sti			\
-	}
-
 	#define no_intr_ret 	asm volatile("sti"); return
 
 #endif
@@ -104,6 +97,56 @@ unsigned long HighestBitSet(unsigned long x){
 }
 
 #endif
+
+#define __no_interrupts(fcode)	\
+	__cli			\
+	fcode 			\
+	__sti			\
+
+/*
+ * This macro should be used only on the function which don't return
+ * anything. If the function does then __sti won't execute -> bug.
+ */
+#define __no_interrupt_func(fcode)		\
+{						\
+	__cli					\
+	fcode					\
+	__sti					\
+}
+
+/*
+ * This macro should be used on the function which return a named
+ * variable or any constant. This ensures __sti is called before
+ * returning.
+ */
+#define __ret_interrupt_func(fcode, ret)	\
+{						\
+	__cli					\
+	fcode					\
+	__sti					\
+	return (ret);				\
+}
+
+/*
+ * Use this macro when using __no_interrupt_return at the end. More semantic
+ * than useful...
+ */
+#define __no_ret__interrupt_func(fcode)		\
+{						\
+	__cli					\
+	fcode					\
+}
+
+/**
+ * Use this macro for returning from __no_interrupt_func
+ * or __ret_interrupt_func functions
+ */
+#define __no_interrupt_return(ret)		\
+	__sti					\
+	return (ret);
+
+#define _no_interrupt_open (
+#define _no_interrupt_close )
 
 class Atomic
 {
