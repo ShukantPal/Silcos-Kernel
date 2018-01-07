@@ -10,7 +10,7 @@
 #ifndef EXEC_EXEC_H
 #define EXEC_EXEC_H
 
-#include <Executable/Stack.h>
+#include <Executable/CPUStack.h>
 #include <Memory/Pager.h>
 #include <Types.h>
 #include <Util/AVLTree.h>
@@ -45,7 +45,7 @@ enum {
 #define TF_KERNEL 1
 #define TF_ROUTINE 2
 
-typedef struct Processor PROCESSOR;
+typedef struct Processor Processor;
 
 /**
  * Struct: KTask
@@ -67,7 +67,7 @@ struct KTask
 	union
 	{
 		AVLNODE Node;
-		LIST_ELEMENT ListLinker;
+		LinkedListNode ListLinker;
 		struct
 		{
 			KTask *next;
@@ -77,7 +77,7 @@ struct KTask
 		};
 	};
 	void *eip;// instruction-pointer
-	void (*run)(PROCESSOR *);// specialized run() method, null for default
+	void (*run)(Processor *);// specialized run() method, null for default
 	unsigned long taskFlags;// runtime execution flags
 	CPUStack *userStack;// user-stack struct
 	CPUStack *kernelStack;// kernel-stack struct (compulsory)
@@ -85,7 +85,7 @@ struct KTask
 	unsigned long RRM_ID;// resource-management id (deprecated)
 	ID id;// unique id
 	TYPE type;/* Legacy, type back-specifier */
-	PROCESSOR *cpu;/* Processor holding the runqueue in which this task exists */
+	Processor *cpu;/* Processor holding the runqueue in which this task exists */
 	CONTEXT *mmu;/* Address space which the task is using */
 	TIME startTime;/* K-Time start */
 	TIME timeStamp;/* K-Time last executed */

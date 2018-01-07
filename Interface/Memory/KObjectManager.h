@@ -79,7 +79,7 @@ extern "C" void *KNew(ObjectInfo *typeInfo, unsigned long kmSleep);
 extern "C" void KDelete(void *object, ObjectInfo *objectInfo);
 extern "C" unsigned long KiDestroyType(ObjectInfo *);
 
-void obSetupAllocator(Void);
-void SetupPrimitiveObjects(void);
+void obSetupAllocator(Void) kxhide;
+void SetupPrimitiveObjects(void) kxhide;
 
 #endif/* Memory/KObjectManager.h */

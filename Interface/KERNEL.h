@@ -42,6 +42,9 @@
 
 #define KLOCAL_END while(TRUE){ asm volatile("nop;"); }
 
+#define Max(a, b) ((a > b) ? a : b)
+#define Min(a, b) ((a < b) ? a : b)
+
 #ifdef IA32
 	#define __cli 		asm volatile("cli");
 	#define __mfence 	asm volatile("mfence");
@@ -98,6 +101,8 @@ unsigned long HighestBitSet(unsigned long x){
 
 #endif
 
+/****************************** Code with no interrupts intervening ********************************************/
+
 #define __no_interrupts(fcode)	\
 	__cli			\
 	fcode 			\
@@ -147,6 +152,11 @@ unsigned long HighestBitSet(unsigned long x){
 
 #define _no_interrupt_open (
 #define _no_interrupt_close )
+
+/****************************** elf visiblity of symbols ******************************************/
+
+#define kxport __attribute__((visibility("default")))
+#define kxhide __attribute__((visibility("hidden")))
 
 class Atomic
 {

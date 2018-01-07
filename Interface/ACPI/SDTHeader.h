@@ -39,9 +39,9 @@ struct _SDT_HEADER
 
 static inline
 bool VerifySdtChecksum(SDT_HEADER *Sdt) {
-	register U8 Sum = 0;
+	U8 Sum = 0;
 
-	for(register unsigned long Counter = 0; Counter < Sdt -> Length; Counter++)
+	for(unsigned long Counter = 0; Counter < Sdt -> Length; Counter++)
 		Sum += ((U8*) Sdt)[Counter];
 
 	return (Sum == 0);

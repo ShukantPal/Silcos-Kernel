@@ -10,10 +10,7 @@
 #include <HAL/Processor.h>
 #include <Debugging.h>
 #include <Executable/KTask.h>
-#include <Executable/Process.h>
-#include <Executable/SchedList.h>
 #include <Executable/Thread.h>
-#include <Executable/ThreadGroup.h>
 #include <Synch/Spinlock.h>
 
 #define NoThreadExecutable 140
@@ -45,18 +42,7 @@ TIME XMilliTime;
 #define InitSchedOperation SpinLock(&SchedSynchronizer)
 #define CompleteSchedOperation SpinUnlock(&SchedSynchronizer)
 
-/* Infer queue type by priority index. */
-U8 CtQueueType(U8 Type);
-
-#define NTFError 0xE1
-#define TGNVError 0xE2
-KTHREAD *RetrieveThread(struct ThreadGroup *TG);
-
-KTHREAD *SelectThread(U32 RunqueueNo);
-
-export_asm void Schedule(
-	PROCESSOR*
-);
+export_asm void Schedule(Processor*) kxhide;
 
 static inline TIME getSystemTime()
 {

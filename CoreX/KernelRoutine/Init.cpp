@@ -7,7 +7,6 @@
 #include <Module/ModuleRecord.h>
 #include <Module/ModuleLoader.h>
 #include <Memory/Pager.h>
-#include <Memory/PMemoryManager.h>
 #include <KERNEL.h>
 #include <Multiboot2.h>
 #include <Module/MSI.h>

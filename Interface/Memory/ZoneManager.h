@@ -56,9 +56,9 @@ typedef unsigned long ZNPNO;
 typedef
 struct ZonePreference
 {
-	LIST_ELEMENT LiLinker;
+	LinkedListNode LiLinker;
 	ZNPNO ZnPref;
-	CLIST ZoneList;
+	CircularList ZoneList;
 } ZNPREF;
 
 #define ATOMIC 0
@@ -153,7 +153,6 @@ public:
 	static void configureZones(unsigned long entrySize, unsigned long highestOrder, unsigned short *listInfo, LinkedList *listArray, struct Zone *zoneTable, unsigned long count);
 	static void configurePreference(struct Zone *zoneArray, struct ZonePreference *pref,  unsigned int count);
 	static void configureZoneMappings(struct Zone *zoneTable, unsigned long zoneCount);
-
 private:
 	struct BuddyBlock *descriptorTable;
 	struct ZonePreference *prefTable;
@@ -161,7 +160,7 @@ private:
 	struct Zone *zoneTable;
 	unsigned long zoneCount;
 
-	struct Zone *getZone(unsigned long blockOrder, unsigned long basePref, ZNFLG allocFlags, struct Zone *prefZone);
+	struct Zone *getZone(unsigned long blockOrder, unsigned long basePref, ZNFLG allocFlags, struct Zone *prefZone) kxhide;
 };
 
 }

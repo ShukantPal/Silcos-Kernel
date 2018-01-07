@@ -40,7 +40,7 @@
 void __cxa_finalize(void *callFunc)
 {
 	Elf::ABI::ExitorFunction *record =
-			(Elf::ABI::ExitorFunction*) __atExitEntries.Head;
+			(Elf::ABI::ExitorFunction*) __atExitEntries.head;
 
 	Elf::ABI::ExitorFunction *called;
 
@@ -51,7 +51,7 @@ void __cxa_finalize(void *callFunc)
 
 			called = record;
 			record = (Elf::ABI::ExitorFunction*)
-					record->linkageNode.Next;
+					record->linkageNode.next;
 			RemoveElement(&called->linkageNode, &__atExitEntries);
 			kobj_free((kobj*) called, tElf_ABI_ExitorFunc_);
 		}
@@ -62,7 +62,7 @@ void __cxa_finalize(void *callFunc)
 
 			called = record;
 			record = (Elf::ABI::ExitorFunction*)
-					record->linkageNode.Next;
+					record->linkageNode.next;
 			RemoveElement(&called->linkageNode, &__atExitEntries);
 			kobj_free((kobj*) called, tElf_ABI_ExitorFunc_);
 		}

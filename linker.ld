@@ -52,7 +52,6 @@ SECTIONS {
 	.data ALIGN (0x1000) : AT(ADDR(.data) - KERNEL_OFFSET){
 		*(.data)
 		*(.gnu.linkonce.d.*)
-
 	}
 	KernelDataEnd = .;
 

@@ -74,9 +74,9 @@ public:
 	static void loadFile(BlobRegister &blob);
 	static void loadBundle(LinkedList &blobList);
 private:
-	static void *moveFileIntoMemory(BlobRegister &blob);
-	static ABI globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob);
-	static void linkFile(ABI binaryIfc, BlobRegister& blob);
+	static void *moveFileIntoMemory(BlobRegister &blob) kxhide;
+	static ABI globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob) kxhide;
+	static void linkFile(ABI binaryIfc, BlobRegister& blob) kxhide;
 };
 
 }

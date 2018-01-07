@@ -10,7 +10,7 @@ LinkedListNode *ChDataAllocate(CHSYS *chInfo, unsigned long *statusFilter)
 
 	if(chReg->DCount != 0)
 	{
-		LinkedListNode *dNode = chReg->DList.Head;
+		LinkedListNode *dNode = chReg->DList.head;
 		RemoveElement(dNode, &chReg->DList);
 
 		if(chReg->DCount == 0)

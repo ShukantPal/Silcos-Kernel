@@ -74,7 +74,7 @@ struct Domain
 	union
 	{
 		LinkedListNode liLinker;
-		CLNODE clnLinker;
+		CircularListNode clnLinker;
 		struct
 		{
 			Domain *next;
@@ -163,8 +163,8 @@ public:
 
 private:
 	ProcessorTopology();// No usage as object is statically used
-	static Domain *systemDomain;
-	static ObjectInfo *tDomain;
+	static Domain *systemDomain kxhide;
+	static ObjectInfo *tDomain kxhide;
 };
 
 struct DomainBinding

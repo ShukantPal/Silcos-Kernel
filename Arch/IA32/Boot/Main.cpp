@@ -22,7 +22,6 @@
 #include <HAL/ADM.h>
 #include <HAL/CPUID.h>
 #include <HAL/Processor.h>
-#include <Executable/Process.h>
 #include <Executable/RunqueueBalancer.hpp>
 #include <Executable/Thread.h>
 #include <Memory/Pager.h>
@@ -32,7 +31,6 @@
 #include <Memory/KObjectManager.h>
 #include <Util/Memory.h>
 #include <Synch/Spinlock.h>
-#include <Multiboot.h>
 #include <Debugging.h>
 #include <Multiboot2.h>
 #include <TYPE.h>
@@ -56,9 +54,6 @@ extern "C" void __cxa_pure_virtual()
 {
 	DbgLine("compiler err: __cxa_pure_virtual() called, c++ virtual function problem!");
 }
-
-
-PROCESSOR_SETUP_INFO *dInfo;
 /**
  * Function: ValidateSupport()
  *
@@ -141,7 +136,6 @@ export_asm void Main(
 
 	SetupPrimitiveObjects();
 
-	InitPTable();
 	InitTTable();
 	RunqueueBalancer::init();
 

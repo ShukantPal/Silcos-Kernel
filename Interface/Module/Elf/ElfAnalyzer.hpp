@@ -8,6 +8,7 @@
 #define INTERFACE_MODULE_ELFANALYZER_HPP_
 
 #include "ELF.h"
+#include <KERNEL.h>
 
 namespace Module
 {
@@ -27,15 +28,15 @@ namespace Elf
 class ElfAnalyzer
 {
 public:
-	static bool validateBinary(Void *fileBinary);
-	static class ElfManager *getSecureManager();
+	static bool validateBinary(Void *fileBinary) kxhide;
+	static class ElfManager *getSecureManager() kxhide;
 
-	static unsigned long getSymbolHash(char *symbolName);
+	static unsigned long getSymbolHash(char *symbolName) kxhide;
 
 	// Not implemented yet!
-	static unsigned long getGNUSymbolHash(char *symbolName);
-	static struct Symbol* querySymbol(char *name, struct SymbolTable *symbolTable, struct HashTable *hashTable);
-	static struct Symbol* querySymbol(char *name, struct SymbolTable *symbolTable, struct GNUHashTable *gnuHash);
+	static unsigned long getGNUSymbolHash(char *symbolName) kxhide;
+	static struct Symbol* querySymbol(char *name, struct SymbolTable *symbolTable, struct HashTable *hashTable) kxhide;
+	static struct Symbol* querySymbol(char *name, struct SymbolTable *symbolTable, struct GNUHashTable *gnuHash) kxhide;
 };
 
 }

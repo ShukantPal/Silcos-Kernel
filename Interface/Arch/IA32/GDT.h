@@ -14,7 +14,7 @@
 #ifndef IA32_GDT_H__
 #define IA32_GDT_H__
 
-#include <Types.h>
+#include <KERNEL.h>
 
 #ifdef NAMESPACE_IA32_GDT
 
@@ -36,7 +36,7 @@ struct GDTPointer {
 typedef GDTPointer GDT_POINTER;
 
 void SetGateOn(unsigned short gateNo, unsigned int base, unsigned int limit,
-		unsigned char access, unsigned char gran, GDTEntry *gdt);
+		unsigned char access, unsigned char gran, GDTEntry *gdt) kxhide;
 
 #endif// NAMESPACE_IA32_GDT
 

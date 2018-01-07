@@ -13,9 +13,8 @@
 #ifndef EXEC_THREAD_H
 #define EXEC_THREAD_H
 
+#include <Executable/CPUStack.h>
 #include <Executable/KTask.h>
-#include <Executable/SchedList.h>
-#include <Executable/Stack.h>
 #include <Memory/Pager.h>
 #include <Synch/Spinlock.h>
 #include <Types.h>
@@ -51,7 +50,6 @@ struct EThreadInfo
 {
 	TIME SleepTime;
 	EXEC *PtrConjoint;
-	ExecList ExecWaiters;
 };
 
 typedef struct EThreadInfo ETI;
@@ -178,15 +176,11 @@ extern KTHREAD *kInitThread;
  * @Version 1
  * @Since Circuit 2.03
  */
-KTHREAD *KeGetThread(
-	ID threadID
-);
+KTHREAD *KeGetThread(ID threadID);
 
-void InitTTable(void);
-
-void SetupRunqueue();
-
-KTHREAD* KThreadCreate(void *entry);
+void InitTTable(void) kxhide;
+void SetupRunqueue() kxhide;
+KTHREAD* KThreadCreate(void *entry) kxhide;
 
 /* Thread Operation Exceptions */
 #define ParadoxError 0xE1

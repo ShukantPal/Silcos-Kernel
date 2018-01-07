@@ -28,7 +28,6 @@
 #define NS_ADM
 	#define NS_ADM_MULTIBOOT
 
-#include <Circuit.h>
 #include <HAL/Processor.h>
 #include <Memory/KFrameManager.h>
 #include <Util/CtPrim.h>

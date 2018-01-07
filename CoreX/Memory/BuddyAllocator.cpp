@@ -191,7 +191,7 @@ void BuddyAllocator::removeBuddyBlock(BuddyBlock *bBlock, LinkedList *containerL
 	RemoveElement((LinkedListNode *) bBlock, containerList);
 
 	BDUNLINK(bBlock);
-	if(containerList->Count == 0)
+	if(containerList->count == 0)
 	{
 		listInfo[LV_SUB(bBlock->LowerOrder)] &= ~(1 << bBlock->UpperOrder);
 		// No superblocks for given lower-order exist then
@@ -400,7 +400,7 @@ BuddyBlock *BuddyAllocator::allocateBlock(unsigned long blockOrder)
 	}
 	else
 	{
-		BuddyBlock *paSuperBlock = (BuddyBlock*) optimalList->Head;
+		BuddyBlock *paSuperBlock = (BuddyBlock*) optimalList->head;
 		removeBuddyBlock(paSuperBlock, optimalList);
 
 

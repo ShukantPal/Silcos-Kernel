@@ -5,7 +5,6 @@
 #ifndef ARCH_X86_PAGE_EXPLORER_H
 #define ARCH_X86_PAGE_EXPLORER_H
 
-#include <Circuit.h>
 #include <Memory/Address.h>
 #include <Memory/Pager.h>
 
@@ -15,17 +14,8 @@ import_asm U64 GlobalDirectory[512];
 import_asm U64 IdentityDirectory[512];
 import_asm U64 GlobalTable[512];
 
-U64 *GetDirectory(
-	unsigned long DirNo,
-	unsigned long frFlags,
-	CONTEXT *Context
-);
-
-U64 *GetPageTable(
-	unsigned short DirNo,
-	unsigned short TableNo,
-	unsigned long frFlags,
-	CONTEXT *Context
-);
+U64 *GetDirectory(unsigned long DirNo, unsigned long frFlags, CONTEXT *Context) kxhide;
+U64 *GetPageTable(unsigned short DirNo, unsigned short TableNo,
+			unsigned long frFlags, CONTEXT *Context) kxhide;
 
 #endif /* Arch/x86/PageExplorer.h */

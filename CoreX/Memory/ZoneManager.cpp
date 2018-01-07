@@ -380,7 +380,7 @@ void ZoneAllocator::configurePreference(Zone *zoneArray, ZonePreference *pref, u
 	unsigned int index = 0;
 	while(index < count)
 	{
-		ClnInsert((CircularListNode *) zoneArray, CLN_LAST, &pref->ZoneList);
+		AddCElement((CircularListNode *) zoneArray, CLAST, &pref->ZoneList);
 		++(index);
 		++(zoneArray);
 	}

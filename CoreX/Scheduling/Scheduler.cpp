@@ -10,21 +10,7 @@ Spinlock SchedSynchronizer;
 
 TIME XMilliTime; /* Maintain 64-bit kernel time. */
 
-unsigned long PickRoller(PROCESSOR *tproc)
-{
-	unsigned long rollerIndex = 0;
-
-	while(rollerIndex < SCHED_MAX)
-	{
-		if(tproc->scheduleClasses[rollerIndex].RunnerLoad > 0)
-			return (rollerIndex);
-		++rollerIndex;
-	}
-
-	return (SCHED_MAX);
-}
-
-export_asm void Schedule(PROCESSOR *tproc)
+export_asm void Schedule(Processor *tproc)
 {
 	ScheduleInfo *tsched = &tproc->crolStatus;
 	Executable::ScheduleRoller *lrol = tsched->presRoll;

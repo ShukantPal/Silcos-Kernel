@@ -22,8 +22,8 @@
 #include <Memory/KMemorySpace.h>
 #include <Util/CircularList.h>
 
-#define CPU(ID) (PROCESSOR *) (KCPUINFO + KB(4) * ID)
-#define GetProcessorById(ID) ((PROCESSOR*) (KCPUINFO + (ID << 12)))
+#define CPU(ID) (Processor *) (KCPUINFO + KB(4) * ID)
+#define GetProcessorById(ID) ((Processor*) (KCPUINFO + (ID << 12)))
 #define PROCESSOR_ID ((U32) RdApicRegister(APIC_REGISTER_ID) >> 24)
 #define PROCESSOR_STACK_SIZE 1024
 

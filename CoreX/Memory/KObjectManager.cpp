@@ -46,7 +46,7 @@ void SetupPrimitiveObjects(void)
 	tLinkedList = KiCreateType(nmLinkedList, sizeof(LinkedList), NO_ALIGN, NULL, NULL);
 }
 
-CLIST tList; /* List of active kernel object managers */
+CircularList tList; /* List of active kernel object managers */
 
 /**
  * Function: ObCreateSlab
@@ -193,7 +193,7 @@ static Slab *ObFindSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 		else
 			metaInfo->emptySlab = NULL;
 
-		ClnInsert((CircularListNode*) emptySlab, CLN_LAST, &metaInfo->partialList);
+		AddCElement((CircularListNode*) emptySlab, CLAST, &metaInfo->partialList);
 		return (emptySlab);
 	}
 }
@@ -218,8 +218,8 @@ static Slab *ObFindSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 static void ObPlaceSlab(Slab *slab, ObjectInfo *metaInfo)
 {
 	if(slab->freeCount == 0) {
-		ClnRemove((CLNODE *) slab, &metaInfo->partialList);
-		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->fullList);
+		RemoveCElement((CircularListNode *) slab, &metaInfo->partialList);
+		AddCElement((CircularListNode *) slab, CFIRST, &metaInfo->fullList);
 	}
 }
 
@@ -249,12 +249,12 @@ static void ObRecheckSlab(Slab *slab, ObjectInfo *metaInfo)
 {
 	if(slab->freeCount == 1)
 	{ // Came from full list
-		ClnRemove((CLNODE *) slab, &metaInfo->fullList);
-		ClnInsert((CLNODE *) slab, CLN_FIRST, &metaInfo->partialList);
+		RemoveCElement((CircularListNode *) slab, &metaInfo->fullList);
+		AddCElement((CircularListNode *) slab, CFIRST, &metaInfo->partialList);
 	}
 	else if(slab->freeCount == metaInfo->bufferPerSlab)
 	{
-		ClnRemove((CLNODE *) slab, &metaInfo->partialList);
+		RemoveCElement((CircularListNode *) slab, &metaInfo->partialList);
 
 		Slab *oldEmptySlab = metaInfo->emptySlab;
 		metaInfo->emptySlab = slab;
@@ -365,7 +365,7 @@ extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize, unsi
 	typeInfo->partialList.count = 0;
 	typeInfo->fullList.lMain = NULL;
 	typeInfo->fullList.count= 0;
-	ClnInsert((CLNODE*) typeInfo, CLN_LAST, &tList);
+	AddCElement((CircularListNode*) typeInfo, CLAST, &tList);
 
 	//Dbg("kobj Created: "); Dbg(tName); Dbg(" Size:"); DbgInt(tSize); Dbg(" "); DbgInt(tList.ClnCount); DbgLine("");
 
@@ -396,7 +396,7 @@ extern "C" unsigned long KiDestroyType(ObjectInfo *typeInfo)
 	}
 	else
 	{
-		ClnRemove((CLNODE*) typeInfo, &tList);
+		RemoveCElement((CircularListNode*) typeInfo, &tList);
 
 		Slab *emptySlab = (Slab*) typeInfo->emptySlab;
 		if(emptySlab != NULL)

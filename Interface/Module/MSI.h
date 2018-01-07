@@ -71,13 +71,9 @@ extern KCOR_MSICACHE msiKernelSections;
 class KernelElf
 {
 public:
-	static DynamicEntry *getDynamicEntry(DynamicTag tag);
-	static ModuleRecord *registerDynamicLink();
-	static void loadBootModules();
+	static DynamicEntry *getDynamicEntry(DynamicTag tag) kxhide;
+	static ModuleRecord *registerDynamicLink() kxhide;
+	static void loadBootModules() kxhide;
 };
-
-void MsiSetupKernelForLinking(
-		struct ElfCache *coreCache
-);
   
 #endif/* Module/MSI.h */

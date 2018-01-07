@@ -114,7 +114,7 @@ public:
 	static Symbol *querySymbol(char *symbolName, unsigned long& baseAddress);
 
 private:
-	static LinkedList globalRecordList;
+	static LinkedList globalRecordList kxhide;
 };
 
 }

@@ -11,6 +11,7 @@
 #include <Debugging.h>
 #include <Util/CtPrim.h>
 #include <Synch/Spinlock.h>
+#include <KERNEL.h>
 
 DebugStream *Streams[10];
 char StreamNo = -1;

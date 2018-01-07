@@ -202,7 +202,7 @@ void ModuleLoader::loadFile(BlobRegister &blob)
  */
 void ModuleLoader::loadBundle(LinkedList &blobList)
 {
-	BlobRegister *blob = (BlobRegister*) blobList.Head;
+	BlobRegister *blob = (BlobRegister*) blobList.head;
 
 	while(blob != NULL)
 	{
@@ -212,15 +212,15 @@ void ModuleLoader::loadBundle(LinkedList &blobList)
 		blob->abiFound =
 			ModuleLoader::globalizeDynamic((void*) blob->fileAddr, *blob->regForm, *blob);
 
-		blob = (BlobRegister*) blob->liLinker.Next;
+		blob = (BlobRegister*) blob->liLinker.next;
 	}
 
-	blob = (BlobRegister*) blobList.Head;
+	blob = (BlobRegister*) blobList.head;
 
 	while(blob != NULL)
 	{
 		ModuleLoader::linkFile(blob->abiFound, *blob);
-		blob = (BlobRegister*) blob->liLinker.Next;
+		blob = (BlobRegister*) blob->liLinker.next;
 	}
 }
 

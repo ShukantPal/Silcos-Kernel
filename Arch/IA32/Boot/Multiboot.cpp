@@ -2,7 +2,6 @@
 
 #include <Memory/KMemorySpace.h>
 #include <Memory/Pager.h>
-#include <Multiboot.h>
 #include <Multiboot2.h>
 #include <Debugging.h>
 

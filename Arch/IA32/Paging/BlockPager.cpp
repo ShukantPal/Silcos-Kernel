@@ -8,7 +8,6 @@
 #include <Memory/Address.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
-#include <Multiboot.h>
 #include <Util/Memory.h>
 #include <KERNEL.h>
 

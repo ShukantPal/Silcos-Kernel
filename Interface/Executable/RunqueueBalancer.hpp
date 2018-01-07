@@ -38,9 +38,9 @@ namespace Executable
 class RunqueueBalancer final
 {
 public:
-	static void init();
-	static void balanceWork(ScheduleClass cls);
-	static void balanceWork(ScheduleClass cls, HAL::Domain *dom);
+	static void init() kxhide;
+	static void balanceWork(ScheduleClass cls) kxhide;
+	static void balanceWork(ScheduleClass cls, HAL::Domain *dom) kxhide;
 
 	struct Accept : public HAL::IPIRequest
 	{
@@ -73,7 +73,7 @@ public:
 	};
 
 private:
-	RunqueueBalancer();
+	RunqueueBalancer() kxhide;
 };
 
 }// namespace Executable

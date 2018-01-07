@@ -5,14 +5,12 @@
 #ifndef X86_PORT_IO_H
 #define X86_PORT_IO_H
 
-#include <TYPE.h>
+#include <KERNEL.h>
 
-import_asm unsigned char ReadPort(unsigned short portNo);
+import_asm unsigned char ReadPort(unsigned short portNo) kxhide;
+import_asm void WritePort(unsigned short portNo, unsigned char byte) kxhide;
 
-import_asm void WritePort(unsigned short portNo, unsigned char byte);
-
-export_asm UBYTE ReadCMOSRegister(unsigned long cmosRegisterIndex);
-
-export_asm void WriteCMOSRegister(unsigned long cmosRegisterIndex, UBYTE cmosRegisterValue);
+export_asm UBYTE ReadCMOSRegister(unsigned long cmosRegisterIndex) kxhide;
+export_asm void WriteCMOSRegister(unsigned long cmosRegisterIndex, UBYTE cmosRegisterValue) kxhide;
 
 #endif /* IO.h */

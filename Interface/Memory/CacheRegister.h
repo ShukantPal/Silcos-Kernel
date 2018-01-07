@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2017 - Shukant Pal
  *
- * The cache register is a data structure used in the PROCESSOR to list (LIFO)
+ * The cache register is a data structure used in the Processor to list (LIFO)
  * zero-order data (pages). It is an extension inside the zone allocator.
  */
 #ifndef __MEMORY_CACHE_REGISTER_H
@@ -77,8 +77,8 @@ LinkedListNode *ChDataAllocate(
 	unsigned long *statusFilters
 );
 
-LIST_ELEMENT *ChDataFree(
-	LIST_ELEMENT *dInfo,
+LinkedListNode *ChDataFree(
+	LinkedListNode *dInfo,
 	CHSYS *chInfo
 );
 

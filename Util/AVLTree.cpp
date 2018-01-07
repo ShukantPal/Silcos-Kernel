@@ -1,7 +1,18 @@
 /* Copyright (C) 2017 - Shukant Pal */
 
-#include <Circuit.h>
 #include <Util/AVLTree.h>
+#include <KERNEL.h>
+
+/**
+ *
+ *  big note - this file has been deprecated
+ *
+ *
+ * not used yet in the microkernel. if it won't be used in the near future
+ * well delete it
+ *
+ *
+ */
 
 /**
  * AVLRotateRight() - 

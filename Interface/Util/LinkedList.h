@@ -1,138 +1,80 @@
 /**
- * Copyright (C) 2017 - Shukant Pal
- */
-
-#ifndef __UTIL_LINKED_LIST_H__
-#define __UTIL_LINKED_LIST_H__
-
-#include <Types.h>
-
-/* Helper macros */
-#define NextElement(E) (E -> Next)
-#define PreviousElement(E) (E -> Previous)
-
-typedef
-struct LinkedListNode {
-	struct LinkedListNode *Next;
-	struct LinkedListNode *Previous;
-} LinkedListNode;
-
-/**
- * Struct: GenericLinkedListNode
+ * File: LinkedList.h
  *
  * Summary:
- * This generic linked-list node is used for lists in which the elements point
- * to certain object by a (void*) pointer. This means they aren't contained in
- * the object listed.
+ * Declares the LinkedListNode, LinkedList and the functions which operate
+ * on them.
  *
- * NOTE:
- * This is of same size as the 'linked-list' thus you should allocated it from
- * the tLinkedList object-allocator.
+ * Functions:
+ * ShiftElement - moves a element from one list to the other
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
+#ifndef UTIL_LINKED_LIST_H__
+#define UTIL_LINKED_LIST_H__
+
+/**
+ * Struct: LinkedListNode
+ *
+ * Summary:
+ * This is the node used by the linked-list for connecting each element in the
+ * list. For other data structures, this should be put at the very beginning
+ * so that a mere (LinkedListNode*) cast can be passed to functions operating
+ * on the data in lists.
  *
  * Author: Shukant Pal
  */
-struct GenericLinkedListNode
+struct LinkedListNode
 {
-	union
-	{
-		GenericLinkedListNode *nextGenericNode;/* for client */
-		LinkedListNode *nextNode;/* for compat with linode */
-	};
-	union
-	{
-		GenericLinkedListNode *previousGenericNode;/* for client */
-		LinkedListNode *previousNode;/* for compat with linode */
-	};
-	Void *objectListed;
+	LinkedListNode *next;
+	LinkedListNode *prev;
 };
 
-typedef LinkedListNode LIST_ELEMENT;
-
-/* Helper macros */
-#define Head(L) (L -> Head)
-#define Tail(L) (L -> Tail)
-#define Count(L) (L -> Count)
-
-typedef
-struct LinkedList {
-	SIZE Count;
-	struct LinkedListNode *Head;
-	struct LinkedListNode*Tail;
-} LinkedList;
-
-void AddElement(LinkedListNode *newNode, struct LinkedList *List);
-
-void RemoveElement(LinkedListNode *newNode, LinkedList *list);
-
 /**
- * InsertElementAfter() - 
+ * Struct: LinkedList
  *
  * Summary:
- * This function inserts the new element after the given old element, and
- * assumes the old element to be a non-null LinkedListNode, which is participating
- * in the same list. If the given element is null or belongs to a different list
- * then the list will become corrupted.
+ * This is the descriptor for linked-lists which terminate at both ends with
+ * null pointers.
  *
- * The new element should also be isolated and not belong to another list,
- * otherwise that list will become corrupted.
- *
- * Args:
- * oldElement - Existing element, of the same list, after which a element is to inserted
- * newElement - A isolated element, to be added to the list
- * list - List on which operation is being done
- *
- * Returns: void
- *
- * @Version 1
- * @Since Circuit 2.03
+ * Author: Shukant Pal
  */
-void InsertElementAfter(
-	LinkedListNode *oldElement,
-	LinkedListNode *newElement,
-	LinkedList *list
-);
+struct LinkedList
+{
+	unsigned long count;
+	LinkedListNode *head;
+	LinkedListNode *tail;
+};
 
-/**
- * InsertElementBefore() - 
- *
- * Summary:
- * This function inserts the new element before the given old element, and
- * assumes the old element to be a non-null LinkedListNode, which is participating
- * in the same list. If the given element is null or belongs to a different list
- * then the list will become corrupted.
- *
- * The new element should also be isolated and not belong to another list,
- * otherwise that list will become corrupted.
- *
- * Args:
- * oldElement - Existing element, of the same list, before which a element is to inserted
- * newElement - A isolated element, to add to the list
- * list - List on which operation is being done
- *
- * Returns: void
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-void InsertElementBefore(
-	LinkedListNode *oldElement,
-	LinkedListNode *newElement,
-	LinkedList *list
-);
+extern "C"
+{
+	void AddElement(LinkedListNode *newNode, LinkedList *List);
+	void RemoveElement(LinkedListNode *newNode, LinkedList *list);
+	void InsertElementAfter(LinkedListNode *oldElement, LinkedListNode *newElement,
+					LinkedList *list);
+	void InsertElementBefore(LinkedListNode *oldElement, LinkedListNode *newElement,
+					LinkedList *list);
+	void PushHead(LinkedListNode *newHead, LinkedList *list);
+	LinkedListNode *PullTail(LinkedList *fromList);
+}
 
-void PushHead(
-	LinkedListNode *New,
-	LinkedList *List
-);
-
-LinkedListNode *PullTail(
-	LinkedList *List
-);
-
-static inline
-void ShiftElement(LinkedListNode *Elem, LinkedList *OldList, LinkedList *NewList){
-	RemoveElement(Elem, OldList);
-	AddElement(Elem, NewList);
+static inline void ShiftElement(LinkedListNode *elem, LinkedList *old, LinkedList *newList)
+{
+	RemoveElement(elem, old);
+	AddElement(elem, newList);
 }
 
 #endif/* Util/LinkedList.h */

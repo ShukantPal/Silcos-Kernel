@@ -32,10 +32,10 @@ class ElfLinker
 public:
 	static void __fill_edbg(RelEntry*, ElfManager&);
 
-	static void resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService);
-	static void resolveRelocation(RelaEntry *relocEntry, ElfManager &handlerService);
-	static void resolveRelocations(RelTable &relocTable, ElfManager &handlerService);
-	static void resolveRelocations(RelaTable &relaTable, ElfManager &handlerService);
+	static void resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService) kxhide;
+	static void resolveRelocation(RelaEntry *relocEntry, ElfManager &handlerService) kxhide;
+	static void resolveRelocations(RelTable &relocTable, ElfManager &handlerService) kxhide;
+	static void resolveRelocations(RelaTable &relaTable, ElfManager &handlerService) kxhide;
 
 	static inline void resolveRelocations(RelocationTable &relocTable, ElfManager &handlerService)
 	{

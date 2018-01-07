@@ -6,7 +6,7 @@
 
 #ifdef NAMESPACE_IA32_IDT
 
-#include <TYPE.h>
+#include <KERNEL.h>
 
 enum GateType
 {
@@ -42,6 +42,6 @@ extern "C" void MapHandler(
 	unsigned short handlerNo,
 	unsigned int handlerAddress,
 	IDTEntry *pIDT
-);
+) kxhide;
 
 #endif /* IA32/IDT.h */

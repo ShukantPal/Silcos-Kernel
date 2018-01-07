@@ -99,7 +99,7 @@ void SetFrames(ADDRESS addressEnd, MMFRAME *frameHead, CONTEXT *pageContext)
 			pageTable[tableOffset] |= frameAddress | KernelData;
 			--tableOffset;
 			FlushTLB(addressEnd);
-			frame = (MMFRAME *) (frame->ListLinker.Next);
+			frame = (MMFRAME *) (frame->ListLinker.next);
 			addressEnd -= KB(4);
 		}
 	}

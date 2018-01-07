@@ -18,7 +18,7 @@
  * KiFrameAllocate(), KiFrameFree() - Used for atomic, system memory allocated
  *
  * KiFrameEntrap() - Used for non-caching allocation of pageframes (to bypass the
- * PROCESSOR table)
+ * Processor table)
  *
  * Copyright (C) 2017 - Shukant Pal
  *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
@@ -80,7 +80,7 @@ void TypifyMRegion(
 	unsigned long typeValue,
 	unsigned long regionAddress,
 	unsigned long regionSize
-);
+) kxhide;
 
 #endif
 
@@ -104,7 +104,7 @@ void TypifyMRegion(
  */
 void SetupKFrameManager(
 	void
-);
+) kxhide;
 
 #endif
 
@@ -117,34 +117,11 @@ void SetupKFrameManager(
 #define OFFSET_NOINTR 31
 #define KF_NOINTR (1 << 31) /* Do not turn interrupts on */
 
-PADDRESS KeFrameAllocate(
-	unsigned long fOrder,
-	unsigned long prefZone,
-	unsigned long fFlags
-);
-
-/******************************************************************************
- * KeFrameFree() - 
- *
- * Summary: This function just deallocates the physical pageframe. Clients mustn't use the
- * pageframe after calling this.
- *
- * Args:
- * frameAddress - Address given during allocation
- *
- * Returns: 0
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See ZNSYS, ZNINFO, ZnFreeBlock() - "ZoneManager.h"
- ******************************************************************************/
-unsigned long KeFrameFree(
-	PADDRESS frameAddress
-);
+PADDRESS KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long fFlags);
+unsigned long KeFrameFree(PADDRESS frameAddress);
 
 #define KiFrameAllocate() KeFrameAllocate(0, ZONE_KERNEL, FLG_ATOMIC) /* Atomic allocation */
 #define KiFrameFree(fAddress) KeFrameFree(fAddress) /* Just the pair provided for KiFrameAllocate() */
-#define KiFrameEntrap(frFlags) KeFrameAllocate(0, ZONE_KERNEL, frFlags | FLG_ATOMIC | FLG_NOCACHE) /* Bypass the PROCESSOR table (non-caching) */
+#define KiFrameEntrap(frFlags) KeFrameAllocate(0, ZONE_KERNEL, frFlags | FLG_ATOMIC | FLG_NOCACHE) /* Bypass the Processor table (non-caching) */
 
-#endif /* Memory/KFrameManager.h */
+#endif/* Memory/KFrameManager.h */

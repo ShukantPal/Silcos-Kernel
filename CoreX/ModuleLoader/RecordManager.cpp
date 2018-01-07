@@ -76,9 +76,9 @@ ModuleRecord *RecordManager::createRecord(char *modName, unsigned long buildVers
  */
 Symbol *RecordManager::querySymbol(char *requiredSymbolName, unsigned long &baseAddress)
 {
-	ModuleRecord *qRecord = (ModuleRecord*) RecordManager::globalRecordList.Head;
+	ModuleRecord *qRecord = (ModuleRecord*) RecordManager::globalRecordList.head;
 	unsigned long qRecordIndex = 0;
-	unsigned long qRecordCount = RecordManager::globalRecordList.Count;
+	unsigned long qRecordCount = RecordManager::globalRecordList.count;
 
 	DynamicLink *qLink;
 	Symbol *foundSymbol;

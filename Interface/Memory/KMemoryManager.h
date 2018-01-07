@@ -17,7 +17,7 @@
 #ifdef NAMESPACE_MAIN
 	void SetupKMemoryManager(
 		void
-	);
+	) kxhide;
 #endif
 
 #ifdef NS_KMEMORYMANAGER

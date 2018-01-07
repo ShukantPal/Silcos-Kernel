@@ -190,7 +190,7 @@ void KernelElf::loadBootModules()
 
 	BlobRegister *nextBlob;
 
-	blob = (BlobRegister*) bmRecordList->Head;
+	blob = (BlobRegister*) bmRecordList->head;
 	while(blob != NULL)
 	{
 		if(blob->regForm->init)
@@ -198,12 +198,12 @@ void KernelElf::loadBootModules()
 			blob->regForm->init();
 		}
 
-		blob = (BlobRegister*) blob->liLinker.Next;
+		blob = (BlobRegister*) blob->liLinker.next;
 	}
 
 	DbgLine("Initialized all kernel boot modules");
 
-	blob = (BlobRegister*) bmRecordList->Head;
+	blob = (BlobRegister*) bmRecordList->head;
 	while(blob != NULL)
 	{
 		if(blob->regForm->entryAddr && *(unsigned long*) blob->regForm->entryAddr != NO_ENTRY_ADDR)
@@ -211,7 +211,7 @@ void KernelElf::loadBootModules()
 			KThreadCreate((void*) blob->regForm->entryAddr);
 		}
 		
-		nextBlob = (BlobRegister*) blob->liLinker.Next;
+		nextBlob = (BlobRegister*) blob->liLinker.next;
 		kobj_free((kobj*) blob, tBlobRegister);
 		blob = nextBlob;
 	}

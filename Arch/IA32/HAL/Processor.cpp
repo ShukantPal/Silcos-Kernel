@@ -1,4 +1,3 @@
-
 /**
  * File: Processor.c
  *
@@ -113,14 +112,14 @@ void ConstructProcessor(Processor *proc)
  */
 void AddProcessorInfo(MADTEntryLAPIC *PE)
 {
-	PROCESSOR *cpu = GetProcessorById(PE->apicID);
+	Processor *cpu = GetProcessorById(PE->apicID);
 	PROCESSOR_INFO *platformInfo = &cpu->Hardware;
 	unsigned long apicID = PE->apicID;
 	
 	if(apicID != BSP_ID)
 	{
 		EnsureUsability((ADDRESS) cpu, NULL, FLG_NOCACHE, KernelData | PageCacheDisable);
-		memset(cpu, 0, sizeof(PROCESSOR));
+		memset(cpu, 0, sizeof(Processor));
 	}
 
 	platformInfo->APICID = apicID;
@@ -182,7 +181,7 @@ extern "C" void SetupBSP()
 
 	Processor *cpu = GetProcessorById(PROCESSOR_ID);
 	EnsureUsability((ADDRESS) cpu, NULL, KF_NOINTR | FLG_NOCACHE, KernelData | PageCacheDisable);
-	memset(cpu, 0, sizeof(PROCESSOR));
+	memset(cpu, 0, sizeof(Processor));
 	ConstructProcessor(cpu);
 	DisablePIC();
 	MapIDT();

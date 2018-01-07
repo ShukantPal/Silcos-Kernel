@@ -13,8 +13,6 @@
 #include <Debugging.h>
 #include <HAL/Processor.h>
 #include <Executable/Thread.h>
-#include <Executable/Process.h>
-#include <Executable/SchedList.h>
 #include <Executable/Scheduler.h>
 #include <HAL/Processor.h>
 #include <Memory/Address.h>
@@ -159,7 +157,7 @@ int log_id = 2;
  * Author: Shukant Pal
  */
 KTHREAD *KThreadCreate(void *entry){
-	PROCESSOR *currentProcessor = GetProcessorById(PROCESSOR_ID);
+	Processor *currentProcessor = GetProcessorById(PROCESSOR_ID);
 	KTHREAD *newThread = KNew(tdInfo, KM_SLEEP);
 	newThread->Gate.taskFlags = (1 << 0) | (1 << 1);
 	newThread->Gate.eip = entry;

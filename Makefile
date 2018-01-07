@@ -42,8 +42,6 @@ ConfigObjects = Compile/RSDP.o Compile/RSDT.o Compile/MADT.o # ACPI tables
 
 IntrObjects = Compile/ExHandler.o # Core exception & device handlers
 
-InterProcessObjects =
-
 KernelRoutineObjects = Compile/Init.o
 
 # Memory Subsystems + Algorithms
@@ -51,15 +49,13 @@ MemoryObjects = Compile/BuddyAllocator.o Compile/CacheRegister.o \
 Compile/KFrameManager.o Compile/KMemoryManager.o  Compile/KObjectManager.o \
 Compile/Structure.o Compile/ZoneManager.o
 
-ProcessObjects = Compile/Process.o
-
 ThreadObjects = Compile/Thread.o
 
 # Core Scheduler + Scheduler Classes/Rollers
 SchedulerObjects = Compile/Scheduler.o Compile/ScheduleRoller.o \
 Compile/RoundRobin.o Compile/RunqueueBalancer.o #Compile/SchedList.o
 
-UtilObjects = Compile/AVLTree.o Compile/CircuitPrimitive.o Compile/CircularList.o \
+UtilObjects = Compile/CircuitPrimitive.o Compile/CircularList.o \
 Compile/Console.o Compile/Debugger.o Compile/LinkedList.o Compile/Stack.o
 
 moduleLoaderObjects = Compile/ElfManager.o Compile/ElfAnalyzer.o \
@@ -67,7 +63,7 @@ Compile/ModuleLoader.o Compile/MSI.o Compile/ElfLinker.o Compile/RecordManager.o
 
 # Header Dependencies
 
-BuildChain : BuildInit BuildArch BuildConfig BuildKernelRoutines BuildIntr BuildInterProcess BuildMemory BuildProcess BuildScheduler BuildThread BuildUtil BuildModuleLoader Link
+BuildChain : BuildInit BuildArch BuildConfig BuildKernelRoutines BuildIntr BuildMemory BuildScheduler BuildThread BuildUtil BuildModuleLoader Link
 
 $(IfcHAL)/Processor.h: $(IfcMemory)/CacheRegister.h $(IfcUtil)/AVLTree.h $(IfcUtil)/CircularList.h
 
@@ -166,11 +162,6 @@ Compile/ExHandler.o: CoreX/Intr/ExHandler.cpp
 
 BuildIntr: $(IntrObjects)
 
-Compile/MessagePassing.o: CoreX/InterProcess/MessagePassing.cpp
-	$(CC) $(CFLAGS) CoreX/InterProcess/MessagePassing.cpp -o Compile/MessagePassing.o
-
-BuildInterProcess: $(InterProcessObjects)
-
 Compile/Init.o: CoreX/KernelRoutine/Init.cpp
 	$(CC) $(CFLAGS) CoreX/KernelRoutine/Init.cpp -o Compile/Init.o
 
@@ -201,11 +192,6 @@ Compile/ZoneManager.o: $(IfcMemory)/ZoneManager.h CoreX/Memory/ZoneManager.cpp
 	$(CC) $(CFLAGS) CoreX/Memory/ZoneManager.cpp -o Compile/ZoneManager.o
 
 BuildMemory: $(MemoryObjects)
-
-Compile/Process.o: CoreX/Process/Process.cpp
-	$(CC) $(CFLAGS) CoreX/Process/Process.cpp -o Compile/Process.o
-
-BuildProcess: $(ProcessObjects)
 
 Compile/Scheduler.o: CoreX/Scheduling/Scheduler.cpp
 	$(CC) $(CFLAGS) CoreX/Scheduling/Scheduler.cpp -o Compile/Scheduler.o
@@ -273,7 +259,11 @@ Compile/RecordManager.o: $(IfcModule)/ModuleRecord.h CoreX/ModuleLoader/RecordMa
 BuildModuleLoader: $(moduleLoaderObjects)
 
 Link: Compile/IO.o
-	ld -m elf_i386 -T linker.ld --export-dynamic --strip-all -pie Compile/IO.o $(InitObjects) $(ConfigObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) $(InterProcessObjects) $(MemoryObjects) $(ProcessObjects) $(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) -o circuitk-1.02
+	ld -m elf_i386 -T linker.ld --export-dynamic --strip-all -pie \
+	Compile/IO.o $(InitObjects) $(ConfigObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) \
+	$(InterProcessObjects) $(MemoryObjects) \
+	$(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) -o \
+	 circuitk-1.02
 	make -C ./Modules
 	cp circuitk-1.02 ../circuit-iso/boot/
 	cp -a Modules/Builtin/* ../circuit-iso/boot/

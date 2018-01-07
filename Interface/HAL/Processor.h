@@ -5,7 +5,7 @@
  * This file presents the interface for managing multi-processing in the kernel. Each CPU must be
  * handled seperately by the software and this is achieved by keeping information of each CPU in
  * table. Each CPU is given 4 (32-bit) or 8 (64-bit) KB for keeping its information and this is done in
- * the PROCESSOR struct. Each processor is identified by its PROCESSOR_ID (platform-specific) and
+ * the Processor struct. Each processor is identified by its PROCESSOR_ID (platform-specific) and
  * this is the index for it in the processor table which is placed at KCPUINFO in the kernel memory. 
  *
  * Processor topology is also maintained by the system in order to optimize resource allocation. Each
@@ -14,11 +14,11 @@
  * SCHED_GROUPs are the children of a SCHED_DOMAIN.
  *
  * Types:
- * PROCESSOR - per-CPU data struct
+ * Processor - per-CPU data struct
  * PROCESSOR_TOPOLOGY - used for managing processor topology and sched domains
  *
  * Functions:
- * AddProcessorInfo() - Setup PROCESSOR struct
+ * AddProcessorInfo() - Setup Processor struct
  * SetupProcessor() - HAL-init per-CPU
  * MxRegisterProcessor() - Register processor topology in the system
  * MxIterateTopology() - Do some operation on each domain in which this processor exists
@@ -31,9 +31,7 @@
 #include <IA32/APIC.h>
 #include "ProcessorTopology.hpp"
 #include <ACPI/MADT.h>
-#include <Executable/CFS.h>
 #include <Executable/RoundRobin.h>
-#include <Executable/SchedList.h>
 #include <Memory/CacheRegister.h>
 #include <Memory/KMemorySpace.h>
 #include <Util/AVLTree.h>
@@ -67,15 +65,6 @@ extern U32 BSP_HID;
 #define PoID(P) (P -> Hardware)
 #define HardwareHeader(P) (P -> Hardware)
 #define SID(P) (P -> SId)
-
-/* Use only while including Thread.h & Process.h */
-//#define ExecThread_ptr(P) (P -> PoExT)
-
-//#define ExecThread_(P) ((struct Thread *) P -> PoExT)
-//#define ExecProcess_(P) ((struct Process *) &PTable[ExecThread_(P) -> ParentID])
-
-//#define ExecThread(P) ((struct Thread *) P -> PoExT)
-//#define ExecProcess(P) ((struct Process *) &PTable[ExecThread(P) -> ParentID])
 
 typedef
 struct ScheduleInfo
@@ -166,7 +155,7 @@ struct IPIRequest
 
 }
 
-typedef struct Processor
+struct Processor
 {
 	LinkedListNode LiLinker;/* Participate in lists */
 	unsigned int ProcessorCluster;/* NUMA Domain */
@@ -183,7 +172,6 @@ typedef struct Processor
 	CHREG pageCache[2];
 	CHREG slabCache;
 	SPIN_LOCK PageLock;/* Obselete */
-	KSCHED_ROLLER scheduleClasses[3];
 	Executable::ScheduleRoller *lschedTable[3];// ptr-table to schedule-classes
 	Executable::RoundRobin rrsched;// round-robin scheduler
 	void *IdlerThread;// idle-task for this cpu
@@ -192,9 +180,9 @@ typedef struct Processor
 	CircularList actionRequests;// list of action-request waiting for handling
 	Spinlock migrlock;// migration lock (for registering action-requests)
 	ProcessorInfo Hardware;// platform-specifics
-} PROCESSOR;
+};
 
-extern PROCESSOR *CPUArray;
+extern Processor *CPUArray;
 
 namespace HAL
 {

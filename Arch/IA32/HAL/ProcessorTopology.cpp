@@ -143,7 +143,7 @@ void ProcessorTopology::plug()
 			SpinLock(&token->lock);
 		}
 
-		ClnInsert((CircularListNode*) token, CLN_FIRST, domList);
+		AddCElement((CircularListNode*) token, CFIRST, domList);
 		domBuiltLastTime = true;
 		goto ContinueBuild;
 

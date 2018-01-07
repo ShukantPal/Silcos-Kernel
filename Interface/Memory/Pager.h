@@ -172,18 +172,4 @@ bool CheckUsability(ADDRESS address, CONTEXT *pgContext);
 
 void EnsureAllMappings(unsigned long address, PADDRESS pAddress, unsigned long mapSize,
 			CONTEXT *pgContext, PAGE_ATTRIBUTES pgAttr);
-
-/* Used to expand heaps by size HEAP_EXTENSION_SIZE (PageTrans) */
-ADDRESS RtDynamicMemory(
-);
-
-ADDRESS AtStack(
-	CONTEXT *
-);
-
-void DtStack(
-	CONTEXT *,
-	unsigned long StackBase
-);
-
 #endif /* Memory/Pager.h */

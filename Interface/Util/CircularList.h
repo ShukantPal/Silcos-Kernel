@@ -2,7 +2,7 @@
  * File: CircularList.h
  *
  * Summary:
- * C-based circular-list is declared here.
+ * C-based circular-list is declared here. It is useful for fast full iteration.
  *
  * Functions:
  * ClnInsert - insert a circular-list node into a list (pre-allocated)
@@ -26,25 +26,25 @@
 #ifndef UTIL_CIRCULAR_LIST_H__
 #define UTIL_CIRCULAR_LIST_H__
 
-#include <TYPE.h>
-
-typedef
 struct CircularListNode
 {
 	CircularListNode *next;
 	CircularListNode *last;
-} CLNODE;
+};
 
-typedef
-struct CircularList {
+struct CircularList
+{
 	unsigned long count;
 	CircularListNode *lMain;
-} CLIST;
+};
 
-#define CLN_LAST 0
-#define CLN_FIRST 1
+enum CInsertMode
+{
+	CLAST  = 0,
+	CFIRST = 1
+};
 
-extern "C" void ClnInsert(CircularListNode *ClnNode, unsigned long ClnPosition, CircularList *clList);
-extern "C" void ClnRemove(CircularListNode *ClnNode, CircularList *clList);
+extern "C" void AddCElement(CircularListNode *node, unsigned long pos, CircularList *clist);
+extern "C" void RemoveCElement(CircularListNode *node, CircularList *clist);
 
 #endif/* Util/CircularList.h */

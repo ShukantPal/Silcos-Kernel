@@ -5,7 +5,7 @@
 #define __MEMORY_BUDDY_MANAGER_H__
 
 #include <Util/LinkedList.h>
-#include <TYPE.h>
+#include <KERNEL.h>
 
 namespace Memory
 {
@@ -124,15 +124,15 @@ private:
 	unsigned long freeBuddies;// Blocks available in the allocator
 	unsigned long allocatedBuddies;// Blocks that have been pushed out of the allocator
 
-	struct BuddyBlock *getBuddyBlock(unsigned long blockOrder, struct BuddyBlock *);
-	struct LinkedList *getBuddyList(unsigned long optimalOrder);
-	struct LinkedList *getBuddyList(unsigned long lowerOrder, unsigned long upperOrder);
-	struct LinkedList *getBuddyList(struct BuddyBlock *);
-	Void addBuddyBlock(struct BuddyBlock *);
-	Void removeBuddyBlock(struct BuddyBlock *);
-	Void removeBuddyBlock(struct BuddyBlock *, struct LinkedList *);
-	struct BuddyBlock *splitSuperBlock(unsigned long newOrder, struct BuddyBlock *bInfo, struct BuddyBlock **lowerSuperBlock, struct BuddyBlock **upperSuperBlock);
-	struct BuddyBlock *mergeSuperBlock(struct BuddyBlock *, unsigned long maxBlockOrder);
+	BuddyBlock *getBuddyBlock(unsigned long blockOrder, struct BuddyBlock *) kxhide;
+	LinkedList *getBuddyList(unsigned long optimalOrder) kxhide;
+	LinkedList *getBuddyList(unsigned long lowerOrder, unsigned long upperOrder) kxhide;
+	LinkedList *getBuddyList(BuddyBlock *) kxhide;
+	Void addBuddyBlock(BuddyBlock *) kxhide;
+	Void removeBuddyBlock(BuddyBlock *) kxhide;
+	Void removeBuddyBlock(BuddyBlock *, LinkedList *) kxhide;
+	BuddyBlock *splitSuperBlock(unsigned long newOrder, BuddyBlock *bInfo, BuddyBlock **lowerSuperBlock, BuddyBlock **upperSuperBlock) kxhide;
+	BuddyBlock *mergeSuperBlock(BuddyBlock *, unsigned long maxBlockOrder) kxhide;
 };
 
 } // namespace Internal
