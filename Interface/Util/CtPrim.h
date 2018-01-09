@@ -18,5 +18,6 @@ void memcpyf(const void *Pointer, void *Buffer, SIZE ByteSize);
 
 bool memcmp(const void *from, const void *to, SIZE cpSize);
 bool strcmp(const char *str0, const char *str1);
+bool strcmpn(const char *str0, const char *str1, const long n);
 
 #endif/* Util/CtPrim.h */

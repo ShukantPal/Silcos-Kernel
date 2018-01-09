@@ -70,9 +70,10 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
+						<entry excluding="ModuleFramework/Framework|ResourceManager/Interface/Process|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -127,9 +128,10 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|Object|Process|Modules/ResourceManager/Interface/Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ModuleFramework/Framework"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Modules/ResourceManager/Interface/Process"/>
+						<entry excluding="ModuleFramework/Framework|ResourceManager/Interface/Process|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

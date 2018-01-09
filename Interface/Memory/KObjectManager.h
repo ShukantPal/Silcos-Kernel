@@ -25,14 +25,15 @@
 #ifndef __MEMORY_KOBJECT_MANAGER_H__
 #define __MEMORY_KOBJECT_MANAGER_H__
 
+#include "KFrameManager.h"
 #include "Pager.h"
 #include <Synch/Spinlock.h>
 #include <Util/AVLTree.h>
 #include <Util/CircularList.h>
 #include <TYPE.h>
 
-#define KM_SLEEP 1
-#define KM_NOSLEEP 0
+#define KM_SLEEP FLG_ATOMIC
+#define KM_NOSLEEP FLG_NONE
 
 /*
  * Default-alignment is 4 for 32-bit systems/ 8 for 64-bit systems

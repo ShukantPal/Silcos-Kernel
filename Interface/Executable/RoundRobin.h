@@ -29,19 +29,19 @@ namespace Executable
 class RoundRobin final : public ScheduleRoller
 {
 public:
-	virtual KTask *add(KTask *newTask) kxhide;
-	virtual KTask *allocate(TIME t, Processor *cpu) kxhide;
-	virtual KTask *update(TIME t, Processor *cpu) kxhide;
-	virtual void free(TIME at, Processor *cpu) kxhide;
-	virtual void remove(KTask *tTask) kxhide;
-	virtual void send(Processor *to, CircularList& list, unsigned long deltaLoad) kxhide;
-	virtual void recieve(KTask *first, KTask *last, unsigned long count, unsigned long load) kxhide;
-	RoundRobin() kxhide;
+	virtual KTask *add(KTask *newTask);
+	virtual KTask *allocate(TIME t, Processor *cpu);
+	virtual KTask *update(TIME t, Processor *cpu);
+	virtual void free(TIME at, Processor *cpu);
+	virtual void remove(KTask *tTask);
+	virtual void send(Processor *to, CircularList& list, unsigned long deltaLoad);
+	virtual void recieve(KTask *first, KTask *last, unsigned long count, unsigned long load);
+	RoundRobin();
+	~RoundRobin();
 private:
 	KTask *mainTask;// circular list -> main task
 	KTask *mostRecent;// most recently run task
 	unsigned long taskCount;// no. of tasks on this cpu
-	~RoundRobin() kxhide;
 };
 
 }

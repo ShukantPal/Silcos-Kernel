@@ -105,14 +105,14 @@ struct ModuleRecord
 class RecordManager
 {
 public:
-	static inline void registerRecord(ModuleRecord *modRecord){
+	static inline void registerRecord(ModuleRecord *modRecord)
+	{
 		AddElement((LinkedListNode *) modRecord, &globalRecordList);
 	}
 
-	static ModuleRecord *createRecord(char *modName, unsigned long modVersion, unsigned long type);
-
+	static ModuleRecord *create(char *modName, unsigned long modVersion, unsigned long type);
+	static const ModuleRecord *search(char *name);
 	static Symbol *querySymbol(char *symbolName, unsigned long& baseAddress);
-
 private:
 	static LinkedList globalRecordList kxhide;
 };

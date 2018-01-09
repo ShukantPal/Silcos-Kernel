@@ -20,6 +20,7 @@
 #define NS_KFRAMEMANAGER/* MM_FRAME is internal to the KFrameManager */
 
 #include "Pager.h"
+#include "KFrameManager.h"
 
 MMFRAME *GetFrames(
 	ADDRESS address,

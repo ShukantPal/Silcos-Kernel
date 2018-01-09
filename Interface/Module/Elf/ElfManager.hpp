@@ -51,6 +51,7 @@ namespace Elf
 class ElfManager
 {
 public:
+	ElfManager();
 	ElfManager(ElfHeader *binaryHeader);
 	~ElfManager();
 

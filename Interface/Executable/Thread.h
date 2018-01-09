@@ -1,27 +1,14 @@
 /**
  * Copyright (C) 2017 - Shukant Pal
- *
- * A thread is a basic scheduling unit in modern operating systems. Its importance is
- * lowered by using the KRUNNABLE interface to the scheduler, but it is must be given
- * to run user-application. Here, a thread is just a execution path inside a process that
- * can be run concurrently along with other threads (on different CPUs). But, threads
- * undergo IPC (not processes), and thus can switch address spaces (if allowed).
- *
- * A kThread belongs to the (Kernel) process. This process has no address space
- * and thus, kernel threads cannot rely on the data below KERNEL_OFFSET.
  */
-#ifndef EXEC_THREAD_H
-#define EXEC_THREAD_H
+#ifndef EXECUTABLE_THREAD_H__
+#define EXECUTABLE_THREAD_H__
 
 #include <Executable/CPUStack.h>
 #include <Executable/KTask.h>
 #include <Memory/Pager.h>
 #include <Synch/Spinlock.h>
 #include <Types.h>
-
-/* Gate macro */
-#define TGate(T) (T -> Gate)
-#define TdGate(T) (T -> Gate)
 
 /* TdStatus macros */
 enum
@@ -46,38 +33,6 @@ enum ThreadState
 	Thread_CustomStack = (1 << 4)
 };
 
-struct EThreadInfo
-{
-	TIME SleepTime;
-	EXEC *PtrConjoint;
-};
-
-typedef struct EThreadInfo ETI;
-
-/* Helper macros */
-#define LocalPrio(T) (T -> Priority)
-#define LocalPriv(T) (T -> Privelege)
-
-#define TdPrio(T) (T -> Priority)
-#define TdPrivelege(T) (T -> Privelege)
-
-#define TFlags(T) (T -> Flags)
-#define TdFlags(T) (T -> Flags)
-#define TdStatus(T) (T -> Status)
-
-#define Status(T) (T -> Status)
-#define ProgramCounter(T) (T -> ProgramCounter)
-#define StackBase(T) (T -> UserStack.Base)
-#define StackPtr(T) (T -> UserStack.Pointer)
-#define ParentID(T) (T -> ParentID)
-
-/* TFlags macros */
-#define ISRealtime(T) (TFlags(T) & (1 << 0))
-#define ISUserMode(T) (TFlags(T) & (1 << 1))
-
-/* User-mode & kernel-mode threads */
-
-/* User-mode & kernel-mode values*/
 #define UserThread 1
 #define KernelThread 0
 
@@ -87,79 +42,25 @@ typedef struct EThreadInfo ETI;
 
 #define CustomStack(T) (TdFlags(T) >> 4 & 1)
 
-/* Also #include <Exec/Process.h> to  use this */
-#define Parent(T) ((struct Process*) (&PTable[T -> ParentID]))
-
-#define TdETI(T) (T -> ExTI)
-#define TdConjoint(T) (T -> ExTI.PtrConjoint)
-#define TdSleepTime(T) (T -> ExTI.SleepTime)
-#define TdWaiting(T) (T -> ExTI.ExecWaiters)
-#define TdLock(T) (T -> Lock)
-
-typedef void KTD_PARAMS;
-
-typedef
-struct {
-	KTD_PARAMS *ParamList;
-	SIZE ParamSize;
-	void *ThreadEntry;
-} KTHREAD_PARAMS;
-
-typedef
-struct {
-	unsigned long EntryMode;
-	
-} KTHREAD_ENTRY;
-
-/**
- * KTHREAD - 
- *
- * Summary:
- * This type represents a schedulable kernel thread. It belongs to a process and has its
- * own set of permissions and priorities. It does not hold any 'resources'. It is just a
- * execution path, that can be run as a independent KRUNNABLE.
- *
- * Although thread belonging to the same process share its address space, threads (which
- * are allowed), can switch to another address space. This technique is used for implementing
- * controlled IPC, e.g. LPC, RPC, and Object Copying. But, the address space still remains
- * resource given to a process. 
- *
- * A thread doesn't hold any resources, but as the kernel is extendable, a hybrid type can
- * be made, between a THREAD and a PROCESS. Most user-applications don't need a special
- * entity for that, thus, it is not implemented in the KERNEL.
- *
- * NOTE:
- * KRUNNABLE interface is 
- *
- * Fields:
- * Gate - KRUNNABLE descriptor
- * ...
- *
- * @Before THREAD
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- */
-typedef
-struct _KTHREAD {
-	KRUNNABLE Gate;
+struct Thread
+{
+	KTask Gate;
 	UBYTE Priority;
 	UBYTE Privelege;
 	unsigned short Flags;
 	unsigned long Status;
 	void (*ProgramCounter)();
-	KSTACKINFO UserStack;
-	KSTACKINFO KernelStack;
+	CPUStack UserStack;
+	CPUStack KernelStack;
 	ID ParentID;//48
-	ETI ExTI;
 	CONTEXT *tdContext;
 	SPIN_LOCK Lock;
-} KTHREAD;
+};
 
 typedef unsigned long KTHREAD_HANDLE;
 
-extern KTHREAD *kIdlerThread;
-extern KTHREAD *kInitThread;
+extern Thread *kIdlerThread;
+extern Thread *kInitThread;
 
 /**
  * KeGetThread() - 
@@ -171,20 +72,15 @@ extern KTHREAD *kInitThread;
  * Args:
  * threadID - TID of the referred thread
  *
- * Returns: The KTHREAD structure (pointer)
+ * Returns: The Thread structure (pointer)
  *
  * @Version 1
  * @Since Circuit 2.03
  */
-KTHREAD *KeGetThread(ID threadID);
+Thread *KeGetThread(ID threadID);
 
-void InitTTable(void) kxhide;
-void SetupRunqueue() kxhide;
-KTHREAD* KThreadCreate(void *entry) kxhide;
+void InitTTable(void);
+void SetupRunqueue();
+Thread* KThreadCreate(void *entry);
 
-/* Thread Operation Exceptions */
-#define ParadoxError 0xE1
-#define SelfDestructError 0xE2
-#define HardwareException 0xE3
-
-#endif /* Exec/Thread.h */
+#endif/* Executable/Thread.h */

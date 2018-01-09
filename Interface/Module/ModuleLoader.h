@@ -76,6 +76,7 @@ public:
 private:
 	static void *moveFileIntoMemory(BlobRegister &blob) kxhide;
 	static ABI globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob) kxhide;
+public:
 	static void linkFile(ABI binaryIfc, BlobRegister& blob) kxhide;
 };
 

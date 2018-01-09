@@ -38,7 +38,7 @@ namespace Executable
 class RunqueueBalancer final
 {
 public:
-	static void init() kxhide;
+	static void init();
 	static void balanceWork(ScheduleClass cls) kxhide;
 	static void balanceWork(ScheduleClass cls, HAL::Domain *dom) kxhide;
 

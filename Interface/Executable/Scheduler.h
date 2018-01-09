@@ -42,7 +42,7 @@ TIME XMilliTime;
 #define InitSchedOperation SpinLock(&SchedSynchronizer)
 #define CompleteSchedOperation SpinUnlock(&SchedSynchronizer)
 
-export_asm void Schedule(Processor*) kxhide;
+export_asm void Schedule(Processor*);
 
 static inline TIME getSystemTime()
 {
