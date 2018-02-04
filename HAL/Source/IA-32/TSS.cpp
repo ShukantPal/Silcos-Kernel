@@ -5,10 +5,12 @@
 #include <IA32/Processor.h>
 #include <Util/CtPrim.h>
 
+using namespace HAL;
+
 TSS SystemTSS;
 import_asm void ExecuteLTR(void);
 
-extern "C" void SetupTSS(ProcessorInfo *pinfo)
+extern "C" void SetupTSS(ArchCpu *pinfo)
 {
 	TSS *pTSS = &(pinfo->kTSS);
 

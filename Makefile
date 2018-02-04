@@ -9,6 +9,7 @@
 Build:
 	make BuildChain -C ./KernelHost
 	make IA32_HAL   -C ./HAL
+	make ExMake -C ./ExecutionManager
 	make MfMake -C ./ModuleFramework
 	make ObMake -C ./ObjectManager
 	make RsMake -C ./ResourceManager
@@ -17,7 +18,7 @@ Build:
 
 q: Build
 	grub-mkrescue -o os.iso ../circuit-iso --modules="iso9660 part_msdos multiboot"
-	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=2,cores=1,sockets=1 -display sdl
+	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=1,cores=1,sockets=1 -display sdl -cpu Broadwell
 
 b: Build
 	grub-mkrescue -o os.iso ../circuit-iso --modules="iso9660 part_msdos multiboot"

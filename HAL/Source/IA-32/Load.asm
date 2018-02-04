@@ -1,11 +1,3 @@
-;+=============================================================================
-; File: Load.asm
-;
-; Summary: This file contains the code for loading system data structures - GDT, IDT, and TSS.
-;
-; Copyright (C) - Shukant Pal
-;=============================================================================+
-
 section .text
 
 	Exit:

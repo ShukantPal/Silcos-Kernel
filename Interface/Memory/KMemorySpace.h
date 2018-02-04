@@ -35,6 +35,6 @@
 #endif
 
 extern ADDRESS ArchBlock;
-extern ADDRESS ConfigBlock;
+extern ADDRESS stcConfigBlock;
 
 #endif

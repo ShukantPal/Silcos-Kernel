@@ -7,10 +7,10 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 
-#include <Object.hxx>
 #include <Debugging.h>
 #include <Heap.hxx>
 #include <TYPE.h>
+#include "../Interface/Object.hpp"
 
 unsigned char ModuleName[16] = "KTERM";
 unsigned long ModuleVersion = 1001000;

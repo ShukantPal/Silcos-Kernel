@@ -25,7 +25,6 @@
 
 #include <Types.h>
 #include <Synch/Spinlock.h>
-#include <Util/XArray.h>
 #include "KFrameManager.h"
 
 /* Paging attribute macros */
@@ -75,7 +74,7 @@ struct _CONTEXT {
 	unsigned int Flags;/* Context-handling flags, provided by macros */
 	PAGE_TRANSALATOR HardwarePage;/* Hardware-impl of the paging mechanism */
 	unsigned int UsedBy;/* Number of resource-handlers referencing this context */
-	SPIN_LOCK ContextLock;/* Lock for concurrent accesses*/
+	Spinlock ContextLock;/* Lock for concurrent accesses*/
 } CONTEXT;
 
 extern /* Only addresses > 3gb mapped */

@@ -27,12 +27,15 @@ SRC_ACPI = Source/ACPI
 # A C P I   B u i l d   S y s t e m
 #
 
-ACPI_Build = $(COM_ACPI)/MADT.o $(COM_ACPI)/RSDP.o \
-$(COM_ACPI)/RSDT.o
+ACPI_Build = $(COM_ACPI)/MADT.o $(COM_ACPI)/HPET.o \
+$(COM_ACPI)/RSDP.o $(COM_ACPI)/RSDT.o
 
 $(COM_ACPI)/MADT.o: $(SRC_ACPI)/MADT.cpp
 	$(CC) $(CFLAGS) $(SRC_ACPI)/MADT.cpp -o $(COM_ACPI)/MADT.o
 	
+$(COM_ACPI)/HPET.o: $(SRC_ACPI)/HPET.cpp
+	$(CC) $(CFLAGS) $(SRC_ACPI)/HPET.cpp -o $(COM_ACPI)/HPET.o	
+
 $(COM_ACPI)/RSDP.o: $(SRC_ACPI)/RSDP.cpp
 	$(CC) $(CFLAGS) $(SRC_ACPI)/RSDP.cpp -o $(COM_ACPI)/RSDP.o
 	
@@ -46,8 +49,9 @@ $(COM_ACPI)/RSDT.o: $(SRC_ACPI)/RSDT.cpp
 IA32_Build = $(COMPILE)/APBoot.o $(COMPILE)/APIC.o $(COMPILE)/CMOS.o 	\
 $(COMPILE)/CPUDriver.o $(COMPILE)/CPUID.o $(COMPILE)/GDT.o 				\
 $(COMPILE)/IDT.o $(COMPILE)/IntrHook.o $(COMPILE)/IO.o 					\
-$(COMPILE)/Load.o $(COMPILE)/Processor.o $(COMPILE)/ProcessorTopology.o \
-$(COMPILE)/Startup.o $(COMPILE)/SwitchRunner.o $(COMPILE)/TSS.o
+$(COMPILE)/IOAPIC.o $(COMPILE)/Load.o $(COMPILE)/Processor.o			\
+$(COMPILE)/ProcessorTopology.o $(COMPILE)/Startup.o						\
+ $(COMPILE)/SwitchRunner.o $(COMPILE)/TSS.o
 
 $(COMPILE)/APBoot.o: $(SOURCE)/APBoot.asm
 	$(AS) $(ASFLAGS) $(SOURCE)/APBoot.asm -o $(COMPILE)/APBoot.o
@@ -75,6 +79,9 @@ $(COMPILE)/IntrHook.o: $(SOURCE)/IntrHook.asm
 
 $(COMPILE)/IO.o: $(SOURCE)/IO.asm
 	$(AS) $(ASFLAGS) $(SOURCE)/IO.asm -o $(COMPILE)/IO.o
+
+$(COMPILE)/IOAPIC.o: $(SOURCE)/IOAPIC.cpp
+	$(CC) $(CFLAGS) $(SOURCE)/IOAPIC.cpp -o $(COMPILE)/IOAPIC.o
 
 $(COMPILE)/Load.o: $(SOURCE)/Load.asm
 	$(AS) $(ASFLAGS) $(SOURCE)/Load.asm -o $(COMPILE)/Load.o

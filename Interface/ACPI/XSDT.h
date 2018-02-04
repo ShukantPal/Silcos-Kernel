@@ -9,7 +9,7 @@
 
 typedef
 struct _XSDT {
-	SDT_HEADER XRootHeader;
+	SDTHeader XRootHeader;
 	U64 ConfigurationTables[];
 } XSDT;
 

@@ -30,7 +30,8 @@
 struct ObjectInfo;
 extern ObjectInfo *tRunqueueBalancer_Accept;
 extern ObjectInfo *tRunqueueBalancer_Renounce;
-struct Processor;
+
+namespace HAL { struct Processor; }
 
 namespace Executable
 {
@@ -61,10 +62,10 @@ public:
 	{
 		const ScheduleClass taskType;
 		HAL::Domain &donor, &taker;
-		Processor &src, &dst;
+		HAL::Processor &src, &dst;
 
 		Renounce(ScheduleClass cls, HAL::Domain &from, HAL::Domain &to,
-				Processor &src_, Processor &dst_)
+				HAL::Processor &src_, HAL::Processor &dst_)
 		: HAL::IPIRequest(HAL::RenounceTasks, 0, tRunqueueBalancer_Renounce),
 		  	  taskType(cls), donor(from), taker(to), src(src_), dst(dst_)
 		{

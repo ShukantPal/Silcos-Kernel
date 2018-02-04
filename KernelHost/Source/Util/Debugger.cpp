@@ -21,7 +21,7 @@ const char *__leftparen = "(";
 const char *__rightparen = ") ";
 const char *__comma = ", ";
 
-SPIN_LOCK dbgLock;
+Spinlock dbgLock;
 
 char digitMapping[36] = "0123456789ABCDEFGHIJK";
 char digitZero[2] = "0";

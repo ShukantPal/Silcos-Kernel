@@ -33,17 +33,7 @@ KiClockRespond:
 	CMP [BSP_ID], EDX 						; test if the cpu is the BSP
 	JNE KiScheduleEntry
 
-	; Update kTime
-	PUSH EDX								; save PROCESSOR_ID on stack
-	MOV EDX, 1								; load 1 for incrementing time
-	XADD [XMilliTime], EDX 					; update time and load old time into EDX
-	CMP [XMilliTime], EDX					; test for overflow in lower 32-bits
-	POP EDX									; restore PROCESSOR_ID into EDX
-	JLE Incro								; if overflow occured, increment upper-32bits
-	JMP KiRunnerUpdate
-
-Incro:
-	LOCK INC DWORD [XMilliTime + 4]			; increment upper-32 bits
+	LOCK INC DWORD [XMilliTime]
 
 KiRunnerUpdate:
 
@@ -145,6 +135,8 @@ KiJumpNew:
 	; end-of-intr
 	global EOI
 	EOI:
+		PUSH EDX
 		MOV EDX, [VAPICBase]
 		MOV DWORD [EDX + 0xB0], 0
+		POP EDX
 		RET

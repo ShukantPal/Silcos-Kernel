@@ -158,19 +158,6 @@ unsigned long HighestBitSet(unsigned long x){
 #define kxport __attribute__((visibility("default")))
 #define kxhide __attribute__((visibility("hidden")))
 
-class Atomic
-{
-public:
-#ifdef ARCH_32
-	static inline void inc(unsigned long x)
-	{
-		++x; asm volatile("MFENCE");//for now, jugaad
-	}
-#else
-
-#endif
-};
-
 void ASSERT(
 	bool boolCondition,
 	char *errorMsg

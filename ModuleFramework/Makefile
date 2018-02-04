@@ -19,29 +19,29 @@ Compile/Object.o Compile/RBTree.o Compile/String.o
 # Code that is not classifed is compiled here!
 MDFRWK = Compile/Heap.o Compile/Main.o
 
-Compile/Arrays.o: Framework/Arrays.cxx
-	$(CC) $(CFLAGS) Framework/Arrays.cxx -o Compile/Arrays.o
+Compile/Arrays.o: Framework/Arrays.cpp
+	$(CC) $(CFLAGS) Framework/Arrays.cpp -o Compile/Arrays.o
 
-Compile/BinaryTree.o: Framework/BinaryTree.cxx
-	$(CC) $(CFLAGS) Framework/BinaryTree.cxx -o Compile/BinaryTree.o
+Compile/BinaryTree.o: Framework/BinaryTree.cpp
+	$(CC) $(CFLAGS) Framework/BinaryTree.cpp -o Compile/BinaryTree.o
 
-Compile/HashMap.o: Framework/HashMap.cxx
-	$(CC) $(CFLAGS) Framework/HashMap.cxx -o Compile/HashMap.o
+Compile/HashMap.o: Framework/HashMap.cpp
+	$(CC) $(CFLAGS) Framework/HashMap.cpp -o Compile/HashMap.o
 
-Compile/Object.o: Framework/Object.cxx
-	$(CC) $(CFLAGS) Framework/Object.cxx -o Compile/Object.o
+Compile/Object.o: Framework/Object.cpp
+	$(CC) $(CFLAGS) Framework/Object.cpp -o Compile/Object.o
 
-Compile/RBTree.o: Framework/RBTree.cxx
-	$(CC) $(CFLAGS) Framework/RBTree.cxx -o Compile/RBTree.o
+Compile/RBTree.o: Framework/RBTree.cpp
+	$(CC) $(CFLAGS) Framework/RBTree.cpp -o Compile/RBTree.o
 
-Compile/Heap.o: Heap.cxx
-	$(CC) $(CFLAGS) Heap.cxx -o Compile/Heap.o
+Compile/Heap.o: Heap.cpp
+	$(CC) $(CFLAGS) Heap.cpp -o Compile/Heap.o
 
 Compile/Main.o: Main.cpp
 	$(CC) $(CFLAGS) Main.cpp -o Compile/Main.o
 
-Compile/String.o: Framework/String.cxx
-	$(CC) $(CFLAGS) Framework/String.cxx -o Compile/String.o
+Compile/String.o: Framework/String.cpp
+	$(CC) $(CFLAGS) Framework/String.cpp -o Compile/String.o
 
 MfMake: $(MDFRWK_UTIL) $(MDFRWK)
 	ld -m elf_i386 -shared -T linker.ld $(MDFRWK_UTIL) $(MDFRWK) -o Build/silcos.mdfrwk -h "ModuleFramework"

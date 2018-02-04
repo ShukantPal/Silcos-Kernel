@@ -17,7 +17,7 @@
 
 struct MADT
 {
-	SDT_HEADER baseHeader;
+	SDTHeader baseHeader;
 	U32 LCA;
 	U32 flags;
 	U8 SystemInfo[ ];// Array of various entries, starting with a MADTHeader
@@ -42,7 +42,7 @@ struct MADTEntryIOAPIC
 	U8 reserved;
 	U32 apicBase;
 	U32 GSIB;
-};
+} __attribute__((__packed__));
 
 struct MADTEntryISR
 {

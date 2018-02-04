@@ -24,15 +24,32 @@
  *
  * Author: Shukant Pal
  */
-struct RSDT {
-	SDT_HEADER RootHeader;// Standard ACPI Header
+struct RSDT
+{
+	SDTHeader RootHeader;// Standard ACPI Header
 	U32 ConfigurationTables[];// Physical-addresses of ACPI Tables
+
+	inline unsigned long entryCount()
+	{
+		return (RootHeader.Length - sizeof(SDTHeader)) / 4;
+	}
+};
+
+/*
+ * Just like RSDT, but is created by the kernel. It actually maps each ACPI
+ * table to "virtual" addresses that are directly usable.
+ */
+struct VirtualRSDT
+{
+	RSDT *physTable;
+	unsigned long matrixBase;
+	unsigned long stdTableCount;
+	unsigned long stdTableAddr[];
 };
 
 extern RSDT *SystemRsdt;/* RSDT found during setup */
 
-void SetupRsdt(void);
-void *RetrieveConfiguration(RSDT *RootSDT, const char *Signature,
-				U32 MappingBlk);
+void SetupRSDTHolder(void);
+void *SearchACPITableByName(const char *tblSign, SDTHeader *stdTable);
 
 #endif/* ACPI/RSDT.h */

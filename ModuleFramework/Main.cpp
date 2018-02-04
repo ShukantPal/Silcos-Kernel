@@ -13,10 +13,11 @@
  */
 #include <KERNEL.h>
 
+#include <Atomic.hpp>
 #include <Memory/KObjectManager.h>
 #include <Heap.hxx>
-#include <Util/HashMap.hxx>
-#include <Util/RBTree.hxx>
+#include <Util/HashMap.hpp>
+#include <Util/RBTree.hpp>
 #include <String.hxx>
 
 #include <Module/Elf/ABI/Implementor.h>
@@ -45,32 +46,10 @@ extern "C" void __init()
 	HashMap::init();
 
 	defaultString  = new(tString) String("@com.silcos.mdfrwk#Object");
-}
 
-#include <Process/MemoryImage.hpp>
-
-using namespace Process;
-using namespace Resource;
-
-/*
- * Test case for resource-manager
- */
-
-#include <Executable/RoundRobin.h>
-
-void test_rsmgr()
-{
-	Process::MemoryImage *mem = Process::MemoryImage::getImage();
-
-	mem->insertRegion(KB(64), 4, GetConfigFlags(MemorySection::Type::Code, 0), 0);
-	mem->insertRegion(KB(84), 1, GetConfigFlags(MemorySection::Type::Data, 0), 0);
-	mem->insertRegion(KB(92), 2, GetConfigFlags(MemorySection::Type::Code, 0), 0);
-
-
-	volatile Executable::RoundRobin *d = new Executable::RoundRobin();
-
-	DbgLine("__printal");
-	mem->printAll();
+	unsigned long a=1, b=2;
+	Atomic::xchg(b, &a);
+	Dbg("a: "); DbgInt(a); DbgLine(" ");
 }
 
 #include <HAL/Processor.h>

@@ -3,14 +3,15 @@
  *
  * RR (or Round Robin) is the scheduler for uni-priority runner's that are CPU-bound
  * or are batch-runners. They are the lowest priority in the system and thus are given
-
+ *
  */
 #ifndef EXEC_RR_H
 #define EXEC_RR_H
 
-#include <Executable/KTask.h>
 #include <Executable/ScheduleRoller.h>
 #include <Util/CircularList.h>
+#include <Util/RBTree.hpp>
+#include "Task.hpp"
 
 namespace Executable
 {
@@ -29,19 +30,21 @@ namespace Executable
 class RoundRobin final : public ScheduleRoller
 {
 public:
-	virtual KTask *add(KTask *newTask);
-	virtual KTask *allocate(TIME t, Processor *cpu);
-	virtual KTask *update(TIME t, Processor *cpu);
-	virtual void free(TIME at, Processor *cpu);
-	virtual void remove(KTask *tTask);
-	virtual void send(Processor *to, CircularList& list, unsigned long deltaLoad);
-	virtual void recieve(KTask *first, KTask *last, unsigned long count, unsigned long load);
+	Task *add(Task *newTask);
+	Task *allocate(Time t, HAL::Processor *cpu);
+	Task *update(Time t, HAL::Processor *cpu);
+	void free(Time at, HAL::Processor *cpu);
+	void remove(Task *tTask);
+	void send(HAL::Processor *to, CircularList& list, unsigned long deltaLoad);
+	void recieve(Task *first, Task *last, unsigned long count, unsigned long load);
 	RoundRobin();
 	~RoundRobin();
 private:
-	KTask *mainTask;// circular list -> main task
-	KTask *mostRecent;// most recently run task
+	Task *mainTask;// circular list -> main task
+	Task *mostRecent;// most recently run task
 	unsigned long taskCount;// no. of tasks on this cpu
+	CircularList pausedTasks;// tasks that are paused without any timer
+
 };
 
 }

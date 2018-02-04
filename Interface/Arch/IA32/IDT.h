@@ -1,8 +1,9 @@
-/**
+/* @file IDT.h
+ *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef IA32_IDT_H
-#define IA32_IDT_H
+#ifndef HAL_IA32_IDT_H__
+#define HAL_IA32_IDT_H__
 
 #ifdef NAMESPACE_IA32_IDT
 
@@ -17,16 +18,24 @@ enum GateType
 	TRAP_GATE_386 = 0xF
 };
 
+/*
+ * An IDT-entry is used for controlling how interrupts are handled. It
+ * is used for mapping and masking irq-handlers.
+ *
+ * @version 1.0
+ * @since Circuit 2.01
+ * @author Shukant Pal
+ */
 struct IDTEntry
 {
-	unsigned short LowOffset;	
-	unsigned short Selector;
-	unsigned char ReservedSpace;
-	unsigned char GateType : 4;
-	unsigned char StorageSegment : 1;
-	unsigned char DPL : 2;
-	unsigned char Present : 1;
-	unsigned short HighOffset;
+	unsigned short offLow;
+	unsigned short sel;
+	unsigned char rfield;
+	unsigned char gateType		: 4;
+	unsigned char storageSegment	: 1;
+	unsigned char dpl		: 2;
+	unsigned char present		: 1;
+	unsigned short offHigh;
 } __attribute__((__packed__));
 
 struct IDTPointer {
@@ -38,10 +47,7 @@ struct IDTPointer {
 	struct IDTEntry;
 #endif/* NAMESPACE_IDT */
 
-extern "C" void MapHandler(
-	unsigned short handlerNo,
-	unsigned int handlerAddress,
-	IDTEntry *pIDT
-) kxhide;
+decl_c void MapHandler(unsigned short handlerNo, unsigned int handlerAddress,
+				IDTEntry *pIDT) kxhide;
 
-#endif /* IA32/IDT.h */
+#endif/* IA32/IDT.h */

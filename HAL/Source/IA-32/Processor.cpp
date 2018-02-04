@@ -1,27 +1,24 @@
-/**
- * File: Processor.c
+/* @file Processor.c
  *
- * Summary:
- * This file implements processor boot, setup, and management along with proper
- * organization of CPU topology.
- *
- * Function:
- * extern "C" Executable_ProcessorBinding_IPIRequest_Handler - handles incoming
- * 				inter-processor requests on the actionRequest
- * 				list.
+ * Controls processor-specific operations and provides interfaces to IPI comm.,
+ * system-bootup, and other hardware-specific abstractions.
  *
  * Copyright (C) 2017 - Shukant Pal
  */
 #define NAMESPACEProcessor
 #define NS_KFRAMEMANAGER
 
+#include <Character.hpp>
+#include <Object.hpp>
 #include <IA32/APBoot.h>
 #include <IA32/APIC.h>
 #include <ACPI/MADT.h>
+#include <ACPI/HPET.h>
 #include <Executable/Scheduler.h>
 #include <Executable/RoundRobin.h>
 #include <Executable/RunqueueBalancer.hpp>
 #include <HAL/CPUID.h>
+#include <HAL/IOAPIC.hpp>
 #include <HAL/Processor.h>
 #include <HAL/ProcessorTopology.hpp>
 #include <IA32/IO.h>
@@ -35,14 +32,14 @@
 #include <KERNEL.h>
 
 using namespace HAL;
+using namespace HAL::CpuId;
 using namespace Executable;
 
 unsigned int BSP_ID;
 unsigned int BSP_HID;
 bool x2APICModeEnabled;
-SPIN_LOCK apPermitLock = 0;
+Spinlock apPermitLock = 0;
 unsigned long APBootSequenceBuffer;
-void SetupAPICTimer();
 import_asm void TimerWait(U32 t);
 void *RunqueueBalancers[3];
 
@@ -51,7 +48,109 @@ extern unsigned long halLoadPAddr;
 
 using namespace HAL;
 
-PROCESSOR_SETUP_INFO *ConstructTrampoline()
+/*
+ * Extracts the processor's base frequency from its brand-string. It should be
+ * used if the frequency-info leaf is not supported. The base-frequency given
+ * should not be used for purposes other than displaying information on the
+ * console, as it is neither accurate nor relevant for software-usage.
+ *
+ * The brand-string is scanned in reverse order to match the substring "MHz",
+ * "GHz" or "THz" to get the frequency-unit. On matching "unit" substrings, the
+ * multipler for that unit is calculated and then the decimal value given in
+ * the string is multiplied with the unit/multiplier. This occurs without using
+ * floating-point decimal values, by dividing the multiplier by 10 until a
+ * decimal point is found.
+ *
+ * @arg brandString - the brand string detected using __cpuid
+ * @return base-frequency of the cpu, if detected successfully; if not, 0;
+ * @version 1.0
+ * @since Silcos 3.02
+ * @author Shukant Pal
+ */
+unsigned long ArchCpu::extractBaseFrequency()
+{
+	char *tc = brandString + 62;
+	char cmul;
+	int ctr = 0;
+	while(ctr < 60)
+	{
+		if(*tc == 'z' && *(tc - 1) == 'H')
+		{
+			cmul = *(tc - 2);
+			if(cmul == 'M' || cmul == 'G' || cmul == 'T')
+				break;
+		}
+
+		++(ctr);
+		--(tc);
+	}
+
+	tc -= 3;
+	if(ctr == 60)
+		return (0);
+
+	unsigned long mult;
+	switch(cmul)
+	{
+	case 'M':
+		mult = 1000000;
+		break;
+	case 'G':
+		mult = 1000000000;
+		break;
+	default:
+		DbgLine("ERROR: THz not supported");
+		while(TRUE) asm volatile("hlt;");
+		break;
+	}
+
+	unsigned long freq = 0, digits = 0, pow10 = 1, pointOffset = 64;
+	while(*tc != ' ')
+	{
+		if(*tc == '.')
+		{
+			pointOffset = digits;
+		}
+		else if(Character::isDigit(*tc))
+		{
+			freq += pow10 * (*tc - 48);
+
+			if(pointOffset == 64)
+				mult /= 10;
+
+			pow10 *= 10;
+			++(digits);
+		}
+		else
+			return (0);
+
+		--(tc);
+	}
+
+	if(pointOffset == 64)
+	{
+		while(digits > 0)
+		{
+			--(digits);
+			mult *= 10;
+		}
+	}
+
+	freq *= mult;
+	return (freq);
+}
+
+/*
+ * Constructs the trampoline for booting application processors. It copies the
+ * code & data present b/w APBootSequenceStart & APBootSequenceEnd to a
+ * hardwired physical-address.
+ *
+ * @version 1.2
+ * @since Circuit 2.03
+ * @author Shukant Pal
+ * @see APBoot.asm
+ */
+decl_c PROCESSOR_SETUP_INFO *ConstructTrampoline()
 {
 	unsigned long apTrampoline = ALLOCATE_TRAMPOLINE();
 	void *apBoot = (void *) PADDR_TO_VADDR(apTrampoline);
@@ -74,10 +173,10 @@ PROCESSOR_SETUP_INFO *ConstructTrampoline()
 	
 	APBootSequenceBuffer = apTrampoline >> 12;
 	
-	return (PROCESSOR_SETUP_INFO *) (apBoot);
+	return ((PROCESSOR_SETUP_INFO *)(apBoot));
 }
 
-void DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline)
+extern "C" void DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline)
 {
 	// TODO: FREE_TRAMPOLINE()
 }
@@ -90,31 +189,30 @@ void DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline)
  *
  * Author: Shukant Pal
  */
-void ConstructProcessor(Processor *proc)
+decl_c void ConstructProcessor(Processor *proc)
 {
-	proc->ProcessorStack = (U32) ((ADDRESS) &proc->Hardware.ProcessorStack + PROCESSOR_STACK_SIZE);
+	proc->ProcessorStack = (U32) ((ADDRESS) &proc->hw.ProcessorStack + PROCESSOR_STACK_SIZE);
 	proc->lschedTable[0] = &proc->rrsched;
 	new((void*) proc->lschedTable[0]) Executable::RoundRobin();
 	proc->crolStatus.presRoll = proc->lschedTable[0];
 }
 
-/**
- * Function: AddProcessorInfo
+/*
+ * Maps the processor's per-CPU struct into its index in the CPU-table. It also
+ * writes basic-information into it using the ACPI 2.0 MADT entry for its local
+ * ACPI and using __cpuid functions. After initializing the per-CPU struct, it
+ * invokes the APIC wakeup-sequence through which the processor gets-up and
+ * starts running.
  *
- * Summary:
- * Adds the processor information to the processor table and does the wakeup
- * sequence on it, assuming it is a application processor.
- *
- * Args:
- * MADTEntryLAPIC *pe - the MADT entry containing information about its local
- *                      APIC
- *
- * Author: Shukant Pal
+ * @args pe - the ACPI 2.0 MADT entry for the local-APIC of the given processor
+ * @version 1.0
+ * @since Silcos 3.02
+ * @author Shukant Pal
  */
-void AddProcessorInfo(MADTEntryLAPIC *PE)
+decl_c void AddProcessorInfo(MADTEntryLAPIC *PE)
 {
 	Processor *cpu = GetProcessorById(PE->apicID);
-	PROCESSOR_INFO *platformInfo = &cpu->Hardware;
+	HAL::ArchCpu *platformInfo = &cpu->hw;
 	unsigned long apicID = PE->apicID;
 	
 	if(apicID != BSP_ID)
@@ -129,7 +227,7 @@ void AddProcessorInfo(MADTEntryLAPIC *PE)
 	if(apicID != BSP_ID)
 		ConstructProcessor(cpu);
 
-	if(cpu->Hardware.APICID != BSP_ID)
+	if(cpu->hw.APICID != BSP_ID)
 	{
 		(void) ConstructTrampoline();
 		APIC::wakeupSequence(PE->apicID, (U8) APBootSequenceBuffer);
@@ -142,34 +240,26 @@ ObjectInfo *tPROCESSOR_TOPOLOGY;
 
 extern bool oballocNormaleUse;
 
-/**
- * Function: SetupBSP
+/*
+ * Executes the roles of the boot-strap processor relevant to the system
+ * startup. It checks if all features are available and enables interrupts,
+ * memory-segmentation, and the task-state segment. It enables the pre-boot
+ * kernel timer and initializes cpu-topology allowing other processors to
+ * wakeup later.
  *
- * Summary:
- * Performs all pre-SMP functions which are to be done by a single cpu in the
- * system (namely, boot-strap processor).
- *
- * 1. Sets the x2APICModeEnabled trigger
- * 2. Checks whether hyper-threading is available
- * 3. Loads this cpu's APIC id.
- * 4. Constructs this cpu's Processor struct.
- * 5. Disable the programmable interrupt controller, map the IDT, and then load
- *    the GDT, IDT, and TSS for this cpu.
- * 6. Enable the preboot timer.
- * 7. Initalizes the processor-topology subsystem and plug this cpu in it.
- *
- * Author: Shukant Pal
+ * @version 1.0
+ * @since Silcos 3.02
+ * @author Shukant Pal
  */
-extern "C" void SetupBSP()
+decl_c void SetupBSP()
 {
 	BSP_HID = PROCESSOR_ID;
 	BSP_ID = PROCESSOR_ID;
 
-	U32 CPUIDBuffer[4];
-	CPUIDBuffer[CPUID_ECX] = 1 << 21;
-	CPUID(0x1, 0, &CPUIDBuffer[0]);
+	cRegs ot;
+	__cpuid(0x1, 0, &ot.output[0]);
 
-	if((CPUIDBuffer[CPUID_ECX] >> 21) & 1)
+	if((ot.ecx >> 21) & 1)
 	{
 		DbgLine("x2APIC Supported");
 		x2APICModeEnabled = TRUE;
@@ -177,8 +267,7 @@ extern "C" void SetupBSP()
 	
 	IA32_APIC_BASE_MSR apicBaseMSR;
 	ReadMSR(IA32_APIC_BASE, &apicBaseMSR.msrValue);
-	DbgInt(PROCESSOR_ID);
-	CPUID(0xB, 2, &CPUIDBuffer[0]);
+	::__cpuid(0xB, 2, &ot.output[0]);
 
 	Processor *cpu = GetProcessorById(PROCESSOR_ID);
 	EnsureUsability((ADDRESS) cpu, NULL, KF_NOINTR | FLG_NOCACHE, KernelData | PageCacheDisable);
@@ -189,8 +278,7 @@ extern "C" void SetupBSP()
 	SetupProcessor();
 	oballocNormaleUse = true;
 
-	WtApicRegister(APIC_REGISTER_ESR, 0);
-	SetupAPICTimer();
+	APIC::setupEarlyTimer();
 	FlushTLB(0);
 	
 	const ModuleRecord *halRecord = Module::RecordManager::search("kernel.silcos.hal");
@@ -211,19 +299,22 @@ extern "C" void SetupBSP()
 	*((volatile unsigned short *) PADDR_TO_VADDR(TRAMPOLINE_HIGH)) = (startEIP >> 4);
 	*((volatile unsigned short *) PADDR_TO_VADDR(TRAMPOLINE_LOW)) = (startEIP & 0xF);
 
+	cpu->hw.init();
+
 	ProcessorTopology::init();
 	ProcessorTopology::plug();
 }
 
-extern "C" void SetupAPs()
+decl_c void SetupAPs()
 {
-	EnumerateMADT(&AddProcessorInfo, NULL, NULL);
+	EnumerateMADT(&AddProcessorInfo, &IOAPIC::registerIOAPIC, null);
+	testhpet();
 }
 
-extern "C" ProcessorInfo *SetupProcessor()
+decl_c ArchCpu *SetupProcessor()
 {
 	Processor *pCPU = GetProcessorById(PROCESSOR_ID);
-	ProcessorInfo *pInfo = &(pCPU->Hardware);
+	ArchCpu *pInfo = &(pCPU->hw);
 
 	SetupGDT(pInfo);
 	SetupIDT();
@@ -240,17 +331,20 @@ extern "C" ProcessorInfo *SetupProcessor()
  *
  * Author: Shukant Pal
  */
-extern "C" void APMain()
+decl_c void APMain()
 {
 	SetupProcessor();
 	ProcessorTopology::plug();
 	SetupRunqueue();
 
-	extern void APWaitForPermit();
-	APWaitForPermit();
+	unsigned long b[2];
+	extern void APWaitForPermit(unsigned long*);
+	APWaitForPermit(b);
+
+	Dbg(" cpu:"); DbgInt(b[0]);
 
 	FlushTLB(0);
-	SetupTick();
+	APIC::setupScheduleTicks();
 
 	while(TRUE)
 	{
@@ -259,15 +353,13 @@ extern "C" void APMain()
 }
 
 /*
- * Function: CPURequestHandler
+ * This is the interrupt-handler for IPIs sent on the ProcessorRequest
+ * vector. It deals with each request based on their type by popping them off
+ * from the cpu->actionRequest list.
  *
- * Summary:
- * Handles a inter-processor request sent by another CPU to this CPU. It
- * has separate handlers for each request-type.
- *
- * Author: Shukant Pal
+ * @author Shukant Pal
  */
-extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
+decl_c void Executable_ProcessorBinding_IPIRequest_Handler()
 {
 	Processor *tcpu = GetProcessorById(PROCESSOR_ID);
 	IPIRequest *req = CPUDriver::readRequest(tcpu);
@@ -279,7 +371,7 @@ extern "C" void Executable_ProcessorBinding_IPIRequest_Handler()
 		case AcceptTasks:
 		{
 			RunqueueBalancer::Accept *acc = (RunqueueBalancer::Accept*) req;
-			tcpu->lschedTable[acc->type]->recieve((KTask*) acc->taskList.lMain, (KTask*) acc->taskList.lMain->last,
+			tcpu->lschedTable[acc->type]->recieve((Executable::Task*) acc->taskList.lMain, (Executable::Task*) acc->taskList.lMain->last,
 								acc->taskList.count, acc->load);
 			break;
 		}

@@ -22,7 +22,7 @@
 #include <Memory/Pager.h>
 #include <Memory/KMemoryManager.h>
 #include <Util/LinkedList.h>
-#include <Util/RBTree.hxx>
+#include <Util/RBTree.hpp>
 
 namespace Resource
 {

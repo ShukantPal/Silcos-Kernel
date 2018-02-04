@@ -5,6 +5,8 @@
 #ifndef CONFIG_SDT_HEADER_H
 #define CONFIG_SDT_HEADER_H
 
+#include "ACPI.h"
+
 #define RsdtSignature "RSDT"
 #define MadtSignature "APIC"
 #define FadtSignature "FACP"
@@ -35,10 +37,10 @@ struct _SDT_HEADER
 	U32 OemRevision;
 	U32 CreatorId;
 	U32 CreatorRevision;
-} SDT_HEADER;
+} SDTHeader;
 
 static inline
-bool VerifySdtChecksum(SDT_HEADER *Sdt) {
+bool VerifySdtChecksum(SDTHeader *Sdt) {
 	U8 Sum = 0;
 
 	for(unsigned long Counter = 0; Counter < Sdt -> Length; Counter++)

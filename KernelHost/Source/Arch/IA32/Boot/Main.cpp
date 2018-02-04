@@ -89,6 +89,8 @@ void printStatic()
 #endif
 }
 
+extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
+
 /**
  * Function: Main()
  *
@@ -122,4 +124,6 @@ export_asm void Main(
 
 	MdSetupLoader();
 	KernelElf::loadBootModules();
+
+	ArchMain();// HAL is responsible for further init
 }

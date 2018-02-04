@@ -25,8 +25,8 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef HAL_PROCESSOR_H
-#define HAL_PROCESSOR_H
+#ifndef HAL_PROCESSOR_H__
+#define HAL_PROCESSOR_H__
 
 #include <IA32/APIC.h>
 #include "ProcessorTopology.hpp"
@@ -34,18 +34,16 @@
 #include <Executable/RoundRobin.h>
 #include <Memory/CacheRegister.h>
 #include <Memory/KMemorySpace.h>
-#include <Util/AVLTree.h>
+#include <Util/AVLTree.hpp>
 #include <Util/CircularList.h>
 #include <Util/LinkedList.h>
 #include <Util/Memory.h>
 #include <Synch/Spinlock.h>
+#include "../Util/AVLTree.hpp"
 
 #ifdef x86
 	#include <IA32/Processor.h>
 #endif
-
-struct ObjectInfo;
-struct KTask;
 
 namespace Executable
 {
@@ -153,8 +151,6 @@ struct IPIRequest
 	}
 };
 
-}
-
 struct Processor
 {
 	LinkedListNode LiLinker;/* Participate in lists */
@@ -165,13 +161,13 @@ struct Processor
 	unsigned int PoType;
 	unsigned short PoStk;
 	unsigned short Padding;
-	KTask *ctask;// presently running task on this cpu
+	Executable::Task *ctask;// presently running task on this cpu
 	unsigned int ProcessorStack;// address of the unique processor-stack
 	ScheduleInfo crolStatus;// core-roller (scheduler) status
 	CHREG frameCache[5];
 	CHREG pageCache[2];
 	CHREG slabCache;
-	SPIN_LOCK PageLock;/* Obselete */
+	Spinlock PageLock;/* Obselete */
 	Executable::ScheduleRoller *lschedTable[3];// ptr-table to schedule-classes
 	Executable::RoundRobin rrsched;// round-robin scheduler
 	void *IdlerThread;// idle-task for this cpu
@@ -179,13 +175,11 @@ struct Processor
 	HAL::Domain *domlink;// link into the topology tree
 	CircularList actionRequests;// list of action-request waiting for handling
 	Spinlock migrlock;// migration lock (for registering action-requests)
-	ProcessorInfo Hardware;// platform-specifics
+	AVLTree timeoutTree;// tree containing tasks that are waiting on the timer
+	ArchCpu hw;// platform-specifics
 };
 
 extern Processor *CPUArray;
-
-namespace HAL
-{
 
 class CPUDriver
 {
@@ -196,6 +190,6 @@ public:
 
 }// namespace HAL
 
-void AddProcessorInfo(MADTEntryLAPIC *madtEntry);
+decl_c void AddProcessorInfo(MADTEntryLAPIC *madtEntry);
 
 #endif/* HAL/Processor.h */

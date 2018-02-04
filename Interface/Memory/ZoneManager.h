@@ -99,7 +99,7 @@ struct Zone
 	unsigned long memorySize;
 	unsigned long memoryReserved;
 	unsigned long memoryAllocated;
-	SPIN_LOCK controlLock;
+	Spinlock controlLock;
 };
 
 

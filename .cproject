@@ -70,7 +70,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="ModuleFramework/Framework|ResourceManager/Interface/Process|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
@@ -128,7 +128,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="ModuleFramework/Framework|ResourceManager/Interface/Process|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>

@@ -30,7 +30,7 @@ using namespace Memory::Internal;
 
 #define KMEM_ZONE_COUNT 2
 
-SPIN_LOCK kmLock;
+Spinlock kmLock;
 
 // Vectors (bit-fields) used by the (buddy) allocator
 static unsigned short allocatorVectors[(1 + PGVECTORS) * 2];

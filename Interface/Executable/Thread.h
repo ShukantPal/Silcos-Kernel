@@ -5,7 +5,7 @@
 #define EXECUTABLE_THREAD_H__
 
 #include <Executable/CPUStack.h>
-#include <Executable/KTask.h>
+#include <Executable/Task.hpp>
 #include <Memory/Pager.h>
 #include <Synch/Spinlock.h>
 #include <Types.h>
@@ -44,7 +44,7 @@ enum ThreadState
 
 struct Thread
 {
-	KTask Gate;
+	Executable::Task Gate;
 	UBYTE Priority;
 	UBYTE Privelege;
 	unsigned short Flags;
@@ -54,7 +54,7 @@ struct Thread
 	CPUStack KernelStack;
 	ID ParentID;//48
 	CONTEXT *tdContext;
-	SPIN_LOCK Lock;
+	Spinlock Lock;
 };
 
 typedef unsigned long KTHREAD_HANDLE;

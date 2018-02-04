@@ -1,12 +1,5 @@
 /**
  * File: ProcessorTopology.hpp
- *
- * Summary:
- * 
- * Functions:
- *
- * Origin:
- *
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +16,8 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef INTERFACE_HAL_PROCESSORTOPOLOGY_HPP_
-#define INTERFACE_HAL_PROCESSORTOPOLOGY_HPP_
+#ifndef HAL_PROCESSOR_TOPOLOGY_HPP__
+#define HAL_PROCESSOR_TOPOLOGY_HPP__
 
 #include <Executable/Scheduler.h>
 #include <Executable/ScheduleRoller.h>
@@ -34,7 +27,7 @@
 #include <Util/CircularList.h>
 #include <Util/Memory.h>
 
-struct Processor;
+namespace HAL { struct Processor; }
 
 namespace HAL
 {
@@ -142,8 +135,7 @@ class ProcessorTopology final
 public:
 	static inline void init()
 	{
-		tDomain = KiCreateType("::HAL::Domain", sizeof(Domain),
-				sizeof(long), 0, 0);
+		tDomain = KiCreateType("::HAL::Domain", sizeof(Domain), sizeof(long), 0, 0);
 		systemDomain = new(tDomain) Domain();
 	}
 
@@ -154,13 +146,9 @@ public:
 	struct Iterator
 	{
 		static void toggleLoad(Processor *initialCPU, Executable::ScheduleClass cls, long mag);
-
-		static void ofEach(Processor *initialCPU, void (*domainUpdater)(Domain *),
-					unsigned long limit);
-
+		static void ofEach(Processor *initialCPU, void (*domainUpdater)(Domain *), unsigned long limit);
 		static void forAll(Domain *in, void (*action)(Processor *proc));
 	};
-
 private:
 	ProcessorTopology();// No usage as object is statically used
 	static Domain *systemDomain kxhide;
@@ -173,6 +161,8 @@ struct DomainBinding
 	static Processor *getBusiest(Executable::ScheduleClass cls, Domain *pdom);
 	static Domain *findIdlestGroup(Executable::ScheduleClass cls, Domain *client);
 	static Domain *findBusiestGroup(Executable::ScheduleClass cls, Domain *client);
+private:
+	DomainBinding();
 };
 
 }

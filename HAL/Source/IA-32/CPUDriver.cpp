@@ -109,5 +109,5 @@ void CPUDriver::writeRequest(IPIRequest &req, Processor *proc)
 
 	__mfence
 	SpinUnlock(&proc->migrlock);
-	APIC::triggerIPI(proc->Hardware.APICID, 0xFD);
+	APIC::triggerIPI(proc->hw.APICID, 0xFD);
 }

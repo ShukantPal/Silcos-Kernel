@@ -12,7 +12,7 @@ ArchDir = Arch/IA32
 CC = g++ -std=c++1z# C Compiler
 CFLAGS = -m32 -I"." -I"../Interface" -I"../Interface/Arch" -c \
 -fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -Os -fPIC \
--fno-rtti -fno-exceptions -LHAL/Build/kernel.silcos.hal
+-fno-rtti -fno-exceptions -L../HAL/Build/kernel.silcos.hal
 
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
@@ -68,22 +68,14 @@ $(COM_ARCH)/Multiboot.o
 ArchObjects = $(COM_ARCH)/FrameExtractor.o $(COM_ARCH)/Pager.o \
 $(COM_ARCH)/TableManipulator.o
 
-ConfigObjects = # ACPI tables
-
 IntrObjects = $(COM_INTR)/ExHandler.o # Core exception & device handlers
 
 KernelRoutineObjects = $(COM_KR)/Init.o
 
 # Memory Subsystems + Algorithms
-MemoryObjects = $(COM_MM)/BuddyAllocator.o $(COM_MM)/CacheRegister.o \
+MemoryObjects = $(COM_MM)/BuddyAllocator.o \
 $(COM_MM)/KFrameManager.o $(COM_MM)/KMemoryManager.o  $(COM_MM)/KObjectManager.o \
 $(COM_MM)/Structure.o $(COM_MM)/ZoneManager.o
-
-ThreadObjects = $(COM_TD)/Thread.o
-
-# Core Scheduler + Scheduler Classes/Rollers
-SchedulerObjects = $(COM_SCHED)/Scheduler.o $(COM_SCHED)/ScheduleRoller.o \
-$(COM_SCHED)/RoundRobin.o $(COM_SCHED)/RunqueueBalancer.o 
 
 UtilObjects = $(COM_UTIL)/CircuitPrimitive.o $(COM_UTIL)/CircularList.o \
 $(COM_UTIL)/Console.o $(COM_UTIL)/Debugger.o $(COM_UTIL)/LinkedList.o \
@@ -94,9 +86,9 @@ $(COM_MD)/ModuleLoader.o $(COM_MD)/MSI.o $(COM_MD)/ElfLinker.o $(COM_MD)/RecordM
 
 # Header Dependencies
 
-BuildChain : BuildInit BuildArch BuildKernelRoutines BuildIntr BuildMemory BuildScheduler BuildThread BuildUtil BuildModuleLoader Link
+BuildChain : BuildInit BuildArch BuildKernelRoutines BuildIntr BuildMemory BuildUtil BuildModuleLoader Link
 
-$(IfcHAL)/Processor.h: $(IfcMemory)/CacheRegister.h $(IfcUtil)/AVLTree.h $(IfcUtil)/CircularList.h
+$(IfcHAL)/Processor.h: $(IfcMemory)/CacheRegister.h $(IfcUtil)/CircularList.h
 
 $(IfcModule)/Elf/ELF.h: $(IfcModule)/ModuleLoader.h
 $(IfcModule)/Elf/ElfManager.hpp: $(IfcModule)/Elf/ELF.h
@@ -162,31 +154,6 @@ $(COM_MM)/ZoneManager.o: $(IfcMemory)/ZoneManager.h $(SRC_MM)/ZoneManager.cpp
 
 BuildMemory: $(MemoryObjects)
 
-$(COM_SCHED)/Scheduler.o: $(SRC_SCHED)/Scheduler.cpp
-	$(CC) $(CFLAGS) $(SRC_SCHED)/Scheduler.cpp -o $(COM_SCHED)/Scheduler.o
-
-$(COM_SCHED)/ScheduleRoller.o: $(SRC_SCHED)/ScheduleRoller.cpp
-	$(CC) $(CFLAGS) $(SRC_SCHED)/ScheduleRoller.cpp -o $(COM_SCHED)/ScheduleRoller.o
-
-$(COM_SCHED)/RoundRobin.o: $(SRC_SCHED)/RoundRobin.cpp
-	$(CC) $(CFLAGS) $(SRC_SCHED)/RoundRobin.cpp -o $(COM_SCHED)/RoundRobin.o
-
-$(COM_SCHED)/RunqueueBalancer.o: $(SRC_SCHED)/RunqueueBalancer.cpp
-	$(CC) $(CFLAGS) $(SRC_SCHED)/RunqueueBalancer.cpp -o $(COM_SCHED)/RunqueueBalancer.o
-
-$(COM_SCHED)/RR.o: $(IfcHAL)/Processor.h $(IfcRunnable)/Scheduler.h $(IfcRunnable)/RoundRobin.h $(SRC_SCHED)/RR.cpp
-	$(CC) $(CFLAGS) $(SRC_SCHED)/RR.cpp -o $(COM_SCHED)/RR.o
-
-BuildScheduler: $(SchedulerObjects)
-
-$(COM_TD)/Thread.o: $(SRC_TD)/Thread.cpp
-	$(CC) $(CFLAGS) $(SRC_TD)/Thread.cpp -o $(COM_TD)/Thread.o
-
-BuildThread: $(ThreadObjects)
-
-$(COM_UTIL)/AVLTree.o: $(IfcUtil)/AVLTree.h $(SRC_UTIL)/AVLTree.cpp
-	$(CC) $(CFLAGS) $(SRC_UTIL)/AVLTree.cpp -o $(COM_UTIL)/AVLTree.o
-
 $(COM_UTIL)/CircuitPrimitive.o: $(SRC_UTIL)/CircuitPrimitive.cpp
 	$(CC) $(CFLAGS) $(SRC_UTIL)/CircuitPrimitive.cpp -o $(COM_UTIL)/CircuitPrimitive.o
 
@@ -231,7 +198,7 @@ Link:
 	ld -m elf_i386 -T linker.ld --export-dynamic --strip-all -pie -nostdlib \
 	$(InitObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) \
 	$(InterProcessObjects) $(MemoryObjects) \
-	$(SchedulerObjects) $(ThreadObjects) $(UtilObjects) $(moduleLoaderObjects) --warn-unresolved-symbols -o \
+	$(UtilObjects) $(moduleLoaderObjects) --warn-unresolved-symbols -o \
 	 Build/circuitk-1.02 
 
 q: BuildChain

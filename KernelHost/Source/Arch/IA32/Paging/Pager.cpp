@@ -21,7 +21,6 @@
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
 #include <Util/CtPrim.h>
-#include <Util/IndexMap.h>
 
 import_asm void SwitchPaging(U32);
 import_asm U64 PDPT[4];

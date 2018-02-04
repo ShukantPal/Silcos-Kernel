@@ -28,9 +28,9 @@
 #include "KFrameManager.h"
 #include "Pager.h"
 #include <Synch/Spinlock.h>
-#include <Util/AVLTree.h>
 #include <Util/CircularList.h>
 #include <TYPE.h>
+#include "../Util/AVLTree.hpp"
 
 #define KM_SLEEP FLG_ATOMIC
 #define KM_NOSLEEP FLG_NONE

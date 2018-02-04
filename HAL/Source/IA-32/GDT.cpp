@@ -2,6 +2,8 @@
 #include <IA32/Processor.h>
 #include <HAL/Processor.h>
 
+using namespace HAL;
+
 import_asm GDTEntry defaultBootGDT[3];/* This should contain a flat memory-model, and no TSS entry. (APBoot.asm) */
 import_asm GDTPointer defaultBootGDTPointer;/* APBoot.asm */
 import_asm int ExecuteLGDT(GDTPointer *);
@@ -35,7 +37,7 @@ void SetGateOn(unsigned short gateNo, unsigned int segBase, unsigned int segLimi
 }
 
 /* Part of processor initialization series. */
-extern "C" void SetupGDT(ProcessorInfo *processorInfo)
+extern "C" void SetupGDT(ArchCpu *processorInfo)
 {
 	GDTEntry *pGDT = &(processorInfo->GDT[0]);
 	GDTPointer *pGDTPointer = &(processorInfo->GDTR);

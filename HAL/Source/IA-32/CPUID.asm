@@ -15,8 +15,8 @@ section .text
 		AND EAX, 0x200000				; EAX is zero if the ID bit can't be changed, else non-zero
 		RET										; Return to the caller
 
-	global CPUID
-	CPUID:
+	global __cpuid
+	__cpuid:
 		PUSH EBX
 		PUSH EDX
 		MOV EAX, [ESP + 12]				; Load CPUID.EAX

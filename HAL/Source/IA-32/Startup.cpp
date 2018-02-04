@@ -19,7 +19,9 @@
 #include <ACPI/RSDP.h>
 #include <ACPI/RSDT.h>
 #include <ACPI/MADT.h>
+#include <ACPI/HPET.h>
 #include <IA32/APIC.h>
+#include <HAL/IOAPIC.hpp>
 #include <HAL/Processor.h>
 #include <HAL/ProcessorTopology.hpp>
 #include <Executable/RunqueueBalancer.hpp>
@@ -30,19 +32,16 @@ using namespace Executable;
 
 import_asm void BSPGrantPermit();
 
-/**
- * Function: __init()
- *
- * Summary:
- * The (hardware abstraction layer) function initializes the system and sets
- * the new oballocNormaleUse to true (SetupBSP) for normal object allocation.
- *
- * Author: Shukant Pal
- */
 decl_c void __init()
 {
+	tp_IOAPIC = KiCreateType("IOAPIC", sizeof(IOAPIC), sizeof(long),
+						null, null);
+}
+
+decl_c void ArchMain()
+{
 	ScanRsdp();
-	SetupRsdt();
+	SetupRSDTHolder();
 	MapAPIC();
 	SetupBSP();
 
@@ -50,7 +49,5 @@ decl_c void __init()
 	RunqueueBalancer::init();
 
 	SetupAPs();
-	SetupTick();
-
-	BSPGrantPermit();
+	APIC::setupScheduleTicks();
 }

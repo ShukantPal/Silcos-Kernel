@@ -9,7 +9,7 @@
 void EnumerateMADT(void (*handleLAPIC)(MADTEntryLAPIC *), void (*handleIOAPIC)(MADTEntryIOAPIC *),
 				void (*handleISR)(MADTEntryISR *))
 {
-	MADT *madtPtr = (MADT*) RetrieveConfiguration((RSDT*)SystemRsdt, "APIC", ConfigBlock);
+	MADT *madtPtr = (MADT*) SearchACPITableByName("APIC", null);
 	U8 *entryBytes = &madtPtr->SystemInfo[0];
 	unsigned long jump;
 

@@ -14,8 +14,8 @@
 #define MEMORY_MEMORYMANAGER_H
 
 #include "Pager.h"
-#include <Util/AVLTree.h>
 #include <Util/LinkedList.h>
+#include "../Util/AVLTree.hpp"
 
 /**
  * MM_REGION - 
@@ -49,7 +49,7 @@
 typedef
 struct _MM_REGION {
 	union {
-		AVLNODE Node;
+		AVLNode Node;
 		struct {
 			struct _MM_REGION *LeftLinker;
 			struct _MM_REGION *RightLinker;

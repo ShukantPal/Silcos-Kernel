@@ -1,50 +1,37 @@
 /**
- * Copyright (C) 2017 - Shukant Pal
+ * File: Scheduler.h
+ * Module: ExecutionManager (@kernel.silcos.excmgr)
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
  */
-
 #ifndef EXEC_SCHEDULER_H
 #define EXEC_SCHEDULER_H
 
 #include <HAL/Processor.h>
-#include <Debugging.h>
-#include <Executable/KTask.h>
+#include <Executable/Task.hpp>
 #include <Executable/Thread.h>
 #include <Synch/Spinlock.h>
+#include <KERNEL.h>
 
-#define NoThreadExecutable 140
+extern Time XMilliTime;
 
-#define RT_SCHED 0
-#define CFS_SCHED 1
-#define RR_SCHED 2
-#define SCHED_MAX 3
+export_asm void WakeupExpiredWaiters(HAL::Processor *cpu) kxhide;
+export_asm void Schedule(HAL::Processor *cpu);
 
-enum
-{
-	RT_Queue = 0,
-	RR_Queue = 1,
-	FIFO_Queue = 2
-};
-
-extern
-LinkedList Runqueue[32];
-
-extern /* Sleeping threads */
-LinkedList Sleepqueue;
-
-extern
-SPIN_LOCK SchedSynchronizer;
-
-extern
-TIME XMilliTime;
-
-#define InitSchedOperation SpinLock(&SchedSynchronizer)
-#define CompleteSchedOperation SpinUnlock(&SchedSynchronizer)
-
-export_asm void Schedule(Processor*);
-
-static inline TIME getSystemTime()
+static inline Time getSystemTime()
 {
 	return (XMilliTime);
 }

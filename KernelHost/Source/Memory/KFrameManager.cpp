@@ -53,7 +53,7 @@ unsigned long pgTotal;
 
 unsigned long memFrameTableSize;
 
-SPIN_LOCK kfLock;
+Spinlock kfLock;
 
 // Vector (bit-fields) for use by (buddy) allocator
 static unsigned short allocatorVectors[(1 + FRAME_VECTORS) * 5];

@@ -19,9 +19,11 @@ void bsp_main(){
 }
 
 extern "C" void stupid();
+import_asm void BSPGrantPermit();
 
 void Init() {
-	DbgLine("System Initialization... ");
+	DbgLine("Hello\nThis is a newline. ");
+	BSPGrantPermit();
 
 	while(TRUE) { asm volatile("nop"); }
 }

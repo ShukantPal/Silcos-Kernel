@@ -1,7 +1,5 @@
-/**
- * File: ProcessorTopology.cpp
+/* @file sProcessorTopology.cpp
  *
- * Summary:
  * Hardware-topology is maintained in a in-optimized B-tree fashion allowing
  * CPUs to be plugged & unplugged. A CPU is a part of a hierarchy of CPU
  * domains, in which it is at the lowest-level.  Each domain has a set of
@@ -9,9 +7,6 @@
  * it is the top-most one. This allows iterating over the topology and maintain
  * resources in a organized manner.
  * 
- * Functions:
- * RegisterProcessorCount - (++) the record of no. of processors in a domain
- * ::HAL::ProcessorTopology::plug - plug-in a new-processor in the topology
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,10 +42,7 @@ void UpdateCoreCount(Domain *dom)
 	++(dom->cpuCount);
 }
 
-/**
- * Method: HAL::ProcessorTopology::plug
- *
- * Summary:
+/*
  * Plugs the running processor into the CPU-topology tree and registers all its
  * parent domains. It gathers all topological-IDs and writes them to the
  * per-CPU TopologyIdentifiers. From there, each successive domain is added
@@ -65,12 +57,12 @@ void UpdateCoreCount(Domain *dom)
  * # When the child domain is allocated, it is immediately locked so that this
  * CPU can continuously go to the lower-topological levels.
  *
- * Author: Shukant Pal
+ * @author Shukant Pal
  */
 void ProcessorTopology::plug()
 {
 	Processor *tproc = GetProcessorById(PROCESSOR_ID);
-	ProcessorInfo *tcpu = &tproc->Hardware;
+	ArchCpu *tcpu = &tproc->hw;
 
 	if(x2APICModeEnabled)
 	{
@@ -81,9 +73,9 @@ void ProcessorTopology::plug()
 		APIC_ID apicId = tcpu->APICID;
 
 		U32 CPUIDBuffer[4];
-		CPUID(4, 0, CPUIDBuffer);
+		__cpuid(4, 0, CPUIDBuffer);
 		U32 coreIdSubfieldSize = FindMaskWidth((CPUIDBuffer[0] >> 26) + 1);
-		CPUID(1, 0, CPUIDBuffer);
+		__cpuid(1, 0, CPUIDBuffer);
 		U32 smtIdSubfieldSize = FindMaskWidth((CPUIDBuffer[1] >> 16) & 0xFF) - coreIdSubfieldSize;
 		tcpu->SMT_ID = apicId & ((1 << smtIdSubfieldSize) - 1);
 		tcpu->CoreID = (apicId >> smtIdSubfieldSize) & ((1 << coreIdSubfieldSize) - 1);
@@ -167,19 +159,14 @@ void ProcessorTopology::plug()
 	Iterator::ofEach(tproc, &UpdateCoreCount, 4);
 }
 
-/**
- * Method: ::HAL::ProcessorTopology::Iterator::toggleLoad
- *
- * Summary:
+/*
  * Iterates all the way to the top toggling each domain's load (for a specific
  * sched-class), by the given magnitude.
  *
- * Args:
- * Processor *initialCPU - the cpu whose load is to be toggled
- * Executable::ScheduleClass cls - index of the scheduler's class
- * long magnitude - amount by which to change the load (+ve or -ve)
- *
- * Author: Shukant Pal
+ * @param initialCPU - the cpu whose load is to be toggled
+ * @param cls - index of the scheduler's class
+ * @param magnitude - amount by which to change the load (+ve or -ve)
+ * @author Shukant Pal
  */
 void ProcessorTopology::Iterator::toggleLoad(Processor *initialCPU, Executable::ScheduleClass cls, long mag)
 {
@@ -197,20 +184,15 @@ void ProcessorTopology::Iterator::toggleLoad(Processor *initialCPU, Executable::
 	}
 }
 
-/**
- * Method: HAL::ProcessorTopology::Iterator::ofEach
- *
- * Summary:
+/*
  * Iterates to the top of the topology starting from a initial-processor. It
  * calls a callback-handler which should handle the domain (without locking)
  * in a synchronized manner.
  *
- * Args:
- * Processor* initialCPU - CPU of the initial-domain; NULL, if this CPU is used
- * void (*handle)(Domain*) - call-back handler for all domains
- * unsigned long limit - limit for the topology-level
- *
- * Author: Shukant Pal
+ * @param initialCPU - CPU of the initial-domain; NULL, if this CPU is used
+ * @param handler - call-back handler for all domains
+ * @param limit - limit for the topology-level
+ * @author Shukant Pal
  */
 void ProcessorTopology::Iterator::ofEach(Processor *initialCPU, void (*handler)(HAL::Domain*),
 						unsigned long limit)
@@ -231,19 +213,14 @@ void ProcessorTopology::Iterator::ofEach(Processor *initialCPU, void (*handler)(
 	}
 }
 
-/**
- * Method: ProcessorTopology::Iterator::forAll
- *
- * Summary:
+/*
  * Executes a action for all the processor in a domain, going through each
  * nested domain serially. This means from the lowest APIC-id to the highest
  * if the processor are sorted by order in each domain.
  *
- * Args:
- * Domain *in - parent domain in which all processor required exist
- * void (*action)(Processor *) - action to take on each cpu
- *
- * Author: Shukant Pal
+ * @param in - parent domain in which all processor required exist
+ * @param action - action to take on each cpu
+ * @author Shukant Pal
  */
 void ProcessorTopology::Iterator::forAll(Domain *in, void (*action)(Processor *))
 {
@@ -299,10 +276,7 @@ void ProcessorTopology::Iterator::forAll(Domain *in, void (*action)(Processor *)
 	}
 }
 
-/**
- * Method: HAL::ProcessorTopology::DomainBinding::getIdlest
- *
- * Summary:
+/*
  * Find the processor which has the least load in the given domain. In an
  * ideal situation, the returned cpu would really have the least load in the
  * given domain, but practically this function always goes the sub-domains in
@@ -312,16 +286,14 @@ void ProcessorTopology::Iterator::forAll(Domain *in, void (*action)(Processor *)
  * This technique of searching for least-loaded subdomains speedens lookup as
  * not all cpus are tested for.
  *
- * Args:
- * Executable::ScheduleClass cls - scheduling class for which load is to be
+ * @param cls - scheduling class for which load is to be
  * 					the least
- * Domain *pdom - parent domain in which the cpu is to be searched
+ * @param pdom - parent domain in which the cpu is to be searched
  *
- * Return:
- * the processor whose successive parent domains are least-loaded relatively to
- * their sibling (.i.e almost idlest processor)
+ * @return - the processor whose successive parent domains are least-loaded
+ * relatively to their sibling (.i.e almost idlest processor)
  *
- * Author: Shukant Pal
+ * @author Shukant Pal
  */
 Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
 {
@@ -362,10 +334,7 @@ Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
 		return (NULL);
 }
 
-/**
- * Method: ::HAL::ProcessorTopology::DomainBinding::getBusiest
- *
- * Summary:
+/*
  * Find the processor which has the highest load in the given domain. In an
  * ideal situation, the returned cpu would really have the highest load in the
  * given domain, but practically this function always goes the sub-domains in
@@ -375,16 +344,15 @@ Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
  * This technique of searching for highest-loaded subdomains speedens lookup as
  * not all cpus are tested for.
  *
- * Args:
- * Executable::ScheduleClass cls - scheduling class for which load is to be
+ * @param cls - scheduling class for which load is to be
  * 					the highest
- * Domain *pdom - parent domain in which the cpu is to be searched
+ * @param pdom - parent domain in which the cpu is to be searched
  *
- * Return:
+ * @return
  * the processor whose successive parent domains are most-loaded relatively to
  * their sibling (.i.e most heavily loaded processor)
  *
- * Author: Shukant Pal
+ * @author Shukant Pal
  */
 Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom)
 {
@@ -422,10 +390,7 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
 		return (NULL);
 }
 
-/**
- * Method: HAL::ProcessorTopology::DomainBinding::findDonee
- *
- * Summary:
+/*
  * Searches for a domain under the same parent, which has a load atleast 20%
  * less than the donor. It locks the search-lock for the parent, and for each
  * sibling it tests for load-balancing.
@@ -433,14 +398,13 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
  * After selecting the donee, it will subtract the given 'delta' from the donor
  * load and add it to the donee load.
  *
- * Args:
- * Executable::ScheduleClass cls - the scheduling class whose runqueue is to balance
- * Domain *client - domain that is to be balanced (by pushing tasks away)
+ * @param cls - the scheduling class whose runqueue is to balance
+ * @param client - domain that is to be balanced (by pushing tasks away)
  *
  * Note:
  * Donor must have a parent, thus, it cannot be the 'system' domain, honestly.
  *
- * Author: Shukant Pal
+ * @author Shukant Pal
  */
 Domain *DomainBinding::findIdlestGroup(Executable::ScheduleClass cls, Domain *donor)
 {
@@ -469,17 +433,13 @@ Domain *DomainBinding::findIdlestGroup(Executable::ScheduleClass cls, Domain *do
 	return (bestFound);
 }
 
-/**
- * Method: HAL::ProcessorTopology::DomainBinding::findBusiestGroup
- *
- * Summary:
+/*
  * Searches for a domain under the same parent, which is the busiest.
  *
- * Args:
- * ScheduleClass cls - schedule class for which load is to be maximum
- * Domain *client - one which is going to transfer with client
+ * @param cls - schedule class for which load is to be maximum
+ * @param client - one which is going to transfer with client
  *
- * Author: Shukant Pal
+ * @author Shukant Pal
  */
 Domain *DomainBinding::findBusiestGroup(Executable::ScheduleClass cls, Domain *client)
 {
