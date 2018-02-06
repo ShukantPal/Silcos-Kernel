@@ -1,13 +1,21 @@
-/**
- * File: Processor.h
- *
- * Summary:
- * Declares how the IA32-processor-specific data is maintained in each per-CPU
- * struct. Also defines some initialization specific code used during SMP-wake
- * to initialize application-processors.
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file Processor.h
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #ifndef X86_PROCESSOR_H
 #define X86_PROCESSOR_H
 
@@ -21,18 +29,31 @@
 #include "TSS.h"
 #include <HAL/CPUID.h>
 #include <Memory/KMemorySpace.h>
-#include <Util/CircularList.h>
+#include <Utils/CircularList.h>
 
-#define GetProcessorById(ID) ((HAL::Processor*) (KCPUINFO + (ID << 12)))
+//! Alias for the pointer to an HAL::Processor with the given processor Id.
+#define GetProcessorById(ID)((HAL::Processor*)(KCPUINFO + 2 * (ID << 12)))
+
+//! Alias for getting the current processor-id
 #define PROCESSOR_ID APIC::id()
+
+//! Size of the per-cpu stack for IA32 platforms
 #define PROCESSOR_STACK_SIZE 1024
 
 void MxConstructTopology(void *);
 
 namespace HAL
 {
-
-typedef
+///
+/// @struct ArchCpu
+///
+/// Architectural per-cpu data structure. It holds basic processor information
+/// and state data. Many of its members are written during CPUID probing.
+///
+/// @version 1.2
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
 struct ArchCpu
 {
 	unsigned int APICID;
@@ -48,15 +69,18 @@ struct ArchCpu
 	IDTEntry IDT[256];
 	IDTPointer IDTR;
 	char brandString[64];
-	unsigned long maxBasicLeaf;
-	unsigned long maxExtLeaf;
-	unsigned long baseFreq;
-	unsigned long busFreq;
-	unsigned long nominalFreq;
-	unsigned long maxFreq;
-	unsigned long tscFreq;
+	unsigned long maxBasicLeaf;//! maximum CPUID basic-leaf
+	unsigned long maxExtLeaf;//! maximum CPUID extended-leaf
+	unsigned long baseFreq;//! (display-only) base-frequency of this cpu
+	unsigned long busFreq;//! (display-only) bus-frequency for this cpu
+	unsigned long nominalFreq;//! nominal frequency of the TSC
+	unsigned long maxFreq;//! maximum frequency for this cpu
+	unsigned long tscFreq;//! rate at which TSC increments its counter
 	unsigned int TopologyIdentifiers[0];
 
+	///
+	/// Accumulates the brand string using __cpuid and saves it in ArchCpu
+	///
 	void detectBrandString()
 	{
 		__cpuid(CpuId::BrandStringStart, 0, (U32*) brandString);
@@ -64,6 +88,10 @@ struct ArchCpu
 		__cpuid(CpuId::BrandStringEnd, 0, (U32*) brandString + 8);
 	}
 
+	///
+	/// Detects if the TSC is present in this cpu. If so, it will save the
+	/// nominal and TSC frequencies.
+	///
 	void detectTSC()
 	{
 		CpuId::cRegs ot;

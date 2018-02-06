@@ -1,3 +1,4 @@
+
 /* @file Processor.c
  *
  * Controls processor-specific operations and provides interfaces to IPI comm.,
@@ -27,7 +28,7 @@
 #include <Memory/KObjectManager.h>
 #include <Memory/MemoryTransfer.h>
 #include <Module/ModuleRecord.h>
-#include <Util/CtPrim.h>
+#include "../../../Interface/Utils/CtPrim.h"
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
 
@@ -218,6 +219,7 @@ decl_c void AddProcessorInfo(MADTEntryLAPIC *PE)
 	if(apicID != BSP_ID)
 	{
 		EnsureUsability((ADDRESS) cpu, NULL, FLG_NOCACHE, KernelData | PageCacheDisable);
+		EnsureUsability((ADDRESS) cpu + 4096, NULL, FLG_NOCACHE, KernelData | PageCacheDisable);
 		memsetf(cpu, 0, sizeof(Processor));
 	}
 

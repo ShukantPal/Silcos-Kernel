@@ -4,8 +4,8 @@
 #ifndef __MEMORY_BUDDY_MANAGER_H__
 #define __MEMORY_BUDDY_MANAGER_H__
 
-#include <Util/LinkedList.h>
 #include <KERNEL.h>
+#include "../Utils/LinkedList.h"
 
 namespace Memory
 {

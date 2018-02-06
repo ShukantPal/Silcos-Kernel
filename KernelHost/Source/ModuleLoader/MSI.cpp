@@ -12,9 +12,9 @@
 #include <Memory/KMemorySpace.h>
 #include <Memory/KObjectManager.h>
 #include <Module/MSI.h>
-#include <Util/Memory.h>
 #include <Debugging.h>
 #include <Executable/Thread.h>
+#include "../../../Interface/Utils/Memory.h"
 
 using namespace Module;
 using namespace Module::Elf;

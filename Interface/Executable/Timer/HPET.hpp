@@ -27,8 +27,8 @@
 #include "WallTimer.hpp"
 #include <Memory/KMemorySpace.h>
 #include <Synch/Spinlock.h>
-#include <Util/AVLTree.hpp>
 #include <TYPE.h>
+#include "../../Utils/AVLTree.hpp"
 
 namespace Executable
 {

@@ -16,7 +16,7 @@
 ; APInvokeMain32 - This is the code, where the code jumps after enabling PM-mode. This will return
 ; 					to APMain32 at the end.
 ; APSetupRuntime - This is the code, not in the trampoline, which is executed after enabling paging
-; 					to goto APMain, from which the hot-plug mechanism (runqueue) starts working.
+; 		to goto APMain, from which the hot-plug mechanism (runqueue) starts working.
 ;
 ; Copyright (C) 2017 - Shukant Pal
 ;=============================================================================+
@@ -32,29 +32,29 @@ extern InitPaging
 
 SECTION .text
 
-GDT_ENTRY_SIZE					equ 8
-GDT_SIZE 						equ (GDT_ENTRY_SIZE * 3)
-GDT_POINTER_SIZE 				equ 6
+GDT_ENTRY_SIZE			equ 8
+GDT_SIZE 			equ (GDT_ENTRY_SIZE * 3)
+GDT_POINTER_SIZE 		equ 6
 
-STATUS_INIT 					equ	0x0002
-STATUS_BOOTING	 				equ	0x00BB
-STATUS_ERROR 					equ	0x00FF
+STATUS_INIT 			equ	0x0002
+STATUS_BOOTING	 		equ	0x00BB
+STATUS_ERROR 			equ	0x00FF
 
-PADDR_TRAMP 					equ 589824 ; KB(576) Trampoline is loaded here
-PADDR_APMAIN32  				equ PADDR_TRAMP + APMain32-APBoot
-PADDR_APSETUPRUNTIME 			equ PADDR_TRAMP + APSetupRuntime-APBoot
-PADDR_DEFAULT_BOOT_GDT 			equ PADDR_TRAMP + defaultBootGDT-APBoot
+PADDR_TRAMP 			equ 589824 ; KB(576) Trampoline is loaded here
+PADDR_APMAIN32  		equ PADDR_TRAMP + APMain32-APBoot
+PADDR_APSETUPRUNTIME 		equ PADDR_TRAMP + APSetupRuntime-APBoot
+PADDR_DEFAULT_BOOT_GDT 		equ PADDR_TRAMP + defaultBootGDT-APBoot
 PADDR_DEFAULT_BOOT_GDT_POINTER	equ PADDR_TRAMP + defaultBootGDTPointer-APBoot
-PADDR_HAL_LOAD_ADDR				equ PADDR_TRAMP + halLoadAddr-APBoot
-PADDR_HAL_LOAD_PADDR			equ PADDR_TRAMP + halLoadPAddr-APBoot
+PADDR_HAL_LOAD_ADDR		equ PADDR_TRAMP + halLoadAddr-APBoot
+PADDR_HAL_LOAD_PADDR		equ PADDR_TRAMP + halLoadPAddr-APBoot
 
-KCPUINFO equ (0xC0000000 + (20 << 20))
+KCPUINFO 			equ (0xC0000000 + (20 << 20))
 
 ALIGN 4
 APBoot:
 APBootSequenceStart:
-halLoadAddr:					RESB 4
-halLoadPAddr:					RESB 4
+halLoadAddr:			RESB 4
+halLoadPAddr:			RESB 4
 
 ;=============================================================================;
 ; Symbol: APRealModeInit
@@ -78,8 +78,8 @@ APRealModeInit:
 	LGDT [PADDR_DEFAULT_BOOT_GDT_POINTER & 0xFF]
 
 	MOV DWORD EAX, CR0
-	OR DWORD EAX, 0x1				; Set PM-bit
-	MOV DWORD CR0, EAX				; Enable Protected-Mode
+	OR DWORD EAX, 0x1		; Set PM-bit
+	MOV DWORD CR0, EAX		; Enable Protected-Mode
 	MOV DWORD EBX, PADDR_APMAIN32	; AP_MAIN32_INVOKER comes here
 
 	JMP DWORD 0x8:AP_MAIN32_INVOKER
@@ -97,11 +97,11 @@ APRealModeInit:
 [BITS 32]
 ALIGN 4
 APMain32:
-	MOV EDX, APSetupRuntime			; InitPaging code will return to address given in EDX
+	MOV EDX, APSetupRuntime		; InitPaging code will return to address given in EDX
 
-	MOV ECX, InitPaging				; Load InitPaging symbol (it is in higher-half)
-	SUB ECX, 0xC0000000				; Load physical address of InitPaging
-	JMP ECX							; goto InitPaging
+	MOV ECX, InitPaging		; Load InitPaging symbol (it is in higher-half)
+	SUB ECX, 0xC0000000		; Load physical address of InitPaging
+	JMP ECX				; goto InitPaging
 
 ALIGN 8
 apSetupInfo:
@@ -144,7 +144,7 @@ extern VAPICBase
 APSetupRuntime:
 	MOV DWORD EAX, [VAPICBase]
 	MOV DWORD EAX, [EAX + 0x20]
-	SHR EAX, 12	; SHR 24 to get APIC_ID and then SHL 12 to multiply by KPGSIZE
+	SHR EAX, 13	; SHR 24 to get APIC_ID and then SHL 12 to multiply by KPGSIZE
 	
 	MOV EBX, KCPUINFO
 	ADD EBX, EAX
@@ -165,15 +165,15 @@ APSetupRuntime:
 extern apPermitLock
 global APWaitForPermit
 APWaitForPermit:
-		PUSH EDX						; save EDX on stack as we are using it
-		apTryForPermitAgain:			; loop until we get the permit
-			PAUSE						; pause - as per spin-lock semantics
+		PUSH EDX			; save EDX on stack as we are using it
+		apTryForPermitAgain:		; loop until we get the permit
+			PAUSE			; pause - as per spin-lock semantics
 			PAUSE
 			PAUSE
-			MOV EDX, [apPermitLock]		; load the apPermitLock for checking
-			CMP EDX, 0					; check if the lock was granted
-			JNE apGotPermit				; goto apGotPermit if lock was granted
-			JE apTryForPermitAgain		; otherwise, loop again
+			MOV EDX, [apPermitLock]	; load the apPermitLock for checking
+			CMP EDX, 0		; check if the lock was granted
+			JNE apGotPermit		; goto apGotPermit if lock was granted
+			JE apTryForPermitAgain	; otherwise, loop again
 			
 		apGotPermit:
 			PUSH EAX
@@ -184,7 +184,7 @@ APWaitForPermit:
 			MOV [ECX+4], EDX
 			POP ECX
 			POP EAX
-			POP EDX						; restore EDX as we are done with it
+			POP EDX			; restore EDX as we are done with it
 			RET
 		
 ;====================================================================;

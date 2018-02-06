@@ -33,7 +33,8 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Util/LinkedList.h>
+#include "../../../Interface/Utils/LinkedList.h"
+
 #include <TYPE.h>
 
 extern "C"

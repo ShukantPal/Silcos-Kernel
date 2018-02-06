@@ -4,8 +4,9 @@
 #include <Executable/Scheduler.h>
 #include <Executable/ScheduleRoller.h>
 #include <Memory/Pager.h>
-#include <Util/AVLTree.hpp>
+#include "../../../Interface/Utils/AVLTree.hpp"
 
+using namespace HAL;
 using namespace Executable;
 
 Time XMilliTime; /* Maintain 64-bit kernel time. */

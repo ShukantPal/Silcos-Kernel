@@ -29,7 +29,7 @@
 #include <Types.h>
 #include <Debugging.h>
 #include <Synch/Spinlock.h>
-#include <Util/Memory.h>
+#include "../../../Interface/Utils/Memory.h"
 
 static volatile U8 *writeBuffer;
 static volatile U8 *bufferPos;

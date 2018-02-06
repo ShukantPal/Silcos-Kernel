@@ -1,22 +1,30 @@
-/**
- * File: ELF.h
- *
- * Summary:
- * This file contains the ELF-kmodule support types. It is used for loading the
- * kmodules into the kernel-space and linking them dynamically with the microkernel
- * core.
- *
- * Types:
- * ELF32_EHDR, ELF32_SHDR, ELF32_PHDR - As defined in ELF specification
- *
- * @See Portable Formats Specification - ELF
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file ELF.h
+///
+/// Contains all the data structures required by the ELF ABI to conform
+/// to it.
+///
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #ifndef MODULE_ELF_H
 #define MODULE_ELF_H
 
 #include <TYPE.h>
-#include <Util/LinkedList.h>
+#include <Utils/LinkedList.h>
 
 namespace Module
 {
@@ -146,22 +154,22 @@ enum SectionIndex
 /* ELF Section Types */
 enum SectionType
 {
-	SHT_NULL		= 0,
+	SHT_NULL	= 0,
 	SHT_PROGBITS	= 1,
-	SHT_SYMTAB		= 2,
-	SHT_STRTAB		= 3,
-	SHT_RELA		= 4,
-	SHT_HASH		= 5,
-	SHT_DYNAMIC		= 6,
-	SHT_NOTE		= 7,
-	SHT_NOBITS		= 8,
-	SHT_REL			= 9,
-	SHT_SHLIB		= 10,
-	SHT_DYNSYM		= 11,
-	SHT_LOPROC		= 0x70000000,
-	SHT_HIPROC		= 0x7FFFFFFF,
-	SHT_LOUSER		= 0x80000000,
-	SHT_HIUSER		= 0xFFFFFFFF
+	SHT_SYMTAB	= 2,
+	SHT_STRTAB	= 3,
+	SHT_RELA	= 4,
+	SHT_HASH	= 5,
+	SHT_DYNAMIC	= 6,
+	SHT_NOTE	= 7,
+	SHT_NOBITS	= 8,
+	SHT_REL		= 9,
+	SHT_SHLIB	= 10,
+	SHT_DYNSYM	= 11,
+	SHT_LOPROC	= 0x70000000,
+	SHT_HIPROC	= 0x7FFFFFFF,
+	SHT_LOUSER	= 0x80000000,
+	SHT_HIUSER	= 0xFFFFFFFF
 };
 
 /* Section Flags */
@@ -203,7 +211,8 @@ enum SymbolBind
 
 #define ELF32_ST_TYPE(value) ((value) & 0xF)
 
-enum SymbolType {
+enum SymbolType
+{
 	STT_NOTYPE 		= 0,// Symbol's type is not specified
 	STT_OBJECT 		= 1,// Symbol is associated with a data object
 	STT_FUNC   		= 2,// Symbol is associated with a function or other executable code
@@ -293,32 +302,32 @@ struct ProgramHeader
 
 enum DynamicTag
 {
-	DT_NULL 		= 	0, // Marks the end of _DYNAMIC array
-	DT_NEEDED 		=	1, // Element holds the string table offset of a null-terminated string
-	DT_PLTRELSZ		=	2, // Element holds the total size
-	DT_PLTGOT		=	3, // Element holds an address associated with the procedure linkage table
-	DT_HASH			=	4, // Element holds an address of the symbol hash table
-	DT_STRTAB		=	5, // Element holds the address of the string table
-	DT_SYMTAB		=	6, // Element holds the address of the symbol table
-	DT_RELA			=	7, // Element holds the address of a relocation table
-	DT_RELASZ		=	8, // Element holds the total size, in bytes, of the DT_RELA relocation table
-	DT_RELAENT		=	9, // Element holds the size, in bytes, of the DT_RELA relocation entry
-	DT_STRSZ		=	10,// Element holds the size, in bytes, of the string table
-	DT_SYMENT		=	11,// Element holds the size, in bytes, of the symbol table entry
-	DT_INIT			=	12,// Element holds the address of the initialization function
-	DT_FINI			=	13,// Element holds the address of the termination function
-	DT_SONAME		=	14,// Element holds the string table offset of a null-terminated string
-	DT_RPATH		=	15,// Element's presence in .so file resolution algorithm for references within the library
-	DT_SYMBOLIC		=	16,// Element is similar to DT_RELA, except its table has implicit addends, such as ELF32_REL
-	DT_REL			=	17,// Element holds total size, in bytes, of the DT_REL relocation table
-	DT_RELSZ		=	18,// Element holds the size, in bytes, of the DT_REL relocation entry
-	DT_RELENT		=	19,// Memory specifies the type of relocation entry referred by procedure linkage table
-	DT_PLTREL		=	20,// Member is used for debugging, contents not specified for the ABI, used KAF software only
-	DT_DEBUG		=	21,// Member's absence signifies that no relocation entry causes no change to a non-writable segment
-	DT_TEXTREL		=	22,// ERR in documentations - er's absence
-	DT_JMPREL		=	23,// If present, this entries's' Pointer holds the address of relocation entries associated with PLT
-	DT_LOPROC		=	0x70000000,//  For processor-specific...
-	DT_HIPROC		=	0x7FFFFFFF// semantics
+	DT_NULL 	= 0, //! marks end of dynamic array
+	DT_NEEDED 	= 1, //! offset of required library's name
+	DT_PLTRELSZ	= 2, //! the total size
+	DT_PLTGOT	= 3, //! address of GOT
+	DT_HASH		= 4, //! address of the symbol hash table
+	DT_STRTAB	= 5, //! address of the string table
+	DT_SYMTAB	= 6, //! address of the symbol table
+	DT_RELA		= 7, //! address of a relocation table
+	DT_RELASZ	= 8, //! total size of the DT_RELA relocation table
+	DT_RELAENT	= 9, //! size of the DT_RELA relocation entry
+	DT_STRSZ	= 10,//! size of the string table
+	DT_SYMENT	= 11,//! size of the symbol table entry
+	DT_INIT		= 12,//! address of the initialization function
+	DT_FINI		= 13,//! address of the termination function
+	DT_SONAME	= 14,//! build name of module
+	DT_RPATH	= 15,//! presence in .so file resolution algorithm for references within the library
+	DT_SYMBOLIC	= 16,//! similar to DT_RELA, has implicit addends
+	DT_REL		= 17,//! total size, in bytes, of the DT_REL table
+	DT_RELSZ	= 18,//! Element holds the size, in bytes, of the DT_REL relocation entry
+	DT_RELENT	= 19,//! Memory specifies the type of relocation entry referred by procedure linkage table
+	DT_PLTREL	= 20,//! Member is used for debugging, contents not specified for the ABI, used KAF software only
+	DT_DEBUG	= 21,//! absence signifies that no relocation entry causes no change to a non-writable segment
+	DT_TEXTREL	= 22,
+	DT_JMPREL	= 23,//! pointer to relocation entries for PLT
+	DT_LOPROC	= 0x70000000,//! lower-bound for arch-dependent entries
+	DT_HIPROC	= 0x7FFFFFFF//! upper-bound for arch-dependent entries
 };
 
 typedef

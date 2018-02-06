@@ -1,7 +1,6 @@
-/**
- * File: String.cxx
+/* @file String.cpp
+ * @module ModuleFramework (kernel.silcos.mdfrwk)
  *
- * Summary:
  * Implements String class and provides its allocation-information for using kernel
  * kobj-new operator.
  * ___________________________________________________________________
@@ -21,10 +20,10 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 #include <Math.hpp>
-#include <Heap.hxx>
+#include <Heap.hpp>
 #include <String.hxx>
+#include <Utils/Arrays.hpp>
 #include <KERNEL.h>
-#include "../../Interface/Util/Arrays.hpp"
 
 #define DEFAULT_HASH 0xFFFFFFFF
 
@@ -105,19 +104,16 @@ String::String(const char *value_, unsigned int length)
 	this->source = value;
 }
 
-/**
- * Function: String::String
+/* @constructor
  *
- * Summary:
  * Initializes a string from a already-string memory buffer at the offset given. It
  * is private to prevent users from initializing a String with mutable memory.
  *
- * Args:
- * const char *value - source for the kmalloc-memory (not value for this string)
- * unsigned int offset - offset of this string from source given
- * unsigned int length - length of this string in characters
- *
- * Author: Shukant Pal
+ * @param value - source for the kmalloc-memory (not value for this string)
+ * @param offset - offset of this string from source given
+ * @param length - length of this string in characters
+ * @version 1.0
+ * @author Shukant Pal
  */
 String::String(const char *value, unsigned int offset, unsigned int length)
 {

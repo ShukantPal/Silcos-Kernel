@@ -21,8 +21,8 @@
 
 #include <Memory/Pager.h>
 #include <Memory/KMemoryManager.h>
-#include <Util/LinkedList.h>
-#include <Util/RBTree.hpp>
+#include "../../../Interface/Utils/LinkedList.h"
+#include "../../../Interface/Utils/RBTree.hpp"
 
 namespace Resource
 {

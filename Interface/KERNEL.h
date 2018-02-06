@@ -18,7 +18,7 @@
 #include <Debugging.h>
 #include <TYPE.h>
 #include <Synch/Spinlock.h>
-#include <Util/Memory.h>
+#include "Utils/Memory.h"
 
 #define __ADM_CONFIG__
 

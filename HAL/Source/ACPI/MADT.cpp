@@ -1,4 +1,5 @@
-/**
+/* @file MADT.cpp
+ *
  * Copyright (C) 2017 - Shukant Pal
  */
 #include <ACPI/SDTHeader.h>
@@ -6,7 +7,17 @@
 #include <ACPI/MADT.h>
 #include <Memory/KMemorySpace.h>
 
-void EnumerateMADT(void (*handleLAPIC)(MADTEntryLAPIC *), void (*handleIOAPIC)(MADTEntryIOAPIC *),
+/*
+ * Enumerates the multiple-descriptor APIC table (ACPI 2.0) and calls the
+ * handlers for each type of entry. Currently, nominal entries local & IO
+ * APIC and Interrupt Service Routine entries are supported here.
+ *
+ * @version 1.0
+ * @since Silcos 3.02
+ * @author Shukant Pal
+ */
+void EnumerateMADT(void (*handleLAPIC)(MADTEntryLAPIC *),
+				void (*handleIOAPIC)(MADTEntryIOAPIC *),
 				void (*handleISR)(MADTEntryISR *))
 {
 	MADT *madtPtr = (MADT*) SearchACPITableByName("APIC", null);

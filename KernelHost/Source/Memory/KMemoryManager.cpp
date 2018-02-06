@@ -1,3 +1,4 @@
+
 /**
  * File: KMemoryManager.c
  *
@@ -16,7 +17,7 @@
 #include <HAL/Processor.h>
 #include <Memory/KMemoryManager.h>
 #include <Memory/KMemorySpace.h>
-#include <Util/Memory.h>
+#include "../../../Interface/Utils/Memory.h"
 #include <KERNEL.h>
 
 #include <Synch/Spinlock.h>

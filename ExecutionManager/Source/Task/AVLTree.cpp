@@ -18,8 +18,9 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
+#include "../../../Interface/Utils/AVLTree.hpp"
+
 #include <Math.hpp>
-#include <Util/AVLTree.hpp>
 #include <KERNEL.h>
 
 static AVLLinker *AVLRotateRight(AVLLinker *node)

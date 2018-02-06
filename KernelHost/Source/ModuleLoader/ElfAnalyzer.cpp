@@ -5,8 +5,8 @@
  */
 
 #include <Module/Elf/ElfAnalyzer.hpp>
-#include <Util/Memory.h>
 #include <KERNEL.h>
+#include "../../../Interface/Utils/Memory.h"
 
 using namespace Module;
 using namespace Module::Elf;

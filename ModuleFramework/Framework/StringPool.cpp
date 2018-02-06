@@ -23,8 +23,8 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Heap.hxx>
 #include <StringPool.hxx>
+#include "../../Interface/Heap.hpp"
 
 StringPool::StringPool()
 {

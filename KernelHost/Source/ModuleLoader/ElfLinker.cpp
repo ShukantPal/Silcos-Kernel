@@ -1,41 +1,45 @@
-/**
- * File: ElfLinker.cpp
- *
- * Summary:
- * This file contains the implementation for the dynamic linkage & relocation
- * services for modules. It is used by the module-loader to modules as shared
- * libraries in the kernel-space.
- * 
- * Functions:
- *
- * Origin:
- *
- * Copyright (C) 2017 - Shukant Pal
- */
-#include <Module/Elf/ElfLinker.hpp>
+///
+/// @file ElfLinker.cpp
+///
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #include <Module/ModuleRecord.h>
-#include <KERNEL.h>
+#include <Module/Elf/ElfLinker.hpp>
 
 using namespace Module;
 using namespace Module::Elf;
 
-void* __dso_handle;
-
-/**
- * Function: ElfLinker::resolveRelocation
- *
- * Summary:
- * This function resolves a 'rel' type relocation.
- *
- * Args:
- * RelEntry *relocEntry - 'Rel' entry descriptor
- * ElfManager &handlerService - Module's elf-manager
- *
- * Author: Shukant Pal
- */
-void ElfLinker::resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService)
+///
+/// Resolves the relocation-entry for the given elf-object. It takes the
+/// type of relocation and performs it as stated by the ELF Format
+/// Specification. Some types of relocations have not been implemented, so
+/// make sure your module doesn't use them or implement them.
+///
+/// @param relocEntry - relocation-entry to be resolved now
+/// @param handlerService - elf-object handler
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
+void ElfLinker::resolveRelocation(RelEntry *relocEntry,
+					ElfManager &handlerService)
 {
-	unsigned long *field = (unsigned long*) (handlerService.baseAddress + relocEntry->Offset);
+	unsigned long *field = (unsigned long*)(handlerService.baseAddress +
+							relocEntry->Offset);
 	unsigned long sindex = ELF32_R_SYM(relocEntry->Info);
 	Symbol *symbolReferred = handlerService.dynamicSymbols.entryTable + sindex;
 	char *signature = handlerService.dynamicSymbols.nameTable + symbolReferred->Name;
@@ -76,18 +80,16 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry, ElfManager &handlerServi
 	}
 }
 
-/**
- * Function: ElfLinker::resolveRelocations
- *
- * Summary:
- * This function resolves all the relocations in a 'rel' relocation table.
- *
- * Args:
- * RelTable &relocTable - 'Rel' relocation table
- * ElfManager &handlerService - Elf-manager for the relevant module
- *
- * Author: Shukant Pal
- */
+///
+/// Resolves all the relocations in the RelTable. This are of type "rel" and
+/// have implicit addends.
+///
+/// @param relocTable - rel-table containing the required entries
+/// @param handlerService - elf-object being referred to
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 void ElfLinker::resolveRelocations(RelTable &relocTable, ElfManager &handlerService)
 {
 	unsigned long relIndex = 0;

@@ -27,7 +27,7 @@
 #ifndef MODULES_MODULEFRAMEWORK_OBJECT_HXX_
 #define MODULES_MODULEFRAMEWORK_OBJECT_HXX_
 
-#include "Heap.hxx"
+#include "Heap.hpp"
 
 class String;
 

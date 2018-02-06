@@ -6,7 +6,7 @@
 #define MEMORY_ADDRESS_H
 
 #include <Types.h>
-#include <Util/LinkedList.h>
+#include "../Utils/LinkedList.h"
 
 #ifdef x86
 	#include <IA32/PageTrans.h>

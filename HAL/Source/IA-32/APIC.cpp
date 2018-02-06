@@ -132,4 +132,3 @@ void APIC::wakeupSequence(U32 apicId, U8 pvect)
 	else
 		Dbg("x2apic - - not imple -- no statrup epecet crash shortly!!!");
 }
-

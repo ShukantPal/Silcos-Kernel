@@ -8,8 +8,8 @@
  */
 
 #include <Debugging.h>
-#include <Heap.hxx>
 #include <TYPE.h>
+#include "../Interface/Heap.hpp"
 #include "../Interface/Object.hpp"
 
 unsigned char ModuleName[16] = "KTERM";

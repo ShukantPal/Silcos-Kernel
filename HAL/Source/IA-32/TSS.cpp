@@ -3,7 +3,7 @@
  */
 
 #include <IA32/Processor.h>
-#include <Util/CtPrim.h>
+#include "../../../Interface/Utils/CtPrim.h"
 
 using namespace HAL;
 

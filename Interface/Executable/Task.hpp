@@ -13,10 +13,9 @@
 #include <Executable/CPUStack.h>
 #include <Memory/Pager.h>
 #include <Types.h>
-#include <Util/LinkedList.h>
-
 #include <Memory/Pager.h>
-#include "../Util/AVLTree.hpp"
+#include "../Utils/AVLTree.hpp"
+#include "../Utils/LinkedList.h"
 
 typedef unsigned long ID;
 typedef unsigned long TYPE;

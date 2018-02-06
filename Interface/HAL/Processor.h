@@ -34,12 +34,12 @@
 #include <Executable/RoundRobin.h>
 #include <Memory/CacheRegister.h>
 #include <Memory/KMemorySpace.h>
-#include <Util/AVLTree.hpp>
-#include <Util/CircularList.h>
-#include <Util/LinkedList.h>
-#include <Util/Memory.h>
 #include <Synch/Spinlock.h>
-#include "../Util/AVLTree.hpp"
+#include "../Utils/AVLTree.hpp"
+#include "../Utils/AVLTree.hpp"
+#include "../Utils/CircularList.h"
+#include "../Utils/LinkedList.h"
+#include "../Utils/Memory.h"
 
 #ifdef x86
 	#include <IA32/Processor.h>

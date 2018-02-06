@@ -10,7 +10,7 @@
 #define EXEC_SCHEDULECLASS_H
 
 #include <Synch/Spinlock.h>
-#include <Util/Stack.h>
+#include "../Utils/Stack.h"
 #include "Task.hpp"
 
 namespace HAL { struct Domain; struct Processor; }

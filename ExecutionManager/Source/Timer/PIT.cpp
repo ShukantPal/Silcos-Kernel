@@ -19,6 +19,16 @@
 
 using namespace Executable::Timer;
 
+bool PIT::intrAction()
+{
+	bool servReq = status(0).outputState;
+
+	if(status(0).outputState)
+		resetTimer(0xFFFF, INTERRUPT_ON_TERMINAL_COUNT, 0);
+
+	return (servReq);
+}
+
 /*
  * Resets the PIT by writing to the control word and then to the counter, so
  * that the next interrupt occurs at initialCount cycles later. Even if the

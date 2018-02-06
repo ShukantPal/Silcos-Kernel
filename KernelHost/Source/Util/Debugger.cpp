@@ -9,9 +9,9 @@
 
 #include <Types.h>
 #include <Debugging.h>
-#include <Util/CtPrim.h>
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
+#include "../../../Interface/Utils/CtPrim.h"
 
 DebugStream *Streams[10];
 char StreamNo = -1;

@@ -40,7 +40,6 @@ extern PADDRESS mmUsable;
 extern unsigned long pgTotal;
 extern unsigned long pgUsable;
 
-#ifdef NS_KFRAMEMANAGER
 #include "BuddyManager.h"
 
 #define FRSIZE_ORDER 12
@@ -81,8 +80,6 @@ void TypifyMRegion(
 	unsigned long regionAddress,
 	unsigned long regionSize
 ) kxhide;
-
-#endif
 
 #ifdef NAMESPACE_MAIN
 

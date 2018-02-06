@@ -7,7 +7,7 @@
 #include <Memory/KFrameManager.h>
 #include <Memory/MemoryTransfer.h>
 #include <IA32/PageExplorer.h>
-#include <Util/Stack.h>
+#include "../../../../../Interface/Utils/Stack.h"
 
 /**
  * Function: GetFrames

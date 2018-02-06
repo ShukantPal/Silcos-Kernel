@@ -15,14 +15,14 @@
 
 #include <Atomic.hpp>
 #include <Memory/KObjectManager.h>
-#include <Heap.hxx>
-#include <Util/HashMap.hpp>
-#include <Util/RBTree.hpp>
 #include <String.hxx>
 
 #include <Module/Elf/ABI/Implementor.h>
 
 #include <KERNEL.h>
+#include "../Interface/Heap.hpp"
+#include "../Interface/Utils/HashMap.hpp"
+#include "../Interface/Utils/RBTree.hpp"
 
 ObjectInfo *tRBTree;
 char nmRBTree[] = "@com.silcos.circuit.mdfrwk.RBTree";
@@ -46,10 +46,6 @@ extern "C" void __init()
 	HashMap::init();
 
 	defaultString  = new(tString) String("@com.silcos.mdfrwk#Object");
-
-	unsigned long a=1, b=2;
-	Atomic::xchg(b, &a);
-	Dbg("a: "); DbgInt(a); DbgLine(" ");
 }
 
 #include <HAL/Processor.h>

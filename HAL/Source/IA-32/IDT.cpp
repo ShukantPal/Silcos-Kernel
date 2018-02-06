@@ -8,7 +8,7 @@
 #include <IA32/IntrHook.h>
 #include <IA32/IO.h>
 #include <IA32/Processor.h>
-#include <Util/Memory.h>
+#include "../../../Interface/Utils/Memory.h"
 
 import_asm void ExecuteLIDT(IDTPointer *);
 import_asm void Spurious();

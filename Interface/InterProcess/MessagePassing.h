@@ -6,10 +6,11 @@
 #define MESSAGE_PASSING_H
 
 #include <Executable/Executable::KTask.h>
+
+#include "../Utils/AVLTree.hpp"
+#include "../Utils/LinkedList.h"
 #include "IPC.h"
 
-#include <Util/LinkedList.h>
-#include "../Util/AVLTree.hpp"
 
 #define UPPER_LIMIT_MSG_BUFFER_SIZE 4096
 #define MSG_TAG_ANY 0

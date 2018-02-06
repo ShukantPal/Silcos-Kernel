@@ -35,7 +35,9 @@ Executable::Timer::HPET *tm_;
 unsigned int fd = 0;
 
 #include <IA32/IO.h>
+#include <Heap.hpp>
 #include <Executable/Timer/PIT.hpp>
+#include <Utils/ArrayList.hpp>
 
 using namespace Executable::Timer;
 
@@ -61,7 +63,7 @@ ObjectInfo *h;
 
 decl_c void testhpet()
 {
-	DbgLine("test-hpet !!!!");
+	DbgLine("test-hpet !!!!"); DbgInt(sizeof(ArrayList));
 
 //	ACPI::HPET *tb = (ACPI::HPET*) SearchACPITableByName("HPET", null);
 
@@ -92,4 +94,11 @@ decl_c void testhpet()
 	}
 	else
 		DbgLine("something is wrong!!@!!");
+
+	Dbg(" ");
+	//char volatile *mem = (char volatile*) kcalloc(4096);
+	//mem[4095 -11] = 12;
+	//DbgInt((unsigned long) mem);
+
+	Dbg("over");
 }

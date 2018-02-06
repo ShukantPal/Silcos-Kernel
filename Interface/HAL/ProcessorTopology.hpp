@@ -23,9 +23,9 @@
 #include <Executable/ScheduleRoller.h>
 #include <Memory/KObjectManager.h>
 #include <Synch/Spinlock.h>
-#include <Util/LinkedList.h>
-#include <Util/CircularList.h>
-#include <Util/Memory.h>
+#include "../Utils/CircularList.h"
+#include "../Utils/LinkedList.h"
+#include "../Utils/Memory.h"
 
 namespace HAL { struct Processor; }
 

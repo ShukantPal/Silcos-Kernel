@@ -1,25 +1,28 @@
-/**
- * File: RecordManager.cpp
- *
- * Summary:
- * This file implements the module-record organization provided. Global-level
- * information querying and overall record I/O is given in the RecordManager
- * implementation.
- * 
- * Functions:
- * RecordManager::createRecord - Create a new record, without registration
- * RecordManager::querySymbol - Search for a symbol by name, in all records
- *
- * Origin:
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file RecordManager.cpp
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #include <Module/Elf/ElfAnalyzer.hpp>
 #include <Module/ModuleRecord.h>
-#include <Util/Memory.h>
+#include <Utils/Memory.h>
 #include <KERNEL.h>
 
 using namespace Module;
+using namespace Module::Elf;
 
 /*
  * This list contains all the registered module-records, unbiased of any
@@ -65,7 +68,7 @@ const ModuleRecord *RecordManager::search(char *name)
 	while(rec != NULL)
 	{
 		if(strcmpn(rec->buildName, name, 16))
-			return (const ModuleRecord*) rec;
+			return ((const ModuleRecord*) rec);
 
 		rec = rec->NextModule;
 	}

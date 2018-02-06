@@ -44,29 +44,29 @@ KiRunnerUpdate:
 ;
 extern Schedule
 KiScheduleEntry:
-	SHL EDX, 12								; get the offset of the cpu-struct
+	SHL EDX, 13				; get the offset of the cpu-struct
 	ADD EDX, 0xc0000000 + 20 * 1024 * 1024	; load the address of cpu-struct
 
-	MOV EBX, [EDX + 24] 					; load the current kernel-task
-	MOV EDI, [EBX + 32] 					; cache the task's kernel-mode stack
+	MOV EBX, [EDX + 24] 			; load the current kernel-task
+	MOV EDI, [EBX + 32] 			; cache the task's kernel-mode stack
 
-	MOV ECX, [EBP]							; load the eip from which interrupt has occured
-	MOV [EBX + 16], ECX 					; store eip into task->eip
+	MOV ECX, [EBP]				; load the eip from which interrupt has occured
+	MOV [EBX + 16], ECX 			; store eip into task->eip
 
-	CMP DWORD [EBP + 4], 0x8				; test whether we came from a kernel/user context
-	JE KiScheduleKernel						; we have seperate handlers for each case
+	CMP DWORD [EBP + 4], 0x8		; test whether we came from a kernel/user context
+	JE KiScheduleKernel			; we have seperate handlers for each case
 
 	KiScheduleUser:
-		MOV ECX, [EBP + 12] 				; load the user-mode stack pointer (from interrupt-frame)
-		MOV ESI, [EBX + 28]					; cache the user-mode struct
-		MOV [ESI + 4], ECX 					; save the user-mode pointer
+		MOV ECX, [EBP + 12] 		; load the user-mode stack pointer (from interrupt-frame)
+		MOV ESI, [EBX + 28]		; cache the user-mode struct
+		MOV [ESI + 4], ECX 		; save the user-mode pointer
 	KiScheduleKernel:
-		SUB EBP, 28							; come to the frame holding the saved registers
-		MOV [EDI + 4], EBP					; save the kernel-mode stack-pointer
+		SUB EBP, 28			; come to the frame holding the saved registers
+		MOV [EDI + 4], EBP		; save the kernel-mode stack-pointer
 
 KiInvokeScheduler:
-	PUSH EDX								; save EDX (to avoid changes)
-	PUSH EDX								; pass cpu-argument
+	PUSH EDX				; save EDX (to avoid changes)
+	PUSH EDX				; pass cpu-argument
 	CALL Schedule
 
 ;-F-F-F-F-F-

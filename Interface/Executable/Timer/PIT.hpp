@@ -24,6 +24,7 @@
 #define EXEMGR_TIMER_PIT_HPP__
 
 #include <IA32/IO.h>
+#include <Executable/IRQHandler.hpp>
 #include <TYPE.h>
 
 namespace Executable
@@ -41,7 +42,7 @@ namespace Timer
  *
  * @author Shukant Pal
  */
-class PIT
+class PIT final
 {
 public:
 	enum
@@ -117,6 +118,7 @@ public:
 		return (sts);
 	}
 
+	bool intrAction();
 	void resetTimer(unsigned short initialCount, unsigned char operation,
 				unsigned char counter);
 private:

@@ -29,8 +29,8 @@
 #include "BuddyManager.h"
 #include "CacheRegister.h"
 #include <Synch/Spinlock.h>
-#include <Util/Stack.h>
-#include <Util/CircularList.h>
+#include "../Utils/CircularList.h"
+#include "../Utils/Stack.h"
 
 typedef unsigned long ZNPNO;
 

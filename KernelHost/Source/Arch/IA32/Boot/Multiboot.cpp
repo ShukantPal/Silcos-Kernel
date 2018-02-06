@@ -40,25 +40,24 @@ export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType)
 	return (NULL);
 }
 
-/**
- * LoadMultibootTags() -
+/*
+ * Initializes the multiboot-parser. It should be called before main because
+ * multiboot information passed in the CPU registers will be lost.
  *
- * Summary:
- * This function maps the multiboot tags at the specific address
- * of MULTIBOOT_INTERFACE and ensures their validity.
- *
- * Args:
- * tagTable - Physical address of the tag-table
- *
- * @Version 1
- * @Since Circuit 2.03
+ * @param tagTable - physical address of multiboot-information table
+ * @version 1
+ * @since Circuit 2.03
+ * @author Shukant Pal
  */
-export_asm void LoadMultibootTags(U32 pTagAddress){
+export_asm void LoadMultibootTags(U32 pTagAddress)
+{
 	InitConsole((unsigned char *) 0xc00b8000);
 
 	SwitchContext(&SystemCxt);
-	EnsureMapping(MULTIBOOT_INTERFACE, (PADDRESS) pTagAddress, NULL, 0, KernelData);
+	EnsureMapping(MULTIBOOT_INTERFACE, (PADDRESS) pTagAddress, NULL,
+				0, KernelData);
 
-	tagTable = (MULTIBOOT_TAG*) (MULTIBOOT_INTERFACE + (pTagAddress % KB(4)));
+	tagTable = (MULTIBOOT_TAG*)(MULTIBOOT_INTERFACE +
+					(pTagAddress % KB(4)));
 	tagTableSize = *((U32*) tagTable);
 }

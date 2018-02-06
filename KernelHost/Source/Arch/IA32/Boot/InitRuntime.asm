@@ -102,27 +102,27 @@ SECTION .text
 	global InitEnvironment
 	extern LoadMultibootTags
 	extern Main
-	extern ctorsStart						; Constructor-Section Start
-	extern ctorsEnd							; Constructor-Section End
+	extern ctorsStart		; Constructor-Section Start
+	extern ctorsEnd			; Constructor-Section End
 	InitEnvironment:
-		MOV ESP, KernelStack_			; load kernel-stack for usage in C, C++ code
-		PUSH EAX						; save multiboot register
-		PUSH EBX						; save multiboot register
-		MOV EBX, ctorsStart				; load ctor-pointer array
-		JMP InitializeGlobalObjects		; call all ctors
+		MOV ESP, KernelStack_	; load kernel-stack for usage in C, C++ code
+		PUSH EAX		; save multiboot register
+		PUSH EBX		; save multiboot register
+		MOV EBX, ctorsStart	; load ctor-pointer array
+		JMP InitializeGlobalObjects	; call all ctors
 
 		CallConstructor:
-		CALL [EBX]						; call ctor
-		ADD EBX, 4						; goto next ctor
+		CALL [EBX]		; call ctor
+		ADD EBX, 4		; goto next ctor
 
 		InitializeGlobalObjects:
-		CMP EBX, ctorsEnd				; test if current ctor is the last one
-		JB CallConstructor				; if not, continue (in loop)
+		CMP EBX, ctorsEnd	; test if current ctor is the last one
+		JB CallConstructor	; if not, continue (in loop)
 
-		CALL LoadMultibootTags			; load multiboot-tags
-		CALL Main						; initializes the system until scheduler is enabled
-		INT 0x20						; if Main() returns, call the scheduler-tick
-		JMP $							; if it comes here, we are seriously stupid
+		CALL LoadMultibootTags	; load multiboot-tags
+		CALL Main		; initializes the system until scheduler is enabled
+		INT 0x20		; if Main() returns, call the scheduler-tick
+		JMP $			; if it comes here, we are seriously stupid
 
 
 	;; imported from HAL (not in mainline KernelHost)

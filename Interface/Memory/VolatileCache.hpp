@@ -27,8 +27,8 @@
 #ifndef INTERFACE_MEMORY_VOLATILECACHE_HPP_
 #define INTERFACE_MEMORY_VOLATILECACHE_HPP_
 
+#include "../Utils/Stack.h"
 #include "KObjectManager.h"
-#include <Util/Stack.h>
 
 /**
  * Class: VolatileCache

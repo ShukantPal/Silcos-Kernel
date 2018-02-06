@@ -25,7 +25,7 @@ IfcHAL = ../Interface/HAL
 IfcRunnable = ../Interface/Executable
 IfcMemory = ../Interface/Memory
 IfcModule = ../Interface/Module
-IfcUtil = ../Interface/Util
+IfcUtil = ../Interface/Utils
 
 #
 # C o m p i l a t i o n   U n i t s

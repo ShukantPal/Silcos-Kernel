@@ -13,9 +13,9 @@
 #ifndef MEMORY_MEMORYMANAGER_H
 #define MEMORY_MEMORYMANAGER_H
 
+#include "../Utils/AVLTree.hpp"
+#include "../Utils/LinkedList.h"
 #include "Pager.h"
-#include <Util/LinkedList.h>
-#include "../Util/AVLTree.hpp"
 
 /**
  * MM_REGION - 

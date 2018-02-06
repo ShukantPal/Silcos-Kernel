@@ -1,19 +1,30 @@
-
-/**
- * File: Main.c
- *
- * Summary:
- * This file contains the initialization code for the IA32 platform. Internal kernel
- * subsystems are setup before waking all other CPUs and preparing SMP in the system.
- *
- * CPUID support is implemented for getting all model-specific information on the
- * system. This allows for the flexibility of the software to bend against changes
- * in the models of a CPU in the architecture.
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file Main.cpp
+///
+/// Early boot-up code is written in this file after the InitRuntime.asm
+/// code. Here logical initialization of subsystems is done and basic
+/// boot-time checking is done for system compatiblity.
+///
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #define NAMESPACE_MAIN
 #define NAMESPACE_MEMORY_MANAGER
+
+#include <Module/Elf/ABI/Implementor.h>
 
 #include <ACPI/RSDP.h>
 #include <ACPI/RSDT.h>
@@ -31,13 +42,13 @@
 #include <Memory/KObjectManager.h>
 #include <Module/ModuleLoader.h>
 #include <Module/MSI.h>
-#include <Util/Memory.h>
 #include <Synch/Spinlock.h>
 #include <Debugging.h>
 #include <Multiboot2.h>
 #include <TYPE.h>
 #include <KERNEL.h>
 #include <Module/Elf/ELF.h>
+#include <Utils/Memory.h>
 
 using namespace HAL;
 using namespace Executable;
@@ -52,32 +63,11 @@ void ImmatureHang(const char *dbgString){
 	while(TRUE){ asm("hlt"); }
 }
 
-extern "C" void stupid();
-
-extern "C" void __cxa_pure_virtual()
-{
-	DbgLine("compiler err: __cxa_pure_virtual() called, c++ virtual function problem!");
-}
-/**
- * Function: ValidateSupport()
- *
- * Summary: This function validates the required features to run the kernel, by checking for
- * CPUID support and then searching for the list features.
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-void ValidateSupport(){
-	if(TestCPUID() != 0) {
-		// TODO: Implement CPUID feature searching through ADM subset.
-	} else
-		ImmatureHang(cpuIdNotSupportedError);
-}
-
-/*
- * For debugging, print sizes of sections & global data structures that are
- * important for kernel size.
- */
+///
+/// Called during early-boot phase to print the sizes of the various seections
+/// of the KernelHost. This was important when the whole kernel was only one
+/// piece but now it is a bit obselete as all module sizes aren't printed.
+///
 void printStatic()
 {
 #ifdef DEBUG
@@ -91,21 +81,22 @@ void printStatic()
 
 extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
 
-/**
- * Function: Main()
- *
- * Args:
- * bootInfo - virtual address of the multiboot header
- * magicNo - the identification number given by the loader
- *
- * Returns: void
- *
- * @See Init.c, InitRuntime.asm
- * @Version 21
- * @Since Circuit 1.02
- */
+///
+/// This is the logical entry point of the silcos kernel. The KernelHost
+/// initializes itself by calling setup-functions for each internal subsystem
+/// and then loads the boot-modules. Once all modules are linked & init'ed
+/// then the HAL gets the chance to continue.
+///
+/// @param multibootTable - physical address of the multi-boot table passed by
+/// 			    the boot loader in the EBX register
+/// @param magicNo - magic no. passed by the boot loader to identify itself as
+/// 		     multiboot-compliant.
+/// @version 15.12
+/// @since Circuit 1.98
+/// @author Shukant Pal
+///
 export_asm void Main(
-		U32 bootInfo,
+		U32 multibootTable,
 		U32 magicNo
 ){
 	DbgLine("Reporting Load: @(com.silcos.circuit.2030)\t--- Silcos Kernel 2.05! ---");
@@ -125,5 +116,5 @@ export_asm void Main(
 	MdSetupLoader();
 	KernelElf::loadBootModules();
 
-	ArchMain();// HAL is responsible for further init
+	ArchMain();
 }

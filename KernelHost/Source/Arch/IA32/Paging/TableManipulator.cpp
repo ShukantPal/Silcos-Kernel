@@ -4,7 +4,7 @@
 
 #include <IA32/PageExplorer.h>
 #include <Memory/KFrameManager.h>
-#include <Util/Memory.h>
+#include "../../../../../Interface/Utils/Memory.h"
 
 U64 *GetDirectory(unsigned long dirOffset, unsigned long frFlags, CONTEXT *Context)
 {

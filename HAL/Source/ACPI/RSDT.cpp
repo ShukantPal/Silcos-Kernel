@@ -7,8 +7,8 @@
 #include <ACPI/XSDT.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
-#include <Util/Memory.h>
 #include <KERNEL.h>
+#include "../../../Interface/Utils/Memory.h"
 
 using namespace ACPI;
 

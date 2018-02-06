@@ -30,7 +30,7 @@
 
 #include <HAL/Processor.h>
 #include <Memory/KFrameManager.h>
-#include <Util/CtPrim.h>
+#include "../../../Interface/Utils/CtPrim.h"
 #include <Multiboot2.h>
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>

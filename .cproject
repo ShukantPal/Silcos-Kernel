@@ -1,164 +1,314 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
-	<storageModule moduleId="org.eclipse.cdt.core.settings">
-		<cconfiguration id="0.728405807">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.728405807" moduleId="org.eclipse.cdt.core.settings" name="Default">
-				<externalSettings>
-					<externalSetting/>
-				</externalSettings>
-				<extensions>
-					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-				</extensions>
-			</storageModule>
-			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildProperties="" description="" id="0.728405807" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
-					<folderInfo id="0.728405807." name="/" resourcePath="">
-						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.1943278703" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
-							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1943278703.831002887" name=""/>
-							<builder arguments="q" cleanBuildTarget="CleanAndBuild" command="make" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.settings.default.builder.353955350" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1123211836" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1819911617" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.195907285" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
-								</option>
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1139205146" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1995962644" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.446258456" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
-									<listOptionValue builtIn="false" value="NS_ADM"/>
-									<listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
-									<listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
-									<listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
-									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
-								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1948716526" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Interface}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Interface/Arch}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ObjectManager/Interface}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ModuleFramework/Interface}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ProcessManager/Interface}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ThreadManager}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
-								</option>
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1518564512" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1832730151" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.128797908" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface/Arch&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ObjectManager/Interface}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
-								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1278889805" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
-									<listOptionValue builtIn="false" value="NS_ADM"/>
-									<listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
-									<listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
-									<listOptionValue builtIn="false" value="NS_KOBJECTMANAGER"/>
-									<listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
-									<listOptionValue builtIn="false" value="x86"/>
-									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
-								</option>
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.279561001" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-						</toolChain>
-					</folderInfo>
-					<sourceEntries>
-						<entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
-					</sourceEntries>
-				</configuration>
-			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
-		</cconfiguration>
-		<cconfiguration id="0.728405807.669696826">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.728405807.669696826" moduleId="org.eclipse.cdt.core.settings" name="CircuitEBuild">
-				<externalSettings/>
-				<extensions>
-					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-				</extensions>
-			</storageModule>
-			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" description="" id="0.728405807.669696826" name="CircuitEBuild" parent="org.eclipse.cdt.build.core.prefbase.cfg">
-					<folderInfo id="0.728405807.669696826." name="/" resourcePath="">
-						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.940276375" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
-							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.940276375.780170565" name=""/>
-							<builder arguments="BuildChain" command="make" id="org.eclipse.cdt.build.core.settings.default.builder.928085007" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.718078875" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1867240001" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1548784359" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.923355682" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.396858246" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
-									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
-								</option>
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1262902665" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1232163187" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.673137589" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface/Arch&quot;"/>
-								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.891344080" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
-									<listOptionValue builtIn="false" value="NS_ADM"/>
-									<listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
-									<listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
-									<listOptionValue builtIn="false" value="NS_KOBJECTMANAGER"/>
-									<listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
-									<listOptionValue builtIn="false" value="x86"/>
-									<listOptionValue builtIn="false" value="NS_PMFLGS"/>
-								</option>
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.577671350" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-						</toolChain>
-					</folderInfo>
-					<sourceEntries>
-						<entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
-					</sourceEntries>
-				</configuration>
-			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
-		</cconfiguration>
-	</storageModule>
-	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="CircuitKernel 2.03.null.1274548314" name="CircuitKernel 2.03"/>
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="CircuitEBuild">
-			<resource resourceType="PROJECT" workspacePath="/CircuitKernel 2.03"/>
-		</configuration>
-		<configuration configurationName="Default">
-			<resource resourceType="PROJECT" workspacePath="/CircuitKernel 2.03"/>
-		</configuration>
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="0.728405807">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="0.728405807.669696826">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-	</storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.settings">
+        		
+        <cconfiguration id="0.728405807">
+            			
+            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.728405807" moduleId="org.eclipse.cdt.core.settings" name="Default">
+                				
+                <externalSettings>
+                    					
+                    <externalSetting/>
+                    				
+                </externalSettings>
+                				
+                <extensions>
+                    					
+                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    				
+                </extensions>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+                				
+                <configuration artifactName="${ProjName}" buildProperties="" description="" id="0.728405807" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+                    					
+                    <folderInfo id="0.728405807." name="/" resourcePath="">
+                        						
+                        <toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.1943278703" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
+                            							
+                            <targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1943278703.831002887" name=""/>
+                            							
+                            <builder arguments="q" cleanBuildTarget="CleanAndBuild" command="make" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.settings.default.builder.353955350" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.libs.1123211836" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.1819911617" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.incpaths.195907285" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/CircuitKernel 2.03/Modules/ResourceManager/Interface}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1139205146" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.1995962644" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.symbols.446258456" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+                                    									
+                                    <listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_ADM"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_PMFLGS"/>
+                                    								
+                                </option>
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1948716526" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/Interface}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/Interface/Arch}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/ResourceManager/Interface}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1518564512" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.1832730151" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.incpaths.128797908" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/Interface}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/Interface/Arch}&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.symbols.1278889805" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_ADM"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KOBJECTMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="x86"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_PMFLGS"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.279561001" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+                                							
+                            </tool>
+                            						
+                        </toolChain>
+                        					
+                    </folderInfo>
+                    					
+                    <sourceEntries>
+                        						
+                        <entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
+                        					
+                    </sourceEntries>
+                    				
+                </configuration>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+            		
+        </cconfiguration>
+        		
+        <cconfiguration id="0.728405807.669696826">
+            			
+            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.728405807.669696826" moduleId="org.eclipse.cdt.core.settings" name="CircuitEBuild">
+                				
+                <externalSettings/>
+                				
+                <extensions>
+                    					
+                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+                    					
+                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+                    				
+                </extensions>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+                				
+                <configuration buildProperties="" description="" id="0.728405807.669696826" name="CircuitEBuild" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+                    					
+                    <folderInfo id="0.728405807.669696826." name="/" resourcePath="">
+                        						
+                        <toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.940276375" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
+                            							
+                            <targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.940276375.780170565" name=""/>
+                            							
+                            <builder arguments="BuildChain" command="make" id="org.eclipse.cdt.build.core.settings.default.builder.928085007" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.libs.718078875" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.1867240001" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+                                								
+                                <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1548784359" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.923355682" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.symbols.396858246" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+                                    									
+                                    <listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_PMFLGS"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1262902665" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+                                							
+                            </tool>
+                            							
+                            <tool id="org.eclipse.cdt.build.core.settings.holder.1232163187" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.incpaths.673137589" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;/home/sukantdev/Documents/Silca Innovations/Circuit Kernel/circuit-source-2.03/Interface/Arch&quot;"/>
+                                    								
+                                </option>
+                                								
+                                <option id="org.eclipse.cdt.build.core.settings.holder.symbols.891344080" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_ADM"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_ADM_MULTIBOOT"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KMEMORYMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_KOBJECTMANAGER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="x86"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="NS_PMFLGS"/>
+                                    								
+                                </option>
+                                								
+                                <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.577671350" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+                                							
+                            </tool>
+                            						
+                        </toolChain>
+                        					
+                    </folderInfo>
+                    					
+                    <sourceEntries>
+                        						
+                        <entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
+                        					
+                    </sourceEntries>
+                    				
+                </configuration>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+            		
+        </cconfiguration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+        		
+        <project id="CircuitKernel 2.03.null.1274548314" name="CircuitKernel 2.03"/>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+    	
+    <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+    	
+    <storageModule moduleId="refreshScope" versionNumber="2">
+        		
+        <configuration configurationName="CircuitEBuild">
+            			
+            <resource resourceType="PROJECT" workspacePath="/CircuitKernel 2.03"/>
+            		
+        </configuration>
+        		
+        <configuration configurationName="Default">
+            			
+            <resource resourceType="PROJECT" workspacePath="/CircuitKernel 2.03"/>
+            		
+        </configuration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+    	
+    <storageModule moduleId="scannerConfiguration">
+        		
+        <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+        		
+        <scannerConfigBuildInfo instanceId="0.728405807">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="0.728405807.669696826">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        	
+    </storageModule>
+    
 </cproject>

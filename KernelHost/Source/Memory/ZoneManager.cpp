@@ -6,7 +6,7 @@
 
 #include <Memory/KFrameManager.h>
 #include <Memory/ZoneManager.h>
-#include <Util/CircularList.h>
+#include "../../../Interface/Utils/CircularList.h"
 #include <KERNEL.h>
 
 using namespace Memory;

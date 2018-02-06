@@ -8,7 +8,7 @@
 #include <Memory/Address.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
-#include <Util/Memory.h>
+#include "../../../../../Interface/Utils/Memory.h"
 #include <KERNEL.h>
 
 extern PADDRESS mmTotal;

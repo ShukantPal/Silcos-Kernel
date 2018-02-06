@@ -25,6 +25,7 @@
 #include <HAL/Processor.h>
 #include <HAL/ProcessorTopology.hpp>
 #include <Executable/RunqueueBalancer.hpp>
+#include <Module/Elf/ABI/Implementor.h>
 #include <KERNEL.h>
 
 using namespace HAL;
@@ -32,9 +33,11 @@ using namespace Executable;
 
 import_asm void BSPGrantPermit();
 
+const char *nmIOAPIC = "::IOAPIC";
+
 decl_c void __init()
 {
-	tp_IOAPIC = KiCreateType("IOAPIC", sizeof(IOAPIC), sizeof(long),
+	tp_IOAPIC = KiCreateType(nmIOAPIC, sizeof(IOAPIC), NO_ALIGN,
 						null, null);
 }
 

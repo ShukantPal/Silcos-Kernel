@@ -13,11 +13,15 @@ AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
 
 # Utilities are compiled here (although they lie in the global-NS)
-MDFRWK_UTIL = Compile/Arrays.o Compile/BinaryTree.o Compile/HashMap.o \
+MDFRWK_UTIL = Compile/ArrayList.o Compile/Arrays.o \
+Compile/BinaryTree.o Compile/HashMap.o \
 Compile/Object.o Compile/RBTree.o Compile/String.o
 
 # Code that is not classifed is compiled here!
 MDFRWK = Compile/Heap.o Compile/Main.o
+
+Compile/ArrayList.o: Framework/ArrayList.cpp
+	$(CC) $(CFLAGS) Framework/ArrayList.cpp -o Compile/ArrayList.o
 
 Compile/Arrays.o: Framework/Arrays.cpp
 	$(CC) $(CFLAGS) Framework/Arrays.cpp -o Compile/Arrays.o
