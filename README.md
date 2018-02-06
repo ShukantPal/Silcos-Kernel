@@ -1,2 +1,3 @@
-# CircuitKernel
-CircuitKernel is the project name for hybrid kernel for the Silcos OS &amp; its eXecutive software.
+# Silcos 3.02
+
+Welcome to Silcos Kernel v3.02!!! This kernel is designed and developed in C++ and assembly. It aims to build a robust and extensible platform to build an OS on top of it. Look into our documentation for details.

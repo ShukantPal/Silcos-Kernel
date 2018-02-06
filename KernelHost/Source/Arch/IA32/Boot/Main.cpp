@@ -95,10 +95,8 @@ extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
 /// @since Circuit 1.98
 /// @author Shukant Pal
 ///
-export_asm void Main(
-		U32 multibootTable,
-		U32 magicNo
-){
+export_asm void Main(U32 multibootTable, U32 magicNo)
+{
 	DbgLine("Reporting Load: @(com.silcos.circuit.2030)\t--- Silcos Kernel 2.05! ---");
 	printStatic();
 

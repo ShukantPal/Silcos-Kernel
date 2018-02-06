@@ -45,8 +45,6 @@ void MxConstructTopology(void *);
 namespace HAL
 {
 ///
-/// @struct ArchCpu
-///
 /// Architectural per-cpu data structure. It holds basic processor information
 /// and state data. Many of its members are written during CPUID probing.
 ///
