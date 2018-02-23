@@ -36,17 +36,27 @@ namespace Elf
 
 #define EI_NIDENT 16
 
-typedef U32 ELF32_ADDR;
-typedef U16 ELF32_HALF;
-typedef U32 ELF32_OFF;
-typedef S32 ELF32_SWORD;
-typedef U32 ELF32_WORD;
+#ifdef ARCH_32
+	typedef U32 ELF32_ADDR;
+	typedef U16 ELF32_HALF;
+	typedef U32 ELF32_OFF;
+	typedef S32 ELF32_SWORD;
+	typedef U32 ELF32_WORD;
+#else
+	// Not checked yet
+	typedef U64 ELF64_ADDR;
+	typedef U32 ELF64_HALF;
+	typedef U64 ELF64_OFF;
+	typedef S64 ELF64_SWORD;
+	typedef U64 ELF32_WORD;
+#endif
 
 struct ElfHeader;
 struct ElfProgramHeader;
 struct ElfSectionHeader;
 
-enum ElfClass {
+enum ElfClass
+{
 	ELFCLASSNONE=0,// Invalid Class
 	ELFCLASS32 = 1,// 32-bit Objects
 	ELFCLASS64 = 2 // 64-bit Objects
@@ -136,8 +146,11 @@ struct ElfHeader
 	ELF32_HALF sectionStringIndex;// Section header table index of entry associated with section name-table
 };
 
-#define PROGRAM_HEADER(eHeader) ((struct ProgramHeader *) ((unsigned long) eHeader + eHeader->programHeaderOffset))
-#define SECTION_HEADER(eHeader) (eHeader->sectionHeaderOffset) ? ((struct SectionHeader *) ((unsigned long) eHeader + eHeader->sectionHeaderOffset)) : NULL
+#define PROGRAM_HEADER(eHeader) ((ProgramHeader *)((unsigned long) eHeader \
+		+ eHeader->programHeaderOffset))
+#define SECTION_HEADER(eHeader) (eHeader->sectionHeaderOffset) ? \
+		((SectionHeader *)((unsigned long) eHeader + \
+				eHeader->sectionHeaderOffset)) : NULL
 
 /* Special Section Indexes */
 enum SectionIndex
@@ -235,17 +248,17 @@ struct Symbol {
 
 //------------------------------ELF Relocation---------------------------------
 enum RelocationType {
-	R_386_NONE		= 0,
-	R_386_32		= 1,
-	R_386_PC32		= 2,
-	R_386_GOT32		= 3,
-	R_386_PLT32		= 4,
-	R_386_COPY		= 5,
+	R_386_NONE	= 0,
+	R_386_32	= 1,
+	R_386_PC32	= 2,
+	R_386_GOT32	= 3,
+	R_386_PLT32	= 4,
+	R_386_COPY	= 5,
 	R_386_GLOB_DAT	= 6,
 	R_386_JMP_SLOT	= 7,
 	R_386_RELATIVE	= 8,
 	R_386_GOTOFF	= 9,
-	R_386_GOTPC		= 10
+	R_386_GOTPC	= 10
 };
 
 #define ELF32_R_SYM(i) ((i) >> 8)
@@ -264,40 +277,61 @@ struct RelaEntry
 	ELF32_SWORD AddEnd;/* Constant addend used to compute the value to be stored into the relocatable field.*/
 };
 
+///
+/// Describes the values by which segments/program-header can be
+/// described by the ProgramHeader::entryType field.
+///
 enum PhdrType
 {
-	PT_NULL		= 0,
-	PT_LOAD		= 1,
-	PT_DYNAMIC	= 2,
-	PT_INTERP	= 3,
-	PT_NOTE		= 4,
-	PT_SHLTB	= 5,
-	PT_PHDR		= 6,
-	PT_LOPROC	= 0x70000000,
-	PT_HIPROC	= 0x7FFFFFFF
+	PT_NULL		= 0,//!< PT_NULL - unused entry
+
+	PT_LOAD		= 1,//!< PT_LOAD - specifies loadable segment
+
+	PT_DYNAMIC	= 2,//!< PT_DYNAMIC - specifies dynamic linking info
+
+	PT_INTERP	= 3,//!< PT_INTERP - specifies location and size of
+			    //! null terminated path to invoke interpreter. Not
+			    //! used by this kernel as ModuleLoader is used.
+			    
+	PT_NOTE		= 4,//!< PT_NOTE - specifies location and size of any
+			    //! auxiliary information. ElfAnalyzer may be used
+			    //! to access such kind of notes.
+
+	PT_SHLTB	= 5,//!< PT_SHLTB - reserved as of now
+
+	PT_PHDR		= 6,//!< PT_PHDR - specifies location and size of the
+			    //! program-header table in file & memory. It is
+			    //! optional but only exists singly.
+
+	PT_LOPROC	= 0x70000000,//!< PT_LOPROC - beginning of CPU-reserved
+					//! values
+
+	PT_HIPROC	= 0x7FFFFFFF //!< PT_HIPROC - end of CPU-reserved vals
 };
 
-/**
- * Struct: ProgramHeader
- *
- * Summary:
- * Contains information about the execution view of the binary. That includes
- * dynamic linking information & program chunks to be loaded in memory.
- *
- * Version: 1.1
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
- */
+///
+/// A kernel module's program-headers describe a segment or other
+/// information the kernel-host needs to prepare it for
+/// running.
+///
+/// @version 1.0
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
 struct ProgramHeader
 {
-	ELF32_WORD entryType;// Type of segment this array element describes
-	ELF32_OFF fileOffset;// Offset from beginning of file at which the first byte of segment resides
-	ELF32_ADDR virtualAddress;// Virtual address of first byte of segment, residing in memory
-	ELF32_ADDR physicalAddress;// Physical addressing relevancy only, not used in CircuitKernel-ELF-KModule support!
-	ELF32_WORD fileSize;// No. of bytes in file image of the segment, may be zero
-	ELF32_WORD memorySize;// No. of bytes in memory image of the segment, may be zero
-	ELF32_WORD flagSet;// Has flags relevant to the segment
-	ELF32_WORD alignBoundary;// Gives the value to which segments are aligned in memory & in the file
+	ELF32_WORD entryType;//!< Tells what kind of infomation it gives
+	ELF32_OFF fileOffset;//!< Gives the offset in the file at which first
+			     //!< byte of segment resides
+	ELF32_ADDR virtualAddress;//!< Gives the virtual address at which the
+				  //! first byte in the segment resides
+	ELF32_ADDR physicalAddress;//!< Not relevant in the kernel-context
+	ELF32_WORD fileSize;//!< Size of the segment in the file, may be zero
+	ELF32_WORD memorySize;//!< Size of the segment in virtual memory, it
+			      //! can be zero
+	ELF32_WORD flagSet;//!< Contains the flags relevant to this entry
+	ELF32_WORD alignBoundary;//!< Values to which segment are aligned in
+				 //! memory and the file
 };
 
 enum DynamicTag

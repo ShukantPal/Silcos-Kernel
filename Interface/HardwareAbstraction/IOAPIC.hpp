@@ -21,12 +21,11 @@
 
 #include <Object.hpp>
 #include <ACPI/MADT.h>
+#include <Executable/IRQHandler.hpp>
 #include <Synch/Spinlock.h>
 #include <Utils/ArrayList.hpp>
 #include <Utils/LinkedList.h>
 #include <TYPE.h>
-
-extern ObjectInfo *tp_IOAPIC;
 
 namespace HAL
 {
@@ -42,11 +41,13 @@ namespace HAL
 /// asserts a specific input-signal, the IOAPIC uses the corresponding
 /// redirection entry to format an interrupt message.
 ///
+/// For details of the IOAPIC refer to the Intel preliminary document.
+///
 /// @version 1.0
 /// @since Silcos 3.02
 /// @author Shukant Pal
 ///
-class IOAPIC : public Lockable, public LinkedListNode
+class IOAPIC final : public Lockable, public LinkedListNode
 {
 public:
 	enum DeliveryMode
@@ -72,12 +73,16 @@ public:
 		U64 destination : 8;/// Id for the interrupt's destination
 	};
 
+	struct InputSignal : public Executable::IRQ
+	{
+		IOAPIC *intrRouter;
+	};
+
 	unsigned char id(){ return (apicID); }
 	unsigned char version(){ return (hardwareVersion); }
 	unsigned char redirectionEntries(){ return (redirEntries); }
 	unsigned char arbitrationId(){ return (arbId); }
 
-	IOAPIC(unsigned long physicalBase);
 	RedirectionEntry getRedirEnt(unsigned char inputSignal);
 	void setRedirEnt(unsigned char inputSignal, RedirectionEntry *data);
 
@@ -85,14 +90,13 @@ public:
 
 	static IOAPIC *getIterable()
 	{
-		return ((IOAPIC*)(ioApicChain.head));
+		return ((IOAPIC*) systemIOAPICs.get(0));
 	}
 private:
 	unsigned char apicID;
 	unsigned char hardwareVersion;
 	unsigned char redirEntries;
 	unsigned char arbId;
-
 	unsigned long physRegs;
 	unsigned long virtAddr;
 
@@ -123,10 +127,11 @@ private:
 #define IOAPICARB	0x02
 #define IOREDTBL(n)	0x10 + 2*n
 
-	static ArrayList irqTable;/// array of irq's that can be handled
-	static LinkedList ioApicChain;
-
+	static ArrayList systemIOAPICInputs;
+	static ArrayList systemIOAPICs;
 	friend class IRQ;
+
+	IOAPIC(unsigned long physicalBase, unsigned long intrBase);
 };
 
 }// namespace HAL

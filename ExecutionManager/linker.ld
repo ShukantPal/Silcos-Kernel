@@ -28,6 +28,8 @@ SECTIONS {
 		*(SORT(.dtors*))
 		dtorsEnd = .;
 		
+		*(.init.*)
+		*(.fini.*)
 		*(.text)
 		*(.text*)
 		*(.rdata)

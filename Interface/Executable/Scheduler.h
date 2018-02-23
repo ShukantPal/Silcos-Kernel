@@ -20,9 +20,9 @@
 #ifndef EXEC_SCHEDULER_H
 #define EXEC_SCHEDULER_H
 
-#include <HAL/Processor.h>
 #include <Executable/Task.hpp>
 #include <Executable/Thread.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
 

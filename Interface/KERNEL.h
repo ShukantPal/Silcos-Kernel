@@ -20,6 +20,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+#ifndef __ASM_SOURCE__
 #ifndef KERNEL_H__
 #define KERNEL_H__
 
@@ -172,3 +173,4 @@ void ASSERT(
 );
 
 #endif/* KERNEL.h */
+#endif// __ASM_SOURCE__

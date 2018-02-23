@@ -17,8 +17,8 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 #include <Memory/KMemoryManager.h>
-#include <Resource/ContextManager.hpp>
 #include <KERNEL.h>
+#include <Resource/ContextManager.hpp>
 
 using namespace Resource;
 

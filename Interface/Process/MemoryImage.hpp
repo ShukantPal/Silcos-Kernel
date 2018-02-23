@@ -21,7 +21,7 @@
 
 #include <Memory/KObjectManager.h>
 #include <Resource/ContextManager.hpp>
-#include "../../../Interface/Utils/RBTree.hpp"
+#include <Utils/RBTree.hpp>
 
 extern ObjectInfo *tProcess_MemoryImage;
 

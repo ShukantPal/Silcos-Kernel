@@ -4,14 +4,6 @@
 #
 # B u i l d : A U T O (n o   c o m m a n d s)
 
-CC = g++
-CFLAGS = -m32 -I"." -I"./Interface" -I"../Interface" -I"../Interface/Arch" -I"../ModuleFramework/Interface" \
- -c -ffreestanding -nostdlib -nostdinc \
- -Wall -O2 -fPIC -L../KernelHost/Build/circuitk-1.02 -fno-exceptions -fno-rtti
-
-AS = nasm
-ASFLAGS = -f elf32
-
 RS = Compile/ContextManager.o Compile/Init.o Compile/MemoryImage.o
 
 COMPILE = Compile
@@ -27,5 +19,5 @@ $(COMPILE)/MemoryImage.o: $(SOURCE)/MemoryImage.cpp
 	$(CC) $(CFLAGS) $(SOURCE)/MemoryImage.cpp -o $(COMPILE)/MemoryImage.o
 
 RsMake: $(RS)
-	ld -m elf_i386 -shared -T linker.ld $(RS) -o Build/silcos.rsmgr
+	$(CC) $(RS) $(LFLAGS) -o Build/silcos.rsmgr
 	cp Build/silcos.rsmgr ../Modules/Builtin/

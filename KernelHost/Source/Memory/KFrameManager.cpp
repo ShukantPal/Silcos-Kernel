@@ -28,7 +28,7 @@
 #define NS_ADM
 	#define NS_ADM_MULTIBOOT
 
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Memory/KFrameManager.h>
 #include "../../../Interface/Utils/CtPrim.h"
 #include <Multiboot2.h>

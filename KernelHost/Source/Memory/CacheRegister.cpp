@@ -1,6 +1,6 @@
 /* Copyright (C) 2017 - Shukant Pal */
 
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Memory/CacheRegister.h>
 
 LinkedListNode *ChDataAllocate(CHSYS *chInfo, unsigned long *statusFilter)

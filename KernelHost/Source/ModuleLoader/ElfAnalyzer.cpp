@@ -1,17 +1,43 @@
-/**
- * File: ElfAnalyzer.cpp
- *
- * Copyright (C) 2017 - sukantdev
- */
+///
+/// @file ElfAnalyzer.cpp
+/// @module KernelHost
+///
+/// Implements the utility function to access and manipulate various
+/// features of an elf-object.
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 
 #include <Module/Elf/ElfAnalyzer.hpp>
+#include <Utils/Memory.h>
 #include <KERNEL.h>
-#include "../../../Interface/Utils/Memory.h"
 
 using namespace Module;
 using namespace Module::Elf;
 
-bool ElfAnalyzer::validateBinary(void *binaryFile){
+///
+/// Validates the binary-file present in kernel-memory as an elf-object,
+/// which must be a "shared" library.
+///
+/// @param binaryFile - file of the module loaded from secondary
+/// 			storage
+/// @return - whether or not the module is a elf-object
+///
+bool ElfAnalyzer::validateBinary(void *binaryFile)
+{
 	ElfHeader *analyzedHeader = (ElfHeader *) binaryFile;
 
 	if(analyzedHeader->fileIdentifier[EI_MAG0] != ELFMAG0) return (false);
@@ -30,6 +56,12 @@ bool ElfAnalyzer::validateBinary(void *binaryFile){
 	return (true);
 }
 
+///
+/// Returns the hash value of the string given using the ELF-defined
+/// algorithm.
+///
+/// @param symbolName - name of the symbol/string to be hashed
+///
 unsigned long ElfAnalyzer::getSymbolHash(char *symbolName)
 {
 	unsigned long hashKey = 0, testHolder;
@@ -46,10 +78,26 @@ unsigned long ElfAnalyzer::getSymbolHash(char *symbolName)
 	return (hashKey);
 }
 
-Symbol *ElfAnalyzer::querySymbol(char *requiredSymbolName, SymbolTable *symbolRecord, HashTable *hashTable)
+///
+/// Searches for the symbol with the given string as its name. It subsequently
+/// takes help of the "standard" ELF hash-table present in the elf-object and
+/// a symbol-table which holds the symbol-entry.
+///
+/// @param requiredSymbolName - name of the symbol being searched for
+/// @param symbolRecord - table of symbols in which it resides
+/// @param hashTable - "standard" ELF hash-table of symbols
+/// @return - the symbol entry having the given name, present in the
+/// 		symbol table given
+/// @version 1.0
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
+Symbol *ElfAnalyzer::querySymbol(char *requiredSymbolName,
+		SymbolTable *symbolRecord, HashTable *hashTable)
 {
 	unsigned long hashKey = ElfAnalyzer::getSymbolHash(requiredSymbolName);
-	unsigned long chainIndex = hashTable->bucketTable[hashKey % hashTable->bucketEntries];
+	unsigned long chainIndex = hashTable->bucketTable
+			[hashKey % hashTable->bucketEntries];
 	unsigned long *chainEntry;
 	Symbol *relevantSymbol;
 
@@ -58,14 +106,11 @@ Symbol *ElfAnalyzer::querySymbol(char *requiredSymbolName, SymbolTable *symbolRe
 		chainEntry = hashTable->chainTable + chainIndex;
 		relevantSymbol = symbolRecord->entryTable + chainIndex;
 
-		if(strcmp(requiredSymbolName, symbolRecord->nameTable + relevantSymbol->Name))
-		{
+		if(strcmp(requiredSymbolName, symbolRecord->nameTable +
+				relevantSymbol->Name))
 			return (relevantSymbol);
-		}
 		else
-		{
 			chainIndex = *chainEntry;
-		}
 	} while(chainIndex != STN_UNDEF);
 
 	return (NULL);

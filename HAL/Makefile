@@ -8,14 +8,11 @@
 # HAL_IA32 - build a ia32 hal Build/IA32
 #
 
+#
+# Imported C++ runtime features built into the module
+#
 
-CC = g++ -std=c++1z # C + +   C o m p i l e r
-CFLAGS = -m32 -I"." -I"../Interface" -I"../Interface/Arch" -c \
--fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall \
--Os -fPIC -fno-rtti -fno-exceptions -L../KernelHost/Build/circuitk-1.02
-
-AS = nasm # A s s e m b e r
-ASFLAGS = -f elf32 # A s m   F l a g s
+ImportCppRuntime = $(DefaultCppRuntime)
 
 COMPILE = Compile/IA-32
 SOURCE = Source/IA-32
@@ -47,10 +44,11 @@ $(COM_ACPI)/RSDT.o: $(SRC_ACPI)/RSDT.cpp
 #
 
 IA32_Build = $(COMPILE)/APBoot.o $(COMPILE)/APIC.o $(COMPILE)/CMOS.o 	\
-$(COMPILE)/CPUDriver.o $(COMPILE)/CPUID.o $(COMPILE)/GDT.o 				\
-$(COMPILE)/IDT.o $(COMPILE)/IntrHook.o $(COMPILE)/IO.o 					\
-$(COMPILE)/IOAPIC.o $(COMPILE)/Load.o $(COMPILE)/Processor.o			\
-$(COMPILE)/ProcessorTopology.o $(COMPILE)/Startup.o						\
+$(COMPILE)/CPUDriver.o $(COMPILE)/CPUID.o $(COMPILE)/GDT.o 		\
+$(COMPILE)/IDT.o $(COMPILE)/IntrHook.o $(COMPILE)/IO.o 			\
+$(COMPILE)/IOAPIC.o $(COMPILE)/IRQCallbacks.o				\
+$(COMPILE)/Load.o $(COMPILE)/Processor.o				\
+$(COMPILE)/ProcessorTopology.o $(COMPILE)/Startup.o			\
  $(COMPILE)/SwitchRunner.o $(COMPILE)/TSS.o
 
 $(COMPILE)/APBoot.o: $(SOURCE)/APBoot.asm
@@ -83,6 +81,9 @@ $(COMPILE)/IO.o: $(SOURCE)/IO.asm
 $(COMPILE)/IOAPIC.o: $(SOURCE)/IOAPIC.cpp
 	$(CC) $(CFLAGS) $(SOURCE)/IOAPIC.cpp -o $(COMPILE)/IOAPIC.o
 
+$(COMPILE)/IRQCallbacks.o: $(SOURCE)/IRQCallbacks.asm
+	$(AS) $(ASFLAGS) $(SOURCE)/IRQCallbacks.asm -o $(COMPILE)/IRQCallbacks.o
+
 $(COMPILE)/Load.o: $(SOURCE)/Load.asm
 	$(AS) $(ASFLAGS) $(SOURCE)/Load.asm -o $(COMPILE)/Load.o
 
@@ -106,7 +107,7 @@ $(COMPILE)/TSS.o: $(SOURCE)/TSS.cpp
 #
 
 IA32_HAL: $(ACPI_Build) $(IA32_Build)
-	ld -m elf_i386 -shared -T linker.ld $(ACPI_Build) $(IA32_Build) -o Build/kernel.silcos.hal -h "HardwareAbstractionLayer" \
-	-L../KernelHost/Build/circuitk-1.02
+	 $(CC) ../Modules/crti.o $(Cpp.crtbegin.o) $(ACPI_Build) $(IA32_Build) $(LFLAGS) $(Cpp.crtend.o) ../Modules/crtn.o \
+	 -o Build/kernel.silcos.hal
 	cp Build/kernel.silcos.hal ../Modules/Builtin/
 	

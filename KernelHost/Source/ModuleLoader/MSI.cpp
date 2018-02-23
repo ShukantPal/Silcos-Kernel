@@ -1,12 +1,26 @@
-/**
- * File: KernelElf.cpp
- *
- * Summary:
- * This file implements abstracting the microkernel elf-binary & loading the
- * boot-modules.
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file MSI.cpp
+/// @module KernelHost
+///
+/// Implements elf-object holder for the KernelHost module as its
+/// file is not available at boot-time.
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
+
 #include <Module/ModuleLoader.h>
 #include <Module/ModuleRecord.h>
 #include <Memory/KMemorySpace.h>
@@ -14,55 +28,49 @@
 #include <Module/MSI.h>
 #include <Debugging.h>
 #include <Executable/Thread.h>
-#include "../../../Interface/Utils/Memory.h"
+#include <Utils/Memory.h>
 
 using namespace Module;
 using namespace Module::Elf;
 
 KCOR_MSICACHE msiKernelSections;
 
-/*
- * Contains the microkernel dynamic-link info
- */
-static struct Module::DynamicLink coreLink;
+///
+/// Contains the microkernel dynamic-link info
+///
+static DynamicLink coreLink;
 
-/*
- * Contains the module-record for the microkernel
- */
-static ModuleRecord coreRecord;
-
-/*
- * Symbol defined, as the location of the microkernel dynamic table
- */
+///
+/// Symbol defined, as the location of the microkernel dynamic table
+///
 extern unsigned long msiKernelDynamicTableStart;
 
-/*
- * Symbol defined, as the location of the end of the microkernel dynamic table
- */
+///
+/// Symbol defined, as the location of the end of the microkernel dynamic table
+///
 extern unsigned long msiKernelDynamicTableEnd;
 
-/*
- * DynamicEntry* array for the microkernel
- */
+///
+/// DynamicEntry* array for the microkernel
+///
 #define msiDynamicTable ((DynamicEntry *) ((unsigned long) &msiKernelDynamicTableStart))
 
-/*
- * DynamicEntry count for the microkernel
- */
+///
+/// DynamicEntry count for the microkernel
+///
 #define msiDynamicCount ((unsigned long) &msiKernelDynamicTableEnd - (unsigned long) &msiKernelDynamicTableStart) / sizeof(DynamicEntry)
 #define HDR_SEARCH_START (unsigned long) &kernelSeg
 
-/**
- * KernelElf::getDynamicEntry
- *
- * Summary:
- * Special function for getting a dynamic entry of the microkernel (only).
- *
- * Args:
- * DynamicTag dRequiredTag - required dynamic tag
- *
- * Author: Shukant Pal
- */
+///
+/// Special function for getting a dynamic entry of the KernelHost
+/// binary.
+///
+/// @param dRequiredTag - required dynamic tag
+/// @return dynamic-entry associated with the given tag
+/// @version 1.0
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
 DynamicEntry *KernelElf::getDynamicEntry(enum DynamicTag dRequiredTag)
 {
 	DynamicEntry *dynamicEntry = msiDynamicTable;
@@ -83,22 +91,20 @@ DynamicEntry *KernelElf::getDynamicEntry(enum DynamicTag dRequiredTag)
 	return (NULL);
 }
 
-/*
- * Build name for the microkernel
- */
+///
+/// Build-time name of this module
+///
 char coreModuleString[] = "Microkernel";
 
-/**
- * Function: KernelElf::registerDynamicLink
- *
- * Summary:
- * This function will setup the microkernel-record & its dynamic link-info for use
- * by module-loaders.
- *
- * Args: NONE
- *
- * Author: Shukant Pal
- */
+///
+/// Extracts a dynamic-link struct for the KernelHost, as the normal
+/// ElfAnalyzer function can't be used.
+///
+/// Args: NONE
+/// @return module-record for the KernelHost, extracted using KernelElf
+/// 		utility functions only
+/// @author Shukant Pal
+///
 ModuleRecord *KernelElf::registerDynamicLink()
 {
 	DynamicEntry *dsmEntry = KernelElf::getDynamicEntry(DT_SYMTAB);
@@ -134,12 +140,6 @@ ModuleRecord *KernelElf::registerDynamicLink()
 	}
 }
 
-/*
- * Temporary object-allocator for getting blob-registers for the boot modules.
- *
- * @Note - Future builds will contain a general-use heap from which they will
- * be taken
- */
 ObjectInfo *tBlobRegister;
 char nmBlobRegister[] = "BlobRegister";
 
@@ -174,6 +174,7 @@ void KernelElf::loadBootModules()
 	// but again for linking the "false file" we create a blob & link the manager with blob
 	ElfManager kernhost;
 	BlobRegister kernhblob;
+
 	bmRecord = RecordManager::create("Kernel Host", 3020, ModuleType::KMT_EXC_MODULE);
 	RecordManager::registerRecord(bmRecord);
 	kernhblob.manager = (void*) &kernhost;
@@ -181,11 +182,11 @@ void KernelElf::loadBootModules()
 	DynamicLink *khlinks = kernhost.exportDynamicLink();
 	bmRecord->linkerInfo = khlinks;
 
-	ModuleRecord *khrec = bmRecord;
-
-	MultibootTagModule *foundModule = (MultibootTagModule*) SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_MODULE);
+	MultibootTagModule *foundModule = (MultibootTagModule*)
+			SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_MODULE);
 	while(foundModule != NULL)
 	{
+		Dbg(foundModule->CMDLine);
 		bmRecord = RecordManager::create(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
 
 		blob = new(tBlobRegister) BlobRegister();

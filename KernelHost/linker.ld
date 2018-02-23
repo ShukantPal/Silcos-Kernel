@@ -1,11 +1,9 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * File: linker.ld (/linker.ld - Core)
+/* @file linker.ld
  *
- * Summary:
- * GNU linker script
+ * This is the linker script for the KernelHost position-independent
+ * executable.
  *
- * Copyright (C) 2016, 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 
 OUTPUT_FORMAT("elf32-i386")
 ENTRY(InitRuntime)
@@ -37,7 +35,8 @@ SECTIONS {
 				
 		*(.text)
 		*(.text.*)
-	/*	*(.gnu.linkonce.t.*)	*(.gnu.linkonce.r.*) */
+		*(.gnu.linkonce.t.*)
+		*(.gnu.linkonce.r.*)
 	} 
 	KernelCodeEnd = .;
 

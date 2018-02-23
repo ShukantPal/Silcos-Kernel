@@ -16,6 +16,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #ifndef X86_PROCESSOR_H
 #define X86_PROCESSOR_H
 
@@ -27,12 +28,17 @@
 #include "GDT.h"
 #include "IDT.h"
 #include "TSS.h"
-#include <HAL/CPUID.h>
+#include <Executable/IRQHandler.hpp>
+#include <HardwareAbstraction/CPUID.h>
 #include <Memory/KMemorySpace.h>
+#include <Utils/ArrayList.hpp>
 #include <Utils/CircularList.h>
 
 //! Alias for the pointer to an HAL::Processor with the given processor Id.
-#define GetProcessorById(ID)((HAL::Processor*)(KCPUINFO + 2 * (ID << 12)))
+#define GetProcessorById(ID)((HAL::Processor*)(KCPUINFO + 8 * (ID << 12)))
+
+//! Alias for the pointer to the local-irq table for a given CPU
+#define GetIRQTableById(id)((HAL::LocalIRQ*)(KCPUINFO + (id << 15) + 24576))
 
 //! Alias for getting the current processor-id
 #define PROCESSOR_ID APIC::id()
@@ -44,6 +50,32 @@ void MxConstructTopology(void *);
 
 namespace HAL
 {
+
+///
+/// Holds the IRQHandler array for a local interrupt. It is used only
+/// for interrupts which have vectors in the range 32 to 192. These can
+/// be used by device drivers and are shared among devices unless held
+/// exclusively.
+///
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
+class LocalIRQ : public Executable::IRQ
+{
+public:
+	static void init(unsigned long tableId);
+
+	void addHandler(IRQHandler *hdlr)
+	{
+		SpinLock(&lineHdlrs.modl);
+		lineHdlrs.add((void*) hdlr);
+		SpinUnlock(&lineHdlrs.modl);
+	}
+private:
+	LocalIRQ();
+};
+
 ///
 /// Architectural per-cpu data structure. It holds basic processor information
 /// and state data. Many of its members are written during CPUID probing.
@@ -61,19 +93,19 @@ struct ArchCpu
 	unsigned int CoreID;
 	unsigned int SMT_ID;
 	unsigned int ProcessorStack[256];
-	GDTEntry GDT[6];
+	GDTEntry GDT[6] __attribute__((aligned(8)));
 	GDTPointer GDTR;
 	TSS kTSS;
-	IDTEntry IDT[256];
-	IDTPointer IDTR;
-	char brandString[64];
-	unsigned long maxBasicLeaf;//! maximum CPUID basic-leaf
-	unsigned long maxExtLeaf;//! maximum CPUID extended-leaf
-	unsigned long baseFreq;//! (display-only) base-frequency of this cpu
-	unsigned long busFreq;//! (display-only) bus-frequency for this cpu
-	unsigned long nominalFreq;//! nominal frequency of the TSC
-	unsigned long maxFreq;//! maximum frequency for this cpu
-	unsigned long tscFreq;//! rate at which TSC increments its counter
+	IDTEntry IDT[256];//!< obselete @deprecated
+	IDTPointer IDTR;//!< obselete @deprecated
+	char brandString[64];//!< Brand-string extracted from CPUID
+	unsigned long maxBasicLeaf;//!< Maximum CPUID basic-leaf
+	unsigned long maxExtLeaf;//!< Maximum CPUID extended-leaf
+	unsigned long baseFreq;//!< (display-only) Base-frequency of this cpu
+	unsigned long busFreq;//!< (display-only) Bus-frequency for this cpu
+	unsigned long nominalFreq;//!< Nominal frequency of the TSC
+	unsigned long maxFreq;//!< Maximum frequency for this cpu
+	unsigned long tscFreq;//!< Rate at which TSC increments its counter
 	unsigned int TopologyIdentifiers[0];
 
 	///

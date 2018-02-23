@@ -129,13 +129,15 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry excluding="Interface/Process|IRQ|ResourceManager/Interface/Process|Modules/ModuleFramework/DataManagement|ACPI|Modules/ResourceManager/Interface/Process|ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/Framework|ExecutionManager/Source/IRQ|Object|Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ExecutionManager/Source/IRQ"/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
                         						
-                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Interface/Process"/>
                         						
-                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
                         					
                     </sourceEntries>
                     				
@@ -245,13 +247,15 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|ResourceManager/Interface/Process|Source|Modules/ModuleFramework/DataManagement|Modules/ModuleFramework/Framework|ACPI|Object|Process|Modules/ResourceManager/Interface/Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry excluding="Interface/Process|IRQ|ResourceManager/Interface/Process|Modules/ModuleFramework/DataManagement|ACPI|Modules/ResourceManager/Interface/Process|ModuleFramework/Framework|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/Framework|ExecutionManager/Source/IRQ|Object|Process|HAL/Source/ACPI" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ExecutionManager/Source/IRQ"/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Source/ACPI"/>
                         						
-                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Interface/Process"/>
                         						
-                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ResourceManager/Interface/Process"/>
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ModuleFramework/Framework"/>
                         					
                     </sourceEntries>
                     				

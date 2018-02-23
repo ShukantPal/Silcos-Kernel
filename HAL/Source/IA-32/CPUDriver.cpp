@@ -17,8 +17,8 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 
+#include <HardwareAbstraction/Processor.h>
 #include <IA32/APIC.h>
-#include <HAL/Processor.h>
 #include <KERNEL.h>
 
 using namespace HAL;

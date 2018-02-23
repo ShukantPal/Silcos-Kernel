@@ -32,22 +32,22 @@ import_asm U64 GlobalTable[512];
 
 CONTEXT SystemCxt;
 
-/*
- * Allows software to write to a specific physical address by mapping it in
- * virtual memory. This may be to write to an device register or for shared
- * memory region.
- *
- * @param address - virtual address to be mapped
- * @param pAddress - Physical address of page-frame
- * @param cxt - mmu-context in which virtual-address resides. This is
- * 		required to map in an user-mode address. To do so in a
- * 		kernel-owned memory region, null also works.
- * @param frFlags - flags with which page-table is to be allocated, if required
- * @param pgAttr - attributes to be applied on the page while mapping
- * @version 1.0
- * @since Circuit 2.03
- * @author Shukant Pal
- */
+///
+/// Allows software to write to a specific physical address by mapping it in
+/// virtual memory. This may be to write to an device register or for shared
+/// memory region.
+///
+/// @param address - virtual address to be mapped
+/// @param pAddress - Physical address of page-frame
+/// @param cxt - mmu-context in which virtual-address resides. This is
+/// 		required to map in an user-mode address. To do so in a
+/// 		kernel-owned memory region, null also works.
+/// @param frFlags - flags with which page-table is to be allocated, if required
+/// @param pgAttr - attributes to be applied on the page while mapping
+/// @version 1.0
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
 decl_c void EnsureMapping(ADDRESS vaddr, PADDRESS paddr, CONTEXT *cxt,
 				unsigned long frFlags, PAGE_ATTRIBUTES pgAttr)
 {
@@ -60,22 +60,22 @@ decl_c void EnsureMapping(ADDRESS vaddr, PADDRESS paddr, CONTEXT *cxt,
 	}
 }
 
-/*
- * Typically allocates an page-frame with the specified flags and maps it to
- * the virtual address given. This is used in allocators to map allocated
- * regions in virtual memory and pass them to kernel code. User-mode software
- * may also request extensions in heaps, files, shm, etc.
- *
- * @param address - virtual memory address to be allocated
- * @param pgContext - address space in which the virtual-address resides. This
- * 			can be null for kernel-owned memory.
- * @param frFlags - flags with which page-frame & page-table (if not already
- * 			present) are allocated
- * @param pgAttr - attributes with which virtual-address is mapped
- * @version 1
- * @since Circuit 2.03
- * @author Shukant Pal
- */
+///
+/// Typically allocates an page-frame with the specified flags and maps it to
+/// the virtual address given. This is used in allocators to map allocated
+/// regions in virtual memory and pass them to kernel code. User-mode software
+/// may also request extensions in heaps, files, shm, etc.
+///
+/// @param address - virtual memory address to be allocated
+/// @param pgContext - address space in which the virtual-address resides. This
+/// 			can be null for kernel-owned memory.
+/// @param frFlags - flags with which page-frame & page-table (if not already
+/// 			present) are allocated
+/// @param pgAttr - attributes with which virtual-address is mapped
+/// @version 1
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
 decl_c void EnsureUsability(ADDRESS address, CONTEXT *pgContext,
 				unsigned long frFlags, PAGE_ATTRIBUTES pgAttr)
 {
@@ -95,17 +95,17 @@ decl_c void EnsureUsability(ADDRESS address, CONTEXT *pgContext,
 	}
 }
 
-/*
- * Ensures that the virtual-address given is not mapped to any physical-address
- * so that a page-fault occurs on accessing it. The caller should ensure that
- * the physical-address mapped so was freed before losing it here.
- *
- * @param address - virtual-address to be unmapped
- * @param cxt - context where this address resides; null if kernel-memory
- * @version 1.1
- * @since Silcos 2.05
- * @author Shukant Pal
- */
+///
+/// Ensures that the virtual-address given is not mapped to any physical-address
+/// so that a page-fault occurs on accessing it. The caller should ensure that
+/// the physical-address mapped so was freed before losing it here.
+///
+/// @param address - virtual-address to be unmapped
+/// @param cxt - context where this address resides; null if kernel-memory
+/// @version 1.1
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 decl_c void EnsureFaulty(ADDRESS address, CONTEXT *cxt)
 {
 	U64 *pgTable = GetPageTable(address / GB(1), (address % GB(1)) / MB(2),
@@ -118,20 +118,57 @@ decl_c void EnsureFaulty(ADDRESS address, CONTEXT *cxt)
 	}
 }
 
-/*
- * Maps the virtual-addresses starting from vaddr to the physical-addresses
- * starting from paddr. It should be used when mapping *multi-page* blocks
- * to memory. It assumes that *page-size extension* is not being used in
- * the area being mapped.
- *
- * @param vaddr - virtual-address base from which mapping starts
- * @param paddr - physical-address base from which it is mapped
- * @param mapSize - no. of bytes to map in memory; should be multiple of
- * 			page-size, otherwise one page may be lost
- * @version 1.0
- * @since Silcos 2.05
- * @author Shukant Pal
- */
+///
+/// Ensures that all pages in the range from vaddr to +mapSize are usable
+/// and will not cause a page-fault by mapping them to page-frames allocated
+/// from the page-frame allocator. Support for huge-pages has not be
+/// implemented BUT WILL BE.
+///
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
+decl_c void EnsureAllUsable(unsigned long vaddr, unsigned long mapSize,
+			unsigned long frFlags, CONTEXT *cxt,
+			PAGE_ATTRIBUTES attr)
+{
+	U64 *pgTbl;
+	U32 pgEnt = (vaddr % MB(2)) >> 12;
+	S32 mapCounter = mapSize >> 12;
+
+	while(mapCounter > 0)
+	{
+		pgTbl = GetPageTable(vaddr >> 30, (vaddr % GB(1)) >> 21,
+				FLG_ATOMIC, cxt);
+		while(mapCounter > 0 && pgEnt < 512)
+		{
+			pgTbl[pgEnt++] = KeFrameAllocate(0, ZONE_KERNEL,
+						frFlags) | attr;
+			FlushTLB(vaddr);
+			vaddr += KB(4);
+			--(mapCounter);
+		}
+
+		pgEnt = 0;
+	}
+}
+
+///
+/// Maps the virtual-addresses starting from vaddr to the physical-addresses
+/// starting from paddr. It should be used when mapping *multi-page* blocks
+/// to memory. It assumes that *page-size extension* is not being used in
+/// the area being mapped.
+///
+/// Support for PSE will be implemented.
+///
+/// @param vaddr - virtual-address base from which mapping starts
+/// @param paddr - physical-address base from which it is mapped
+/// @param mapSize - no. of bytes to map in memory; should be multiple of
+/// 			page-size, otherwise one page may be lost
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 decl_c void EnsureAllMappings(ADDRESS vaddr, PADDRESS paddr,
 				unsigned long mapSize, CONTEXT *pgContext,
 				PAGE_ATTRIBUTES pgAttr)
@@ -149,8 +186,8 @@ decl_c void EnsureAllMappings(ADDRESS vaddr, PADDRESS paddr,
 		{
 			pgTable[pgEntry++] = pMapper | pgAttr;
 			pMapper += KB(4);
-			vaddr += KB(4);
 			FlushTLB(vaddr);
+			vaddr += KB(4);
 			--(mapCounter);
 		}
 		
@@ -158,16 +195,16 @@ decl_c void EnsureAllMappings(ADDRESS vaddr, PADDRESS paddr,
 	}
 }
 
-/*
- * Ensures that all pages in the the range vaddr to +mapSize is unmapped
- * an accessing any address in it causes a page-fault. Support for huge pages
- * has not been yet given.
- *
- * @param vaddr - virtual-address base
- * @param mapSize - bytes to unmap, should be multiple of page-size otherwise
- * 			a (huge/small) page can be left out.
- * @author Shukant Pal
- */
+///
+/// Ensures that all pages in the the range vaddr to +mapSize is unmapped
+/// an accessing any address in it causes a page-fault. Support for huge pages
+/// has not been yet given.
+///
+/// @param vaddr - virtual-address base
+/// @param mapSize - bytes to unmap, should be multiple of page-size otherwise
+/// 			a (huge/small) page can be left out.
+/// @author Shukant Pal
+///
 decl_c void EnsureAllFaulty(ADDRESS vaddr, unsigned long mapSize, CONTEXT *cxt)
 {
 	U64 *pgTbl;

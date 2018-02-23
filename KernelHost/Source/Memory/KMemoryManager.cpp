@@ -14,10 +14,10 @@
  */
 #define NS_KMEMORYMANAGER
 
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Memory/KMemoryManager.h>
 #include <Memory/KMemorySpace.h>
-#include "../../../Interface/Utils/Memory.h"
+#include <Utils/Memory.h>
 #include <KERNEL.h>
 
 #include <Synch/Spinlock.h>

@@ -16,6 +16,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #ifndef KERNHOST__MODULE__ELFLINKER_HPP__
 #define KERNHOST__MODULE__ELFLINKER_HPP__
 
@@ -43,7 +44,8 @@ public:
 	static void resolveRelocations(RelTable &relocTable, ElfManager &handlerService);
 	static void resolveRelocations(RelaTable &relaTable, ElfManager &handlerService);
 
-	static inline void resolveRelocations(RelocationTable &relocTable, ElfManager &handlerService)
+	static inline void resolveRelocations(RelocationTable &relocTable,
+			ElfManager &handlerService)
 	{
 		if(relocTable.relocType == DT_REL)
 			ElfLinker::resolveRelocations((RelTable&) relocTable, handlerService);
@@ -54,6 +56,8 @@ public:
 		ElfLinker::resolveRelocations(modService.relTable, modService);
 		ElfLinker::resolveRelocations(modService.pltRelocTable, modService);
 	}
+private:
+	ElfLinker();
 };
 
 }// namespace Elf

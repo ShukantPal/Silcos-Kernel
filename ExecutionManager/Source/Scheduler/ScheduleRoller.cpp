@@ -17,7 +17,7 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 #include <Executable/ScheduleRoller.h>
-#include <HAL/ProcessorTopology.hpp>
+#include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <Synch/Spinlock.h>
 
 using namespace Executable;

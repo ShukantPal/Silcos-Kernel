@@ -26,12 +26,16 @@ struct GDTEntry
 	unsigned char access;
 	unsigned char granularity;
 	unsigned char baseHigh;
-} __attribute__((__packed__));
+} __attribute__((packed));
 
+///
+/// Pointer to the GDT that can be used by the CPU. It is loaded
+/// using the LGDT instruction through the SetupGDT() call.
+///
 struct GDTPointer {
-	unsigned short Limit;
-	unsigned int Base;
-} __attribute__((__packed__));
+	unsigned short Limit;//!< The size of the GDT minus one
+	unsigned int Base;//!< The base linear-address of the GDT
+} __attribute__((packed));
 
 typedef GDTPointer GDT_POINTER;
 

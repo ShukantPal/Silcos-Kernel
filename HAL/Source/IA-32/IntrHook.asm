@@ -34,7 +34,6 @@ PageFault:
 	call HandlePF
 	iret
 
-global Spurious
 extern DbgErro
 	Spurious:
 	iret
@@ -42,6 +41,10 @@ extern DbgErro
 extern EOI
 global TimerUpdate
 TimerUpdate:
+	PUSH EDX
+	CALL EOI
+	POP EDX
+	IRET
 	LOCK INC DWORD [DelayTime]	; Update current time
 	PUSH EDX			; Save EDX
 	CALL EOI			; Do a EOI
@@ -77,20 +80,6 @@ Executable_ProcessorBinding_IPIRequest_Invoker:
 	POP ESI
 	POP EBP
 	POPAD
-	IRET
-
-global RR_BalanceRunqueue
-extern RrBalanceRoutine
-RR_BalanceRunqueue:
-	;	PUSHA
-	;	CALL RrBalanceRoutine
-	;	POPA
-		IRET
-
-global hpetTimer
-extern hellow_hpet
-hpetTimer:
-	call hellow_hpet
 	IRET
 
 section .bss

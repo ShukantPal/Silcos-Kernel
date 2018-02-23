@@ -16,13 +16,13 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_MEMORYSECTION_HPP_
-#define MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_MEMORYSECTION_HPP_
+#ifndef RSMGR_MEMORY_SECTION_HPP__
+#define RSMGR_MEMORY_SECTION_HPP__
 
 #include <Memory/Pager.h>
 #include <Memory/KMemoryManager.h>
-#include "../../../Interface/Utils/LinkedList.h"
-#include "../../../Interface/Utils/RBTree.hpp"
+#include <Utils/LinkedList.h>
+#include <Utils/RBTree.hpp>
 
 namespace Resource
 {

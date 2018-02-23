@@ -1,6 +1,6 @@
 /** Public Domain (no guarantee provided) */
+#include <HardwareAbstraction/Processor.h>
 #include <IA32/Processor.h>
-#include <HAL/Processor.h>
 
 using namespace HAL;
 
@@ -24,8 +24,9 @@ import_asm int ExecuteLGDT(GDTPointer *);
  *
  * Author: Shukant Pal
  */
-void SetGateOn(unsigned short gateNo, unsigned int segBase, unsigned int segLimit,
-		unsigned char segAccess, unsigned char segGranularity, GDTEntry *pGDT)
+void SetGateOn(unsigned short gateNo, unsigned int segBase,
+		unsigned int segLimit, unsigned char segAccess,
+		unsigned char segGranularity, GDTEntry *pGDT)
 {
 	pGDT[gateNo].baseLow = (segBase & 0xffff);
 	pGDT[gateNo].baseMiddle = (segBase >> 16) & 0xff;
@@ -45,13 +46,11 @@ extern "C" void SetupGDT(ArchCpu *processorInfo)
 	pGDTPointer->Limit = (sizeof(GDTEntry) * 6) - 1;
 	pGDTPointer->Base = (unsigned int) pGDT;
 
-	DbgInt((unsigned long) pGDT); Dbg(" ");
-
 	SetGateOn(0, 0, 0, 0, 0, pGDT);
-	SetGateOn(1, 0, 0xffffffff, 0x9a, 0xcf, pGDT);
-	SetGateOn(2, 0, 0xffffffff, 0x92, 0xcf, pGDT);
-	SetGateOn(3, 0, 0xffffffff, 0xfa, 0xcf, pGDT);
-	SetGateOn(4, 0, 0xffffffff, 0xf2, 0xcf, pGDT);
+	SetGateOn(1, 0, 0xFFFFFFFF, 0x9A, 0xCF, pGDT);
+	SetGateOn(2, 0, 0xFFFFFFFF, 0x92, 0xCF, pGDT);
+	SetGateOn(3, 0, 0xFFFFFFFF, 0xFA, 0xCF, pGDT);
+	SetGateOn(4, 0, 0xFFFFFFFF, 0xF2, 0xCF, pGDT);
 	/* SetupTSS() will add the 6th entry */
 
 	ExecuteLGDT(pGDTPointer);/* Load.asm */

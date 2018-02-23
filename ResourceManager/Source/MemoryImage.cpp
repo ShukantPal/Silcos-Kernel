@@ -23,8 +23,8 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Process/MemoryImage.hpp>
 #include <KERNEL.h>
+#include <Process/MemoryImage.hpp>
 
 using namespace Resource;
 using namespace Process;

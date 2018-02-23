@@ -1,33 +1,47 @@
-/**
- * Copyright (C) 2017 - Shukant Pal
- *
- * This is the interface for allocation kernel space pages, and is technically the
- * vmm of the kernel. It uses the zone manager to specifically divide the kernel
- * space into two zones - KObject and KModule.
- *
- * It conjoins with the PMM in respect with allocation policy and algorithms.
- */
+///
+/// @file KMemoryManager.h
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #ifndef MEMORY_KMEMORYMANAGER_H
 #define MEMORY_KMEMORYMANAGER_H
 
+#include "Internal/BuddyAllocator.hpp"
+#include "Internal/ZoneAllocator.hpp"
 #include "Address.h"
-#include "BuddyManager.h"
-#include "ZoneManager.h"
 
 #ifdef NAMESPACE_MAIN
-	void SetupKMemoryManager(
-		void
-	) kxhide;
+	void SetupKMemoryManager(void) kxhide;
 #endif
 
 #ifdef NS_KMEMORYMANAGER
-	#define KPG_AT(pgAddress) (KDYNAMIC + sizeof(KPAGE) * (((unsigned long) pgAddress - KDYNAMIC) >> KPGOFFSET))
-	#define KPGOPAGE(pgOffset) (KPAGE*) (KDYNAMIC + sizeof(KPAGE) * pgOffset)
-	#define KPGADDRESS(kpPtr) (KDYNAMIC + (KPGSIZE * ((kpPtr - KDYNAMIC) / sizeof(KPAGE))))
+	//! Kernel-page for the given address
+	#define KPG_AT(pgAddress)(KDYNAMIC + sizeof(KPAGE)* \
+			(((unsigned long) pgAddress - KDYNAMIC) >> KPGOFFSET))
+
+	//! Kernel-page residing at the given page-offset in dynamic memory
+	#define KPGOPAGE(pgOffset)(KPAGE*)(KDYNAMIC + sizeof(KPAGE) * pgOffset)
+
+	//! Virtual address of the given page
+	#define KPGADDRESS(kpPtr)(KDYNAMIC + \
+			(KPGSIZE * ((kpPtr-KDYNAMIC) / sizeof(KPAGE))))
 
 	typedef
 	struct _KPAGE {
-		struct Memory::Internal::BuddyBlock BInfo;
+		Memory::Internal::BuddyBlock BInfo;
 		unsigned long HashCode;
 	} KPAGE;
 #endif
@@ -38,74 +52,13 @@
 #define MAXPGORDER 5
 #define PGVECTORS BDSYS_VECTORS(MAXPGORDER)
 
-/**
- * KiPagesAllocate() - 
- *
- * Summary:
- * This function allocates (unmapped) pages in kernel memory. Mapping must be done
- * by the client. It provides two zones - ZONE_KOBJECT and ZONE_KMODULE. These
- * zones are mainly used for object allocation and module loading.
- *
- * Args:
- * pgOrder - Order of no. of pages required 
- * prefZone - Zone no. required (invalid no. becomes 1)
- * pgFlags - Zone-allocator flags
- *
- * Returns:
- * The address of the first page.
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- */
-ADDRESS KiPagesAllocate(
-	unsigned long pgOrder,
-	unsigned long prefZone,
-	unsigned long pgFlags
-);
-
-/**
- * KiPagesFree() - 
- *
- * Summary:
- * This function frees the pages returned by the user.
- *
- * Args:
- * pgAddress - Address of first page
- *
- * Returns:
- * 1
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- */
-unsigned long KiPagesFree(
-	ADDRESS pgAddress
-);
-
-/**
- * KiPagesExchange() -
- *
- * Summary:
- * Used for exchanging virtual address spaces. It has builtin parameters for some zone
- * manager arguments.
- *
- * Args:
- * pgAddress - Area for extension
- * status - Status info ptr
- * znFlags - Flags on allocation full-block
- *
- * @Version 1
- * @Since Circuit 2.03
- */
-ADDRESS KiPagesExchange(
-	ADDRESS pgAddress,
-	unsigned long *status,
-	unsigned long znFlags
-);
+ADDRESS KiPagesAllocate(unsigned long pgOrder, unsigned long prefZone,
+		unsigned long pgFlags);
+unsigned long KiPagesFree(ADDRESS pgAddress);
+ADDRESS KiPagesExchange(ADDRESS pgAddress, unsigned long *status,
+		unsigned long znFlags);
 
 #define KiPageAllocate(prefZone) KiPagesAllocate(0, prefZone, FLG_NONE)
 #define KiPageFree(pgAddress) KiPagesFree(pgAddress)
 
-#endif /* Memory/KMemoryManager.h */
+#endif/* Memory/KMemoryManager.h */

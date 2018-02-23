@@ -1,32 +1,29 @@
-/* @file sProcessorTopology.cpp
- *
- * Hardware-topology is maintained in a in-optimized B-tree fashion allowing
- * CPUs to be plugged & unplugged. A CPU is a part of a hierarchy of CPU
- * domains, in which it is at the lowest-level.  Each domain has a set of
- * children (unless it is the lowest-level domain) and a parent-domain unless
- * it is the top-most one. This allows iterating over the topology and maintain
- * resources in a organized manner.
- * 
- * -------------------------------------------------------------------
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file ProcessorTopology.cpp
+///
+/// System-topology is managed in a B-Tree like fashion where each domain-node
+/// contains 'n' number of children domains. The topology is forms using the
+/// apic-id of each cpu allowing cpus to be "plugged" and "unplugged".
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
+#include <HardwareAbstraction/CPUID.h>
+#include <HardwareAbstraction/Processor.h>
+#include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <IA32/APIC.h>
-#include <HAL/CPUID.h>
-#include <HAL/Processor.h>
-#include <HAL/ProcessorTopology.hpp>
 #include <KERNEL.h>
 
 using namespace HAL;
@@ -37,28 +34,23 @@ ObjectInfo *ProcessorTopology::tDomain;
 
 import_asm U32 FindMaskWidth(U32);
 
-void UpdateCoreCount(Domain *dom)
+void UpdateCoreCount(Domain *dom) // @suppress("Name convention for function")
 {
 	++(dom->cpuCount);
 }
 
-/*
- * Plugs the running processor into the CPU-topology tree and registers all its
- * parent domains. It gathers all topological-IDs and writes them to the
- * per-CPU TopologyIdentifiers. From there, each successive domain is added
- * into the tree (unless it already exists) till the processor is inserted at
- * the end.
- *
- * The domain representing the single CPU (logical core) is reverse mapped and
- * the relevant CPU can be found by Domain::children::ClnMain (but the core is
- * not inserted as a element & ClnCount is still zero).
- *
- * Changes:
- * # When the child domain is allocated, it is immediately locked so that this
- * CPU can continuously go to the lower-topological levels.
- *
- * @author Shukant Pal
- */
+///
+/// Essentially "plugs" the CPU into the system-topology allowing it to
+/// participate in the kernel. Each successive parent domain from top to
+/// bottom is inserted into the tree automatically unless they already
+/// exist. After calling this, there is no need to use the apic-id to
+/// access the topological position of this cpu, as the topological-ids
+/// are written into the ArchCpu part of the per-cpu struct.
+///
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 void ProcessorTopology::plug()
 {
 	Processor *tproc = GetProcessorById(PROCESSOR_ID);
@@ -90,13 +82,8 @@ void ProcessorTopology::plug()
 
 	Domain *cur = systemDomain, *tmain, *token;
 
-	/* Id for this domain */
 	unsigned long domID;
-
-	/* Search for 'new' domain already existing occurs in this list. */
 	CircularList *domList;
-
-	/* true, if parent-domain of the 'new' one was allocated here only. */
 	bool domBuiltLastTime = false;
 
 	long domLevel = 3;
@@ -159,15 +146,18 @@ void ProcessorTopology::plug()
 	Iterator::ofEach(tproc, &UpdateCoreCount, 4);
 }
 
-/*
- * Iterates all the way to the top toggling each domain's load (for a specific
- * sched-class), by the given magnitude.
- *
- * @param initialCPU - the cpu whose load is to be toggled
- * @param cls - index of the scheduler's class
- * @param magnitude - amount by which to change the load (+ve or -ve)
- * @author Shukant Pal
- */
+
+///
+/// Performs an iteration from the bottom to the top of the topological-tree
+/// and toggles the load of each domain by the given magnitude.
+///
+/// @param initialCPU - the CPU from which iteration starts
+/// @param cls - scheduling-class for which the load is being toggled
+/// @param mag - magnitude by which load is to change (may be +ve or -ve)
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 void ProcessorTopology::Iterator::toggleLoad(Processor *initialCPU, Executable::ScheduleClass cls, long mag)
 {
 	if(!initialCPU)
@@ -184,16 +174,18 @@ void ProcessorTopology::Iterator::toggleLoad(Processor *initialCPU, Executable::
 	}
 }
 
-/*
- * Iterates to the top of the topology starting from a initial-processor. It
- * calls a callback-handler which should handle the domain (without locking)
- * in a synchronized manner.
- *
- * @param initialCPU - CPU of the initial-domain; NULL, if this CPU is used
- * @param handler - call-back handler for all domains
- * @param limit - limit for the topology-level
- * @author Shukant Pal
- */
+
+///
+/// Performs an action for each domain upto to the given limit using a
+/// call-back functor starting from the cpu-level domain.
+///
+/// @param initialCPU - cpu from which the action to take place
+/// @param handler - call-back function to perform action on behalf of this
+/// @param limit - height of domain until which action is to be performed
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 void ProcessorTopology::Iterator::ofEach(Processor *initialCPU, void (*handler)(HAL::Domain*),
 						unsigned long limit)
 {
@@ -213,15 +205,17 @@ void ProcessorTopology::Iterator::ofEach(Processor *initialCPU, void (*handler)(
 	}
 }
 
-/*
- * Executes a action for all the processor in a domain, going through each
- * nested domain serially. This means from the lowest APIC-id to the highest
- * if the processor are sorted by order in each domain.
- *
- * @param in - parent domain in which all processor required exist
- * @param action - action to take on each cpu
- * @author Shukant Pal
- */
+
+///
+/// Performs an action for each cpu present in the given domain by going
+/// through the topological sub-tree.
+///
+/// @param in - domain in which all cpus on which action is called are
+/// @param action - call-back functor which should perform the action
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 void ProcessorTopology::Iterator::forAll(Domain *in, void (*action)(Processor *))
 {
 	/*
@@ -276,32 +270,25 @@ void ProcessorTopology::Iterator::forAll(Domain *in, void (*action)(Processor *)
 	}
 }
 
-/*
- * Find the processor which has the least load in the given domain. In an
- * ideal situation, the returned cpu would really have the least load in the
- * given domain, but practically this function always goes the sub-domains in
- * which the load is minimum. It assumes the subdomains are internally balanced
- * and thus will give almost relevant results.
- *
- * This technique of searching for least-loaded subdomains speedens lookup as
- * not all cpus are tested for.
- *
- * @param cls - scheduling class for which load is to be
- * 					the least
- * @param pdom - parent domain in which the cpu is to be searched
- *
- * @return - the processor whose successive parent domains are least-loaded
- * relatively to their sibling (.i.e almost idlest processor)
- *
- * @author Shukant Pal
- */
+
+///
+/// Finds the cpu for which the load of each successive parent domain is the
+/// least locally.
+///
+/// @param cls - scheduling-class for which load is calculated
+/// @param pdom - parent-domain in which the idlest processor is to be searched
+/// @return - cpu for which parent-domains have least local load
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
 {
 	Domain *testee, *mdomain, *lloaded = NULL;
 	Executable::ScheduleDomain *lrol;
 
 	if(pdom->type == DomainType::LogicalProcessor)
-		return (Processor*) (pdom->children.lMain);
+		return ((Processor*)(pdom->children.lMain));
 
 	while(pdom && pdom->type != PROCESSOR_HIERARCHY_LOGICAL_CPU)
 	{
@@ -329,38 +316,30 @@ Processor *DomainBinding::getIdlest(Executable::ScheduleClass cls, Domain *pdom)
 	}
 
 	if(lloaded)
-		return (Processor *) lloaded->children.lMain;
+		return ((Processor *)lloaded->children.lMain);
 	else
-		return (NULL);
+		return (null);
 }
 
-/*
- * Find the processor which has the highest load in the given domain. In an
- * ideal situation, the returned cpu would really have the highest load in the
- * given domain, but practically this function always goes the sub-domains in
- * which the load is the highest. It assumes the subdomains are internally balanced
- * and thus will give almost relevant results.
- *
- * This technique of searching for highest-loaded subdomains speedens lookup as
- * not all cpus are tested for.
- *
- * @param cls - scheduling class for which load is to be
- * 					the highest
- * @param pdom - parent domain in which the cpu is to be searched
- *
- * @return
- * the processor whose successive parent domains are most-loaded relatively to
- * their sibling (.i.e most heavily loaded processor)
- *
- * @author Shukant Pal
- */
+
+///
+/// Finds the cpu for which the load of each successive parent domain is the
+/// highest locally.
+///
+/// @param cls - scheduling class for which the load is calculated
+/// @param pdom - parent domain in which highest-load cpu is to be found
+/// @return - cpu for which each parent-domain has highest local load
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
 Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom)
 {
 	Domain *testee, *mdomain, *hloaded = NULL;
 	Executable::ScheduleDomain *hrol;
 
 	if(pdom->type == DomainType::LogicalProcessor)
-		return (Processor*) (pdom->children.lMain);
+		return ((Processor*)(pdom->children.lMain));
 
 	while(pdom && pdom->type != PROCESSOR_HIERARCHY_LOGICAL_CPU)
 	{
@@ -385,27 +364,25 @@ Processor *DomainBinding::getBusiest(Executable::ScheduleClass cls, Domain *pdom
 	}
 
 	if(hloaded)
-		return (Processor *) hloaded->children.lMain;
+		return ((Processor *)hloaded->children.lMain);
 	else
-		return (NULL);
+		return (null);
 }
 
-/*
- * Searches for a domain under the same parent, which has a load atleast 20%
- * less than the donor. It locks the search-lock for the parent, and for each
- * sibling it tests for load-balancing.
- *
- * After selecting the donee, it will subtract the given 'delta' from the donor
- * load and add it to the donee load.
- *
- * @param cls - the scheduling class whose runqueue is to balance
- * @param client - domain that is to be balanced (by pushing tasks away)
- *
- * Note:
- * Donor must have a parent, thus, it cannot be the 'system' domain, honestly.
- *
- * @author Shukant Pal
- */
+
+///
+/// Searches for the domain under the same parent (a.k.a sibling of given
+/// donor domain) which has the least load & is willing to participate in
+/// load-balancing. The given load diff. is guaranteed to be 20% atleast.
+///
+/// @param cls - scheduling class for which load is calculated
+/// @param donor - given domain by which load is to be compared
+/// @return - domain whose load is atleast 20% less than donor, if found.
+/// @deprecated (not used in balancing now)
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 Domain *DomainBinding::findIdlestGroup(Executable::ScheduleClass cls, Domain *donor)
 {
 	Domain *test = donor->next, *bestFound = NULL;
@@ -433,14 +410,19 @@ Domain *DomainBinding::findIdlestGroup(Executable::ScheduleClass cls, Domain *do
 	return (bestFound);
 }
 
-/*
- * Searches for a domain under the same parent, which is the busiest.
- *
- * @param cls - schedule class for which load is to be maximum
- * @param client - one which is going to transfer with client
- *
- * @author Shukant Pal
- */
+
+///
+/// Searches for the domain under the same parent (a.ka. sibling of given
+/// client) whose load is the greatest and is willing to participate in load
+/// balancing. The load diff. is guaranteed to be atleast 20%.
+///
+/// @param cls - scheduling class for which load is calculated
+/// @param client - client which should take the tasks
+/// @return - domain with least load and atleast 20% load diff.
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 Domain *DomainBinding::findBusiestGroup(Executable::ScheduleClass cls, Domain *client)
 {
 	Domain *host = client->parent, *test = client->next, *bestFound = NULL;

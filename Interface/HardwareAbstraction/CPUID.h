@@ -27,6 +27,8 @@
 #ifndef HAL_CPUID_H
 #define HAL_CPUID_H
 
+#include <TYPE.h>
+
 namespace HAL
 {
 namespace CpuId

@@ -48,7 +48,7 @@ extern "C" void __init()
 	defaultString  = new(tString) String("@com.silcos.mdfrwk#Object");
 }
 
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/Processor.h>
 extern "C" void KModuleMain(void)
 {
 	DbgLine("Reporting Load: com.silcos.mdfrwk.109");

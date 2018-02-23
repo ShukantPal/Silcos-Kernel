@@ -1,26 +1,30 @@
-/* @file ArrayList.cpp
- * -------------------------------------------------------------------
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
- * Copyright (C) 2017 - Shukant Pal
- */
-#include "../../Interface/Utils/ArrayList.hpp"
+///
+/// @file ArrayList.cpp
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 
 #include <Atomic.hpp>
-#include "../../Interface/Heap.hpp"
-#include "../../Interface/Utils/Arrays.hpp"
-#include "../../Interface/Utils/LinkedList.h"
+#include <Heap.hpp>
+#include <Debugging.h>
+#include <Utils/Arrays.hpp>
+#include <Utils/LinkedList.h>
+#include <Utils/ArrayList.hpp>
+
+const char *f = "HELLOW ";
 
 #define defaultInitialArrayListSize 8
 
@@ -34,10 +38,11 @@
  */
 ArrayList::ArrayList()
 {
-	this->capacity = defaultInitialArrayListSize * sizeof(Object*);
+	Dbg(f);
+	this->capacity = defaultInitialArrayListSize * sizeof(void*);
 	this->changeCount = 0;
 	this->size = 0;
-	this->elemData = (Object **) kmalloc(capacity);
+	this->elemData = (void **) kmalloc(capacity);
 }
 
 /* @constructor
@@ -51,10 +56,12 @@ ArrayList::ArrayList()
  */
 ArrayList::ArrayList(unsigned long initialCapacity)
 {
+	if(initialCapacity==24)
+		Dbg(" ARRAY_LIST ");
 	this->capacity = initialCapacity;
 	this->changeCount = 0;
 	this->size = 0;
-	this->elemData = (Object **) kmalloc(capacity);
+	this->elemData = (void **) kmalloc(capacity);
 }
 
 /* @constructor
@@ -73,12 +80,12 @@ ArrayList::ArrayList(LinkedList &elems)
 	this->capacity = elems.count;
 	this->changeCount = 0;
 	this->size = elems.count;
-	this->elemData = (Object **) kmalloc(capacity);
+	this->elemData = (void **) kmalloc(capacity);
 
 	LinkedListNode *elnode = elems.head;
 	while(elnode)
 	{
-		this->elemData[size] = (Object*) elnode;
+		this->elemData[size] = (void*) elnode;
 		elnode = elnode->next;
 	}
 }
@@ -90,7 +97,7 @@ ArrayList::ArrayList(LinkedList &elems)
  * @param elem - element to add
  * @author Shukant Pal
  */
-unsigned long ArrayList::add(Object *elem)
+unsigned long ArrayList::add(void *elem)
 {
 	ensureBuffer(size + 1);
 	elemData[size++] = elem;
@@ -109,7 +116,7 @@ unsigned long ArrayList::add(Object *elem)
  * 		index
  * @author Shukant Pal
  */
-unsigned long ArrayList::add(Object *elem, unsigned long index)
+unsigned long ArrayList::add(void *elem, unsigned long index)
 {
 	if(isValidIndex(index))
 	{
@@ -139,7 +146,7 @@ unsigned long ArrayList::addAll(LinkedList& elems)
 	LinkedListNode *lielem = elems.head;
 	while(lielem)
 	{
-		elemData[size++] = (Object *) lielem;
+		elemData[size++] = (void *) lielem;
 		lielem = lielem->next;
 	}
 	Atomic::inc(&changeCount);
@@ -157,10 +164,10 @@ unsigned long ArrayList::addAll(LinkedList& elems)
  */
 inline void ArrayList::ensureBuffer(unsigned long newCapacity)
 {
-	newCapacity *= sizeof(Object*);
+	newCapacity *= sizeof(void*);
 	if(newCapacity > capacity)
 	{
-		Object **newBuffer = (Object**) kralloc(elemData, newCapacity);
+		void **newBuffer = (void**) kralloc(elemData, newCapacity);
 
 		if(newBuffer != elemData)
 		{
@@ -181,13 +188,13 @@ inline void ArrayList::ensureBuffer(unsigned long newCapacity)
  * 		the list, then 0xFFFFFFFF
  * @author Shukant Pal
  */
-unsigned long ArrayList::firstIndexOf(Object *o)
+unsigned long ArrayList::firstIndexOf(void *o)
 {
 	unsigned long accToken = this->size;
-	Object **elemPtr = elemData;
+	void **elemPtr = elemData;
 	while(accToken)
 	{
-		if(*elemPtr == (Object *) o)
+		if(*elemPtr == (void *) o)
 			return (size - accToken);
 
 		++(elemPtr);
@@ -205,10 +212,10 @@ unsigned long ArrayList::firstIndexOf(Object *o)
  * @returns - index of last occurence of o, if found in the list; otherwise,
  * 		if the element isn't in the list, then 0xFFFFFFFF
  */
-unsigned long ArrayList::lastIndexOf(Object *o)
+unsigned long ArrayList::lastIndexOf(void *o)
 {
 	unsigned long accToken = size;
-	Object **elem = elemData + size;
+	void **elem = elemData + size;
 	while(accToken)
 	{
 		if(*elem == o)
@@ -233,7 +240,7 @@ bool ArrayList::remove(unsigned long idx)
 	if(isValidIndex(idx))
 	{
 		Arrays::copyFast(elemData + idx + 1, elemData + idx,
-					(size - idx - 1) * sizeof(Object *));
+					(size - idx - 1) * sizeof(void *));
 		--(size);
 		elemData[size] = null;
 		return (true);
@@ -255,7 +262,7 @@ bool ArrayList::remove(unsigned long idx)
  * @param idx - index at which element is to be placed
  * @author Shukant Pal
  */
-void ArrayList::set(Object *elem, unsigned long idx)
+void ArrayList::set(void *elem, unsigned long idx)
 {
 	ensureBuffer(idx + 1);
 	elemData[idx] = elem;

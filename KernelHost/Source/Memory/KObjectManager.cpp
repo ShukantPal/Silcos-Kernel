@@ -172,7 +172,7 @@ static Slab *findSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 {
 	if(metaInfo->partialList.count)
 	{
-		return (Slab *) (metaInfo->partialList.lMain);
+		return ((Slab *)(metaInfo->partialList.lMain));
 	}
 	else
 	{
@@ -182,7 +182,8 @@ static Slab *findSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 		else
 			metaInfo->emptySlab = NULL;
 
-		AddCElement((CircularListNode*) emptySlab, CLAST, &metaInfo->partialList);
+		AddCElement((CircularListNode*) emptySlab, CLAST,
+				&metaInfo->partialList);
 		return (emptySlab);
 	}
 }

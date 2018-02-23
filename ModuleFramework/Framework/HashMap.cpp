@@ -24,9 +24,9 @@
  * Copyright (C) 2017 - Shukant P
  */
 #include <Memory/KObjectManager.h>
-#include <Util/HashMap.hpp>
+#include <Utils/HashMap.hpp>
 #include <KERNEL.h>
-#include "../../Interface/Util/Arrays.hpp"
+#include <Utils/Arrays.hpp>
 
 #define DEFAULT_INITIAL_CAPACITY 16
 #define DEFAULT_LOAD_FACTOR 75

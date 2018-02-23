@@ -24,9 +24,9 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 
+#include <KERNEL.h>
 #include <Process/MemoryImage.hpp>
 #include <Resource/ContextManager.hpp>
-#include <KERNEL.h>
 
 using namespace Process;
 using namespace Resource;

@@ -1,11 +1,24 @@
-/**
- * File: ModuleLoader.cpp
- *
- * Summary:
- * This files implements the so-called cross-ABI module-loader.
- *
- * Author: Shukant Pal
- */
+///
+/// @file ModuleLoader.cpp
+/// @module KernelHost
+///
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
+
 #define NS_PMFLGS // Paging Flags
 
 #include <Memory/Pager.h>
@@ -58,6 +71,12 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 	blob.blobSize = NextPowerOf2(blob.blobSize);
 	unsigned long fileSize = blob.blobSize;
 
+	if(fileSize < KPGSIZE)
+	{
+		fileSize = KPGSIZE;
+		blob.blobSize = fileSize;
+	}
+
 	#ifdef ARCH_32
 		return_if(fileSize > MB(2), FALSE);
 	#else // ARCH_64
@@ -70,59 +89,57 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 	return (memoryArena);
 }
 
-/**
- * Function: ModuleLoader::globalDynamic
- *
- * Summary:
- * Exports the dynamic-symbols for the module
- *
- * Args:
- * void *moduleMemory - Module's file in the virtual memory
- * ModuleRecord& kmRecord - Record of the module, as filled by client
- * BlobRegister& blob - Register for blob-information
- *
- * Author: Shukant Pal
- */
+///
+/// Exports the dynamic-link record of the given "loaded" blob and notes
+/// any initialization/finalization functions presents. Here, the __init()
+/// or any other initialization function is called.
+///
+/// @param moduleMemory
+/// @param kmRecord
+/// @param blob
+/// @return - the ABI of the given module
+///
 ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob)
 {
-	if(ElfAnalyzer::validateBinary(moduleMemory))
+	if(!ElfAnalyzer::validateBinary(moduleMemory))
+		return (ABI::INVALID);
+
+	ElfManager *moduleHandler = new(tElfManager) ElfManager((ElfHeader*) moduleMemory);
+	DynamicLink *linkHandle = moduleHandler->exportDynamicLink();
+
+	kmRecord.linkerInfo = linkHandle;
+	kmRecord.BaseAddr = moduleHandler->baseAddress;
+
+	if(moduleHandler->binaryHeader->entryAddress)
 	{
-		ElfManager *moduleHandler = new(tElfManager) ElfManager((ElfHeader*) moduleMemory);
-		DynamicLink *linkHandle = moduleHandler->exportDynamicLink();
+		kmRecord.entryAddr = kmRecord.BaseAddr +
+				moduleHandler->binaryHeader->entryAddress;
+	}
 
-		kmRecord.linkerInfo = linkHandle;
-		kmRecord.BaseAddr = moduleHandler->baseAddress;
-
-		if(moduleHandler->binaryHeader->entryAddress)
-		{
-			kmRecord.entryAddr = kmRecord.BaseAddr + moduleHandler->binaryHeader->entryAddress;
-		}
-
+	Symbol *__initer = moduleHandler->getStaticSymbol("__init");
+	if(__initer)
+	{
+		kmRecord.init = (void (*)())(kmRecord.BaseAddr +
+					__initer->Value);
+	}
+	else
+	{
 		DynamicEntry* dynamicIniter = moduleHandler->getDynamicEntry(DT_INIT);
 		if(dynamicIniter)
 		{
-			kmRecord.init = (void (*)())(kmRecord.BaseAddr + dynamicIniter->refPointer);
+			DbgLine("dyn-init");
+			kmRecord.init = (void (*)())(kmRecord.BaseAddr +
+					dynamicIniter->refPointer);
 		}
-		else
-		{
-			Symbol *__initer = moduleHandler->getStaticSymbol("__init");
-			if(__initer)
-			{
-				kmRecord.init = (void (*)())(kmRecord.BaseAddr + __initer->Value);
-			}
-		}
-
-		DynamicEntry* dynamicFinier = moduleHandler->getDynamicEntry(DT_FINI);
-		if(dynamicFinier)
-		{
-			kmRecord.fini = (void (*)())(kmRecord.BaseAddr + dynamicFinier->refPointer);
-		}
-
-		blob.manager = moduleHandler;
-		return (ABI::ELF);
 	}
-	else
-		return (ABI::INVALID);
+	DynamicEntry* dynamicFinier = moduleHandler->getDynamicEntry(DT_FINI);
+	if(dynamicFinier)
+	{
+		kmRecord.fini = (void (*)())(kmRecord.BaseAddr + dynamicFinier->refPointer);
+	}
+
+	blob.manager = moduleHandler;
+	return (ABI::ELF);
 }
 
 /**
@@ -180,40 +197,40 @@ void ModuleLoader::loadFile(BlobRegister &blob)
 	blob.regForm->linkerInfo = NULL;
 	RecordManager::registerRecord(blob.regForm);
 
-	blob.abiFound =
-			ModuleLoader::globalizeDynamic(modMemory,
-							*blob.regForm, blob);
+	blob.abiFound = ModuleLoader::globalizeDynamic(modMemory,
+			*blob.regForm, blob);
 
 	ModuleLoader::linkFile(blob.abiFound, blob);
 }
 
-/**
- * Function: ModuleLoader::loadBundle
- *
- * Summary:
- * This function loads & links a bundle of modules. Dynamic-linking is done after
- * registration of all modules, to avoid any inter-depedencies that would cause
- * a not-found linkage error.
- *
- * Args:
- * LinkedList& blobList - List of blob-registers
- *
- * Author: Shukant Pal
- */
+///
+///
+/// This function loads & links a bundle of modules. Dynamic-linking is done after
+/// registration of all modules, to avoid any inter-depedencies that would cause
+/// a not-found linkage error.
+///
+/// @param LinkedList& blobList - List of blob-registers
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
 void ModuleLoader::loadBundle(LinkedList &blobList)
 {
 	BlobRegister *blob = (BlobRegister*) blobList.head;
 
+	unsigned int ctr = 0;
 	while(blob != NULL)
 	{
-		blob->fileAddr = (unsigned long) ModuleLoader::moveFileIntoMemory(*blob);
+		blob->fileAddr = (unsigned long)
+				ModuleLoader::moveFileIntoMemory(*blob);
 		blob->regForm->linkerInfo = NULL;
+
 		RecordManager::registerRecord(blob->regForm);
 
-		blob->abiFound =
-			ModuleLoader::globalizeDynamic((void*) blob->fileAddr, *blob->regForm, *blob);
+		blob->abiFound = ModuleLoader::globalizeDynamic(
+				(void*) blob->fileAddr, *blob->regForm, *blob);
 
 		blob = (BlobRegister*) blob->liLinker.next;
+		++ctr;
 	}
 
 	blob = (BlobRegister*) blobList.head;
@@ -233,14 +250,19 @@ ObjectInfo *tElf_ABI_ExitorFunc_;
 
 void MdSetupLoader()
 {
-	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD", sizeof(KMOD_RECORD), sizeof(unsigned long), NULL, NULL);
+	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD",
+			sizeof(KMOD_RECORD), sizeof(unsigned long),
+			NULL, NULL);
 
-	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager), sizeof(unsigned long), NULL, NULL);
+	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager),
+			sizeof(unsigned long), NULL, NULL);
 
-	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink), sizeof(unsigned long), NULL, NULL);
+	tDynamicLink = KiCreateType(nmDynamicLink, sizeof(DynamicLink),
+			sizeof(unsigned long), NULL, NULL);
 
-	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_, sizeof(::Elf::ABI::ExitorFunction),
-						sizeof(long), NULL, NULL);
+	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_,
+			sizeof(::Elf::ABI::ExitorFunction),
+			sizeof(long), NULL, NULL);
 }
 
 KMOD_RECORD *MdCreateModule(char *moduleName, unsigned long moduleVersion, unsigned long moduleType)

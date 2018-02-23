@@ -11,10 +11,10 @@
 #define NS_KMEMORYMANAGER
 
 #include <Debugging.h>
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Executable/Thread.h>
 #include <Executable/Scheduler.h>
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Memory/Address.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>

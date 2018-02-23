@@ -3,6 +3,7 @@
 ; provides the implementation for a scheduler-invoker on the ia32 arch, and
 ; is called when ever the apic-timer 'ticks'.
 ;
+
 SECTION .bss
 	global ef
 	ef : resb 4
@@ -24,13 +25,13 @@ KiClockRespond:
 	PUSH EDI
 	PUSH EBP
 
-	MOV EBP, ESP 							; load the stack-frame in EBP
-	ADD EBP, 28 							; go to the stack-frame with interrupt-context
+	MOV EBP, ESP 				; load the stack-frame in EBP
+	ADD EBP, 28 				; go to the stack-frame with interrupt-context
 
 	MOV EDX, [VAPICBase]
-	MOV EDX, [EDX + 0x20] 					; load PROCESSOR_ID << 24
-	SHR EDX, 24								; load APIC_ID
-	CMP [BSP_ID], EDX 						; test if the cpu is the BSP
+	MOV EDX, [EDX + 0x20] 			; load PROCESSOR_ID << 24
+	SHR EDX, 24				; load APIC_ID
+	CMP [BSP_ID], EDX 			; test if the cpu is the BSP
 	JNE KiScheduleEntry
 
 	LOCK INC DWORD [XMilliTime]
@@ -44,7 +45,7 @@ KiRunnerUpdate:
 ;
 extern Schedule
 KiScheduleEntry:
-	SHL EDX, 13				; get the offset of the cpu-struct
+	SHL EDX, 15				; get the offset of the cpu-struct (32-kb)
 	ADD EDX, 0xc0000000 + 20 * 1024 * 1024	; load the address of cpu-struct
 
 	MOV EBX, [EDX + 24] 			; load the current kernel-task
@@ -76,28 +77,28 @@ KiInvokeScheduler:
 ; software.
 ;
 KiScheduleExit:
-	ADD ESP, 4								; go to previous stack-frame (before args)
-	POP EDX									; restore the cpu-struct
+	ADD ESP, 4			; go to previous stack-frame (before args)
+	POP EDX				; restore the cpu-struct
 
-	MOV EBX, [EDX + 24] 					; load the new-task
-	MOV EDI, [EBX + 32] 					; cache the task's kernel-stack struct
+	MOV EBX, [EDX + 24] 		; load the new-task
+	MOV EDI, [EBX + 32] 		; cache the task's kernel-stack struct
 
-	MOV ESP, [EDI + 4] 						; store the kernel-mode stack pointer
-	PUSH EBX								; save the task-struct on stack
-	ADD ESP, 4								; restore the stupid stack
+	MOV ESP, [EDI + 4] 		; store the kernel-mode stack pointer
+	PUSH EBX			; save the task-struct on stack
+	ADD ESP, 4			; restore the stupid stack
 
-	CMP DWORD [EBX + 20], 0					; test whether task->run() is 0
-	JE KiDispatchStatus						; if 0, do default execution, else below
-	PUSH EBX								; pass the task-arg
-	CALL [EBX + 20]							; call task->run()
+	CMP DWORD [EBX + 20], 0		; test whether task->run() is 0
+	JE KiDispatchStatus		; if 0, do default execution, else below
+	PUSH EBX			; pass the task-arg
+	CALL [EBX + 20]			; call task->run()
 
 	KiDispatchStatus:
-		BTR DWORD [EBX + 24], 0				; check the dispatch status (new/already executed)
-		JC KiJumpNew						; if new, go to the new-task handler
+		BTR DWORD [EBX + 24], 0	; check the dispatch status (new/already executed)
+		JC KiJumpNew		; if new, go to the new-task handler
 
 	; NOTE:::: EBX (Runner) = ESP - 32
 
-	CALL EOI								; ensure other interrupts are allowed (without overwriting edx)
+	CALL EOI			; ensure other interrupts are allowed (without overwriting edx)
 	POP EBP
 	POP EDI
 	POP ESI
@@ -112,21 +113,21 @@ KiScheduleExit:
 ; invokes a newly-created task which does not have any register stack-frame.
 ;
 KiJumpNew:
-	BT DWORD [EBX + 24], 1					; test for kernel/user-mode dispatch
+	BT DWORD [EBX + 24], 1		; test for kernel/user-mode dispatch
 	JC KiJumpKernel
 
 	KiJumpUser:
 		; //TODO: Implement user-mode intr return
 		PUSH DWORD 0x23
 		PUSH DWORD [EBX + 32]
-		PUSH DWORD (1 << 9) 				; push and eflags with IF=1
+		PUSH DWORD (1 << 9) 	; push and eflags with IF=1
 		PUSH DWORD 0x0 ; CS
 		PUSH DWORD [EBX + 16]
 		CALL EOI
 		IRET
 
 	KiJumpKernel:
-		PUSH DWORD (1 << 1) | (1 << 9) 		; push an eflags with IF=1
+		PUSH DWORD (1 << 1) | (1 << 9) 	; push an eflags with IF=1
 		PUSH DWORD 0x8
 		PUSH DWORD [EBX + 16]
 		CALL EOI

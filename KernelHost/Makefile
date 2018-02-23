@@ -7,15 +7,8 @@
 #
 # Copyright (C) - Shukant Pal
 
+ImportCppRuntime = $(DefaultCppRuntime)
 ArchDir = Arch/IA32
-
-CC = g++ -std=c++1z# C Compiler
-CFLAGS = -m32 -I"." -I"../Interface" -I"../Interface/Arch" -c \
--fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -Os -fPIC \
--fno-rtti -fno-exceptions -L../HAL/Build/kernel.silcos.hal
-
-AS = nasm # Assember
-ASFLAGS = -f elf32 # Asm Flags
 
 # Ifc - Header Directories
 IfcKern = ../Interface/KERNEL.h ../Interface/TYPE.h
@@ -26,6 +19,8 @@ IfcRunnable = ../Interface/Executable
 IfcMemory = ../Interface/Memory
 IfcModule = ../Interface/Module
 IfcUtil = ../Interface/Utils
+
+$(IfcHAL)/Processor.h: $(IfcMemory)/Internal/CacheRegister.h $(IfcUtil)/CircularList.h
 
 #
 # C o m p i l a t i o n   U n i t s
@@ -88,8 +83,6 @@ $(COM_MD)/ModuleLoader.o $(COM_MD)/MSI.o $(COM_MD)/ElfLinker.o $(COM_MD)/RecordM
 
 BuildChain : BuildInit BuildArch BuildKernelRoutines BuildIntr BuildMemory BuildUtil BuildModuleLoader Link
 
-$(IfcHAL)/Processor.h: $(IfcMemory)/CacheRegister.h $(IfcUtil)/CircularList.h
-
 $(IfcModule)/Elf/ELF.h: $(IfcModule)/ModuleLoader.h
 $(IfcModule)/Elf/ElfManager.hpp: $(IfcModule)/Elf/ELF.h
 
@@ -131,7 +124,8 @@ $(COM_KR)/Init.o: $(SRC_KR)/Init.cpp
 
 BuildKernelRoutines: $(KernelRoutineObjects)
 
-$(COM_MM)/BuddyAllocator.o: $(IfcMemory)/BuddyManager.h $(IfcMemory)/Pager.h $(SRC_MM)/BuddyAllocator.cpp
+$(COM_MM)/BuddyAllocator.o: $(IfcMemory)/Internal/BuddyAllocator.hpp $(IfcMemory)/Pager.h \
+				$(SRC_MM)/BuddyAllocator.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/BuddyAllocator.cpp -o $(COM_MM)/BuddyAllocator.o
 
 $(COM_MM)/CacheRegister.o: $(IfcHAL)/Processor.h $(IfcMemory)/CacheRegister.h $(SRC_MM)/CacheRegister.cpp	
@@ -143,13 +137,18 @@ $(COM_MM)/KFrameManager.o: $(IfcKern) $(IfcHAL)/Processor.h $(IfcMemory)/KFrameM
 $(COM_MM)/KMemoryManager.o: $(IfcHAL)/Processor.h $(IfcMemory)/KMemoryManager.h $(SRC_MM)/KMemoryManager.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/KMemoryManager.cpp -o $(COM_MM)/KMemoryManager.o
 
-$(COM_MM)/KObjectManager.o: $(IfcMemory)/KObjectManager.h $(IfcMemory)/MemoryTransfer.h $(IfcMemory)/KMemoryManager.h $(SRC_MM)/KObjectManager.cpp
-	$(CC) $(CFLAGS) $(SRC_MM)/KObjectManager.cpp -o $(COM_MM)/KObjectManager.o
+$(COM_MM)/KObjectManager.o: $(IfcMemory)/KObjectManager.h \
+			 $(IfcMemory)/MemoryTransfer.h \
+			 $(IfcMemory)/KMemoryManager.h \
+			 $(SRC_MM)/KObjectManager.cpp
+	$(CC) $(CFLAGS) $(SRC_MM)/KObjectManager.cpp \
+				 -o $(COM_MM)/KObjectManager.o
 
 $(COM_MM)/Structure.o: $(SRC_MM)/Structure.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/Structure.cpp -o $(COM_MM)/Structure.o
 
-$(COM_MM)/ZoneManager.o: $(IfcMemory)/ZoneManager.h $(SRC_MM)/ZoneManager.cpp
+$(COM_MM)/ZoneManager.o: $(IfcMemory)/Internal/ZoneAllocator.hpp \
+				 $(SRC_MM)/ZoneManager.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/ZoneManager.cpp -o $(COM_MM)/ZoneManager.o
 
 BuildMemory: $(MemoryObjects)
@@ -197,7 +196,7 @@ BuildModuleLoader: $(moduleLoaderObjects)
 Link:
 	ld -m elf_i386 -T linker.ld --export-dynamic --strip-all -pie -nostdlib \
 	$(InitObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) \
-	$(InterProcessObjects) $(MemoryObjects) \
+	$(InterProcessObjects) $(MemoryObjects) $(ImportCppRuntime) \
 	$(UtilObjects) $(moduleLoaderObjects) --warn-unresolved-symbols -o \
 	 Build/circuitk-1.02 
 

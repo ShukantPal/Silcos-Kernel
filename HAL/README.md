@@ -1,4 +1,4 @@
-# HAL
+# HAL (v2.0)
 
 The kernel from Silcos 3.02 has become homogenous in the matter of kernel
 modules. It has further divided the legacy microkernel in further modules

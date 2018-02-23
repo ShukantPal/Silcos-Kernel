@@ -25,7 +25,7 @@
 #define INTERFACE_EXECUTABLE_RUNQUEUEBALANCER_HPP_
 
 #include <Executable/ScheduleRoller.h>
-#include <HAL/ProcessorTopology.hpp>
+#include <HardwareAbstraction/ProcessorTopology.hpp>
 
 struct ObjectInfo;
 extern ObjectInfo *tRunqueueBalancer_Accept;

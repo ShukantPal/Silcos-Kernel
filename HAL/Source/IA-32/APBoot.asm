@@ -144,7 +144,7 @@ extern VAPICBase
 APSetupRuntime:
 	MOV DWORD EAX, [VAPICBase]
 	MOV DWORD EAX, [EAX + 0x20]
-	SHR EAX, 13	; SHR 24 to get APIC_ID and then SHL 12 to multiply by KPGSIZE
+	SHR EAX, 9
 	
 	MOV EBX, KCPUINFO
 	ADD EBX, EAX

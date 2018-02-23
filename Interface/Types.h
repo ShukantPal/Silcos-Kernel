@@ -5,18 +5,29 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
+#define x86
+#define arch_ arch/x86
+#define IA32// Compulsory Add=on to x86
+
+#ifdef IA32
+	typedef unsigned long size_t;
+#elif IA64
+	typedef unsigned int size_t;
+#endif
+
 #ifndef FBUILD_C
 	#define import_asm extern "C" // compile-time specifier
 	#define export_asm extern "C"
 	#define decl_c extern "C"
 
 	extern struct ObjectInfo *tLinkedList;
-	inline void *operator new(unsigned int, void *objectMemory){
+	inline void *operator new(size_t mem_size, void *objectMemory)
+	{
 		return (objectMemory);
 	}
 
 	extern "C" void *KNew(struct ObjectInfo *, unsigned long km_sleep);
-	inline void *operator new(unsigned int, struct ObjectInfo *objectType)
+	inline void *operator new(size_t obj_size, struct ObjectInfo *objectType)
 	{
 		return KNew(objectType, 0);
 	}
@@ -41,10 +52,6 @@
 	#define PHYSICAL(ptr) ((unsigned long) ptr - 0xc0000000)
 
 	#define _3_GB ((uint32_t) 3 * 1024*1024*1024)
-
-	#define x86
-	#define arch_ arch/x86
-	#define IA32// Compulsory Add=on to x86
 
 	#ifdef x64
 		#define ARCH_64
@@ -96,8 +103,6 @@
 
 	#define signed_size_t long
 	#define SSIZE_T signed long
-
-	#define void void
 
 	#define NULL 0
 

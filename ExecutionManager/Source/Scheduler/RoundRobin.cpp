@@ -18,8 +18,8 @@
  */
 #include <Executable/RoundRobin.h>
 #include <Executable/RunqueueBalancer.hpp>
-#include <HAL/Processor.h>
-#include <HAL/ProcessorTopology.hpp>
+#include <HardwareAbstraction/Processor.h>
+#include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <KERNEL.h>
 
 using namespace HAL;

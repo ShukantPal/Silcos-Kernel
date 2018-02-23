@@ -1,15 +1,6 @@
 # S i l c o s   (E x e c u t i o n   M a n a g e r)   M a k e f i l e
 #    C o p y r i g h t ( C ) 2 0 1 7  -  S h u k a n t   P a l
 
-CC = g++ -std=c++1z # C + + C o m p i l e r
-
-CFLAGS = -m32 -I"../Interface" -I"../Interface/Arch" -c \
--fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall -O2 -fPIC \
--fno-rtti -fno-exceptions
-
-AS = nasm # A s s e m b e r
-ASFLAGS = -f elf32 # A s m   F l a g s
-
 # I f c  -  H e a d e r   D i r e c t o r i e s
 IfcKern = ../Interface/KERNEL.h ../Interface/TYPE.h
 IfcArch = ../Interface/$(ArchDir)
@@ -23,6 +14,9 @@ IfcUtil = ../Interface/Util
 # C o m p i l a t i o n   U n i t s
 #     (O b j e c t   F i l e s)
 
+COM_IRQ = Compile/IRQ
+SRC_IRQ = Source/IRQ
+
 COM_SCHED = Compile/Scheduler
 SRC_SCHED = Source/Scheduler
 
@@ -31,6 +25,15 @@ SRC_TIME = Source/Timer
 
 COM_TSK = Compile/Task
 SRC_TSK = Source/Task
+
+#
+# I R Q   S u b s y s t e m
+#
+
+$(COM_IRQ)/IRQHandler.o: $(SRC_IRQ)/IRQHandler.cpp
+	$(CC) $(CFLAGS) $(SRC_IRQ)/IRQHandler.cpp -o $(COM_IRQ)/IRQHandler.o
+
+IRQ_Build = $(COM_IRQ)/IRQHandler.o
 
 #
 # S c h e d u l i n g   S u b s y s t e m
@@ -81,8 +84,7 @@ $(COM_TSK)/AVLTree.o: $(SRC_TSK)/AVLTree.cpp
 $(COM_TSK)/Thread.o: $(SRC_TSK)/Thread.cpp
 	$(CC) $(CFLAGS) $(SRC_TSK)/Thread.cpp -o $(COM_TSK)/Thread.o
 	
-ExMake: $(Sched_Build) $(Time_Build) $(Tsk_Build)
-	ld -m elf_i386 -shared -T linker.ld $(Sched_Build) $(Time_Build) \
-	$(Tsk_Build) -o Build/kernel.silcos.excmgr \
-	--strip-all -h "ExecutionManager"
+ExMake: $(IRQ_Build) $(Sched_Build) $(Time_Build) $(Tsk_Build)
+	$(CC) $(Sched_Build) $(Time_Build) \
+	$(Tsk_Build) $(IRQ_Build) $(LFLAGS) -o Build/kernel.silcos.excmgr
 	cp Build/kernel.silcos.excmgr ../Modules/Builtin

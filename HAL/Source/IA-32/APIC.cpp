@@ -45,11 +45,11 @@ void APIC::setupEarlyTimer(void)
 	{
 		xAPICDriver::write(ErrorStatus, 0);
 
-		MapHandler(0x20, (unsigned int) &TimerUpdate, defaultIDT);
+		MapHandler(0xFC, (unsigned int) &TimerUpdate, defaultIDT);
 		xAPICDriver::write(SpurIntrVector, 0xFE | (1 << 8));
 		xAPICDriver::write(DivideConfig, 128);
 		xAPICDriver::write(LVT_Timer, (1 << 17) | 0x20);
-		xAPICDriver::write(InitialCount, 1 << 20);
+		xAPICDriver::write(InitialCount, 1 << 28);
 	}
 }
 

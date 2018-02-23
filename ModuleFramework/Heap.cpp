@@ -19,8 +19,7 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include "../Interface/Heap.hpp"
-
+#include <Heap.hpp>
 #include <Memory/KObjectManager.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemoryManager.h>
@@ -55,28 +54,28 @@ const char *dbHeapEngineNms[6] = {
 
 ObjectInfo* heapEngines[6];// slab-allocators for each allocation class
 
-/*
- * Allocates the specified amount of memory if available directly from kernel
- * memory, using underlying slab allocator support. The actual amount of memory
- * returned may not be exact, be it is guaranteed to be equal to or greater
- * than the requested bytes.
- *
- * Since Silcos 3.02, support has been given for allocations above 256
- * DWORDs by returning whole blocks of pages directly from the vmm, mapping
- * them to physical kernel-memory.
- *
- * To keep track of usage and prevent dangling pointers, kmalloc() provides a
- * method to hold the no. of users of heap memory. The memory cannot be freed
- * (unless forced) until the no. of users drops to zero.
- *
- * Note that kmalloc is more of a keyword than a function. Use it whenever
- * you allocate objects in small numbers.
- *
- * @param[in] memSize - no. of bytes required in kernel-memory
- * @param[in] initialUsers - no. of initial users that refer to this memory
- * @author Shukant Pal
- * @see KNew, KiCreateType <KObjectManager.h>
- */
+///
+/// Allocates the specified amount of memory if available directly from kernel
+/// memory, using underlying slab allocator support. The actual amount of memory
+/// returned may not be exact, be it is guaranteed to be equal to or greater
+/// than the requested bytes.
+///
+/// Since Silcos 3.02, support has been given for allocations above 256
+/// DWORDs by returning whole blocks of pages directly from the vmm, mapping
+/// them to physical kernel-memory.
+///
+/// To keep track of usage and prevent dangling pointers, kmalloc() provides a
+/// method to hold the no. of users of heap memory. The memory cannot be freed
+/// (unless forced) until the no. of users drops to zero.
+///
+/// Note that kmalloc is more of a keyword than a function. Use it whenever
+/// you allocate objects in small numbers.
+///
+/// @param[in] memSize - no. of bytes required in kernel-memory
+/// @param[in] initialUsers - no. of initial users that refer to this memory
+/// @author Shukant Pal
+/// @see KNew, KiCreateType <KObjectManager.h>
+///
 void* kmalloc(unsigned int memSize, unsigned int initialUsers)
 {
 	memSize += sizeof(BlockContainer);
@@ -91,8 +90,8 @@ void* kmalloc(unsigned int memSize, unsigned int initialUsers)
 	}
 	else
 	{
-		/// Here, we are allocating directly from the vmm, as the
-		/// requested amount is greater than maxHeapSz.
+		// Here, we are allocating directly from the vmm, as the
+		// requested amount is greater than maxHeapSz.
 		if(memSize < KPGSIZE)
 			memSize = KPGSIZE;
 
@@ -101,8 +100,10 @@ void* kmalloc(unsigned int memSize, unsigned int initialUsers)
 
 		unsigned long memAddr = KiPagesAllocate(pagesReq,
 							ZONE_KOBJECT, ATOMIC);
+		PADDRESS pmem = KeFrameAllocate(pagesReq, ZONE_KERNEL, ATOMIC);
 
-		EnsureUsability(memAddr, null, ATOMIC, KernelData);
+		EnsureAllMappings(memAddr, pmem, 1 << (pagesReq + KPGOFFSET),
+				null, KernelData);
 
 		BlockContainer *mBlock = (BlockContainer*) memAddr;
 		mBlock->magicNo = HEAP_MAGIC;
@@ -120,20 +121,20 @@ void* kmalloc(unsigned int memSize, unsigned int initialUsers)
 	return ((void*)(memGiven + 1));
 }
 
-/*
- * Takes back kmalloc'ed memory if found valid, unless the no. of users left
- * is greater than one and forceDelete is not required. Corrupted memory cannot
- * be taken back here.
- *
- * If the memory was taken from vmm, it unmaps it and returns it to the
- * vmm. This occurs when the memory size was greater than 256 DWORDs.
- *
- * @param[in] memGiven - pointer to kmalloc'ed memory
- * @param[in] forceDelete - client may force kfree() to take back memory even
- * 				if the no. of users is still greater than one
- * @return - whether the memory was freed succesfully
- * @author Shukant Pal
- */
+///
+/// Takes back kmalloc'ed memory if found valid, unless the no. of users left
+/// is greater than one and forceDelete is not required. Corrupted memory cannot
+/// be taken back here.
+///
+/// If the memory was taken from vmm, it unmaps it and returns it to the
+/// vmm. This occurs when the memory size was greater than 256 DWORDs.
+///
+/// @param[in] memGiven - pointer to kmalloc'ed memory
+/// @param[in] forceDelete - client may force kfree() to take back memory even
+/// 				if the no. of users is still greater than one
+/// @return - whether the memory was freed succesfully
+/// @author Shukant Pal
+///
 bool kfree(void* memGiven, bool forceDelete)
 {
 	BlockContainer *memBlock = BlockFor(memGiven);
@@ -156,24 +157,25 @@ bool kfree(void* memGiven, bool forceDelete)
 		MMFRAME *paddr = GetFrames((unsigned long) memGiven,
 							vmBlockOrder, null);
 		KeFrameFree((PADDRESS) paddr);
-		EnsureFaulty((unsigned long) memGiven, null);
+		EnsureAllFaulty((unsigned long) memGiven,
+				1 << (vmBlockOrder + KPGOFFSET), null);
 		KiPagesFree((unsigned long) memGiven);
 		return (true);
 	}
 }
 
-/*
- * Re-allocates memory to new size. If the current buffer couldn't be extended
- * a new location in memory is returned. User should copy his data to that
- * buffer if given -
- *
- *			if(old_buffer != new_buffer)
- *				user_mycopy_func(...);
- *
- * @param[in] - pointer to original kmalloc'ed memory
- * @param[new_size] - new size required for data
- * @author Shukant Pal
- */
+///
+/// Re-allocates memory to new size. If the current buffer couldn't be extended
+/// a new location in memory is returned. User should copy his data to that
+/// buffer if given -
+///
+///			if(old_buffer != new_buffer)
+///				user_mycopy_func(...);
+///
+/// @param[in] - pointer to original kmalloc'ed memory
+/// @param[new_size] - new size required for data
+/// @author Shukant Pal
+///
 void* kralloc(void *heap_mem, unsigned long new_size)
 {
 	BlockContainer *heap_block = BlockFor(heap_mem);
@@ -189,16 +191,16 @@ void* kralloc(void *heap_mem, unsigned long new_size)
 	}
 }
 
-/*
- * Used when "refreshing" memory while expanding its range. Returns memory
- * with the new size and filled with "zeros". It is a compresed combination of
- * kralloc & kcalloc.
- *
- * @param[in] heap_mem - kmalloc'ed memory to be zeroed & expanded
- * @param[in] new_size - new size required for data
- * @author Shukant Pal
- * @see kcalloc, kralloc
- */
+///
+/// Used when "refreshing" memory while expanding its range. Returns memory
+/// with the new size and filled with "zeros". It is a compresed combination of
+/// kralloc & kcalloc.
+///
+/// @param[in] heap_mem - kmalloc'ed memory to be zeroed & expanded
+/// @param[in] new_size - new size required for data
+/// @author Shukant Pal
+/// @see kcalloc, kralloc
+///
 void *krcalloc(void *heap_mem, unsigned long new_size)
 {
 	BlockContainer *heap_block = BlockFor(heap_mem);
@@ -215,19 +217,19 @@ void *krcalloc(void *heap_mem, unsigned long new_size)
 		return (kcalloc(new_size));
 }
 
-/*
- * Invoked by __init() during module initialization. Creates the types required
- * for each allocation class under 256 DWORDs.
- *
- * Due to the nature of __init()ing each module as a library, other kernel
- * modules should not invoke heap-access functions until they are assured that
- * __init() has completed (in ModuleFramework). If __init() functions in other
- * modules require the heap, then work must be done so that each module can
- * invoke __init() (in ModuleFramework) while it runs only the first time by a
- * "bool" switch.
- *
- * @author Shukant Pal
- */
+///
+/// Invoked by __init() during module initialization. Creates the types required
+/// for each allocation class under 256 DWORDs.
+///
+/// Due to the nature of __init()ing each module as a library, other kernel
+/// modules should not invoke heap-access functions until they are assured that
+/// __init() has completed (in ModuleFramework). If __init() functions in other
+/// modules require the heap, then work must be done so that each module can
+/// invoke __init() (in ModuleFramework) while it runs only the first time by a
+/// "bool" switch.
+///
+/// @author Shukant Pal
+///
 decl_c void __initHeap()
 {
 	unsigned int engIdx = 0;

@@ -4,11 +4,6 @@
 #
 # Build: AUTO
 
-CC = g++ # C Compiler
-CFLAGS = -m32 -I"." -I"./Interface" -I"../Interface" -I"../Interface/Arch" -I"../ResourceManager/Interface" -c \
- -ffreestanding -nostdlib \
- -nostdinc -Wall -O2 -fPIC -L../KernelHost/Build/circuitk-1.02 -fno-exceptions -fno-rtti
-
 AS = nasm # Assember
 ASFLAGS = -f elf32 # Asm Flags
 
@@ -48,5 +43,5 @@ Compile/String.o: Framework/String.cpp
 	$(CC) $(CFLAGS) Framework/String.cpp -o Compile/String.o
 
 MfMake: $(MDFRWK_UTIL) $(MDFRWK)
-	ld -m elf_i386 -shared -T linker.ld $(MDFRWK_UTIL) $(MDFRWK) -o Build/silcos.mdfrwk -h "ModuleFramework"
+	$(CC) $(MDFRWK_UTIL) $(MDFRWK) $(LFLAGS) -o Build/silcos.mdfrwk
 	cp Build/silcos.mdfrwk ../Modules/Builtin/

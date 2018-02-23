@@ -17,7 +17,7 @@
  * Copyright (C) 2017 - Shukant Pal
  */
 #include <Executable/RunqueueBalancer.hpp>
-#include <HAL/ProcessorTopology.hpp>
+#include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <Memory/KObjectManager.h>
 
 using namespace HAL;

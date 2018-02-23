@@ -34,13 +34,19 @@ unsigned long ElfManager::getLimitAddress(ElfManager *mgr)
 
 	while(phdrIndex < phdrCount)
 	{
-		if(programHeader->entryType == PT_LOAD || programHeader->entryType == PT_DYNAMIC)
+		if(programHeader->entryType == PT_LOAD)
 		{
 			curAddrFound = programHeader->virtualAddress + programHeader->memorySize;
 			if(maxAddrFound < curAddrFound)
 			{
 				maxAddrFound = curAddrFound;
 			}
+		}
+		else if(programHeader->entryType == PT_DYNAMIC)
+		{
+			curAddrFound = programHeader->virtualAddress + programHeader->memorySize;
+			if(maxAddrFound < curAddrFound){
+				DbgLine("ERRO: DYNAMIC ERAF:KLJD"); while(TRUE);}
 		}
 
 		++(programHeader);
@@ -76,7 +82,7 @@ void ElfManager::loadBinary(unsigned long address)
 		ProgramHeader *segHdr = phdrTable;
 		while(segIndex < segCount)
 		{
-			if(segHdr->entryType == PT_LOAD || segHdr->entryType == PT_DYNAMIC)
+			if(segHdr->entryType == PT_LOAD)
 			{
 				memcpyf(
 						(const Void *) ((UBYTE *) binaryHeader + segHdr->fileOffset),
@@ -118,6 +124,7 @@ void ElfManager::fillBlankDsm()
 	dynamicHash.bucketEntries = 0;
 	dynamicHash.chainEntries = 0;
 	DbgLine(msgDsmMissing);
+	while(TRUE);
 }
 
 ElfManager::ElfManager()
@@ -134,11 +141,14 @@ ElfManager::ElfManager()
 			dsmSizeEntry != NULL && dsmHashEntry != NULL)
 	{
 		// Fill dynamic symbol table field
-		dynamicSymbols.entryTable = (Symbol *) ((UBYTE *) binaryHeader + dsmEntry->refPointer);
-		dynamicSymbols.nameTable = (char *) ((UBYTE *) binaryHeader + dsmNamesEntry->refPointer);
+		dynamicSymbols.entryTable = (Symbol *)((UBYTE *) binaryHeader +
+				dsmEntry->refPointer);
+		dynamicSymbols.nameTable = (char *)((UBYTE *) binaryHeader +
+				dsmNamesEntry->refPointer);
 
 		// Fill dynamic hash-table field
-		unsigned long *dsmHashContents = (unsigned long *) ((UBYTE *) binaryHeader + dsmHashEntry->refPointer);
+		unsigned long *dsmHashContents = (unsigned long *)((UBYTE *)
+				binaryHeader + dsmHashEntry->refPointer);
 		dynamicHash.bucketEntries = *dsmHashContents;
 		dynamicHash.chainEntries = dsmHashContents[1];
 		dynamicHash.bucketTable = dsmHashContents + 2;
@@ -159,23 +169,30 @@ ElfManager::ElfManager()
 	if(dRelEntry != NULL && dRelTableSizeEntry != NULL && dRelSizeEntry != NULL)
 	{
 		DbgLine("Boot Module - Linking (rel-type Elf) ");
-		relTable.entryTable = (RelEntry *) (baseAddress + dRelEntry->refPointer);
+		relTable.entryTable = (RelEntry *)(baseAddress +
+				dRelEntry->refPointer);
 		relTable.entrySize = dRelSizeEntry->refValue;
-		relTable.entryCount = dRelTableSizeEntry->refValue / relTable.entrySize;
+		relTable.entryCount = dRelTableSizeEntry->refValue /
+				relTable.entrySize;
 	}
 	else
 		relTable.entryCount = 0;
 
-	DynamicEntry *dRelaEntry = KernelElf::getDynamicEntry(DT_RELA);
-	DynamicEntry *dRelaTableSizeEntry = KernelElf::getDynamicEntry(DT_RELASZ);
-	DynamicEntry *dRelaSizeEntry = KernelElf::getDynamicEntry(DT_RELAENT);
+	DynamicEntry *dRelaEntry =
+			KernelElf::getDynamicEntry(DT_RELA);
+	DynamicEntry *dRelaTableSizeEntry =
+			KernelElf::getDynamicEntry(DT_RELASZ);
+	DynamicEntry *dRelaSizeEntry =
+			KernelElf::getDynamicEntry(DT_RELAENT);
 
 	if(dRelaEntry != NULL && dRelaTableSizeEntry != NULL && dRelaSizeEntry != NULL)
 	{
 		DbgLine("Boot Module - Linking (rela-type Elf) ");
-		relaTable.entryTable = (RelaEntry *) (baseAddress + dRelaEntry->refPointer);
+		relaTable.entryTable = (RelaEntry *)(baseAddress +
+				dRelaEntry->refPointer);
 		relaTable.entrySize = dRelaSizeEntry->refValue;
-		relaTable.entryCount = dRelaTableSizeEntry->refValue / relaTable.entrySize;
+		relaTable.entryCount = dRelaTableSizeEntry->refValue /
+				relaTable.entrySize;
 	}
 	else
 		relaTable.entryCount = 0;
@@ -184,19 +201,19 @@ ElfManager::ElfManager()
 	DynamicEntry *dPltRelSzEntry = KernelElf::getDynamicEntry(DT_PLTRELSZ);
 	DynamicEntry *dPltJmpEntry = KernelElf::getDynamicEntry(DT_JMPREL);
 
-	if(dPltRelEntry != NULL && dPltRelSzEntry != NULL && dPltJmpEntry != NULL)
+	if(dPltRelEntry != NULL && dPltRelSzEntry != NULL &&
+			dPltJmpEntry != NULL)
 	{
 		pltRelocTable.relocType = dPltRelEntry->refValue;
-		pltRelocTable.tableLocation = baseAddress + dPltJmpEntry->refPointer;
+		pltRelocTable.tableLocation = baseAddress +
+				dPltJmpEntry->refPointer;
 
 		if(pltRelocTable.relocType == DT_REL)
-		{
-			pltRelocTable.entryCount = dPltRelSzEntry->refValue / sizeof(RelEntry);
-		}
+			pltRelocTable.entryCount = dPltRelSzEntry->refValue /
+					sizeof(RelEntry);
 		else
-		{
-			pltRelocTable.entryCount = dPltRelSzEntry->refValue / sizeof(RelaEntry);
-		}
+			pltRelocTable.entryCount = dPltRelSzEntry->refValue /
+					sizeof(RelaEntry);
 	}
 }
 
@@ -218,8 +235,8 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 	ProgramHeader *dynamicSegment = getProgramHeader(PT_DYNAMIC);
 	if(dynamicSegment != NULL)
 	{
-		dynamicTable = (DynamicEntry *) (baseAddress + dynamicSegment->virtualAddress);
-		dynamicEntryCount = dynamicSegment->fileSize / sizeof(DynamicEntry);
+		dynamicTable = (DynamicEntry *)(baseAddress + dynamicSegment->virtualAddress);
+		dynamicEntryCount = dynamicSegment->memorySize / sizeof(DynamicEntry);
 
 		// This section searches for the dynamic symbol table & its corresponding
 		// hash table.
@@ -236,7 +253,8 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 			dynamicSymbols.nameTable = (char *) ((UBYTE *) binaryHeader + dsmNamesEntry->refPointer);
 
 			// Fill dynamic hash-table field
-			unsigned long *dsmHashContents = (unsigned long *) ((UBYTE *) binaryHeader + dsmHashEntry->refPointer);
+			unsigned long *dsmHashContents = (unsigned long *)((UBYTE *) binaryHeader +
+					dsmHashEntry->refPointer);
 			dynamicHash.bucketEntries = *dsmHashContents;
 			dynamicHash.chainEntries = dsmHashContents[1];
 			dynamicHash.bucketTable = dsmHashContents + 2;
@@ -245,7 +263,10 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 			dynamicSymbols.entryCount = dynamicHash.chainEntries;
 		}
 		else
+		{
+			Dbg(" this one");
 			fillBlankDsm();
+		}
 
 		// This section searches for the relocation tables of both types (RELA &
 		// REL). It is also important for the module to export relocation entries.
@@ -257,7 +278,7 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		if(dRelEntry != NULL && dRelTableSizeEntry != NULL && dRelSizeEntry != NULL)
 		{
 			DbgLine("Boot Module - Linking (rel-type Elf) ");
-			relTable.entryTable = (RelEntry *) (baseAddress + dRelEntry->refPointer);
+			relTable.entryTable = (RelEntry *)(baseAddress + dRelEntry->refPointer);
 			relTable.entrySize = dRelSizeEntry->refValue;
 			relTable.entryCount = dRelTableSizeEntry->refValue / relTable.entrySize;
 		}
@@ -272,6 +293,7 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		{
 			DbgLine("Boot Module - Linking (rela-type Elf) ");
 			relaTable.entryTable = (RelaEntry *) (baseAddress + dRelaEntry->refPointer);
+			while(TRUE);
 			relaTable.entrySize = dRelaSizeEntry->refValue;
 			relaTable.entryCount = dRelaTableSizeEntry->refValue / relaTable.entrySize;
 		}
@@ -322,7 +344,8 @@ ElfManager::~ElfManager(){}
 
 Symbol* ElfManager::getStaticSymbol(const char *name)
 {
-	return ElfAnalyzer::querySymbol((char*) name, &dynamicSymbols, &dynamicHash);
+	return (ElfAnalyzer::querySymbol((char*) name,
+			&dynamicSymbols, &dynamicHash));
 }
 
 /**
@@ -339,56 +362,44 @@ Symbol* ElfManager::getStaticSymbol(const char *name)
  */
 ProgramHeader *ElfManager::getProgramHeader(PhdrType typeRequired)
 {
-	if(phdrTable)
-	{
-		unsigned long testIndex = 0;
-		unsigned long testCount = phdrCount;
-		ProgramHeader *testPhdr = phdrTable;
+	unsigned long testIndex = 0;
+	unsigned long testCount = phdrCount;
+	ProgramHeader *testPhdr = phdrTable;
 
-		while(testIndex < testCount)
+	while(testIndex < testCount)
+	{
+		if(testPhdr->entryType == typeRequired)
 		{
-			if(testPhdr->entryType == typeRequired)
-			{
-				return (testPhdr);
-			}
-			
-			++(testPhdr);
-			++(testIndex);
+			return (testPhdr);
 		}
+
+		++(testPhdr);
+		++(testIndex);
 	}
 
-	return (NULL);
+	return (null);
 }
 
-/**
- * Function: ElfManager::getDynamicEntry
- *
- * Summary:
- * This function searches for a entry in the dynamic section/segment of the elf
- * module. It may return NULL on failure.
- *
- * Args:
- * enum DynamicTag tag - Required tag for the entry
- *
- * Author: Shukant Pal
- */
+///
+/// Searches for the dynamic-tag entry in the dynamic-table for this
+/// elf-object.
+///
+/// @param tag - the tag of the required entry
+/// @return - the dynamic-entry having the given tag; null, if it
+/// 		doesn't exist in this elf-object
+///
 DynamicEntry *ElfManager::getDynamicEntry(DynamicTag tag)
 {
-	if(dynamicTable)
-	{
-		unsigned long entryIndex = 0;
-		DynamicEntry *entry = dynamicTable;
+	DynamicEntry *entry = dynamicTable;
 
-		while(entryIndex < dynamicEntryCount)
+	while(entry->Tag)
+	{
+		if(entry->Tag == tag)
 		{
-			if(entry->Tag == tag)
-			{
-				return (entry);
-			}
-			
-			++(entryIndex);
-			++(entry);
+			return (entry);
 		}
+
+		++(entry);
 	}
 
 	return (NULL);

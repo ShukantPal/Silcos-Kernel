@@ -1,3 +1,4 @@
+
 ///
 /// @file Main.cpp
 ///
@@ -21,6 +22,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #define NAMESPACE_MAIN
 #define NAMESPACE_MEMORY_MANAGER
 
@@ -30,9 +32,9 @@
 #include <ACPI/RSDT.h>
 #include <IA32/HAL.h>
 #include <IA32/APBoot.h>
-#include <HAL/ADM.h>
-#include <HAL/CPUID.h>
-#include <HAL/Processor.h>
+#include <HardwareAbstraction/ADM.h>
+#include <HardwareAbstraction/CPUID.h>
+#include <HardwareAbstraction/Processor.h>
 #include <Executable/RunqueueBalancer.hpp>
 #include <Executable/Thread.h>
 #include <Memory/Pager.h>
@@ -70,11 +72,18 @@ void ImmatureHang(const char *dbgString){
 ///
 void printStatic()
 {
+	extern unsigned long ctorsEnd, ctorsStart;
 #ifdef DEBUG
-	Dbg("Kernel Code: "); DbgInt((U32) &KernelCodeEnd - (U32) &KernelCodeStart);
-	Dbg("\nKernel Data: "); DbgInt((U32) &KernelDataEnd - (U32) &KernelDataStart);
-	Dbg("\nKernel BSS: "); DbgInt((U32) &KernelBSSEnd - (U32) &KernelBSSStart);
-	Dbg("\nKernel PDat: "); DbgInt((U32) &KernelPDatEnd - (U32) &KernelPDatStart);
+	Dbg("Kernel Code:");
+	DbgInt((U32) &KernelCodeEnd - (U32) &KernelCodeStart);
+	Dbg("\nCtors:");
+	DbgInt((U32) &ctorsEnd - (U32) &ctorsStart);
+	Dbg("\nKernel Data: ");
+	DbgInt((U32) &KernelDataEnd - (U32) &KernelDataStart);
+	Dbg("\nKernel BSS: ");
+	DbgInt((U32) &KernelBSSEnd - (U32) &KernelBSSStart);
+	Dbg("\nKernel PDat: ");
+	DbgInt((U32) &KernelPDatEnd - (U32) &KernelPDatStart);
 	DbgLine("");
 #endif
 }

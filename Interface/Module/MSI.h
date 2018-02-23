@@ -18,6 +18,8 @@
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>
 ///
 /// Copyright (C) 2017 - Shukant Pal
+///
+
 #ifndef __INTERFACE_MODULE_MSI_H__
 #define __INTERFACE_MODULE_MSI_H__
 
@@ -44,11 +46,11 @@ struct MultibootElfCache {
 	MSI_SHDR *SectionHeaderTable;
 	struct {
 		char *DynamicSymbolNames;
-		struct Symbol *DynamicSymbolTable;
+		struct Module::Elf::Symbol *DynamicSymbolTable;
 		unsigned long DynamicSymbolCount;
 	};
-	struct SymbolTable eSymbolTbl;
-	struct HashTable eSymbolHashTbl;
+	struct Module::Elf::SymbolTable eSymbolTbl;
+	struct Module::Elf::HashTable eSymbolHashTbl;
 } KCOR_MSICACHE;
 
 extern KCOR_MSICACHE msiKernelSections;

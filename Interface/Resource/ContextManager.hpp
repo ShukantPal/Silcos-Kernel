@@ -31,9 +31,9 @@
 #ifndef MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_CONTEXTMANAGER_HPP_
 #define MODULES_RESOURCEMANAGER_INTERFACE_RESOURCE_CONTEXTMANAGER_HPP_
 
-#include "MemorySection.hpp"
 #include <Memory/Pager.h>
 #include <Memory/KObjectManager.h>
+#include <Resource/MemorySection.hpp>
 
 namespace Resource
 {

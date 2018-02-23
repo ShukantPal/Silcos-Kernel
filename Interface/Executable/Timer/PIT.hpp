@@ -1,30 +1,30 @@
-/* @file PIT.hpp
- *
- * The legacy programmable interval timer is used in particularly old
- * systems. Software must know how to operate it, and if modern timers are
- * available as an alternative, how to turn it off. This is due to the fact
- * that the state of the PIT is undefined during startup.
- * -------------------------------------------------------------------
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// The legacy programmable interval timer is used in particularly old
+/// systems. Software must know how to operate it, and if modern timers are
+/// available as an alternative, how to turn it off. This is due to the fact
+/// that the state of the PIT is undefined during startup.
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
+///
 #ifndef EXEMGR_TIMER_PIT_HPP__
 #define EXEMGR_TIMER_PIT_HPP__
 
-#include <IA32/IO.h>
 #include <Executable/IRQHandler.hpp>
+#include <IA32/IO.h>
 #include <TYPE.h>
 
 namespace Executable
@@ -34,15 +34,14 @@ namespace Timer
 
 #define CHANNEL_N_DATA(n) (0x40 + n)
 
-/* @class PIT
- *
- * The programmable interval timer is used on older system to generate
- * interrupts at varying intervals. It has been replaced by newer technology
- * (i.e. HPET and TSC). Here we control only one PIT in the system.
- *
- * @author Shukant Pal
- */
-class PIT final
+///
+/// The programmable interval timer is used on older system to generate
+/// interrupts at varying intervals. It has been replaced by newer technology
+/// (i.e. HPET and TSC). Here we control only one PIT in the system.
+///
+/// @author Shukant Pal
+///
+class PIT final : public IRQHandler
 {
 public:
 	enum
@@ -95,16 +94,16 @@ public:
 
 	}
 
-	/*
-	 * Uses the read-back command to check the current state of the given
-	 * counter. Latching multiple counters is not supported in this
-	 * method.
-	 *
-	 * @param ctr - counter no. whose status is to be tested, valid values
-	 * 			are 0 to 2, inclusive
-	 * @return latched status byte of the counter selected
-	 * @author Shukant Pal
-	 */
+	///
+	/// Uses the read-back command to check the current state of the given
+	/// counter. Latching multiple counters is not supported in this
+	/// method.
+	///
+	/// @param ctr - counter no. whose status is to be tested, valid values
+	/// 			are 0 to 2, inclusive
+	/// @return latched status byte of the counter selected
+	/// @author Shukant Pal
+	///
 	inline StatusByte status(unsigned char ctr)
 	{
 		ReadBackCmd cmd;

@@ -1,11 +1,5 @@
 ///
-/// @file IOAPIC.hpp
-///
-/// Multiple devices can assert interrupts on the same line, and therefore
-/// vector. Software is responsible to figure out which device needs servicing,
-/// and then handling that device. For this, each vector has a list of
-/// irq-handlers, which are all invoked when the CPU is interrupted.
-///
+/// @file IrqHandler.hpp
 /// -------------------------------------------------------------------
 /// This program is free software: you can redistribute it and/or modify
 /// it under the terms of the GNU General Public License as published by
@@ -25,13 +19,12 @@
 #ifndef EXEMGR_IRQHANDLER_HPP__
 #define EXEMGR_IRQHANDLER_HPP__
 
+#include <Atomic.hpp>
 #include <Object.hpp>
 #include <Utils/ArrayList.hpp>
 
 namespace Executable
 {
-///
-/// @class IRQHandler
 ///
 /// Device-drivers which require control whenever an interrupt occurs to
 /// service their hardware should inherit from this class. They can then
@@ -45,14 +38,46 @@ namespace Executable
 /// @since Silcos 3.02
 /// @author Shukant Pal
 ///
-class IRQHandler : virtual public Object
+class IRQHandler
 {
 public:
 	virtual bool intrAction() = 0;
 protected:
 	IRQHandler(){}
-	~IRQHandler(){}
+	virtual ~IRQHandler();
 };
+
+///
+/// Carries all interrupt-handlers specific to one "IRQ" line. One can fire
+/// an interrupt in this IRQ object, but that should be only done by the asm
+/// interrupt-handler registered in the IDT.
+///
+/// Child classes may add and remove handlers by directly accessing the
+/// lineHdlrs `ArrayList`.
+///
+/// Note that a IRQ is itself an IRQHandler - local irq (on LAPICs) triggers
+/// and may have IOAPIC handlers too. But those device-interrupt handlers are
+/// specific to IOAPIC so the IOAPIC irq is will behave as an irq-handler and
+/// execute the device irqs. (ToDo: clear this paragraph)
+///
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
+class IRQ : public IRQHandler
+{
+public:
+	virtual bool intrAction();
+protected:
+	IRQ();
+	IRQ(IRQHandler *primHdlr);
+	bool fire(unsigned long& hdlrId);
+	bool fireOnly(unsigned long hdlrId);
+
+	ArrayList lineHdlrs;//!< Array of irq-handler for this line
+	friend struct Processor;
+};
+
 
 }// namespace Executable
 
