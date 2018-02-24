@@ -65,29 +65,6 @@ void ImmatureHang(const char *dbgString){
 	while(TRUE){ asm("hlt"); }
 }
 
-///
-/// Called during early-boot phase to print the sizes of the various seections
-/// of the KernelHost. This was important when the whole kernel was only one
-/// piece but now it is a bit obselete as all module sizes aren't printed.
-///
-void printStatic()
-{
-	extern unsigned long ctorsEnd, ctorsStart;
-#ifdef DEBUG
-	Dbg("Kernel Code:");
-	DbgInt((U32) &KernelCodeEnd - (U32) &KernelCodeStart);
-	Dbg("\nCtors:");
-	DbgInt((U32) &ctorsEnd - (U32) &ctorsStart);
-	Dbg("\nKernel Data: ");
-	DbgInt((U32) &KernelDataEnd - (U32) &KernelDataStart);
-	Dbg("\nKernel BSS: ");
-	DbgInt((U32) &KernelBSSEnd - (U32) &KernelBSSStart);
-	Dbg("\nKernel PDat: ");
-	DbgInt((U32) &KernelPDatEnd - (U32) &KernelPDatStart);
-	DbgLine("");
-#endif
-}
-
 extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
 
 ///
@@ -107,7 +84,6 @@ extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
 export_asm void Main(U32 multibootTable, U32 magicNo)
 {
 	DbgLine("Reporting Load: @(com.silcos.circuit.2030)\t--- Silcos Kernel 2.05! ---");
-	printStatic();
 
 	if(magicNo != MULTIBOOT2_BOOTLOADER_MAGIC){
 		DbgLine("Error : Multiboot-compliant bootloader not found!");
@@ -123,5 +99,6 @@ export_asm void Main(U32 multibootTable, U32 magicNo)
 	MdSetupLoader();
 	KernelElf::loadBootModules();
 
+	DbgInt((unsigned long)&ArchMain);
 	ArchMain();
 }

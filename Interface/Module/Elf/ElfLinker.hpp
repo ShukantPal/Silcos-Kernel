@@ -20,7 +20,6 @@
 #ifndef KERNHOST__MODULE__ELFLINKER_HPP__
 #define KERNHOST__MODULE__ELFLINKER_HPP__
 
-#include "ELF.h"
 #include "ElfManager.hpp"
 
 namespace Module
@@ -36,9 +35,10 @@ namespace Elf
 /// @since Silcos 2.05
 /// @author Shukant Pal
 ///
-class ElfLinker
+class ElfLinker final
 {
 public:
+	void getThis();
 	static void resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService);
 	static void resolveRelocation(RelaEntry *relocEntry, ElfManager &handlerService);
 	static void resolveRelocations(RelTable &relocTable, ElfManager &handlerService);
@@ -49,6 +49,11 @@ public:
 	{
 		if(relocTable.relocType == DT_REL)
 			ElfLinker::resolveRelocations((RelTable&) relocTable, handlerService);
+		else
+		{
+			DbgLine(" Big error - rela not supported");
+			while(TRUE);
+		}
 	}
 
 	static inline void resolveLinkage(ElfManager &modService)

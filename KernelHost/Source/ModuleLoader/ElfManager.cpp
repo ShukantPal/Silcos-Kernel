@@ -23,8 +23,17 @@ using namespace Module::Elf;
 
 extern ObjectInfo *tDynamicLink;
 
-extern "C" void elf_dbg();
-
+///
+/// Calculates the maximum relative-address that is used by the code,
+/// data, and other stuff in the elf-object in the form of segments. In
+/// other words, the relative-address where the end of all segments
+/// resides or the size of the loaded binary.
+///
+/// @param mgr - elf-object manager
+/// @version 1.0
+/// @since Circuit 2.03
+/// @author Shukant Pal
+///
 unsigned long ElfManager::getLimitAddress(ElfManager *mgr)
 {
 	unsigned long maxAddrFound = 0, curAddrFound;
@@ -42,12 +51,6 @@ unsigned long ElfManager::getLimitAddress(ElfManager *mgr)
 				maxAddrFound = curAddrFound;
 			}
 		}
-		else if(programHeader->entryType == PT_DYNAMIC)
-		{
-			curAddrFound = programHeader->virtualAddress + programHeader->memorySize;
-			if(maxAddrFound < curAddrFound){
-				DbgLine("ERRO: DYNAMIC ERAF:KLJD"); while(TRUE);}
-		}
 
 		++(programHeader);
 		++(phdrIndex);
@@ -61,9 +64,17 @@ void ElfManager::loadBinary(unsigned long address)
 	// This part loads the module's binary into kernel memory & places
 	// all segments into the correct areas.
 	unsigned long limitVAddr = ElfManager::getLimitAddress(this);
+
 	if(limitVAddr)
 	{
-		pageCount = NextPowerOf2(limitVAddr) >> KPGOFFSET;
+		if(limitVAddr < KPGSIZE)
+		{
+			pageCount = 1;
+		}
+		else
+		{
+			pageCount = NextPowerOf2(limitVAddr) >> KPGOFFSET;
+		}
 
 		if(address == 0)
 		{
@@ -77,6 +88,7 @@ void ElfManager::loadBinary(unsigned long address)
 		loadAddress = KeFrameAllocate(HighestBitSet(pageCount), ZONE_KERNEL, FLG_NONE);
 		EnsureAllMappings(baseAddress, loadAddress, pageCount * KPGSIZE, NULL, PRESENT | READ_WRITE);
 
+		baseAddress += (unsigned long) binaryHeader % KPGSIZE;
 		unsigned long segIndex = 0;
 		unsigned long segCount = phdrCount;
 		ProgramHeader *segHdr = phdrTable;
@@ -85,8 +97,8 @@ void ElfManager::loadBinary(unsigned long address)
 			if(segHdr->entryType == PT_LOAD)
 			{
 				memcpyf(
-						(const Void *) ((UBYTE *) binaryHeader + segHdr->fileOffset),
-						(Void *) (baseAddress + segHdr->virtualAddress),
+						(const Void *)((unsigned long) binaryHeader + segHdr->fileOffset),
+						(Void *)(baseAddress + segHdr->virtualAddress),
 						segHdr->fileSize
 				);
 
@@ -330,14 +342,6 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		relTable.entryCount = 0;
 		relaTable.entryCount = 0;
 	}
-
-	DynamicEntry *init = this->getDynamicEntry(DT_INIT);
-	if(init)
-	{
-		Dbg("init: ");
-		DbgInt(init->refPointer);
-		DbgLine(" ");
-	}
 }
 
 ElfManager::~ElfManager(){}
@@ -348,18 +352,13 @@ Symbol* ElfManager::getStaticSymbol(const char *name)
 			&dynamicSymbols, &dynamicHash));
 }
 
-/**
- * Function: ElfManager::getProgramHeader
- *
- * Summary:
- * This function searches a program header in the elf-module by its type. It
- * can return NULL also.
- *
- * Args:
- * enum PhdrType typeRequired - Required-type of the program-header
- *
- * Author: Shukant Pal
- */
+///
+/// Returns the first program-header with the type passed.
+///
+/// @param typeRequired - type of program-header required
+/// @return - the first program-header that has this type; null, if
+/// 		none found so.
+///
 ProgramHeader *ElfManager::getProgramHeader(PhdrType typeRequired)
 {
 	unsigned long testIndex = 0;
@@ -369,9 +368,7 @@ ProgramHeader *ElfManager::getProgramHeader(PhdrType typeRequired)
 	while(testIndex < testCount)
 	{
 		if(testPhdr->entryType == typeRequired)
-		{
 			return (testPhdr);
-		}
 
 		++(testPhdr);
 		++(testIndex);

@@ -146,7 +146,7 @@ struct ElfHeader
 	ELF32_HALF sectionStringIndex;// Section header table index of entry associated with section name-table
 };
 
-#define PROGRAM_HEADER(eHeader) ((ProgramHeader *)((unsigned long) eHeader \
+#define PROGRAM_HEADER(eHeader)((ProgramHeader *)((unsigned long) eHeader \
 		+ eHeader->programHeaderOffset))
 #define SECTION_HEADER(eHeader) (eHeader->sectionHeaderOffset) ? \
 		((SectionHeader *)((unsigned long) eHeader + \

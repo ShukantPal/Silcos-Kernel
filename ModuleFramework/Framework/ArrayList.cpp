@@ -56,8 +56,6 @@ ArrayList::ArrayList()
  */
 ArrayList::ArrayList(unsigned long initialCapacity)
 {
-	if(initialCapacity==24)
-		Dbg(" ARRAY_LIST ");
 	this->capacity = initialCapacity;
 	this->changeCount = 0;
 	this->size = 0;

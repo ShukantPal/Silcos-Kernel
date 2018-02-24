@@ -142,7 +142,6 @@ InitEnvironment:
 	JB CallConstructor	; if not, continue (in loop)
 
 	CALL Main		; initializes the system until scheduler is enabled
-	INT 0x20		; if Main() returns, call the scheduler-tick
 	JMP $			; if it comes here, we are seriously stupid
 
 

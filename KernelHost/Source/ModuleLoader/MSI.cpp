@@ -186,7 +186,6 @@ void KernelElf::loadBootModules()
 			SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_MODULE);
 	while(foundModule != NULL)
 	{
-		Dbg(foundModule->CMDLine);
 		bmRecord = RecordManager::create(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
 
 		blob = new(tBlobRegister) BlobRegister();
@@ -209,11 +208,7 @@ void KernelElf::loadBootModules()
 	blob = (BlobRegister*) bmRecordList->head;
 	while(blob != NULL)
 	{
-		if(blob->regForm->init)
-		{
-			blob->regForm->init();
-		}
-
+		ModuleLoader::init(*blob);
 		blob = (BlobRegister*) blob->liLinker.next;
 	}
 

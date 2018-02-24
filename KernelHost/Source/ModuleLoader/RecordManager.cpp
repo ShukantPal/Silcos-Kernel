@@ -104,7 +104,8 @@ Symbol *RecordManager::querySymbol(char *requiredSymbolName, unsigned long &base
 	while(qRecordIndex < qRecordCount)
 	{
 		qLink = qRecord->linkerInfo;
-		foundSymbol = ElfAnalyzer::querySymbol(requiredSymbolName, &qLink->dynamicSymbols, &qLink->symbolHash);
+		foundSymbol = ElfAnalyzer::querySymbol(requiredSymbolName,
+				&qLink->dynamicSymbols, &qLink->symbolHash);
 
 		if(foundSymbol != NULL)
 		{

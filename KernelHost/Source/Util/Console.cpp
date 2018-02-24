@@ -130,7 +130,7 @@ static inline void RestoreConsole()
  *
  * Author: Shukant Pal
  */
-static const char *PrintInline(const char *asciiString)
+static const char *printInline(const char *asciiString)
 {
 	if(!(writeIndex % 80))
 		FinishLine();
@@ -219,13 +219,13 @@ extern "C" void Write(const char *msg)
 	RestoreConsole();
 
 	const char *ch = msg;
-	ch = PrintInline(ch);
+	ch = printInline(ch);
 
 	// This part will occur only if msg overflows this line.
 	while(*ch)
 	{
 		SwitchLine();
-		ch = PrintInline(ch);
+		ch = printInline(ch);
 	}
 
 	MarkLine();

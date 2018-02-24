@@ -44,6 +44,7 @@ ifeq ($(TargetArchitecture), IA32)
 	export LD = $(HOME)/opt/cross/bin/$(TARGET)-ld
 	export GNU_AS = $(HOME)/opt/cross/bin/$(TARGET)-as
 	export GNU_ASFLAGS =
+	export DEF_LD_SCRIPT = $(shell $(LD) --verbose)
 	
 	#
 	# See the last line -Xassembler. It is because the assembler needs to
@@ -54,9 +55,8 @@ ifeq ($(TargetArchitecture), IA32)
 		-fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall \
 		-O2 -fPIC -fno-rtti -fno-exceptions
 		
-	export LFLAGS = -lgcc -fvisibility=default -shared -ffreestanding \
-		-nostdlib -nostdinc -Wall -O2 -fPIC -fno-rtti -fno-exceptions \
-		-Wl,--strip-all,--allow-shlib-undefined \
+	export LFLAGS = -lgcc -shared -ffreestanding \
+		-nostdlib -nostdinc -fno-exceptions -fno-rtti \
 		-Wl,--warn-unresolved-symbols,-shared
 		
 	#
@@ -88,9 +88,10 @@ endif
 # Builds the required C++ runtime objects. Currently the kernel is using the
 # crti.o & crtn.o objects for global object construction and destruction.
 #
-BuildCppRuntime: Modules/crti.S Modules/crtn.S
+BuildCppRuntime: Modules/crti.S Modules/crtn.S Modules/crt0.S
 	$(GNU_AS) Modules/crti.S -o Modules/crti.o
 	$(GNU_AS) Modules/crtn.S -o Modules/crtn.o
+	$(GNU_AS) Modules/crt0.S -o Modules/crt0.o
 
 #
 # Builds all the module binaries and consolidates them under one *.iso file

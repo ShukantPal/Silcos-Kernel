@@ -31,7 +31,7 @@ extern "C" void LinkerUndefined(void*, void*)
 
 extern "C" void __register_frame_info(void*,struct object*){}
 extern "C" void __register_frame_info_bases(void *a1, struct object *a2, void *a3, void *a4);
-extern "C" void* __deregister_frame_info(void*){ return (null); }
+extern "C" void *__deregister_frame_info(void*){ return (null); }
 
 ///
 /// Resolves the relocation-entry for the given elf-object. It takes the
@@ -84,33 +84,13 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 	}
 	else
 	{
+		Dbg("\nUnresolved Symbol: ");
 		if(ELF32_ST_BIND(symbolReferred->Info) == STB_WEAK)
-		{
-			switch(ELF32_R_TYPE(relocEntry->Info))
-			{
-			case R_386_JMP_SLOT:
-			case R_386_GLOB_DAT:
-				*field = (unsigned long) &LinkerUndefined;
-				break;
-			case R_386_32:
-				*field += (unsigned long) &LinkerUndefined;
-				break;
-			case R_386_PC32:
-			*field += (unsigned long) &LinkerUndefined - (unsigned long) field;
-				break;
-			default:
-				DbgLine("Error 40A: TODO:: Build code (elf-linkage-reloc-switch");
-				while(TRUE){ asm volatile("nop"); }
-				break;
-			}
-
-			Dbg("_notfound-weak: "); DbgLine(signature);
+			Dbg(" (weak) ");
+		DbgLine(signature);
+		if(ELF32_ST_BIND(symbolReferred->Info) == STB_WEAK)
 			return;
-		}
-		
-		Dbg("__notfound ");
-		DbgLine(handlerService.dynamicSymbols.nameTable + symbolReferred->Name);
-		while(TRUE){ asm volatile("nop"); }
+		while(TRUE);
 	}
 }
 

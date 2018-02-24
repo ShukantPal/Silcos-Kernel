@@ -177,7 +177,7 @@ decl_c void EnsureAllMappings(ADDRESS vaddr, PADDRESS paddr,
 	U32 pgEntry = (vaddr % MB(2)) >> 12;
 	PADDRESS pMapper = paddr;
 	S32 mapCounter = mapSize >> 12;
-	
+
 	while(mapCounter > 0)
 	{
 		pgTable = GetPageTable(vaddr >> 30, (vaddr % GB(1)) >> 21,

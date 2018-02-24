@@ -67,6 +67,7 @@ public:
 	ElfManager(ElfHeader *binaryHeader);
 	~ElfManager();
 
+	inline unsigned long base(){ return (baseAddress); }
 	inline SymbolTable *getSymbolTable(){ return (&dynamicSymbols); }
 	inline Symbol *getSymbol(char *symName)
 	{

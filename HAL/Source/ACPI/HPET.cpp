@@ -48,6 +48,8 @@ using namespace Executable::Timer;
 PIT *pit;
 ObjectInfo *h;
 
+ArrayList hl(24);
+
 decl_c void do_action(Executable::IRQHandler *h)
 {
 	DbgInt((unsigned long)h ); Dbg(" ");

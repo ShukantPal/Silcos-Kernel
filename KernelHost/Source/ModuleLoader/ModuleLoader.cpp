@@ -55,17 +55,12 @@ struct ObjectInfo *tDynamicLink;// struct DynamicLink - Slab-Allocator
 
 LinkedList LoadedModules;
 
-/**
- * Function: ModuleLoader::moveFileIntoMemory
- *
- * Summary:
- * Moves a binary-blob into the kernel memory by mapping its physical addresses
- *
- * Args:
- * BlobRegister& blob - Blob parameters
- *
- * Author: Shukant Pal
- */
+///
+/// Dynamically allocates memory to store the elf-object's file so that
+/// it could be mapped and used.
+///
+/// @param blob - the registration "form" of the module
+///
 void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 {
 	blob.blobSize = NextPowerOf2(blob.blobSize);
@@ -83,9 +78,14 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 		return_if(fileSize > MB(4), FALSE);
 	#endif
 
-	Void *memoryArena = (void *) KiPagesAllocate(HighestBitSet(fileSize >> KPGOFFSET), ZONE_KMODULE, FLG_NONE);
-	EnsureAllMappings((unsigned long) memoryArena, blob.loadAddr, blob.blobSize, NULL, PRESENT | READ_WRITE);
+	void *memoryArena = (void *) KiPagesAllocate(
+			HighestBitSet(fileSize >> KPGOFFSET), ZONE_KMODULE,
+			FLG_NONE);
 
+	EnsureAllMappings((unsigned long) memoryArena, blob.loadAddr,
+			fileSize, NULL, PRESENT | READ_WRITE);
+
+	memoryArena += blob.loadAddr % KPGSIZE;
 	return (memoryArena);
 }
 
@@ -116,43 +116,42 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, B
 				moduleHandler->binaryHeader->entryAddress;
 	}
 
-	Symbol *__initer = moduleHandler->getStaticSymbol("__init");
-	if(__initer)
+	DynamicEntry* dynamicIniter = moduleHandler->getDynamicEntry(DT_INIT);
+	if(dynamicIniter)
 	{
+	//	Dbg(" dyn -ioni");
 		kmRecord.init = (void (*)())(kmRecord.BaseAddr +
-					__initer->Value);
+				dynamicIniter->refPointer);
 	}
 	else
 	{
-		DynamicEntry* dynamicIniter = moduleHandler->getDynamicEntry(DT_INIT);
-		if(dynamicIniter)
+		Symbol *__initer = moduleHandler->getStaticSymbol("__init");
+		if(__initer)
 		{
-			DbgLine("dyn-init");
 			kmRecord.init = (void (*)())(kmRecord.BaseAddr +
-					dynamicIniter->refPointer);
+					__initer->Value);
 		}
 	}
+
 	DynamicEntry* dynamicFinier = moduleHandler->getDynamicEntry(DT_FINI);
 	if(dynamicFinier)
 	{
-		kmRecord.fini = (void (*)())(kmRecord.BaseAddr + dynamicFinier->refPointer);
+		kmRecord.fini = (void (*)())(kmRecord.BaseAddr +
+				dynamicFinier->refPointer);
 	}
 
 	blob.manager = moduleHandler;
+
 	return (ABI::ELF);
 }
 
-/**
- * Function: ModuleLoader::linkFile
- *
- * Summary:
- * This function finishes linkage of the module.
- *
- * Args:
- * void *modmem - Module's address in virtual memory
- *
- * Author: Shukant Pal
- */
+///
+/// Finishes the linking part of the module by filling in the relocation
+/// entries.
+///
+/// @param binaryIfc - binary-interface of the given module
+/// @param blob - the blob-struct for this module
+///
 void ModuleLoader::linkFile(ABI binaryIfc, BlobRegister& blob)
 {
 	ElfManager *manager;
@@ -222,12 +221,19 @@ void ModuleLoader::loadBundle(LinkedList &blobList)
 	{
 		blob->fileAddr = (unsigned long)
 				ModuleLoader::moveFileIntoMemory(*blob);
+
 		blob->regForm->linkerInfo = NULL;
 
 		RecordManager::registerRecord(blob->regForm);
 
 		blob->abiFound = ModuleLoader::globalizeDynamic(
 				(void*) blob->fileAddr, *blob->regForm, *blob);
+
+		if(blob->abiFound == ABI::INVALID)
+		{
+			DbgLine("Invalid boot-module given ");
+			while(TRUE);
+		}
 
 		blob = (BlobRegister*) blob->liLinker.next;
 		++ctr;
@@ -239,6 +245,17 @@ void ModuleLoader::loadBundle(LinkedList &blobList)
 	{
 		ModuleLoader::linkFile(blob->abiFound, *blob);
 		blob = (BlobRegister*) blob->liLinker.next;
+	}
+}
+
+void ModuleLoader::init(BlobRegister &bl)
+{
+	switch(bl.abiFound)
+	{
+	case ELF:
+		if(bl.regForm->init)
+			bl.regForm->init();
+		break;
 	}
 }
 
@@ -263,15 +280,4 @@ void MdSetupLoader()
 	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_,
 			sizeof(::Elf::ABI::ExitorFunction),
 			sizeof(long), NULL, NULL);
-}
-
-KMOD_RECORD *MdCreateModule(char *moduleName, unsigned long moduleVersion, unsigned long moduleType)
-{
-	KMOD_RECORD *mdRecord = (KMOD_RECORD*) KNew(tKMOD_RECORD, KM_SLEEP);
-	memcpy(moduleName, &mdRecord->buildName, 16);
-	mdRecord->buildVersion = moduleVersion;
-	mdRecord->serviceType = (KM_TYPE) moduleType;
-
-	AddElement(&mdRecord->LiLinker, &LoadedModules);
-	return (mdRecord);
 }

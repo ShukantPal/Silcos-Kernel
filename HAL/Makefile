@@ -107,7 +107,7 @@ $(COMPILE)/TSS.o: $(SOURCE)/TSS.cpp
 #
 
 IA32_HAL: $(ACPI_Build) $(IA32_Build)
-	 $(CC) ../Modules/crti.o $(Cpp.crtbegin.o) $(ACPI_Build) $(IA32_Build) $(LFLAGS) $(Cpp.crtend.o) ../Modules/crtn.o \
-	 -o Build/kernel.silcos.hal
+	 $(LD) ../Modules/crti.o $(Cpp.crtbegin.o) $(ACPI_Build) $(IA32_Build) $(Cpp.crtend.o) ../Modules/crtn.o \
+	 -o Build/kernel.silcos.hal -shared --warn-unresolved-symbols -T ../DefaultModuleLinkage.ld
 	cp Build/kernel.silcos.hal ../Modules/Builtin/
 	

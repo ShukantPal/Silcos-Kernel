@@ -68,12 +68,18 @@ extern unsigned long halLoadPAddr;
 
 using namespace HAL;
 
-extern "C" void hello() __attribute__((constructor));
-
-extern "C" void hello()
+unsigned int cntc=0;
+extern "C" __attribute__((constructor)) void hello()
 {
+	++cntc;
 	DbgLine("iamctor");
 }
+
+extern "C" __attribute__((constructor)) void hellod()
+{
+	DbgLine("iamctorddd");
+}
+
 
 ///
 /// Initializes the local-IRQ block for the given table-id. This id is same as

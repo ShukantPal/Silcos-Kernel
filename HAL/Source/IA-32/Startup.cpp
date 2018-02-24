@@ -31,12 +31,24 @@
 using namespace HAL;
 using namespace Executable;
 
-extern int ccnt;
-extern "C" void _init();
+extern "C" void __cclbk()
+{
+DbgLine("Hellow world");
+}
+
+extern unsigned int cntc;
+
+//extern "C" void (*__preinit_array_start[])() __attribute__((visibility("hidden"), weak));
+//extern "C" void (*__preinit_array_end[])() __attribute__((visibility("hidden"), weak));
+extern "C" void (*__init_array_start [])() __attribute__((visibility("hidden"), weak));
+extern "C" void (*__init_array_end [])() __attribute__((visibility("hidden"), weak));
+
 decl_c void ArchMain()
 {
-	Dbg(" ccnt: "); DbgInt(ccnt);
-	_init();
+	size_t ias = __init_array_end - __init_array_start;
+	for(int j=0; j<ias; j++)
+		__init_array_start[j]();
+
 	ScanRsdp();
 	SetupRSDTHolder();
 	MapAPIC();
