@@ -25,7 +25,7 @@
 #define __INTERFACE_MODULE_MODULE_LOADER_H__
 
 #include "ModuleRecord.h"
-#include <Memory/Pager.h> // For PADDRESS type
+#include <Memory/Pager.h> // For PhysAddr type
 
 void MdSetupLoader(void);
 
@@ -52,7 +52,7 @@ namespace Elf
 struct BlobRegister
 {
 	LinkedListNode liLinker;//!< Used while setting up modules in bundles
-	PADDRESS loadAddr;//!< Physical address of the blob in main-memory
+	PhysAddr loadAddr;//!< Physical address of the blob in main-memory
 	unsigned long blobSize;//!< Size of the file/blob in main-memory
 	unsigned long fileAddr;//!< Address at which the blob/file was mapped
 	char *cmdLine;//!< Command-line arguments for this module

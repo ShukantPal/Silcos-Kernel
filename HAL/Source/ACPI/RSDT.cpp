@@ -8,7 +8,7 @@
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
 #include <KERNEL.h>
-#include "../../../Interface/Utils/Memory.h"
+#include <Utils/Memory.h>
 
 using namespace ACPI;
 
@@ -19,39 +19,41 @@ static VirtualRSDT *loadedTables;
 
 const char *sysRSDTNotFound = "RSDT NOT FOUND";
 
-/**
- * Function: FormVirtualRSDT
- * Attributes: file-only (static)
- *
- * Summary:
- * This function establishes the virtual-RSDT inplace by mapping all the ACPI
- * tables into specific 4KB blocks. Virtual addresses of these tables are
- * placed into a global virtual-RSDT which is used later to search for other
- * tables by their name.
- *
- * Origin:
- * This was implemented to save time to search for a table. Re-mapping of all
- * tables was avoided by pre-mapping all of them at once.
- *
- * Author: Shukant Pal
- */
-static void FormVirtualRSDT()
+///
+///
+/// This function establishes the virtual-RSDT inplace by mapping all the ACPI
+/// tables into specific 4KB blocks. Virtual addresses of these tables are
+/// placed into a global virtual-RSDT which is used later to search for other
+/// tables by their name.
+///
+/// Origin:
+/// This was implemented to save time to search for a table. Re-mapping of all
+/// tables was avoided by pre-mapping all of them at once.
+///
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
+static void formVirtualRSDT()
 {
 	loadedTables = (VirtualRSDT*) (stcConfigBlock * KPGSIZE);
-	EnsureUsability((unsigned long) loadedTables, NULL, KF_NOINTR, KernelData);
+	Pager::use((unsigned long) loadedTables, KF_NOINTR, KernelData);
+
 	++(stcConfigBlock);
 
 	loadedTables->physTable = SystemRsdt;
 	loadedTables->matrixBase = stcConfigBlock * 4096;
 	loadedTables->stdTableCount = SystemRsdt->entryCount();
 
-	PADDRESS stdTablePAddr;
+	PhysAddr stdTablePAddr;
 	for(unsigned long stdTableIndex = 0;
 			stdTableIndex < loadedTables->stdTableCount;
 			stdTableIndex++)
 	{
-		stdTablePAddr = (PADDRESS) SystemRsdt->ConfigurationTables[stdTableIndex];
-		EnsureMapping(stcConfigBlock * 4096, stdTablePAddr & 0xFFFFF000, NULL, KF_NOINTR, KernelData);
+		stdTablePAddr = (PhysAddr) SystemRsdt->ConfigurationTables[stdTableIndex];
+		Pager::map(stcConfigBlock * 4096, stdTablePAddr &
+				0xFFFFF000, KF_NOINTR,
+				KernelData);
 
 		loadedTables->stdTableAddr[stdTableIndex] =
 				(stcConfigBlock << KPGOFFSET) +
@@ -76,13 +78,15 @@ void SetupRSDTHolder()
 {
 	if(SystemRsdp->Revision == 0)
 	{
-		EnsureMapping(stcConfigBlock * 4096, SystemRsdp -> RsdtAddress & 0xfffff000, NULL, KF_NOINTR, 3);
+		Pager::map(stcConfigBlock * 4096,
+				SystemRsdp -> RsdtAddress & 0xfffff000,
+				KF_NOINTR, 3);
 
 		RSDT *Rsdt = (RSDT *) (stcConfigBlock * 4096 + (SystemRsdp -> RsdtAddress % 4096));
 		SystemRsdt = Rsdt;
 		++stcConfigBlock;
 
-		FormVirtualRSDT();
+		formVirtualRSDT();
 
 		if(!VerifySdtChecksum(&(SystemRsdt -> RootHeader)))
 		{

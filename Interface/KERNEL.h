@@ -65,6 +65,13 @@
 
 #endif
 
+#define __while_true while(true);
+
+#define __args_start (
+#define __args_over )
+
+#define word_at(l) (*(unsigned long*)l)
+
 #ifdef ARCH_32
 
 static inline unsigned long NextPowerOf2(unsigned long x)

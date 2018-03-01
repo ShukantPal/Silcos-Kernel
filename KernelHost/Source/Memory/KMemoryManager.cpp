@@ -63,7 +63,7 @@ ADDRESS KiPagesAllocate(unsigned long bOrder, unsigned long prefZone, unsigned l
 	return (KPGADDRESS(bInfo));
 }
 
-unsigned long KiPagesFree(ADDRESS pgAddress)
+ unsigned long KiPagesFree(ADDRESS pgAddress)
 {
 	SpinLock(&kmLock);
 	//Dbg("FREEE:"); DbgInt((pgAddress-GB(3)) / 1024); DbgLine(" --");
@@ -107,11 +107,18 @@ void SetupKMemoryManager(void)
 
 	kptSize = sizeof(KPAGE) * (kdmSize / KPGSIZE);
 	unsigned long kptFence = kptTable + kptSize;
-	while(kptTable < kptFence)
-	{
-		EnsureUsability(kptTable, NULL, FLG_ATOMIC | FLG_NOCACHE | KF_NOINTR, KernelData);
-		kptTable += KPGSIZE;
-	}
+
+//	while(kptTable < kptFence)
+//	{
+//		Pager::use(kptTable, KERNEL_CONTEXT, FLG_ATOMIC | FLG_NOCACHE | KF_NOINTR, KernelData);
+//		kptTable += KPGSIZE;
+//	}
+
+	unsigned kmapfence =kptFence;
+	if(kmapfence & 4095)
+		kmapfence += 4096 - (kmapfence%4096);
+
+	Pager::useAll(kptTable, kmapfence, FLG_ATOMIC | FLG_NOCACHE | KF_NOINTR,KernelData);
 
 	memsetf((void *) KDYNAMIC, 0, kptSize);
 	kptTable = KDYNAMIC;

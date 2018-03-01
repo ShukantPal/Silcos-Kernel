@@ -51,7 +51,7 @@ namespace Timer
 class HPET : public LinkedListNode, public Lockable
 {
 public:
-	HPET(PADDRESS eventBlock);
+	HPET(PhysAddr eventBlock);
 	~HPET();
 
 	void clearIntrStatus(unsigned char n)
@@ -92,7 +92,7 @@ public:
 	bool enableLegacyRouting();
 	void setMainCounter(unsigned long val);
 private:
-	PADDRESS eventBlock;
+	PhysAddr eventBlock;
 	unsigned long regBase;
 
 	/* @struct HPET::CapabilityAndID

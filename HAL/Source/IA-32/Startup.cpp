@@ -31,13 +31,6 @@
 using namespace HAL;
 using namespace Executable;
 
-extern "C" void __cclbk()
-{
-DbgLine("Hellow world");
-}
-
-extern unsigned int cntc;
-
 //extern "C" void (*__preinit_array_start[])() __attribute__((visibility("hidden"), weak));
 //extern "C" void (*__preinit_array_end[])() __attribute__((visibility("hidden"), weak));
 extern "C" void (*__init_array_start [])() __attribute__((visibility("hidden"), weak));

@@ -1,35 +1,34 @@
-/**
- * File: Console.c
- *
- * Summary:
- * Allows printing to VGA text-based screens whose video-RAM is located at a
- * fixed virtual address. This should be initialized by HAL to allow on-screen
- * debugging. It is assumed that the screen is a grid of 80x25 characters.
- *
- * Changes:
- * # Fixed line-by-line printing & line-overflows which lead to mixed text
- * # Allow reprinting from top of the screen, when screen becomes full
- *
- * -------------------------------------------------------------------
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file Console.cpp
+///
+/// Allows printing to VGA text-based screens whose video-RAM is located at a
+/// fixed virtual address. This should be initialized by HAL to allow on-screen
+/// debugging. It is assumed that the screen is a grid of 80x25 characters.
+///
+/// Changes:
+/// a. Fixed line-by-line printing & line-overflows which lead to mixed text
+/// b. Allow reprinting from top of the screen, when screen becomes full
+///
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 #include <Types.h>
 #include <Debugging.h>
 #include <Synch/Spinlock.h>
-#include "../../../Interface/Utils/Memory.h"
+#include <Utils/Memory.h>
 
 static volatile U8 *writeBuffer;
 static volatile U8 *bufferPos;
@@ -37,34 +36,32 @@ static unsigned short writeIndex = 0;
 static DebugStream Console;
 extern Spinlock dbgLock;
 
-static inline void ClearLine(unsigned long lineIndex)
+static inline void clearLine(unsigned long lineIndex)
 {
-	memsetf((void*) bufferPos, (0x17 << 24) | (0x17 << 8), 2 * (80 - writeIndex % 80));
+	memsetf((void*) bufferPos, (0x17 << 24) | (0x17 << 8),
+			2 * (80 - writeIndex % 80));
 }
 
-static inline void FlushLine(unsigned long fromIndex)
+static inline void flushLine(unsigned long fromIndex)
 {
-	memsetf((void*) (writeBuffer + 2 * fromIndex), (0x0F << 24) | (0x0F << 8), 160);
+	memsetf((void*)(writeBuffer + 2 * fromIndex),
+			(0x0F << 24) | (0x0F << 8), 160);
 }
 
-static inline void FinishLine()
+static inline void finishLine()
 {
-	memsetf((void*) bufferPos, (0x17 << 24) | (0x17 << 8), 2 * (80 - writeIndex % 80));
+	memsetf((void*) bufferPos, (0x17 << 24) | (0x17 << 8),
+			2 * (80 - writeIndex % 80));
 }
 
-/**
- * Function: SwitchLine
- *
- * Summary:
- * Changes the write-index & buffer-position to the point where the next line
- * starts on the console.
- *
- * Returns:
- * change in the write-index (delta)
- *
- * Author: Shukant Pal
- */
-static inline unsigned long SwitchLine()
+///
+/// Changes the write-index & buffer-position to the point where the next line
+/// starts on the console.
+///
+/// @returns change in the write-index (delta)
+/// @author Shukant Pal
+///
+static inline unsigned long switchLine()
 {
 	if(writeIndex % 80)
 	{
@@ -74,7 +71,7 @@ static inline unsigned long SwitchLine()
 
 		if(writeIndex != 80 * 25)
 		{
-			ClearLine(writeIndex / 80);
+			clearLine(writeIndex / 80);
 			(bufferPos[0]) = '>';
 			(bufferPos[1]) = 0x7;
 			(bufferPos[2]) = '>';
@@ -87,11 +84,11 @@ static inline unsigned long SwitchLine()
 		return (0);
 }
 
-static inline void MarkLine()
+static inline void markLine()
 {
 	unsigned long markerPos = (writeIndex % 80) ?
 					writeIndex + 80 - writeIndex % 80 : writeIndex;
-	FlushLine(markerPos);
+	flushLine(markerPos);
 
 	volatile U8 *marker = writeBuffer + 2 * markerPos;
 	marker[0] = '>';
@@ -99,43 +96,38 @@ static inline void MarkLine()
 	marker[4] = '>';
 }
 
-static inline void RestoreConsole()
+static inline void restoreConsole()
 {
-	if(writeIndex == 80 * 25)
+	if(writeIndex >= 80 * 25)
 	{
 		writeIndex = 0;
 		bufferPos = writeBuffer;
-		ClearLine(0);
+		clearLine(0);
 	}
 }
 
-/**
- * Function: PrintInline
- *
- * Summary:
- * Continues printing the ascii-string onto the console screen until a line has
- * been fully written. It can switch to the next line (and reset its counter)
- * if a '\n' (line-escape) sequence is encountered.
- *
- * Args:
- * const char *asciiString - the part of the string, from which the print
- * 				should start.
- *
- * Returns:
- * the pointer to the part of the string, till which characters have been
- * printed.
- *
- * Changes:
- * # Add support for tabs, backspace and more!
- *
- * Author: Shukant Pal
- */
+///
+/// Continues printing the ascii-string onto the console screen until a line has
+/// been fully written. It can switch to the next line (and reset its counter)
+/// if  a '\n' (line-escape) sequence is encountered.
+///
+/// @param asciiString - the part of the string, from which the print
+/// 			should start. the pointer to the part of the string,
+/// 			till which characters have been printed already.
+///
+/// Changes:
+/// # Add support for tabs, backspace and more!
+///
+/// @version 1.0
+/// @since Silcos 2.05
+/// @author Shukant Pal
+///
 static const char *printInline(const char *asciiString)
 {
 	if(!(writeIndex % 80))
-		FinishLine();
+		finishLine();
 
-	unsigned long inlineIndex = (unsigned long) (writeIndex % 80);
+	unsigned long inlineIndex = (unsigned long)(writeIndex % 80);
 	unsigned long oldIndex = inlineIndex;
 	while(inlineIndex < 80 && *asciiString)
 	{
@@ -144,8 +136,8 @@ static const char *printInline(const char *asciiString)
 		case '\n':
 		case '\r':
 			writeIndex += inlineIndex - oldIndex;
-			FinishLine();
-			SwitchLine();
+			finishLine();
+			switchLine();
 			inlineIndex = 0;
 			oldIndex = 0;
 			break;
@@ -206,7 +198,7 @@ extern "C" U8 InitConsole(U8 *vid)
 	Console.Write= &Write;
 	Console.WriteLine = &WriteLine;
 
-	return AddStream(&Console);
+	return (AddStream(&Console));
 }
 
 extern "C" void WriteTo(U8 *buf)
@@ -216,7 +208,7 @@ extern "C" void WriteTo(U8 *buf)
 
 extern "C" void Write(const char *msg)
 {
-	RestoreConsole();
+	restoreConsole();
 
 	const char *ch = msg;
 	ch = printInline(ch);
@@ -224,17 +216,17 @@ extern "C" void Write(const char *msg)
 	// This part will occur only if msg overflows this line.
 	while(*ch)
 	{
-		SwitchLine();
+		switchLine();
 		ch = printInline(ch);
 	}
 
-	MarkLine();
+	markLine();
 }
 
 extern "C" void WriteLine(const char *msg)
 {
 	Write(msg);
-	FinishLine();
-	SwitchLine();
-	MarkLine();
+	finishLine();
+	switchLine();
+	markLine();
 }

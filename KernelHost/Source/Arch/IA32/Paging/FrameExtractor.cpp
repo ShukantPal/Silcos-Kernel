@@ -7,7 +7,7 @@
 #include <Memory/KFrameManager.h>
 #include <Memory/MemoryTransfer.h>
 #include <IA32/PageExplorer.h>
-#include "../../../../../Interface/Utils/Stack.h"
+#include <Utils/Stack.h>
 
 /**
  * Function: GetFrames
@@ -32,19 +32,19 @@
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-MMFRAME *GetFrames(ADDRESS Address, ADDRESS Pages, CONTEXT *pageContext)
+decl_c MMFRAME *GetFrames(ADDRESS Address, ADDRESS Pages, CONTEXT *pageContext)
 {
 	unsigned long pageCounter;
 	U64 *pageTable;
 	unsigned long tableOffset;
-	PADDRESS frameAddress;
+	PhysAddr frameAddress;
 	MMFRAME *frame;
 	STACK frameStack = NEW_STACK;
 
 	for(pageCounter = 0; pageCounter < Pages;)
 	{
 		tableOffset = ((Address + pageCounter * KB(4)) % MB(2)) / KB(4);
-		pageTable = GetPageTable(Address / GB(1), (Address % GB(1)) / MB(2), 0, pageContext);
+		pageTable = PageExplorer::getPageTable(Address >> 21, 0);
 		
 		while(pageCounter < Pages && tableOffset < 512)
 		{
@@ -80,10 +80,10 @@ MMFRAME *GetFrames(ADDRESS Address, ADDRESS Pages, CONTEXT *pageContext)
  * Since: Circuit 2.03
  * Author: Shukant Pal
  */
-void SetFrames(ADDRESS addressEnd, MMFRAME *frameHead, CONTEXT *pageContext)
+decl_c void SetFrames(ADDRESS addressEnd, MMFRAME *frameHead, CONTEXT *pageContext)
 {
 	MMFRAME *frame = frameHead;
-	PADDRESS frameAddress;
+	PhysAddr frameAddress;
 	unsigned long tableOffset;
 	U64 *pageTable;
 
@@ -91,7 +91,7 @@ void SetFrames(ADDRESS addressEnd, MMFRAME *frameHead, CONTEXT *pageContext)
 	while(frame != NULL)
 	{
 		tableOffset = (addressEnd % MB(2)) / KB(4);
-		pageTable = GetPageTable(addressEnd / GB(1), (addressEnd % GB(1)) / MB(2), 0, pageContext);
+		pageTable = PageExplorer::getPageTable(addressEnd >>21, 0);
 
 		while(frame != NULL && tableOffset > 0)
 		{

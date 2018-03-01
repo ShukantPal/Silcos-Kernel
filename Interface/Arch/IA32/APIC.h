@@ -36,7 +36,9 @@ static inline void MapAPIC(){
 	VAPICBase = ArchBlock * 4096;
 	++ArchBlock;
 
-	EnsureMapping(VAPICBase, DefaultAPICBase, NULL, KF_NOINTR | FLG_NOCACHE, KernelData | PageCacheDisable);
+	Pager::map(VAPICBase, DefaultAPICBase,
+			KF_NOINTR | FLG_NOCACHE,
+			KernelData | PageCacheDisable);
 }
 
 decl_c void DisablePIC(void);

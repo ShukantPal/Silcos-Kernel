@@ -47,8 +47,9 @@ IOAPIC::IOAPIC(unsigned long regBase, unsigned long intrBase)
 {
 	this->physRegs = regBase;
 	unsigned long mmioPage = KiPagesAllocate(0, ZONE_KMODULE, ATOMIC);
-	EnsureMapping(mmioPage, physRegs & 0xFFFFF000, null,
-					0, KernelData | PageCacheDisable);
+	Pager::map(mmioPage, physRegs & 0xFFFFF000, 0,
+			KernelData | PageCacheDisable);
+
 	this->virtAddr = mmioPage + (physRegs % KPGSIZE);
 	this->apicID = read(IOAPICID) >> 4;
 	this->hardwareVersion = read(IOAPICVER);

@@ -17,6 +17,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #ifndef INTERFACE_MODULE_ELFANALYZER_HPP_
 #define INTERFACE_MODULE_ELFANALYZER_HPP_
 

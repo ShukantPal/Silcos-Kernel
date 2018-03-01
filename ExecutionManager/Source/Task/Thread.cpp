@@ -74,7 +74,7 @@ void InitTTable(void){
 	ADDRESS kisBase = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
 	kInitStack->base = kisBase + KPGSIZE - 4;
 	kInitStack->pointer = kisBase + KPGSIZE - 64;
-	EnsureUsability(kisBase, NULL, FLG_ATOMIC, KernelData);
+	Pager::use(kisBase, FLG_ATOMIC, KernelData);
 
 	Processor *cpu = GetProcessorById(PROCESSOR_ID);
 	cpu->ctask = (Executable::Task*) kIdlerThread;
@@ -128,7 +128,7 @@ void SetupRunqueue()
 	unsigned long ssb = KiPagesAllocate(0, ZONE_KMODULE, FLG_ATOMIC);
 	setupStack->base = ssb + KPGSIZE - 4;
 	setupStack->pointer = ssb + KPGSIZE - 64;
-	Dbg("d--"); EnsureUsability(ssb, NULL, FLG_ATOMIC, KernelData); DbgLine("--t");
+	Dbg("d--"); Pager::use(ssb, FLG_ATOMIC, KernelData); DbgLine("--t");
 	
 	ap->ctask = (Executable::Task*) idlerThread;
 	idlerThread->Gate.next = (Executable::Task*) setupThread;
@@ -158,7 +158,7 @@ Thread *KThreadCreate(void *entry){
 	unsigned long offset = 0;
 	while(offset < 8)
 	{
-		EnsureUsability(stackAddress + offset * KPGSIZE, NULL, FLG_ATOMIC, KernelData);
+		Pager::use(stackAddress + offset * KPGSIZE, FLG_ATOMIC, KernelData);
 		++offset;
 	}
 

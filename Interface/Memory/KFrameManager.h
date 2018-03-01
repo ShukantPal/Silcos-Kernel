@@ -27,10 +27,10 @@
 	#include <IA32/PageTrans.h>
 #endif
 
-extern PADDRESS mmLow;
-extern PADDRESS mmHigh;
-extern PADDRESS mmTotal;
-extern PADDRESS mmUsable;
+extern PhysAddr mmLow;
+extern PhysAddr mmHigh;
+extern PhysAddr mmTotal;
+extern PhysAddr mmUsable;
 extern unsigned long pgTotal;
 extern unsigned long pgUsable;
 
@@ -46,7 +46,7 @@ typedef struct Memory::Internal::BuddyBlock MMFRAME;
 #define FROPAGE(pgOffset)(KFRAMEMAP + pgOffset * sizeof(MMFRAME))
 
 //! Alias for the physical-address for the page-frame
-#define FRADDRESS(fAddress)(PADDRESS)(((unsigned long)fAddress - KFRAMEMAP) \
+#define FRADDRESS(fAddress)(PhysAddr)(((unsigned long)fAddress - KFRAMEMAP) \
 					/ sizeof(MMFRAME)) * KB(4)
 
 void TypifyMRegion(unsigned long typeValue, unsigned long regionAddress,
@@ -68,8 +68,8 @@ void TypifyMRegion(unsigned long typeValue, unsigned long regionAddress,
 //! Interrupts are not turned on if this flag is set
 #define KF_NOINTR (1 << 31)
 
-PADDRESS KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long fFlags);
-unsigned long KeFrameFree(PADDRESS frameAddress);
+PhysAddr KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long fFlags);
+unsigned long KeFrameFree(PhysAddr frameAddress);
 
 //! Atomic allocation; for use in the kernel of one page-frame
 #define KiFrameAllocate() KeFrameAllocate(0, ZONE_KERNEL, FLG_ATOMIC)

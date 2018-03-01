@@ -82,8 +82,8 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 			HighestBitSet(fileSize >> KPGOFFSET), ZONE_KMODULE,
 			FLG_NONE);
 
-	EnsureAllMappings((unsigned long) memoryArena, blob.loadAddr,
-			fileSize, NULL, PRESENT | READ_WRITE);
+	Pager::mapAll((unsigned long) memoryArena, blob.loadAddr,
+			fileSize, FLG_ATOMIC, PRESENT | READ_WRITE);
 
 	memoryArena += blob.loadAddr % KPGSIZE;
 	return (memoryArena);
@@ -121,7 +121,7 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, B
 	{
 	//	Dbg(" dyn -ioni");
 		kmRecord.init = (void (*)())(kmRecord.BaseAddr +
-				dynamicIniter->refPointer);
+				dynamicIniter->ptr);
 	}
 	else
 	{
@@ -129,7 +129,7 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, B
 		if(__initer)
 		{
 			kmRecord.init = (void (*)())(kmRecord.BaseAddr +
-					__initer->Value);
+					__initer->value);
 		}
 	}
 
@@ -137,7 +137,7 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, B
 	if(dynamicFinier)
 	{
 		kmRecord.fini = (void (*)())(kmRecord.BaseAddr +
-				dynamicFinier->refPointer);
+				dynamicFinier->ptr);
 	}
 
 	blob.manager = moduleHandler;
@@ -180,8 +180,8 @@ void ModuleLoader::linkFile(ABI binaryIfc, BlobRegister& blob)
  * registered in the end.
  *
  * Args:
- * PADDRESS moduleAddress - Physical address of the loaded module
- * PADDRESS moduleSIze - Size of the module, in bytes
+ * PhysAddr moduleAddress - Physical address of the loaded module
+ * PhysAddr moduleSIze - Size of the module, in bytes
  * char *cmdLine - Command line option loaded for the module
  * struct ModuleRecord *record - Optional, a module record for the binary
  *

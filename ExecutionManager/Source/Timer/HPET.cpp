@@ -30,7 +30,7 @@ using namespace Executable::Timer;
  * @param[in] eventBlock - base physical-address of HPET's event-block
  * @author Shukant Pal
  */
-HPET::HPET(PADDRESS eventBlock)
+HPET::HPET(PhysAddr eventBlock)
 {
 	this->eventBlock = eventBlock;
 
@@ -42,12 +42,14 @@ HPET::HPET(PADDRESS eventBlock)
 	if(eventBlock%4096 < 3072)
 	{
 		this->regBase = KiPagesAllocate(0, ZONE_KMODULE, ATOMIC) + eventBlock%4096;
-		EnsureMapping(regBase, eventBlock, NULL, 0, KernelData | PageCacheDisable);
+		Pager::map(regBase, eventBlock, 0,
+				KernelData | PageCacheDisable);
 	}
 	else
 	{
 		this->regBase = KiPagesAllocate(1, ZONE_KMODULE, ATOMIC) + eventBlock%4096;
-		EnsureAllMappings(regBase, eventBlock, KB(8), NULL, KernelData | PageCacheDisable);
+		Pager::mapAll(regBase, eventBlock, KB(8), FLG_ATOMIC,
+				KernelData | PageCacheDisable);
 	}
 #endif
 

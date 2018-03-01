@@ -36,5 +36,5 @@ export_asm void Schedule(Processor *tproc)
 
 	tproc->ctask = ntask;
 	if(ntask->mmu != NULL)
-		SwitchContext(ntask->mmu);
+		Pager::switchSpace(ntask->mmu);
 }

@@ -21,7 +21,7 @@ Symbol table '.dynsym' contains 327 entries:
     17: 00008580     0 NOTYPE  GLOBAL DEFAULT    8 __irqCallback138
     18: 00007238     0 NOTYPE  GLOBAL DEFAULT    8 PageFault
     19: 0000815f     0 NOTYPE  GLOBAL DEFAULT    8 __irqCallback59
-    20: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND EnsureUsability
+    20: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND Pager::use
     21: 00008b10     1 FUNC    GLOBAL DEFAULT    8 DestructTrampoline
     22: 000085e0     0 NOTYPE  GLOBAL DEFAULT    8 __irqCallback144
     23: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND ArchBlock
@@ -235,7 +235,7 @@ Symbol table '.dynsym' contains 327 entries:
    231: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND _Z10InitTTablev
    232: 0000823c     0 NOTYPE  GLOBAL DEFAULT    8 __irqCallback76
    233: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND DbgErro
-   234: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND EnsureMapping
+   234: 00000000     0 NOTYPE  GLOBAL DEFAULT  UND Pager::map
    235: 00008403     0 NOTYPE  GLOBAL DEFAULT    8 __irqCallback111
    236: 00005554     0 NOTYPE  GLOBAL DEFAULT    8 halLoadPAddr
    237: 000080ea     0 NOTYPE  GLOBAL DEFAULT    8 __irqCallback50

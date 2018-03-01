@@ -11,7 +11,7 @@
 #include "../../../../../Interface/Utils/Memory.h"
 #include <KERNEL.h>
 
-extern PADDRESS mmTotal;
+extern PhysAddr mmTotal;
 
 /* x86-specific paging structures */
 extern "C" U64 PDPT[4];
@@ -20,15 +20,15 @@ extern "C" U64 IdentityDirectory[512];
 extern "C" U64 GlobalTable[512];
 extern unsigned long memFrameTableSize;
 
-void MTMap2mb(PADDRESS paddr, ADDRESS vaddr)
+void MTMap2mb(PhysAddr paddr, ADDRESS vaddr)
 {
 	GlobalDirectory[(vaddr % GB(1)) / MB(2)] = paddr | (1 << 7) | KernelData;
 	FlushTLB(vaddr);
 }
 
-PADDRESS KiMapTables()
+PhysAddr KiMapTables()
 {
-	PADDRESS frameMapper = MB(16);
+	PhysAddr frameMapper = MB(16);
 	unsigned long framePtr = KFRAMEMAP;
 	unsigned long frameTableEnd = KFRAMEMAP + sizeof(MMFRAME) * (mmTotal >> 12);
 

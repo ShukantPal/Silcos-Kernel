@@ -1,4 +1,6 @@
 ///
+/// @file BuddyAllocator.cpp
+///
 /// The buddy-allocator is the back-end for the commonly-used zone allocator
 /// and its core is implemented in this file. It works in a customizable
 /// fashion as -
@@ -13,6 +15,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #include <Memory/Pager.h>
 #include <Memory/Internal/BuddyAllocator.hpp>
 #include <KERNEL.h>
@@ -465,6 +468,10 @@ BuddyBlock *BuddyAllocator::allocateBlock(unsigned long blockOrder)
 /// This function will free a previously allocated block by first merging it with
 /// other super-blocks to form larger blocks (not super-blocks) and then will add
 /// the merged block to the buddy-lists.
+///
+/// Note that this method assumes that the client wants to fully unuse the
+/// given block. See @code BuddyAllocator::free(BuddyBlock*, unsigned long) to
+/// partially free the block.
 ///
 /// @param blockGiven - descriptor of the block which is to be freed
 /// @version 1.1

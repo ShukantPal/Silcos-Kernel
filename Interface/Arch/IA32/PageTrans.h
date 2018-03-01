@@ -26,12 +26,14 @@
 
 typedef unsigned long ADDRESS;
 typedef U64 PHYSICAL_T;
-typedef U64 PADDRESS;
+typedef U64 PhysAddr;
+typedef U32 VirtAddr;
 typedef U64 PAGE_ATTRIBUTES;
+typedef U64 PageAttributes;
 
 typedef unsigned long ADDRESS;
 
-#define PDPT(ptran) (ptran -> HardwarePage.PDPT)
+#define PDPT(ptran)(ptran->HardwarePage.PDPT)
 
 typedef
 struct PageTrans

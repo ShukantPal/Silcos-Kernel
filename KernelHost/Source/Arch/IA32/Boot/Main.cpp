@@ -67,6 +67,8 @@ void ImmatureHang(const char *dbgString){
 
 extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
 
+char * dk = "    ";
+
 ///
 /// This is the logical entry point of the silcos kernel. The KernelHost
 /// initializes itself by calling setup-functions for each internal subsystem
@@ -99,6 +101,5 @@ export_asm void Main(U32 multibootTable, U32 magicNo)
 	MdSetupLoader();
 	KernelElf::loadBootModules();
 
-	DbgInt((unsigned long)&ArchMain);
 	ArchMain();
 }

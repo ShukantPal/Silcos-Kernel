@@ -18,7 +18,7 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include "../../../Interface/Utils/AVLTree.hpp"
+#include <Utils/AVLTree.hpp>
 
 #include <Math.hpp>
 #include <KERNEL.h>

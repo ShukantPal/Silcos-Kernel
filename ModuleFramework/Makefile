@@ -13,7 +13,7 @@ Compile/BinaryTree.o Compile/HashMap.o \
 Compile/Object.o Compile/RBTree.o Compile/String.o
 
 # Code that is not classifed is compiled here!
-MDFRWK = Compile/Heap.o Compile/Main.o
+MDFRWK = Compile/Main.o
 
 Compile/ArrayList.o: Framework/ArrayList.cpp
 	$(CC) $(CFLAGS) Framework/ArrayList.cpp -o Compile/ArrayList.o
@@ -32,9 +32,6 @@ Compile/Object.o: Framework/Object.cpp
 
 Compile/RBTree.o: Framework/RBTree.cpp
 	$(CC) $(CFLAGS) Framework/RBTree.cpp -o Compile/RBTree.o
-
-Compile/Heap.o: Heap.cpp
-	$(CC) $(CFLAGS) Heap.cpp -o Compile/Heap.o
 
 Compile/Main.o: Main.cpp
 	$(CC) $(CFLAGS) Main.cpp -o Compile/Main.o

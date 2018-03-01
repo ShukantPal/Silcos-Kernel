@@ -86,6 +86,78 @@ struct ModuleRecord
 	ADDRESS BaseAddr;//! base virtual address where this module is mapped
 } KMOD_RECORD;
 
+typedef unsigned long ModuleHandle;
+
+enum SymbolType
+{
+	FUNC,
+	OBJECT,
+	OTHER
+};
+
+///
+/// Represents a module-file which an binary-interface independent
+/// manner.
+///
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
+class ModuleContainer : LinkedListNode
+{
+public:
+	unsigned long getBase(){ return (baseAddress); }
+	virtual void *init() = 0;
+	virtual void *fini() = 0;
+	void (*executeMain)();
+protected:
+	ModuleContainer();
+	~ModuleContainer();
+private:
+	char *nameByBuild;//!< Name of the module given during build
+	unsigned long version;//!< Version of the module, if found
+	DynamicLink *linkerInfo;
+	unsigned long baseAddress, physicalAddress;
+};
+
+///
+/// Holds all the symbolic definitions that have been given kernel-modules
+/// in one internal hash-table to allow faster-lookups. It uses the GNU hash
+/// algorithm to generate hash-keys for symbol-names.
+///
+/// It is used to store all kernel-symbols in the environment and also for
+/// looking up **local** symbols in a module.
+///
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
+class SymbolLookup final
+{
+public:
+	const unsigned long loadFactor = 65;
+
+	SymbolLookup();
+	~SymbolLookup();
+	void add(Elf::Symbol *);
+	void addAll(Elf::SymbolTable table, Elf::HashTable ascHsh);
+private:
+	struct SymbolicDefinition
+	{
+		SymbolicDefinition *next;
+		ModuleHandle owner;
+		unsigned long address;
+		SymbolType type;
+		char name[0];
+	};
+
+	unsigned long internalCapacity;
+	unsigned long currentThreshold;
+	unsigned long totalSymbols;
+	SymbolicDefinition **lookupBuckets;
+	void hashKey(unsigned char *name);
+};
+
 ///
 /// @class RecordManager
 ///
@@ -116,6 +188,7 @@ public:
 	static Module::Elf::Symbol *querySymbol(char *symbolName,
 					unsigned long& baseAddress);
 private:
+
 	static LinkedList globalRecordList kxhide;
 };
 

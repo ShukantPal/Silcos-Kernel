@@ -52,10 +52,9 @@ export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType)
 export_asm void LoadMultibootTags(U32 pTagAddress)
 {
 	InitConsole((unsigned char *) 0xc00b8000);
+	Pager::switchSpace(KERNEL_CONTEXT);
 
-	SwitchContext(&SystemCxt);
-	EnsureMapping(MULTIBOOT_INTERFACE, (PADDRESS) pTagAddress, NULL,
-				0, KernelData);
+	Pager::map(MULTIBOOT_INTERFACE, (PhysAddr) pTagAddress, 0, KernelData);
 
 	tagTable = (MULTIBOOT_TAG*)(MULTIBOOT_INTERFACE +
 					(pTagAddress % KB(4)));

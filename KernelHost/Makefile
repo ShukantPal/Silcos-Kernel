@@ -10,16 +10,6 @@
 ImportCppRuntime = $(DefaultCppRuntime)
 ArchDir = Arch/IA32
 
-# Ifc - Header Directories
-IfcKern = ../Interface/KERNEL.h ../Interface/TYPE.h
-IfcArch = ../Interface/$(ArchDir)
-IfcACPI = ../Interface/ACPI
-IfcHAL = ../Interface/HAL
-IfcRunnable = ../Interface/Executable
-IfcMemory = ../Interface/Memory
-IfcModule = ../Interface/Module
-IfcUtil = ../Interface/Utils
-
 $(IfcHAL)/Processor.h: $(IfcMemory)/Internal/CacheRegister.h $(IfcUtil)/CircularList.h
 
 #
@@ -69,7 +59,8 @@ KernelRoutineObjects = $(COM_KR)/Init.o
 
 # Memory Subsystems + Algorithms
 MemoryObjects = $(COM_MM)/BuddyAllocator.o \
-$(COM_MM)/KFrameManager.o $(COM_MM)/KMemoryManager.o  $(COM_MM)/KObjectManager.o \
+$(COM_MM)/KFrameManager.o $(COM_MM)/Heap.o \
+$(COM_MM)/KMemoryManager.o  $(COM_MM)/KObjectManager.o \
 $(COM_MM)/Structure.o $(COM_MM)/ZoneManager.o
 
 UtilObjects = $(COM_UTIL)/CircuitPrimitive.o $(COM_UTIL)/CircularList.o \
@@ -131,18 +122,18 @@ $(COM_MM)/BuddyAllocator.o: $(IfcMemory)/Internal/BuddyAllocator.hpp $(IfcMemory
 $(COM_MM)/CacheRegister.o: $(IfcHAL)/Processor.h $(IfcMemory)/CacheRegister.h $(SRC_MM)/CacheRegister.cpp	
 	$(CC) $(CFLAGS) $(SRC_MM)/CacheRegister.cpp -o $(COM_MM)/CacheRegister.o
 
+$(COM_MM)/Heap.o: $(Ifc)/Heap.hpp $(SRC_MM)/Heap.cpp
+	$(CC) $(CFLAGS) $(SRC_MM)/Heap.cpp -o $(COM_MM)/Heap.o
+
 $(COM_MM)/KFrameManager.o: $(IfcKern) $(IfcHAL)/Processor.h $(IfcMemory)/KFrameManager.h $(SRC_MM)/KFrameManager.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/KFrameManager.cpp -o $(COM_MM)/KFrameManager.o
 
 $(COM_MM)/KMemoryManager.o: $(IfcHAL)/Processor.h $(IfcMemory)/KMemoryManager.h $(SRC_MM)/KMemoryManager.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/KMemoryManager.cpp -o $(COM_MM)/KMemoryManager.o
 
-$(COM_MM)/KObjectManager.o: $(IfcMemory)/KObjectManager.h \
-			 $(IfcMemory)/MemoryTransfer.h \
-			 $(IfcMemory)/KMemoryManager.h \
-			 $(SRC_MM)/KObjectManager.cpp
-	$(CC) $(CFLAGS) $(SRC_MM)/KObjectManager.cpp \
-				 -o $(COM_MM)/KObjectManager.o
+$(COM_MM)/KObjectManager.o: $(IfcMemory)/KObjectManager.h $(IfcMemory)/MemoryTransfer.h \
+			 $(IfcMemory)/KMemoryManager.h $(SRC_MM)/KObjectManager.cpp
+	$(CC) $(CFLAGS) $(SRC_MM)/KObjectManager.cpp -o $(COM_MM)/KObjectManager.o
 
 $(COM_MM)/Structure.o: $(SRC_MM)/Structure.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/Structure.cpp -o $(COM_MM)/Structure.o

@@ -86,7 +86,8 @@ void ElfManager::loadBinary(unsigned long address)
 		}
 
 		loadAddress = KeFrameAllocate(HighestBitSet(pageCount), ZONE_KERNEL, FLG_NONE);
-		EnsureAllMappings(baseAddress, loadAddress, pageCount * KPGSIZE, NULL, PRESENT | READ_WRITE);
+		Pager::mapAll(baseAddress, loadAddress, pageCount * KPGSIZE, FLG_ATOMIC,
+				PRESENT | READ_WRITE);
 
 		baseAddress += (unsigned long) binaryHeader % KPGSIZE;
 		unsigned long segIndex = 0;
@@ -154,13 +155,13 @@ ElfManager::ElfManager()
 	{
 		// Fill dynamic symbol table field
 		dynamicSymbols.entryTable = (Symbol *)((UBYTE *) binaryHeader +
-				dsmEntry->refPointer);
+				dsmEntry->ptr);
 		dynamicSymbols.nameTable = (char *)((UBYTE *) binaryHeader +
-				dsmNamesEntry->refPointer);
+				dsmNamesEntry->ptr);
 
 		// Fill dynamic hash-table field
 		unsigned long *dsmHashContents = (unsigned long *)((UBYTE *)
-				binaryHeader + dsmHashEntry->refPointer);
+				binaryHeader + dsmHashEntry->ptr);
 		dynamicHash.bucketEntries = *dsmHashContents;
 		dynamicHash.chainEntries = dsmHashContents[1];
 		dynamicHash.bucketTable = dsmHashContents + 2;
@@ -182,9 +183,9 @@ ElfManager::ElfManager()
 	{
 		DbgLine("Boot Module - Linking (rel-type Elf) ");
 		relTable.entryTable = (RelEntry *)(baseAddress +
-				dRelEntry->refPointer);
-		relTable.entrySize = dRelSizeEntry->refValue;
-		relTable.entryCount = dRelTableSizeEntry->refValue /
+				dRelEntry->ptr);
+		relTable.entrySize = dRelSizeEntry->val;
+		relTable.entryCount = dRelTableSizeEntry->val /
 				relTable.entrySize;
 	}
 	else
@@ -201,9 +202,9 @@ ElfManager::ElfManager()
 	{
 		DbgLine("Boot Module - Linking (rela-type Elf) ");
 		relaTable.entryTable = (RelaEntry *)(baseAddress +
-				dRelaEntry->refPointer);
-		relaTable.entrySize = dRelaSizeEntry->refValue;
-		relaTable.entryCount = dRelaTableSizeEntry->refValue /
+				dRelaEntry->ptr);
+		relaTable.entrySize = dRelaSizeEntry->val;
+		relaTable.entryCount = dRelaTableSizeEntry->val /
 				relaTable.entrySize;
 	}
 	else
@@ -216,15 +217,15 @@ ElfManager::ElfManager()
 	if(dPltRelEntry != NULL && dPltRelSzEntry != NULL &&
 			dPltJmpEntry != NULL)
 	{
-		pltRelocTable.relocType = dPltRelEntry->refValue;
+		pltRelocTable.relocType = dPltRelEntry->val;
 		pltRelocTable.tableLocation = baseAddress +
-				dPltJmpEntry->refPointer;
+				dPltJmpEntry->ptr;
 
 		if(pltRelocTable.relocType == DT_REL)
-			pltRelocTable.entryCount = dPltRelSzEntry->refValue /
+			pltRelocTable.entryCount = dPltRelSzEntry->val /
 					sizeof(RelEntry);
 		else
-			pltRelocTable.entryCount = dPltRelSzEntry->refValue /
+			pltRelocTable.entryCount = dPltRelSzEntry->val /
 					sizeof(RelaEntry);
 	}
 }
@@ -261,12 +262,12 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 				&& dsmNamesEntry != NULL && dsmHashEntry != NULL)
 		{
 			// Fill dynamic symbol table field
-			dynamicSymbols.entryTable = (Symbol *) ((UBYTE *) binaryHeader + dsmEntry->refPointer);
-			dynamicSymbols.nameTable = (char *) ((UBYTE *) binaryHeader + dsmNamesEntry->refPointer);
+			dynamicSymbols.entryTable = (Symbol *) ((UBYTE *) binaryHeader + dsmEntry->ptr);
+			dynamicSymbols.nameTable = (char *) ((UBYTE *) binaryHeader + dsmNamesEntry->ptr);
 
 			// Fill dynamic hash-table field
 			unsigned long *dsmHashContents = (unsigned long *)((UBYTE *) binaryHeader +
-					dsmHashEntry->refPointer);
+					dsmHashEntry->ptr);
 			dynamicHash.bucketEntries = *dsmHashContents;
 			dynamicHash.chainEntries = dsmHashContents[1];
 			dynamicHash.bucketTable = dsmHashContents + 2;
@@ -290,9 +291,9 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		if(dRelEntry != NULL && dRelTableSizeEntry != NULL && dRelSizeEntry != NULL)
 		{
 			DbgLine("Boot Module - Linking (rel-type Elf) ");
-			relTable.entryTable = (RelEntry *)(baseAddress + dRelEntry->refPointer);
-			relTable.entrySize = dRelSizeEntry->refValue;
-			relTable.entryCount = dRelTableSizeEntry->refValue / relTable.entrySize;
+			relTable.entryTable = (RelEntry *)(baseAddress + dRelEntry->ptr);
+			relTable.entrySize = dRelSizeEntry->val;
+			relTable.entryCount = dRelTableSizeEntry->val / relTable.entrySize;
 		}
 		else
 			relTable.entryCount = 0;
@@ -304,10 +305,10 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 		if(dRelaEntry != NULL && dRelaTableSizeEntry != NULL && dRelaSizeEntry != NULL)
 		{
 			DbgLine("Boot Module - Linking (rela-type Elf) ");
-			relaTable.entryTable = (RelaEntry *) (baseAddress + dRelaEntry->refPointer);
+			relaTable.entryTable = (RelaEntry *) (baseAddress + dRelaEntry->ptr);
 			while(TRUE);
-			relaTable.entrySize = dRelaSizeEntry->refValue;
-			relaTable.entryCount = dRelaTableSizeEntry->refValue / relaTable.entrySize;
+			relaTable.entrySize = dRelaSizeEntry->val;
+			relaTable.entryCount = dRelaTableSizeEntry->val / relaTable.entrySize;
 		}
 		else
 			relaTable.entryCount = 0;
@@ -318,16 +319,16 @@ ElfManager::ElfManager(ElfHeader *binaryHeader)
 
 		if(dPltRelEntry != NULL && dPltRelSzEntry != NULL && dPltJmpEntry != NULL)
 		{
-			pltRelocTable.relocType = dPltRelEntry->refValue;
-			pltRelocTable.tableLocation = baseAddress + dPltJmpEntry->refPointer;
+			pltRelocTable.relocType = dPltRelEntry->val;
+			pltRelocTable.tableLocation = baseAddress + dPltJmpEntry->ptr;
 
 			if(pltRelocTable.relocType == DT_REL)
 			{
-				pltRelocTable.entryCount = dPltRelSzEntry->refValue / sizeof(RelEntry);
+				pltRelocTable.entryCount = dPltRelSzEntry->val / sizeof(RelEntry);
 			}
 			else
 			{
-				pltRelocTable.entryCount = dPltRelSzEntry->refValue / sizeof(RelaEntry);
+				pltRelocTable.entryCount = dPltRelSzEntry->val / sizeof(RelaEntry);
 			}
 		}
 	}
@@ -389,9 +390,9 @@ DynamicEntry *ElfManager::getDynamicEntry(DynamicTag tag)
 {
 	DynamicEntry *entry = dynamicTable;
 
-	while(entry->Tag)
+	while(entry->tag)
 	{
-		if(entry->Tag == tag)
+		if(entry->tag == tag)
 		{
 			return (entry);
 		}

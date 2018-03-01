@@ -79,7 +79,7 @@ DynamicEntry *KernelElf::getDynamicEntry(enum DynamicTag dRequiredTag)
 
 	while(dynamicEntryIndex < dynamicEntryCount)
 	{
-		if(dynamicEntry->Tag == dRequiredTag)
+		if(dynamicEntry->tag == dRequiredTag)
 		{
 			return (dynamicEntry);
 		}
@@ -115,10 +115,10 @@ ModuleRecord *KernelElf::registerDynamicLink()
 	if(dsmEntry != NULL && dsmNamesEntry != NULL &&
 			dsmSizeEntry != NULL && dsmHashEntry != NULL)
 	{
-		coreLink.dynamicSymbols.entryTable = (Symbol *) dsmEntry->refPointer;
-		coreLink.dynamicSymbols.nameTable = (char *) dsmNamesEntry->refPointer;
+		coreLink.dynamicSymbols.entryTable = (Symbol *) dsmEntry->ptr;
+		coreLink.dynamicSymbols.nameTable = (char *) dsmNamesEntry->ptr;
 
-		unsigned long *dsmHashContents = (unsigned long *) dsmHashEntry->refPointer;
+		unsigned long *dsmHashContents = (unsigned long *) dsmHashEntry->ptr;
 		coreLink.symbolHash.bucketEntries = dsmHashContents[0];
 		coreLink.symbolHash.chainEntries = dsmHashContents[1];
 		coreLink.symbolHash.bucketTable = dsmHashContents + 2;

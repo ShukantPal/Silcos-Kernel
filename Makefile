@@ -23,6 +23,19 @@ else
 	$(error Your architecture isn't supported by the Silcos kernel;)
 endif
 
+# Ifc - Header Directories
+export Ifc = ../Interface
+export IfcKern = ../Interface/KERNEL.h ../Interface/TYPE.h
+export IfcArch = ../Interface/$(ArchDir)
+export IfcACPI = ../Interface/ACPI
+export IfcHAL = ../Interface/HAL
+export IfcRunnable = ../Interface/Executable
+export IfcMemory = ../Interface/Memory
+export IfcModule = ../Interface/Module
+export IfcUtil = ../Interface/Utils
+
+$(Ifc)/Heap.hpp: $(IfcKern) $(IfcUtil)/Memory.h
+
 #
 # Linux is the developing environment for the Silcos kernel. The $(HOME)
 # variable defines the user's home directory. The default value is '~'
@@ -53,7 +66,7 @@ ifeq ($(TargetArchitecture), IA32)
 	#
 	export CFLAGS = -I"." -I"../Interface" -I"../Interface/Arch" -c \
 		-fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall \
-		-O2 -fPIC -fno-rtti -fno-exceptions
+		-O2 -fPIC -fno-rtti -fno-exceptions -fno-strict-aliasing
 		
 	export LFLAGS = -lgcc -shared -ffreestanding \
 		-nostdlib -nostdinc -fno-exceptions -fno-rtti \

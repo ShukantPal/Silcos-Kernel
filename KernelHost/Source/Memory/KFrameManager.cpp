@@ -43,11 +43,11 @@ using namespace Memory::Internal;
 
 #define KFRAME_ZONE_COUNT	5
 
-PADDRESS KiMapTables(void);
-PADDRESS mmLow;
-PADDRESS mmHigh;
-PADDRESS mmUsable;
-PADDRESS mmTotal;
+PhysAddr KiMapTables(void);
+PhysAddr mmLow;
+PhysAddr mmHigh;
+PhysAddr mmUsable;
+PhysAddr mmTotal;
 unsigned long pgUsable;
 unsigned long pgTotal;
 
@@ -100,7 +100,7 @@ extern bool oballocNormaleUse;
  * @See ZNSYS, ZNINFO, ZnAllocateBlock() - "ZoneManager.h"
  * // TODO:@Deprecated - Use System::getMemoryFrame()
  */
-PADDRESS KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long znFlags)
+PhysAddr KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long znFlags)
 {
 	if(!oballocNormaleUse)
 		znFlags |= FLG_NOCACHE;
@@ -120,7 +120,7 @@ PADDRESS KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned 
 	return (bInfo);
 }
 
-unsigned long KeFrameFree(PADDRESS pAddress)
+unsigned long KeFrameFree(PhysAddr pAddress)
 {
 	SpinLock(&kfLock);
 	coreEngine.freeBlock((BuddyBlock *) FRAME_AT(pAddress));
@@ -212,13 +212,13 @@ void SetupKFrameManager()
 	unsigned long regionLimit = (U32) mmMap + mmMap->Size - mmMap->EntrySize;
 
 { // Setup Memory Statistics:
-	PADDRESS mRegionSize;
-	PADDRESS usableMemory = 0;
-	PADDRESS totalMemory = 0;
+	PhysAddr mRegionSize;
+	PhysAddr usableMemory = 0;
+	PhysAddr totalMemory = 0;
 
 	while((unsigned long) regionEntry < regionLimit)
 	{
-		mRegionSize = (PADDRESS) regionEntry->Length;
+		mRegionSize = (PhysAddr) regionEntry->Length;
 		totalMemory += mRegionSize;
 		if(regionEntry->Type == MULTIBOOT_MEMORY_AVAILABLE)
 			usableMemory += mRegionSize & ~((1 << FRSIZE_ORDER) - 1);
@@ -301,8 +301,8 @@ void SetupKFrameManager()
 
 	regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((unsigned long) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
 {
-	PADDRESS pRegionStart;
-	PADDRESS pRegionEnd;
+	PhysAddr pRegionStart;
+	PhysAddr pRegionEnd;
 
 	unsigned long regionStartKFrame;
 	unsigned long regionEndKFrame;

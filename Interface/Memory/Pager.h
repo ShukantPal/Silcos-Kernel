@@ -26,6 +26,7 @@
 #include <Types.h>
 #include <Synch/Spinlock.h>
 #include "KFrameManager.h"
+#include <Utils/LinkedList.h>
 
 /* Paging attribute macros */
 #ifdef x86
@@ -49,7 +50,7 @@
 /// @author Shukant Pal
 ///
 typedef
-struct _CONTEXT
+struct MemoryContext
 {
 	unsigned int OwnerId;// resource-management ID of the primary owner (not used yet!)
 	unsigned int Flags;// generic flags (not used yet!)
@@ -58,22 +59,34 @@ struct _CONTEXT
 	Spinlock ContextLock;// lock for manipulating this context
 } CONTEXT;
 
-extern CONTEXT SystemCxt;//< Primary context for the system. Used for kernel
+extern MemoryContext kernelPager;//< Primary context for the system. Used for kernel
 			 //< and during booting.
 
-decl_c void SwitchContext(CONTEXT *pgContext);
-decl_c void EnsureMapping(ADDRESS vaddr, PADDRESS paddr, CONTEXT *pgContext,
-				unsigned long frFlags, PAGE_ATTRIBUTES pgAttr);
-decl_c void EnsureUsability(ADDRESS address, CONTEXT *pgContext,
-				unsigned long frFlags, PAGE_ATTRIBUTES pgAttr);
-decl_c void EnsureFaulty(ADDRESS address, CONTEXT *cxt);
-decl_c bool CheckUsability(ADDRESS address, CONTEXT *pgContext);
-decl_c void EnsureAllUsable(unsigned long vaddr, unsigned long mapSize,
-				unsigned long frFrames, CONTEXT *cxt,
-				PAGE_ATTRIBUTES attr);
-decl_c void EnsureAllMappings(unsigned long address, PADDRESS pAddress,
-			unsigned long mapSize, CONTEXT *pgContext,
-			PAGE_ATTRIBUTES pgAttr);
-decl_c void EnsureAllFaulty(unsigned long vaddr, unsigned long mapSize,
-			CONTEXT *cxt);
+#define KERNEL_CONTEXT (&kernelPager)
+
+class Pager
+{
+public:
+	static void switchSpace(MemoryContext *cxt);
+
+	static void dispose(VirtAddr vadr);
+
+	static void disposeAll(VirtAddr base, VirtAddr limit);
+
+	static void map(VirtAddr vadr, PhysAddr padr,
+			unsigned allocFlags, PageAttributes attr);
+	static void mapAll(VirtAddr base, PhysAddr pbase, unsigned size,
+			unsigned allocFlags, PageAttributes attr);
+	static void useAllSmall(VirtAddr base, VirtAddr limit,
+			unsigned allocFlags, PageAttributes attr);
+	static void useAllHuge(VirtAddr base, VirtAddr limit,
+			unsigned allocFlags, PageAttributes attr);
+	static void use(VirtAddr base, unsigned allocFlags,
+			PageAttributes attr);
+	static void useAll(VirtAddr base, VirtAddr limit,
+			unsigned allocFlags, PageAttributes attr);
+private:
+	Pager();
+};
+
 #endif/* Memory/Pager.h */

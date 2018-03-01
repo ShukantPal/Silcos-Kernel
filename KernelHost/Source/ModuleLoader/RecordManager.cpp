@@ -109,7 +109,7 @@ Symbol *RecordManager::querySymbol(char *requiredSymbolName, unsigned long &base
 
 		if(foundSymbol != NULL)
 		{
-			if(foundSymbol->Value != 0)
+			if(foundSymbol->value != 0)
 			{
 				baseAddress = qRecord->BaseAddr;
 				return (foundSymbol);

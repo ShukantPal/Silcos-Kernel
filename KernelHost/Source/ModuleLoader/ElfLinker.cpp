@@ -17,8 +17,8 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #include <Module/ModuleRecord.h>
-#include <Module/Elf/ElfManager.hpp>
 #include <Module/Elf/ElfLinker.hpp>
 
 using namespace Module;
@@ -30,7 +30,7 @@ extern "C" void LinkerUndefined(void*, void*)
 }
 
 extern "C" void __register_frame_info(void*,struct object*){}
-extern "C" void __register_frame_info_bases(void *a1, struct object *a2, void *a3, void *a4);
+extern "C" void __register_frame_info_bases(void *a1, struct object *a2, void *a3, void *a4){}
 extern "C" void *__deregister_frame_info(void*){ return (null); }
 
 ///
@@ -49,14 +49,14 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 					ElfManager &handlerService)
 {
 	unsigned long *field = (unsigned long*)(handlerService.baseAddress +
-							relocEntry->Offset);
-	unsigned long sindex = ELF32_R_SYM(relocEntry->Info);
+							relocEntry->offset);
+	unsigned long sindex = ELF32_R_SYM(relocEntry->info);
 	Symbol *symbolReferred = handlerService.dynamicSymbols.entryTable + sindex;
-	char *signature = handlerService.dynamicSymbols.nameTable + symbolReferred->Name;
+	char *signature = handlerService.dynamicSymbols.nameTable + symbolReferred->name;
 	unsigned long declBase;
 	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
 
-	if(*signature == '\0' && ELF32_R_TYPE(relocEntry->Info) == R_386_RELATIVE)
+	if(*signature == '\0' && ELF32_R_TYPE(relocEntry->info) == R_386_RELATIVE)
 	{
 		*field += handlerService.baseAddress;
 		return;
@@ -64,17 +64,17 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 
 	if(declarer != NULL)
 	{
-		switch(ELF32_R_TYPE(relocEntry->Info))
+		switch(ELF32_R_TYPE(relocEntry->info))
 		{
 		case R_386_JMP_SLOT:
 		case R_386_GLOB_DAT:
-			*field = declarer->Value + declBase;
+			*field = declarer->value + declBase;
 			break;
 		case R_386_32:
-			*field += declarer->Value + declBase;
+			*field += declarer->value + declBase;
 			break;
 		case R_386_PC32:
-			*field += declarer->Value + declBase - (unsigned long) field;
+			*field += declarer->value + declBase - (unsigned long) field;
 			break;
 		default:
 			DbgLine("Error 40A: TODO:: Build code (elf-linkage-reloc-switch");
@@ -85,10 +85,10 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 	else
 	{
 		Dbg("\nUnresolved Symbol: ");
-		if(ELF32_ST_BIND(symbolReferred->Info) == STB_WEAK)
+		if(ELF32_ST_BIND(symbolReferred->info) == STB_WEAK)
 			Dbg(" (weak) ");
 		DbgLine(signature);
-		if(ELF32_ST_BIND(symbolReferred->Info) == STB_WEAK)
+		if(ELF32_ST_BIND(symbolReferred->info) == STB_WEAK)
 			return;
 		while(TRUE);
 	}

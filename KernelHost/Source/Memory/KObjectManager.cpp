@@ -78,7 +78,7 @@ static Slab* createSlab(ObjectInfo *metaInfo, unsigned long kmSleep)
 			: (kmSleep | FLG_ATOMIC | FLG_NOCACHE | KF_NOINTR);
 	pageAddress = KiPagesAllocate(0, ZONE_KOBJECT, slFlags);
 
-	EnsureUsability(pageAddress, NULL, slFlags, KernelData);
+	Pager::use(pageAddress, slFlags, KernelData);
 	memsetf((void*) pageAddress, 0, KPGSIZE);
 
 	newSlab = (Slab *) (pageAddress + KPGSIZE - sizeof(Slab));
@@ -150,9 +150,9 @@ static void destroySlab(Slab *emptySlab, ObjectInfo *metaInfo)
 		pageAddress = 0;
 	}
 
-	MMFRAME *mmFrame = GetFrames(pageAddress, 1, NULL);
+	MMFRAME *mmFrame = GetFrames(pageAddress, 1, KERNEL_CONTEXT);
 	KeFrameFree(FRADDRESS(mmFrame));
-	EnsureFaulty(pageAddress, NULL);
+	Pager::dispose(pageAddress);
 	KiPagesFree(pageAddress);
 }
 

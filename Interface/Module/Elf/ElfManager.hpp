@@ -125,7 +125,7 @@ private:
 	// of ElfManager. If no program segments are found, then it will be 0.
 	unsigned long pageCount;
 	unsigned long baseAddress;
-	PADDRESS loadAddress;
+	PhysAddr loadAddress;
 
 	void fillBlankDsm();
 	inline void fillBlankRel(){ relTable.entryCount = 0; }

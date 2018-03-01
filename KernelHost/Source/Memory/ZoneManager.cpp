@@ -19,6 +19,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #define NAMESPACE_KFRAME_MANAGER
 
 #include <Memory/KFrameManager.h>

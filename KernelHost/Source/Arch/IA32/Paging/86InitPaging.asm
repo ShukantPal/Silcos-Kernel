@@ -16,8 +16,8 @@ SECTION .KernelPermData
 	global GlobalTable
 	align 0x1000
 	GlobalTable:
-		times 1022 dd 0
-		DD GlobalDirectory
+		TIMES 1022 DD 0
+		DD (GlobalDirectory - 0xC0000000 + 3)
 		DD 0
 
 	global GlobalDirectory

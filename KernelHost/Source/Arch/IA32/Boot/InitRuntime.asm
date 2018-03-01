@@ -38,7 +38,7 @@ ADM_MEMORY_SIZE		equ (16 << 12)					; 16 KB - ADM Size
 SECTION .data
 
 global KernelStack_
-KernelStack_ equ (KernelStack + 2048)
+KernelStack_ equ (KernelStack + 8192)
 
 bsGDTPointer:
 	DW GDT_SIZE - 1
@@ -161,7 +161,7 @@ APInvokeMain32:
 SECTION .bss
 
 global KernelStack
-KernelStack: RESB 2048		; 2-kb pre-boot stack
+KernelStack: RESB 8192	; 2-kb pre-boot stack
 
 global admMultibootTable
 global admMultibootTableStart

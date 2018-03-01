@@ -107,7 +107,7 @@ Symbol *ElfAnalyzer::querySymbol(char *requiredSymbolName,
 		relevantSymbol = symbolRecord->entryTable + chainIndex;
 
 		if(strcmp(requiredSymbolName, symbolRecord->nameTable +
-				relevantSymbol->Name))
+				relevantSymbol->name))
 			return (relevantSymbol);
 		else
 			chainIndex = *chainEntry;

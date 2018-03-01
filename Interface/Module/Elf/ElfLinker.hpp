@@ -38,7 +38,6 @@ namespace Elf
 class ElfLinker final
 {
 public:
-	void getThis();
 	static void resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService);
 	static void resolveRelocation(RelaEntry *relocEntry, ElfManager &handlerService);
 	static void resolveRelocations(RelTable &relocTable, ElfManager &handlerService);

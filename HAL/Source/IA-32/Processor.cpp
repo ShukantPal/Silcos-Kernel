@@ -100,7 +100,7 @@ void LocalIRQ::init(unsigned long id)
 
 LocalIRQ::LocalIRQ() : IRQ()
 {
-	// ToDo: mask this interrupt
+
 }
 
 ///
@@ -233,7 +233,6 @@ decl_c PROCESSOR_SETUP_INFO *ConstructTrampoline()
 
 extern "C" void DestructTrampoline(PROCESSOR_SETUP_INFO *trampoline)
 {
-	// TODO: FREE_TRAMPOLINE()
 }
 
 decl_c void ConstructProcessor(Processor *proc)
@@ -264,16 +263,12 @@ decl_c void AddProcessorInfo(MADTEntryLAPIC *PE)
 	
 	if(apicID != BSP_ID)
 	{
-		// ToDo: Use huge pages instead of 4-K mappings (per-cpu struct)
-
-		EnsureUsability((ADDRESS) cpu, NULL, FLG_NOCACHE, KernelData);
-		EnsureUsability((ADDRESS) cpu + 4096, NULL, FLG_NOCACHE,
-				KernelData);
+		Pager::use((ADDRESS) cpu, FLG_NOCACHE, KernelData);
+		Pager::use((ADDRESS) cpu + 4096, FLG_NOCACHE, KernelData);
 
 		unsigned long irt = (unsigned long) GetIRQTableById(PE->apicID);
-		EnsureUsability((ADDRESS) irt, NULL, FLG_NOCACHE, KernelData);
-		EnsureUsability((ADDRESS) irt + 4096, NULL, FLG_NOCACHE,
-				KernelData);
+		Pager::use((ADDRESS) irt, FLG_NOCACHE, KernelData);
+		Pager::use((ADDRESS) irt + 4096, FLG_NOCACHE, KernelData);
 
 		LocalIRQ::init(PE->apicID);
 
@@ -329,12 +324,12 @@ decl_c void SetupBSP()
 	::__cpuid(0xB, 2, &ot.output[0]);
 
 	Processor *cpu = GetProcessorById(PROCESSOR_ID);
-	EnsureUsability((ADDRESS) cpu, NULL, KF_NOINTR | FLG_NOCACHE,
+	Pager::use((ADDRESS) cpu, KF_NOINTR | FLG_NOCACHE,
 			KernelData | PageCacheDisable);
 
 	unsigned long irt = (unsigned long) GetIRQTableById(PROCESSOR_ID);
-	EnsureUsability((ADDRESS) irt, NULL, FLG_NOCACHE, KernelData);
-	EnsureUsability((ADDRESS) irt + 4096, NULL, FLG_NOCACHE, KernelData);
+	Pager::use((ADDRESS) irt, FLG_NOCACHE, KernelData);
+	Pager::use((ADDRESS) irt + 4096, FLG_NOCACHE, KernelData);
 	LocalIRQ::init(PROCESSOR_ID);
 
 	memset(cpu, 0, sizeof(Processor));
@@ -358,7 +353,7 @@ decl_c void SetupBSP()
 	else
 	{
 		halLoadAddr = halRecord->BaseAddr;
-		MMFRAME* halframe = GetFrames(halLoadAddr, 1, null);
+		MMFRAME* halframe = GetFrames(halLoadAddr, 1, KERNEL_CONTEXT);
 		halLoadPAddr = FRADDRESS(halframe);
 	}
 

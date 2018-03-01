@@ -24,8 +24,6 @@
 #include <Utils/LinkedList.h>
 #include <Utils/ArrayList.hpp>
 
-const char *f = "HELLOW ";
-
 #define defaultInitialArrayListSize 8
 
 /* @constructor
@@ -38,7 +36,6 @@ const char *f = "HELLOW ";
  */
 ArrayList::ArrayList()
 {
-	Dbg(f);
 	this->capacity = defaultInitialArrayListSize * sizeof(void*);
 	this->changeCount = 0;
 	this->size = 0;

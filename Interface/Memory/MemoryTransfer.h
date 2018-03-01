@@ -22,7 +22,7 @@
 #include "Pager.h"
 #include "KFrameManager.h"
 
-MMFRAME *GetFrames(ADDRESS address, ADDRESS pages, CONTEXT *pageContext);
-void SetFrames(ADDRESS address, MMFRAME *frameHead, CONTEXT *pageContext);
+decl_c MMFRAME *GetFrames(ADDRESS address, ADDRESS pages, CONTEXT *pageContext);
+decl_c void SetFrames(ADDRESS address, MMFRAME *frameHead, CONTEXT *pageContext);
 
 #endif
