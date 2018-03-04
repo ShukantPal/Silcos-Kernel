@@ -1,6 +1,6 @@
 ///
 /// @file HPET.cpp
-/// @module HAL (kernel.silcos.hal)
+/// @module HAL
 ///
 /// THIS FILE IS THE "WORKING" FILE. NOTHING HERE IS FINALIZED. HERE
 /// DEBUGGING OF EXISTING KERNEL FEATURES WAS GOING ON.
@@ -58,16 +58,15 @@ decl_c void do_action(Executable::IRQHandler *h)
 
 decl_c void testhpet()
 {
-	DbgLine("test-hpet !!!!"); DbgInt(sizeof(ArrayList));
+	DbgLine("test-hpet !!!!");
 
 	pit = new PIT();
 
 	// try setting up io/apic
 
 	IOAPIC *e = IOAPIC::getIterable();
-	if(e && 0)// tm_->routingMap(0))
+	if(e)// tm_->routingMap(0))
 	{
-
 		IOAPIC::RedirectionEntry f = e->getRedirEnt(
 					2//HighestBitSet(tm_->routingMap(0))
 			);

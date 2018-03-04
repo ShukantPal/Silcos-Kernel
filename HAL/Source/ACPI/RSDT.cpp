@@ -130,7 +130,7 @@ void *SearchACPITableByName(const char *tblSign, SDTHeader *stdTable)
 	{
 		thisTable = (SDTHeader*) loadedTables->stdTableAddr[tableIdx];
 		if(memcmp(thisTable, tblSign, 4))
-			return (void*) thisTable;
+			return ((void*) thisTable);
 		++(tableIdx);
 	}
 

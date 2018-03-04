@@ -156,7 +156,7 @@ private:
 	public:
 		static inline U32 read(unsigned long roff)
 		{
-			return *(U32 volatile*) (VAPICBase + roff);
+			return (*(U32 volatile*)(VAPICBase + roff));
 		}
 
 		static inline void write(unsigned long roff, U32 val)

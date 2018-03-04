@@ -24,8 +24,6 @@
 
 namespace Module
 {
-namespace Elf
-{
 
 ///
 /// Provides utility functions to resolve relocations and link various elf
@@ -38,16 +36,17 @@ namespace Elf
 class ElfLinker final
 {
 public:
-	static void resolveRelocation(RelEntry *relocEntry, ElfManager &handlerService);
-	static void resolveRelocation(RelaEntry *relocEntry, ElfManager &handlerService);
-	static void resolveRelocations(RelTable &relocTable, ElfManager &handlerService);
-	static void resolveRelocations(RelaTable &relaTable, ElfManager &handlerService);
+	static void resolveRelocation(Elf::RelEntry *relocEntry,
+			Elf::ElfManager &handlerService);
+	static void resolveRelocation(Elf::RelaEntry *relocEntry, Elf::ElfManager &handlerService);
+	static void resolveRelocations(Elf::RelTable &relocTable, Elf::ElfManager &handlerService);
+	static void resolveRelocations(Elf::RelaTable &relaTable, Elf::ElfManager &handlerService);
 
-	static inline void resolveRelocations(RelocationTable &relocTable,
-			ElfManager &handlerService)
+	static inline void resolveRelocations(Elf::RelocationTable &relocTable,
+			Elf::ElfManager &handlerService)
 	{
-		if(relocTable.relocType == DT_REL)
-			ElfLinker::resolveRelocations((RelTable&) relocTable, handlerService);
+		if(relocTable.relocType == Elf::DT_REL)
+			ElfLinker::resolveRelocations((Elf::RelTable&) relocTable, handlerService);
 		else
 		{
 			DbgLine(" Big error - rela not supported");
@@ -55,16 +54,16 @@ public:
 		}
 	}
 
-	static inline void resolveLinkage(ElfManager &modService)
+	static inline void resolveLinkage(Elf::ElfManager &modService)
 	{
-		ElfLinker::resolveRelocations(modService.relTable, modService);
-		ElfLinker::resolveRelocations(modService.pltRelocTable, modService);
+		ElfLinker::resolveRelocations(modService.rel(), modService);
+		ElfLinker::resolveRelocations(*modService.getPltRelocations(),
+				modService);
 	}
 private:
 	ElfLinker();
 };
 
-}// namespace Elf
 }// namespace Module
 
 #endif/* Module/Elf/ElfLinker.hpp */

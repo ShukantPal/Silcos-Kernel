@@ -27,7 +27,7 @@ export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType)
 
 	while((U32) curTag < tagLimit){
 		if(curTag->Type == tagType){
-			return (void*) (curTag);
+			return ((void*)(curTag));
 		}
 
 		tagOffset = curTag->Size;

@@ -74,10 +74,11 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 			*field += declarer->value + declBase;
 			break;
 		case R_386_PC32:
-			*field += declarer->value + declBase - (unsigned long) field;
+			*field += declarer->value + declBase -
+			(unsigned long) field;
 			break;
 		default:
-			DbgLine("Error 40A: TODO:: Build code (elf-linkage-reloc-switch");
+			DbgLine("Error 40A: TODO:: Build code (elf-linkage-rel oc-switch");
 			while(TRUE){ asm volatile("nop"); }
 			break;
 		}

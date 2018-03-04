@@ -21,6 +21,8 @@
 
 using namespace Executable::Timer;
 
+PIT systemPIT;
+
 bool PIT::intrAction()
 {
 	bool servReq = status(0).outputState;

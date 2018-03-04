@@ -56,7 +56,7 @@ decl_c MMFRAME *GetFrames(ADDRESS Address, ADDRESS Pages, CONTEXT *pageContext)
 		}
 	}
 
-	return (MMFRAME *) (frameStack.Head);
+	return ((MMFRAME *)(frameStack.Head));
 }
 
 /**

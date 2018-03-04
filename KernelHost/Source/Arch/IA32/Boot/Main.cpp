@@ -55,7 +55,6 @@
 using namespace HAL;
 using namespace Executable;
 
-extern void SetupTick();
 import_asm void BSPGrantPermit();
 
 const char *cpuIdNotSupportedError = "Error: 0xAAAE1: Platform does not support CPUID.";/* CPUID test returns zero value, indicating failure */

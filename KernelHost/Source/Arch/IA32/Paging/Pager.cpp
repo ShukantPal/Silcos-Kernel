@@ -336,22 +336,5 @@ void Pager::mapAll(VirtAddr vaddr, PhysAddr paddr,
 	}
 }
 
-/*
- * Checks whether the given address can be used without causing a
- * page-fault.
- *
- * @param addr - virt-addr to check
- * @param cxt - context being used
- * @author Shukant Pal
- */
-decl_c bool CheckUsability(ADDRESS addr, CONTEXT *cxt)
-{
-	U64 *pgTbl = PageExplorer::getPageTable(addr/GB(1), FLG_NONE);
-	if(pgTbl)
-		return (pgTbl[(addr % MB(2)) / KB(4)] & 1);
-	else
-		return (FALSE);
-}
-
 decl_c void EraseIdentityPage(){ FlushTLB(0); }
 

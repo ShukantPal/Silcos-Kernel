@@ -28,38 +28,32 @@ namespace Module
 
 struct DynamicLink;
 class ModuleLoader;
+class ElfLinker;
 
 namespace Elf
 {
 
-/**
- * Class: ElfManager
- *
- * Summary:
- * This class is used for loading elf-binaries into kernel space. It will load
- * program segments into memory during initialization.
- *
- * After initialization, this object is of little use, other than exporting its
- * dynamic linking information (see getDynamicLink()). Unless specified by the
- * module by the moduleInfo struct, this object will be destroyed by the dynamic
- * loader. It can be used for getting internal information by the module, and
- * is not for any linking purpose. Infact, ElfAnalyzer provides the back-end
- * services for it and ElfLinker support allows linkage with the kernel.
- *
- * On destruction, the file for the module is also freed.
- *
- * NOTE:
- * All operations are done w.r.t program segment (except a few)
- *
- * Important Functions:
- * getSymbol - Used for getting a dynamic symbol by its name or type
- * getStaticSymbol - Used for getting a symbol from the symtab section
- * getDynamicEntry - Used for getting entry into the dynamic table by tag
- *
- * Version: 1.1
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
- */
+///
+/// This class is used for loading elf-binaries into kernel space. It will load
+/// program segments into memory during initialization.
+///
+/// After initialization, this object is of little use, other than exporting its
+/// dynamic linking information (see getDynamicLink()). Unless specified by the
+/// module by the moduleInfo struct, this object will be destroyed by the dynamic
+/// loader. It can be used for getting internal information by the module, and
+/// is not for any linking purpose. Infact, ElfAnalyzer provides the back-end
+/// services for it and ElfLinker support allows linkage with the kernel.
+///
+/// On destruction, the file for the module is also freed.
+///
+/// NOTE:
+/// All operations are done w.r.t program segment (except a few)
+///
+/// @version 1.0
+/// @since Circuit 2.03
+/// @author ShukantPal
+/// @see Module
+///
 class ElfManager
 {
 public:
@@ -75,6 +69,8 @@ public:
 							&dynamicHash));
 	}
 	inline SymbolTable *getStaticSymbolTable(){ return (staticSymbols); }
+	inline RelTable &rel(){ return (relTable); }
+	inline RelocationTable *getPltRelocations(){ return (&pltRelocTable); }
 
 	Symbol *getStaticSymbol(const char *symName);
 	Symbol *getStaticSymbol(unsigned long symIdx);
@@ -134,7 +130,7 @@ private:
 	static unsigned long getLimitAddress(class ElfManager *mgr);
 
 	friend class ElfAnalyzer;
-	friend class ElfLinker;
+	friend class ::Module::ElfLinker;
 	friend class Module::ModuleLoader;
 };
 

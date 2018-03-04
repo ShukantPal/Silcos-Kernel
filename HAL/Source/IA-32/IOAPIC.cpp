@@ -16,6 +16,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #include <HardwareAbstraction/IOAPIC.hpp>
 #include <Memory/KMemoryManager.h>
 #include <Memory/KObjectManager.h>
@@ -107,8 +108,6 @@ void IOAPIC::setRedirEnt(unsigned char inputSignal,
 		write(IOREDTBL(inputSignal), *(unsigned int*) ent);
 		write(IOREDTBL(inputSignal) + 1, *((unsigned int*) ent + 1));
 	}
-	else
-		DbgLine("EXC");
 }
 
 ///
@@ -132,6 +131,6 @@ void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)
 	}
 	else
 	{
-		//systemIOAPICs.set(ioa, ioaEnt->apicID);
+		systemIOAPICs.set(ioa, ioaEnt->apicID);
 	}
 }
