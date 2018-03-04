@@ -20,9 +20,9 @@ This is the constructor for the IOAPIC driver which initializes internal variabl
 
 `unsigned long intrBase` - This is the global system interrupt base for this I/O APIC. The first interrupt routed to this I/O APIC will be at this offset in the `IOAPIC::systemIOAPICInputs` array-list.
 
-# IOAPIC::registerIOAPIC()
+## IOAPIC::registerIOAPIC()
 
-**Prototype:** `void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)
+**Prototype:** `void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)`
 
 **Description:**
 
