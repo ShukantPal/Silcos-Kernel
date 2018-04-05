@@ -1,34 +1,36 @@
-/* @file HPET.h
- *
- * Provides an interface to use the HPET as a wall-timer for the system. The
- * HPET can provide upto 32 comparators and send interrupts at required
- * intervals.
- * -------------------------------------------------------------------
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
- * Copyright (C) 2017 - Shukant Pal
- */
+///
+/// @file HPET.h
+///
+/// Provides an interface to use the HPET as a wall-timer for the system. The
+/// HPET can provide upto 32 comparators and send interrupts at required
+/// intervals.
+/// -------------------------------------------------------------------
+/// This program is free software: you can redistribute it and/or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
+///
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>
+///
+/// Copyright (C) 2017 - Shukant Pal
+///
 
 #ifndef EXEMGR_TIMER_HPET_H__
 #define EXEMGR_TIMER_HPET_H__
 
 #include <Atomic.hpp>
 #include "WallTimer.hpp"
+#include "../IRQHandler.hpp"
 #include <Memory/KMemorySpace.h>
 #include <Synch/Spinlock.h>
 #include <TYPE.h>
-#include "../../Utils/AVLTree.hpp"
+#include <Utils/AVLTree.hpp>
 
 namespace Executable
 {
@@ -48,16 +50,14 @@ namespace Timer
  * @author Shukant Pal
  * @see IA-PC HPET Specifications 1.0A
  */
-class HPET : public LinkedListNode, public Lockable
+class HPET : public IRQHandler, public LinkedListNode, public Lockable
 {
 public:
 	HPET(PhysAddr eventBlock);
 	~HPET();
 
 	void clearIntrStatus(unsigned char n)
-	{
-		Atomic::oR((unsigned int*) intSts, (1 << n));
-	}
+	{ Atomic::oR((unsigned int*) intSts, (1 << n)); }
 
 	unsigned long mainCounter(){ return ((unsigned long)(ctr->value)); }
 
@@ -90,19 +90,19 @@ public:
 	bool disable();
 	bool enable();
 	bool enableLegacyRouting();
+	bool intrAction();
 	void setMainCounter(unsigned long val);
 private:
 	PhysAddr eventBlock;
 	unsigned long regBase;
 
-	/* @struct HPET::CapabilityAndID
-	 *
-	 * Read-only register which provides general info on the hardware
-	 * capabilities of the HPET and its vendor ID. It is located at
-	 * offset 0x00 in the event block.
-	 *
-	 * @author Shukant Pal
-	 */
+	///
+	/// Read-only register which provides general info on the hardware
+	/// capabilities of the HPET and its vendor ID. It is located at
+	/// offset 0x00 in the event block.
+	///
+	/// @author Shukant Pal
+	///
 	struct CapabilityAndID
 	{
 		U64 revisionID		: 8;//< which revision is implemented
@@ -114,13 +114,12 @@ private:
 		U64 clockPeriod		: 32;//<main-counter tick period
 	};
 
-	/* @struct HPET::Configuration
-	 *
-	 * Read-write register to configure the whole HPET event
-	 * block. It is located at offset 0x10 in the event block.
-	 *
-	 * @author Shukant Pal
-	 */
+	///
+	/// Read-write register to configure the whole HPET event
+	/// block. It is located at offset 0x10 in the event block.
+	///
+	/// @author Shukant Pal
+	///
 	struct Configuration
 	{
 		U64 overallEnable	: 1;//< enables main-counter & timers

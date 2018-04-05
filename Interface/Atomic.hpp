@@ -19,6 +19,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #ifndef __ATOMIC_HPP__
 #define __ATOMIC_HPP__
 

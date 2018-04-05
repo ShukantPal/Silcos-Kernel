@@ -24,24 +24,6 @@ using namespace Memory;
 using namespace Memory::Internal;
 
 ///
-/// This ctor should not be used to initialize buddy-allocators. If done so,
-/// subsequent usage of the allocator will cause page-faults and other sorts
-/// of exceptions. It has been added for completeness and so that allocator
-/// objects can be declared in global namespace.
-///
-///
-BuddyAllocator::BuddyAllocator()
-{
-	this->entrySize = 0;
-	this->entryTable = NULL;
-	this->highestOrder = 0;
-	this->listInfo = NULL;
-	this->blockLists = NULL;
-	this->freeBuddies =
-			this->allocatedBuddies = 0;
-}
-
-///
 /// Initializes the buddy-allocator with the given arguments. This doesn't
 /// render the allocator as usable, though, as all blocks have to be freed
 /// after this to allow them to be allocated afterwards.

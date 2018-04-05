@@ -43,6 +43,7 @@
 #include <Memory/KMemorySpace.h>
 #include <Memory/KObjectManager.h>
 #include <Module/ModuleLoader.h>
+#include <Module/SymbolLookup.hpp>
 #include <Module/MSI.h>
 #include <Synch/Spinlock.h>
 #include <Debugging.h>
@@ -65,8 +66,7 @@ void ImmatureHang(const char *dbgString){
 }
 
 extern "C" void ArchMain(); // hal -> Startup.cpp (ia32)
-
-char * dk = "    ";
+extern "C" void InitAllObjects(); // kernhost -> IA32/Boot/InitRuntime.asm
 
 ///
 /// This is the logical entry point of the silcos kernel. The KernelHost
@@ -96,6 +96,8 @@ export_asm void Main(U32 multibootTable, U32 magicNo)
 	SetupKMemoryManager();
 	obSetupAllocator();
 	SetupPrimitiveObjects();
+	__initHeap();
+	InitAllObjects();
 
 	MdSetupLoader();
 	KernelElf::loadBootModules();

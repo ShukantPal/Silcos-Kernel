@@ -19,6 +19,8 @@
 
 #include <Executable/Timer/PIT.hpp>
 
+#include <Module/Elf/ABI/Implementor.h>
+
 using namespace Executable::Timer;
 
 PIT systemPIT;

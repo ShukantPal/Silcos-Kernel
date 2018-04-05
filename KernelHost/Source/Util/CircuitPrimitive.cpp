@@ -99,11 +99,10 @@ bool strcmp(const char *s1, const char *s2)
 			return (false);
 		}
 		else if(*s1 == '\0')
-			break;
+			return (true);
 		++s1;
 		++s2;
 	}
-	return (true);
 }
 
 bool strcmpn(const char *str0, const char *str1, const long n)
@@ -126,4 +125,28 @@ bool strcmpn(const char *str0, const char *str1, const long n)
 	}
 
 	return (true);
+}
+
+///
+/// Copies all the characters in the string-buffer `str0` to the buffer
+/// located at `str1` till the null-terminating character arrives.
+///
+/// @param str0[in] - source string-buffer, only read
+/// @param str1[out] - destination buffer, written only
+/// @version 1.0
+/// @author Shukant Pal
+///
+void strcpy(const char *str0, char *str1)
+{
+	if(*str0)
+	{
+		while(*str0)
+		{
+			*str1 = *str0;
+			++(str1);
+			++(str0);
+		}
+
+		*str1 = '\0';// null-terminator
+	}
 }

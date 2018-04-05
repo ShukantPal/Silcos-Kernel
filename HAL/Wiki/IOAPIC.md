@@ -28,15 +28,15 @@ This is the constructor for the IOAPIC driver which initializes internal variabl
 
 Adds the IOAPIC into the set of recognized interrupt-controllers and initializes it. It is added to the `systemIOAPICs` array-list in the process.
 
-The interrupt-inputs of this IOAPIC will also be assigned to each processor serially. Once all processors have been assigned interrupt-inputs from IOAPICs then the next vector is used and so one. For example, if there are two CPUs and one IOAPIC with 24 inputs then the mappings will be done as follows
+The interrupt-inputs of this IOAPIC will also be assigned to each processor serially. Once all processors have been assigned interrupt-inputs from IOAPICs then the next vector is used and so one. For example, if there are three CPUs and one IOAPIC with 24 inputs then the mappings will be done as follows
 
     CPU                  Input               Vector
     0                    0                   32
     1                    1                   32
-    0                    2                   33
-    1                    3                   33
-    0                    4                   34
-    1                    5                   34
+    2                    2                   32
+    0                    3                   33
+    1                    4                   33
+    2                    5                   33
 
 and so on.
 

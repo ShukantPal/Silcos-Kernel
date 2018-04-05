@@ -18,7 +18,9 @@
 /// Copyright (C) 2017 - Shukant Pal
 ///
 
+#include <Module/ModuleContainer.hpp>
 #include <Module/ModuleRecord.h>
+#include <Module/SymbolLookup.hpp>
 #include <Module/Elf/ElfLinker.hpp>
 
 using namespace Module;
@@ -46,15 +48,17 @@ extern "C" void *__deregister_frame_info(void*){ return (null); }
 /// @author Shukant Pal
 ///
 void ElfLinker::resolveRelocation(RelEntry *relocEntry,
-					ElfManager &handlerService)
+		ElfManager &handlerService, ModuleContainer *objToRelocate)
 {
 	unsigned long *field = (unsigned long*)(handlerService.baseAddress +
 							relocEntry->offset);
 	unsigned long sindex = ELF32_R_SYM(relocEntry->info);
-	Symbol *symbolReferred = handlerService.dynamicSymbols.entryTable + sindex;
-	char *signature = handlerService.dynamicSymbols.nameTable + symbolReferred->name;
-	unsigned long declBase;
-	Symbol *declarer = RecordManager::querySymbol(signature, declBase);
+	Symbol *symbolReferred = handlerService.dynamicSymbols.entryTable +
+			sindex;
+	char *signature = handlerService.dynamicSymbols.nameTable +
+			symbolReferred->name;
+	unsigned long value = objToRelocate->ptpResolvableLinks->lookup(signature,
+			objToRelocate);
 
 	if(*signature == '\0' && ELF32_R_TYPE(relocEntry->info) == R_386_RELATIVE)
 	{
@@ -62,20 +66,19 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 		return;
 	}
 
-	if(declarer != NULL)
+	if(value != 0)
 	{
 		switch(ELF32_R_TYPE(relocEntry->info))
 		{
 		case R_386_JMP_SLOT:
 		case R_386_GLOB_DAT:
-			*field = declarer->value + declBase;
+			*field = value;
 			break;
 		case R_386_32:
-			*field += declarer->value + declBase;
+			*field += value;
 			break;
 		case R_386_PC32:
-			*field += declarer->value + declBase -
-			(unsigned long) field;
+			*field += value - (unsigned long) field;
 			break;
 		default:
 			DbgLine("Error 40A: TODO:: Build code (elf-linkage-rel oc-switch");
@@ -105,7 +108,8 @@ void ElfLinker::resolveRelocation(RelEntry *relocEntry,
 /// @since Silcos 2.05
 /// @author Shukant Pal
 ///
-void ElfLinker::resolveRelocations(RelTable &relocTable, ElfManager &handlerService)
+void ElfLinker::resolveRelocations(RelTable &relocTable,
+		ElfManager &handlerService, ModuleContainer *objToRelocate)
 {
 	unsigned long relIndex = 0;
 	unsigned long relCount = relocTable.entryCount;
@@ -113,7 +117,8 @@ void ElfLinker::resolveRelocations(RelTable &relocTable, ElfManager &handlerServ
 
 	while(relIndex < relCount)
 	{
-		ElfLinker::resolveRelocation(relDesc, handlerService);
+		ElfLinker::resolveRelocation(relDesc, handlerService,
+				objToRelocate);
 
 		++(relIndex);
 		++(relDesc);

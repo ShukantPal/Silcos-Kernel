@@ -8,7 +8,7 @@
 U32 tagTableSize;
 MULTIBOOT_TAG *tagTable;
 
-export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType)
+export_asm void *SearchMultibootTagFrom(Void *lastTag, U32 tagType)
 {
 	MULTIBOOT_TAG *curTag;
 	U32 tagOffset;
@@ -53,7 +53,6 @@ export_asm void LoadMultibootTags(U32 pTagAddress)
 {
 	InitConsole((unsigned char *) 0xc00b8000);
 	Pager::switchSpace(KERNEL_CONTEXT);
-
 	Pager::map(MULTIBOOT_INTERFACE, (PhysAddr) pTagAddress, 0, KernelData);
 
 	tagTable = (MULTIBOOT_TAG*)(MULTIBOOT_INTERFACE +

@@ -16,6 +16,7 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #ifndef HAL_IOAPIC_HPP__
 #define HAL_IOAPIC_HPP__
 
@@ -29,6 +30,7 @@
 
 namespace HAL
 {
+
 ///
 /// @class IOAPIC
 ///
@@ -82,11 +84,14 @@ public:
 	unsigned char version(){ return (hardwareVersion); }
 	unsigned char redirectionEntries(){ return (redirEntries); }
 	unsigned char arbitrationId(){ return (arbId); }
+	unsigned long intrBase(){ return (globalSystemInterruptBase); }
+	unsigned long intrCount(){ return (redirEntries); }
 
 	RedirectionEntry getRedirEnt(unsigned char inputSignal);
 	void setRedirEnt(unsigned char inputSignal, RedirectionEntry *data);
 
 	static void registerIOAPIC(MADTEntryIOAPIC *ioaEnt);
+	static void mapAllRoutesUniformly();
 
 	static IOAPIC *getIterable()
 	{
@@ -99,6 +104,7 @@ private:
 	unsigned char arbId;
 	unsigned long physRegs;
 	unsigned long virtAddr;
+	unsigned long globalSystemInterruptBase;
 
 	inline U32 read()
 	{
@@ -129,6 +135,7 @@ private:
 
 	static ArrayList systemIOAPICInputs;
 	static ArrayList systemIOAPICs;
+	static unsigned long routesUnderReset;
 	friend class IRQ;
 
 	IOAPIC(unsigned long physicalBase, unsigned long intrBase);

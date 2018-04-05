@@ -25,6 +25,7 @@
 #include <Memory/KMemoryManager.h>
 #include <Memory/KObjectManager.h>
 #include <Module/ModuleLoader.h>
+#include <Module/SymbolLookup.hpp>
 #include <Module/Elf/ABI/icxxabi.h>
 #include <Module/Elf/ELF.h>
 #include <Module/Elf/ElfManager.hpp>
@@ -36,9 +37,6 @@ using namespace Module;
 using namespace Module::Elf;
 
 extern "C" void elf_dbg() { Dbg("ELF PROGRAME CALLS MK");}
-char elf_data;
-
-ObjectInfo *tKMOD_RECORD;
 
 char nmElfManager[] = "Module::Elf::ElfManager";
 char nmDynamicLink[] = "Module::DynamicLink";
@@ -90,57 +88,59 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 }
 
 ///
-/// Exports the dynamic-link record of the given "loaded" blob and notes
-/// any initialization/finalization functions presents. Here, the __init()
-/// or any other initialization function is called.
+/// Exports all dynamic-linking information gathered from the elf-abi
+/// handling objects, notes down init, main, fini functors, and then exports
+/// all symbolic definitions to the ptp pool.
 ///
 /// @param moduleMemory
 /// @param kmRecord
 /// @param blob
 /// @return - the ABI of the given module
 ///
-ABI ModuleLoader::globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob)
+ABI ModuleLoader::globalizeDynamic(void *moduleMemory, BlobRegister &blob)
 {
 	if(!ElfAnalyzer::validateBinary(moduleMemory))
 		return (ABI::INVALID);
 
-	ElfManager *moduleHandler = new(tElfManager) ElfManager((ElfHeader*) moduleMemory);
-	DynamicLink *linkHandle = moduleHandler->exportDynamicLink();
+	ElfManager *obfHdlr = new(tElfManager) ElfManager((ElfHeader*)
+			moduleMemory);
+	DynamicLink *linkHandle = obfHdlr->exportDynamicLink();
+	ModuleContainer *mc = blob.fileBox;
 
-	kmRecord.linkerInfo = linkHandle;
-	kmRecord.BaseAddr = moduleHandler->baseAddress;
+	mc->setLinker(linkHandle);
+	mc->setBase(obfHdlr->baseAddress);
 
-	if(moduleHandler->binaryHeader->entryAddress)
+	if(obfHdlr->binaryHeader->entryAddress)
 	{
-		kmRecord.entryAddr = kmRecord.BaseAddr +
-				moduleHandler->binaryHeader->entryAddress;
+		mc->kMain = reinterpret_cast<void (*)()>(mc->getBase() +
+				obfHdlr->binaryHeader->entryAddress);
 	}
 
-	DynamicEntry* dynamicIniter = moduleHandler->getDynamicEntry(DT_INIT);
+	DynamicEntry* dynamicIniter = obfHdlr->getDynamicEntry(DT_INIT);
 	if(dynamicIniter)
 	{
-	//	Dbg(" dyn -ioni");
-		kmRecord.init = (void (*)())(kmRecord.BaseAddr +
+		mc->initFunctor = reinterpret_cast<void (*)()>(mc->getBase() +
 				dynamicIniter->ptr);
 	}
 	else
 	{
-		Symbol *__initer = moduleHandler->getStaticSymbol("__init");
+		Symbol *__initer = obfHdlr->getStaticSymbol("__init");
 		if(__initer)
 		{
-			kmRecord.init = (void (*)())(kmRecord.BaseAddr +
-					__initer->value);
+			mc->initFunctor = reinterpret_cast<void (*)()>(
+					mc->getBase() + __initer->value);
 		}
 	}
 
-	DynamicEntry* dynamicFinier = moduleHandler->getDynamicEntry(DT_FINI);
+	DynamicEntry* dynamicFinier = obfHdlr->getDynamicEntry(DT_FINI);
 	if(dynamicFinier)
 	{
-		kmRecord.fini = (void (*)())(kmRecord.BaseAddr +
+		mc->initFunctor = reinterpret_cast<void (*)()>(mc->getBase() +
 				dynamicFinier->ptr);
 	}
 
-	blob.manager = moduleHandler;
+	blob.manager = obfHdlr;
+	mc->ptpResolvableLinks->addAll(linkHandle->dynamicSymbols, mc);
 
 	return (ABI::ELF);
 }
@@ -159,7 +159,7 @@ void ModuleLoader::linkFile(ABI binaryIfc, BlobRegister& blob)
 	{
 	case ABI::ELF:
 		manager = (ElfManager*) blob.manager;
-		ElfLinker::resolveLinkage(*manager);
+		ElfLinker::resolveLinkage(*manager, blob.fileBox);
 		manager->~ElfManager();
 		kobj_free((kobj*) manager, tElfManager);
 		break;
@@ -193,11 +193,7 @@ void ModuleLoader::loadFile(BlobRegister &blob)
 {
 	Void *modMemory = ModuleLoader::moveFileIntoMemory(blob);
 
-	blob.regForm->linkerInfo = NULL;
-	RecordManager::registerRecord(blob.regForm);
-
-	blob.abiFound = ModuleLoader::globalizeDynamic(modMemory,
-			*blob.regForm, blob);
+	blob.abiFound = ModuleLoader::globalizeDynamic(modMemory, blob);
 
 	ModuleLoader::linkFile(blob.abiFound, blob);
 }
@@ -222,12 +218,8 @@ void ModuleLoader::loadBundle(LinkedList &blobList)
 		blob->fileAddr = (unsigned long)
 				ModuleLoader::moveFileIntoMemory(*blob);
 
-		blob->regForm->linkerInfo = NULL;
-
-		RecordManager::registerRecord(blob->regForm);
-
 		blob->abiFound = ModuleLoader::globalizeDynamic(
-				(void*) blob->fileAddr, *blob->regForm, *blob);
+				(void*) blob->fileAddr, *blob);
 
 		if(blob->abiFound == ABI::INVALID)
 		{
@@ -253,24 +245,20 @@ void ModuleLoader::init(BlobRegister &bl)
 	switch(bl.abiFound)
 	{
 	case ELF:
-		if(bl.regForm->init)
-			bl.regForm->init();
+		if(bl.fileBox->initFunctor != null)
+			bl.fileBox->initFunctor();
 		break;
 	}
 }
 
-/* @See(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
+/* @see(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
 const char *nmElf_ABI_Exitor_Func_ = "Elf::ABI::ExitorFunc (__cxa)";
 
-/* @See(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
+/* @see(Module/Elf/ABI/icxxabi.h,__cxa_atexit.h,__cxa_finalize.h) */
 ObjectInfo *tElf_ABI_ExitorFunc_;
 
 void MdSetupLoader()
 {
-	tKMOD_RECORD = KiCreateType("Module::KMOD_RECORD",
-			sizeof(KMOD_RECORD), sizeof(unsigned long),
-			NULL, NULL);
-
 	tElfManager = KiCreateType(nmElfManager, sizeof(ElfManager),
 			sizeof(unsigned long), NULL, NULL);
 
@@ -280,4 +268,7 @@ void MdSetupLoader()
 	tElf_ABI_ExitorFunc_ = KiCreateType(nmElf_ABI_Exitor_Func_,
 			sizeof(::Elf::ABI::ExitorFunction),
 			sizeof(long), NULL, NULL);
+
+	globalKernelSymbolTable = new SymbolLookup();
+	defPtpGroup = new SymbolLookup();
 }

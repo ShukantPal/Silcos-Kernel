@@ -75,6 +75,11 @@ struct ObjectInfo
 	CircularList partialList;
 	CircularList fullList;
 	Spinlock lock;
+
+	ObjectInfo() // @suppress("Class members should be properly initialized")
+	{
+
+	}
 };
 
 extern "C" ObjectInfo *KiCreateType(const char *tName, unsigned long tSize,

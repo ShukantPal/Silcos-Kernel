@@ -45,6 +45,7 @@
 #include <Memory/KObjectManager.h>
 #include <Memory/MemoryTransfer.h>
 #include <Module/ModuleRecord.h>
+#include <Module/ModuleContainer.hpp>
 #include <Utils/Memory.h>
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
@@ -343,16 +344,17 @@ decl_c void SetupBSP()
 	APIC::setupEarlyTimer();
 	FlushTLB(0);
 	
-	const ModuleRecord *halRecord =
-			Module::RecordManager::search("kernel.silcos.hal");
-	if(!halRecord)
+	ModuleContainer *halCtr = reinterpret_cast<ModuleContainer*>(
+			Namespace::search("::kernel.silcos.hal", false));
+
+	if(!halCtr)
 	{
 		DbgLine("hal record not found! ");
 		while(TRUE){ asm volatile("hlt"); }
 	}
 	else
 	{
-		halLoadAddr = halRecord->BaseAddr;
+		halLoadAddr = halCtr->getBase();
 		MMFRAME* halframe = GetFrames(halLoadAddr, 1, KERNEL_CONTEXT);
 		halLoadPAddr = FRADDRESS(halframe);
 	}

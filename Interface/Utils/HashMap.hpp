@@ -143,9 +143,8 @@ public:
 		return (capacity * loadFactor / 100);
 	}
 
-	inline unsigned long indexFor(
-			unsigned long hashv
-	){
+	inline unsigned long indexFor(unsigned long hashv)
+	{
 		return (hashv % capacity);
 	}
 

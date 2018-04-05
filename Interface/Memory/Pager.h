@@ -57,6 +57,11 @@ struct MemoryContext
 	PAGE_TRANSALATOR HardwarePage;// arch-specific tables & flags
 	unsigned int UsedBy;// no. of resource-holders using this
 	Spinlock ContextLock;// lock for manipulating this context
+
+	MemoryContext() // @suppress("Class members should be properly initialized")
+	{
+
+	}
 } CONTEXT;
 
 extern MemoryContext kernelPager;//< Primary context for the system. Used for kernel
@@ -86,7 +91,10 @@ public:
 	static void useAll(VirtAddr base, VirtAddr limit,
 			unsigned allocFlags, PageAttributes attr);
 private:
-	Pager();
+	Pager()
+	{
+
+	}
 };
 
 #endif/* Memory/Pager.h */

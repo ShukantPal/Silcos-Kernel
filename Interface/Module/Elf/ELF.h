@@ -447,7 +447,7 @@ struct DynamicEntry
 struct SymbolTable
 {
 	char *nameTable;
-	struct Symbol *entryTable;
+	Symbol *entryTable;
 	unsigned long entryCount;
 };
 
@@ -462,7 +462,7 @@ struct SymbolTable
  */
 struct HashTable
 {
-	struct SectionHeader *hashSectionHdr;/* Section-header, optional (@Deprecated) */
+	SectionHeader *hashSectionHdr;/* Section-header, optional (@Deprecated) */
 	unsigned long bucketEntries;/* No. of bucket entries */
 	unsigned long chainEntries;/* No. of chain entries */
 	unsigned long *bucketTable;/* Pointer to bucket table */

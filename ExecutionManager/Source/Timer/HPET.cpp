@@ -81,3 +81,9 @@ bool HPET::enable()
 	cfg->overallEnable = 1;
 	return (true);
 }
+
+bool HPET::intrAction()
+{
+	DbgLine("ihpet; ");
+	return (true);
+}

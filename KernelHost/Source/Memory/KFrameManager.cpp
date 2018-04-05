@@ -73,7 +73,7 @@ static ZonePreference framePreferences[3];
 
 // This ZoneAllocator is the 'core' allocation engine for the
 // KFrameManager. It may use more allocators in the future.
-static class ZoneAllocator coreEngine;
+static ZoneAllocator coreEngine;
 
 char msgSetupKFrameManager[] = "Setting up KFrameManager...";
 char msgMemoryTooLow[] = "At least 128MB of memory is required to run the kernel.";

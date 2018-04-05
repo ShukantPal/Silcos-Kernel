@@ -70,7 +70,7 @@ class KernelElf
 public:
 	static Module::Elf::DynamicEntry *getDynamicEntry(
 					Module::Elf::DynamicTag tag) kxhide;
-	static Module::ModuleRecord *registerDynamicLink() kxhide;
+	static void registerDynamicLink() kxhide;
 	static void loadBootModules() kxhide;
 };
   

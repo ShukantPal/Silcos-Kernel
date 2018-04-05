@@ -25,6 +25,8 @@
 namespace Module
 {
 
+class ModuleContainer;
+
 ///
 /// Provides utility functions to resolve relocations and link various elf
 /// objects.
@@ -37,16 +39,25 @@ class ElfLinker final
 {
 public:
 	static void resolveRelocation(Elf::RelEntry *relocEntry,
-			Elf::ElfManager &handlerService);
-	static void resolveRelocation(Elf::RelaEntry *relocEntry, Elf::ElfManager &handlerService);
-	static void resolveRelocations(Elf::RelTable &relocTable, Elf::ElfManager &handlerService);
-	static void resolveRelocations(Elf::RelaTable &relaTable, Elf::ElfManager &handlerService);
+			Elf::ElfManager &handlerService,
+			ModuleContainer *objToRelocate);
+	static void resolveRelocation(Elf::RelaEntry *relocEntry,
+			Elf::ElfManager &handlerService,
+			ModuleContainer *objToRelocate);
+	static void resolveRelocations(Elf::RelTable &relocTable,
+			Elf::ElfManager &handlerService,
+			ModuleContainer *objToRelocate);
+	static void resolveRelocations(Elf::RelaTable &relaTable,
+			Elf::ElfManager &handlerService,
+			ModuleContainer *objToRelocate);
 
 	static inline void resolveRelocations(Elf::RelocationTable &relocTable,
-			Elf::ElfManager &handlerService)
+			Elf::ElfManager &handlerService,
+			ModuleContainer *objToRelocate)
 	{
 		if(relocTable.relocType == Elf::DT_REL)
-			ElfLinker::resolveRelocations((Elf::RelTable&) relocTable, handlerService);
+			ElfLinker::resolveRelocations((Elf::RelTable&) relocTable,
+					handlerService, objToRelocate);
 		else
 		{
 			DbgLine(" Big error - rela not supported");
@@ -54,11 +65,13 @@ public:
 		}
 	}
 
-	static inline void resolveLinkage(Elf::ElfManager &modService)
+	static inline void resolveLinkage(Elf::ElfManager &modService,
+			ModuleContainer *objToRelocate)
 	{
-		ElfLinker::resolveRelocations(modService.rel(), modService);
+		ElfLinker::resolveRelocations(modService.rel(), modService,
+				objToRelocate);
 		ElfLinker::resolveRelocations(*modService.getPltRelocations(),
-				modService);
+				modService, objToRelocate);
 	}
 private:
 	ElfLinker();

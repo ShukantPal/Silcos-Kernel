@@ -130,6 +130,8 @@ public:
 		tDomain = KiCreateType("::HAL::Domain", sizeof(Domain),
 				sizeof(long), 0, 0);
 		systemDomain = new(tDomain) Domain();
+		systemDomain->clnLinker.next = (CircularListNode*) systemDomain;
+		systemDomain->clnLinker.last = (CircularListNode*) systemDomain;
 	}
 
 	static void plug();

@@ -29,7 +29,7 @@
 	extern "C" void *KNew(struct ObjectInfo *, unsigned long km_sleep);
 	inline void *operator new(size_t obj_size, struct ObjectInfo *objectType)
 	{
-		return KNew(objectType, 0);
+		return (KNew(objectType, 0));
 	}
 
 	typedef void kobj;

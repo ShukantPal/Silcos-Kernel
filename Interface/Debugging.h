@@ -19,6 +19,12 @@ struct DebugStream
 	char *CurrentBuffer;
 	Void (*Write) (const char *);
 	Void (*WriteLine) (const char *);
+
+	DebugStream() // @suppress("Class members should be properly initialized")
+	{
+		/* See the wiki on EarlyInitRace, to know why not
+		   members are init'ed */
+	}
 };
 
 extern "C"

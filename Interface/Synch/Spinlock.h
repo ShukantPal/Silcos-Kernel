@@ -12,6 +12,8 @@
 #ifndef MDFRWK_EXEMGR_SYNCH_SPIN_LOCK_H__
 #define MDFRWK_EXEMGR_SYNCH_SPIN_LOCK_H__
 
+#include <Atomic.hpp>
+
 typedef volatile unsigned int Spinlock;
 
 extern "C" void SpinLock(volatile Spinlock *);

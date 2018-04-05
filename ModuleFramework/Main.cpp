@@ -37,8 +37,6 @@ extern "C" void stupid()
 
 extern "C" void __init()
 {
-	__initHeap();
-
 	tString = KiCreateType(nmString, sizeof(String), NO_ALIGN, NULL, NULL);
 	tRBTree = KiCreateType(nmRBTree, sizeof(RBTree), NO_ALIGN, NULL, NULL);
 	tRBNode = KiCreateType(nmRBNode, sizeof(RBNode), NO_ALIGN, NULL, NULL);

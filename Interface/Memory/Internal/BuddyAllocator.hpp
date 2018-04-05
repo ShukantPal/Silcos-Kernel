@@ -143,7 +143,9 @@ struct BuddyBlock
 class BuddyAllocator final
 {
 public:
-	BuddyAllocator();
+	BuddyAllocator() // @suppress("Class members should be properly initialized")
+	{}
+
 	BuddyAllocator(unsigned long entrySize, UBYTE *entryTable,
 			unsigned long highestOrder, unsigned short *listInfo,
 			LinkedList *blockLists);

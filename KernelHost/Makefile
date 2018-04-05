@@ -68,7 +68,9 @@ $(COM_UTIL)/Console.o $(COM_UTIL)/Debugger.o $(COM_UTIL)/LinkedList.o \
  $(COM_UTIL)/Stack.o
 
 moduleLoaderObjects = $(COM_MD)/ElfManager.o $(COM_MD)/ElfAnalyzer.o \
-$(COM_MD)/ModuleLoader.o $(COM_MD)/MSI.o $(COM_MD)/ElfLinker.o $(COM_MD)/RecordManager.o
+$(COM_MD)/ModuleContainer.o \
+$(COM_MD)/ModuleLoader.o $(COM_MD)/MSI.o $(COM_MD)/Namespace.o \
+$(COM_MD)/ElfLinker.o $(COM_MD)/SymbolLookup.o
 
 # Header Dependencies
 
@@ -173,14 +175,20 @@ $(COM_MD)/ElfLinker.o: $(IfcModule)/Elf/ElfLinker.hpp $(SRC_MD)/ElfLinker.cpp
 $(COM_MD)/ElfManager.o: $(IfcModule)/Elf/ElfManager.hpp $(SRC_MD)/ElfManager.cpp
 	$(CC) $(CFLAGS) $(SRC_MD)/ElfManager.cpp -o $(COM_MD)/ElfManager.o
 
+$(COM_MD)/ModuleContainer.o: $(IfcModule)/ModuleContainer.hpp $(SRC_MD)/ModuleContainer.cpp
+	$(CC) $(CFLAGS) $(SRC_MD)/ModuleContainer.cpp -o $(COM_MD)/ModuleContainer.o
+
 $(COM_MD)/ModuleLoader.o: $(IfcModule)/ModuleLoader.h $(SRC_MD)/ModuleLoader.cpp
 	$(CC) $(CFLAGS) $(SRC_MD)/ModuleLoader.cpp -o $(COM_MD)/ModuleLoader.o
 
 $(COM_MD)/MSI.o: $(IfcModule)/ModuleLoader.h $(SRC_MD)/MSI.cpp
 	$(CC) $(CFLAGS) $(SRC_MD)/MSI.cpp -o $(COM_MD)/MSI.o
 
-$(COM_MD)/RecordManager.o: $(IfcModule)/ModuleRecord.h $(SRC_MD)/RecordManager.cpp
-	$(CC) $(CFLAGS) $(SRC_MD)/RecordManager.cpp -o $(COM_MD)/RecordManager.o
+$(COM_MD)/Namespace.o: $(IfcModule)/Namespace.hpp $(SRC_MD)/Namespace.cpp
+	$(CC) $(CFLAGS) $(SRC_MD)/Namespace.cpp -o $(COM_MD)/Namespace.o
+
+$(COM_MD)/SymbolLookup.o: $(IfcModule)/SymbolLookup.hpp $(SRC_MD)/SymbolLookup.cpp
+	$(CC) $(CFLAGS) $(SRC_MD)/SymbolLookup.cpp -o $(COM_MD)/SymbolLookup.o
 
 BuildModuleLoader: $(moduleLoaderObjects)
 

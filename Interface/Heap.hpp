@@ -27,10 +27,9 @@
 /// Copyright (C) 2017 - Shukant Pal
 ///
 
-#ifndef __MDFRWK_HEAP_HXX__
-#define __MDFRWK_HEAP_HXX__
+#ifndef KERNHOST_HEAP_HPP__
+#define KERNHOST_HEAP_HPP__
 
-#include <KERNEL.h>
 #include "Utils/Memory.h"
 
 namespace Heap
@@ -62,7 +61,7 @@ struct BlockContainer
 
 }
 
-Void* kmalloc(unsigned int memSize, unsigned int initalUsers = 1);
+void* kmalloc(unsigned int memSize, unsigned int initalUsers = 1);
 bool kfree(Void *memGiven, bool forceDelete = false);
 void* kralloc(void *kmal_mem, unsigned long sasur_ka_size);
 void* krcalloc(void *kmal_mem, unsigned long sasur_ka_size);

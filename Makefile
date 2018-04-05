@@ -35,6 +35,9 @@ export IfcModule = ../Interface/Module
 export IfcUtil = ../Interface/Utils
 
 $(Ifc)/Heap.hpp: $(IfcKern) $(IfcUtil)/Memory.h
+$(IfcModule)/ModuleRecord.h: $(IfcModule)/Elf/ELF.h
+$(IfcModule)/ModuleContainer.hpp: $(IfcModule)/Elf/ELF.h $(IfcModule)/ModuleRecord.h
+$(IfcModule)/SymbolLookup.hpp: $(IfcModule)/ModuleContainer.hpp
 
 #
 # Linux is the developing environment for the Silcos kernel. The $(HOME)

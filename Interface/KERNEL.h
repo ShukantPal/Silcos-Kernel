@@ -1,9 +1,5 @@
 ///
-/// @file __cxa_atexit.h
-///
-/// Provides "minimal" sensible kernel-goodies that almost every source
-/// file will require to properly compile. __asm macros and basic number
-/// manipulators are the main things here.
+/// @file KERNEL.h
 /// -------------------------------------------------------------------
 /// This program is free software: you can redistribute it and/or modify
 /// it under the terms of the GNU General Public License as published by
@@ -20,11 +16,13 @@
 ///
 /// Copyright (C) 2017 - Shukant Pal
 ///
+
 #ifndef __ASM_SOURCE__
 #ifndef KERNEL_H__
 #define KERNEL_H__
 
 #include <Debugging.h>
+#include <Object.hpp>
 #include <TYPE.h>
 #include <Synch/Spinlock.h>
 #include "Utils/Memory.h"
@@ -59,10 +57,9 @@
 	#define __mfence 	asm volatile("mfence");
 	#define __lfence 	asm volatile("lfence");
 	#define __sfence 	asm volatile("sfence");
+	#define __nop		asm volatile("nop");
 	#define __sti 		asm volatile("sti");
-
 	#define no_intr_ret 	asm volatile("sti"); return
-
 #endif
 
 #define __while_true while(true);

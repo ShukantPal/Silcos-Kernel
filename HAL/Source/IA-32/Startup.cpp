@@ -27,6 +27,7 @@
 #include <HardwareAbstraction/Processor.h>
 #include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <KERNEL.h>
+#include <Math.hpp>
 
 using namespace HAL;
 using namespace Executable;
@@ -39,7 +40,7 @@ extern "C" void (*__init_array_end [])() __attribute__((visibility("hidden"), we
 decl_c void ArchMain()
 {
 	size_t ias = __init_array_end - __init_array_start;
-	for(int j=0; j<ias; j++)
+	for(size_t j=0; j<ias; j++)
 		__init_array_start[j]();
 
 	ScanRsdp();

@@ -461,7 +461,8 @@ void HashMap::transferAll(Entry **newTable, unsigned long newSize)
 
 	if(src == newTable)
 	{
-		for(unsigned long slotIndex = 0; slotIndex < oldSize; slotIndex++)
+		for(unsigned long slotIndex = 0; slotIndex < oldSize;
+				slotIndex++)
 		{
 			ent = *slot;
 			while(ent)

@@ -21,6 +21,7 @@
 /// Copyright (C) 2017 - Shukant Pal
 ///
 
+#include <Module/ModuleContainer.hpp>
 #include <Module/ModuleLoader.h>
 #include <Module/ModuleRecord.h>
 #include <Memory/KMemorySpace.h>
@@ -105,7 +106,7 @@ char coreModuleString[] = "Microkernel";
 /// 		utility functions only
 /// @author Shukant Pal
 ///
-ModuleRecord *KernelElf::registerDynamicLink()
+void KernelElf::registerDynamicLink()
 {
 	DynamicEntry *dsmEntry = KernelElf::getDynamicEntry(DT_SYMTAB);
 	DynamicEntry *dsmNamesEntry = KernelElf::getDynamicEntry(DT_STRTAB);
@@ -125,18 +126,10 @@ ModuleRecord *KernelElf::registerDynamicLink()
 		coreLink.symbolHash.chainTable = dsmHashContents + 2 + coreLink.symbolHash.bucketEntries;
 
 		coreLink.dynamicSymbols.entryCount = coreLink.symbolHash.chainEntries;
-
-		ModuleRecord *coreRecord = RecordManager::create(coreModuleString, 1001, 0);
-		coreRecord->BaseAddr = 0;// symbols already contain absolute values
-		coreRecord->linkerInfo = &coreLink;
-
-		RecordManager::registerRecord(coreRecord);
-		return (coreRecord);
 	}
 	else
 	{
 		DbgLine("ERROR: DYNAMIC SYMBOLS NOT FOUND IN MICROKERNEL");
-		return (NULL);
 	}
 }
 
@@ -167,32 +160,30 @@ void KernelElf::loadBootModules()
 	 * in a list containing pointers to all registers.
 	 */
 	BlobRegister *blob;
-	ModuleRecord *bmRecord = NULL;
 
 	// Firstly add the "special" kernel-host elf-manager
 	// but there ain't no blob - cause the bootloader only "loads" the host, not other modules
 	// but again for linking the "false file" we create a blob & link the manager with blob
-	ElfManager kernhost;
+	ElfManager kernhost;// Automatically for the KernelHost (no args passed)
 	BlobRegister kernhblob;
 
-	bmRecord = RecordManager::create("Kernel Host", 3020, ModuleType::KMT_EXC_MODULE);
-	RecordManager::registerRecord(bmRecord);
 	kernhblob.manager = (void*) &kernhost;
+	kernhblob.fileBox = new ModuleContainer("KernelHost", 3050);
 
 	DynamicLink *khlinks = kernhost.exportDynamicLink();
-	bmRecord->linkerInfo = khlinks;
+	kernhblob.fileBox->ptpResolvableLinks->addAll(khlinks->dynamicSymbols,
+			kernhblob.fileBox);
 
 	MultibootTagModule *foundModule = (MultibootTagModule*)
 			SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_MODULE);
 	while(foundModule != NULL)
 	{
-		bmRecord = RecordManager::create(foundModule->CMDLine, 0, ModuleType::KMT_EXC_MODULE);
-
 		blob = new(tBlobRegister) BlobRegister();
 		blob->loadAddr = foundModule->ModuleStart;
 		blob->blobSize = foundModule->ModuleEnd - foundModule->ModuleStart;
 		blob->cmdLine = &foundModule->CMDLine[0];
-		blob->regForm = bmRecord;
+		blob->fileBox = new ModuleContainer(
+				const_cast<char*>(foundModule->CMDLine), 0);
 
 		AddElement((LinkedListNode*) blob, bmRecordList);
 
@@ -208,7 +199,8 @@ void KernelElf::loadBootModules()
 	blob = (BlobRegister*) bmRecordList->head;
 	while(blob != NULL)
 	{
-		ModuleLoader::init(*blob);
+		if(blob->fileBox->initFunctor != null)
+			blob->fileBox->initFunctor();
 		blob = (BlobRegister*) blob->liLinker.next;
 	}
 

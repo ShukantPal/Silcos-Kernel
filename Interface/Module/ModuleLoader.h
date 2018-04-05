@@ -24,6 +24,7 @@
 #ifndef __INTERFACE_MODULE_MODULE_LOADER_H__
 #define __INTERFACE_MODULE_MODULE_LOADER_H__
 
+#include "ModuleContainer.hpp"
 #include "ModuleRecord.h"
 #include <Memory/Pager.h> // For PhysAddr type
 
@@ -56,11 +57,11 @@ struct BlobRegister
 	unsigned long blobSize;//!< Size of the file/blob in main-memory
 	unsigned long fileAddr;//!< Address at which the blob/file was mapped
 	char *cmdLine;//!< Command-line arguments for this module
-	ModuleRecord *regForm;//!< Sort of "registration" form of this module
+	ModuleContainer *fileBox;//!< Binary-object container for this module
 	ABI abiFound;//!< Detected binary-interface for this module. Future
 		     //! kernel may allow multiple binary-interfaces to
 		     //! be inter-linked.
-	Void *manager;//!< Generic pointer to the ABI-manager for the module,
+	void *manager;//!< Generic pointer to the ABI-manager for the module,
 		      //! ElfManager for elf-modules
 };
 
@@ -85,7 +86,7 @@ public:
 	static void init(BlobRegister &blob);
 private:
 	static void *moveFileIntoMemory(BlobRegister &blob) kxhide;
-	static ABI globalizeDynamic(void *moduleMemory, ModuleRecord& kmRecord, BlobRegister &blob) kxhide;
+	static ABI globalizeDynamic(void *moduleMemory, BlobRegister &blob) kxhide;
 
 	static void initElf(Elf::ElfManager &module);
 public:

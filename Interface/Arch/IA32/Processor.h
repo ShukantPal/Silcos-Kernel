@@ -106,6 +106,8 @@ struct ArchCpu
 	unsigned long nominalFreq;//!< Nominal frequency of the TSC
 	unsigned long maxFreq;//!< Maximum frequency for this cpu
 	unsigned long tscFreq;//!< Rate at which TSC increments its counter
+	unsigned long ioapicVectors;//!< Bitmap containing which local device
+				    //! IRQs are mapped to IOAPICs IRQ
 	unsigned int TopologyIdentifiers[0];
 
 	///

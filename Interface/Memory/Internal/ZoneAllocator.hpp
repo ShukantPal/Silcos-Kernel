@@ -141,6 +141,12 @@ public:
 			unsigned int count);
 	static void configureZoneMappings(Zone *zoneTable,
 			unsigned long zoneCount);
+
+	ZoneAllocator() // @suppress("Class members should be properly initialized")
+	{
+
+	}
+
 private:
 	BuddyBlock *descriptorTable;
 	ZonePreference *prefTable;

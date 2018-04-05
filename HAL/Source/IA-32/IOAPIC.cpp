@@ -18,6 +18,7 @@
 ///
 
 #include <HardwareAbstraction/IOAPIC.hpp>
+#include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <Memory/KMemoryManager.h>
 #include <Memory/KObjectManager.h>
 #include <Memory/Pager.h>
@@ -26,6 +27,7 @@ using namespace HAL;
 
 ArrayList IOAPIC::systemIOAPICInputs(24);
 ArrayList IOAPIC::systemIOAPICs;
+unsigned long IOAPIC::routesUnderReset;
 
 ///
 ///
@@ -56,6 +58,7 @@ IOAPIC::IOAPIC(unsigned long regBase, unsigned long intrBase)
 	this->hardwareVersion = read(IOAPICVER);
 	this->redirEntries = 1 + (read(IOAPICVER) >> 16);
 	this->arbId = read(IOAPICARB) >> 4;
+	this->globalSystemInterruptBase = intrBase;
 }
 
 ///
@@ -132,5 +135,34 @@ void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)
 	else
 	{
 		systemIOAPICs.set(ioa, ioaEnt->apicID);
+
+		for(unsigned long globlIdx = ioaEnt->GSIB;
+				globlIdx < (ioaEnt->GSIB + ioa->intrCount());
+				globlIdx++)
+		{
+			systemIOAPICInputs.set(new IOAPIC::InputSignal(),
+					globlIdx);
+		}
 	}
 }
+
+static void __mapRoute(Processor *proc)
+{
+
+}
+
+///
+/// Maps all the IOAPIC inputs to the local device-interrupts of all
+/// existent CPUs uniformly, in an circular fashion. It results in an
+/// complete reset of mappings.
+///
+/// @version 1.0
+/// @since Silcos 3.02
+/// @author Shukant Pal
+///
+void IOAPIC::mapAllRoutesUniformly()
+{
+	//ProcessorTopology::Iterator::forAll(
+	//		ProcessorTopology::systemDomain, &__mapRoute);
+}
+

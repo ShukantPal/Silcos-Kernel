@@ -129,21 +129,36 @@ InitEnvironment:
 	PUSH EBX		; save multiboot register
 
 	CALL LoadMultibootTags	; load multiboot-tags
-
-	MOV EBX, ctorsStart	; load ctor-pointer array
-	JMP InitializeGlobalObjects	; call all ctors
-
-	CallConstructor:
-	CALL [EBX]		; call ctor
-	ADD EBX, 4		; goto next ctor
-
-	InitializeGlobalObjects:
-	CMP EBX, ctorsEnd	; test if current ctor is the last one
-	JB CallConstructor	; if not, continue (in loop)
-
+	;CALL InitAllObjects
 	CALL Main		; initializes the system until scheduler is enabled
 	JMP $			; if it comes here, we are seriously stupid
 
+;=============================================================================;
+; Calls all the global object constructors serially from the CTORS
+; section. This is generally called after memory-management has initialized
+; so that constructors can utilize it.
+;
+; @see (wiki) EarlyInitRace
+; @version 1.0
+; @since Silcos 3.05
+; @author Shukant Pal
+;=============================================================================;
+global InitAllObjects
+InitAllObjects:
+	PUSHAD				; save all regs due to ctor's usage
+	MOV EBX, ctorsStart		; value of addr of ptr of first ctor
+	ADD EBX, 4
+	JMP .incCtor
+	.callCtor:
+		PUSH EBX
+		CALL [EBX]		; call each ctor using the ptr
+		POP EBX
+		ADD EBX, 4		; inc the ctor ptr
+	.incCtor:
+		CMP EBX, ctorsEnd	; test whether no more ctors are left
+		JB .callCtor		; if not, continue
+	POPAD				; restore regs
+	RET
 
 ;; imported from HAL (not in mainline KernelHost)
 ALIGN 4
@@ -161,7 +176,7 @@ APInvokeMain32:
 SECTION .bss
 
 global KernelStack
-KernelStack: RESB 8192	; 2-kb pre-boot stack
+KernelStack: RESB 8192	; 8-kb pre-boot stack
 
 global admMultibootTable
 global admMultibootTableStart

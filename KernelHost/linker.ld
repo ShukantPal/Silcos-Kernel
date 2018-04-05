@@ -62,7 +62,7 @@ SECTIONS {
 				msiKernelDynamicTableStart = .;
 		*(.dynamic)
 				msiKernelDynamicTableEnd = .;
-	} :kernel
+	} :kernel :dynamic
 	
 	/DISCARD/ :
     {
