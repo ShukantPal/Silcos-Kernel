@@ -45,17 +45,15 @@ const char *nmHashMap = "HashMap";
 ObjectInfo *tHashMap;
 
 /* Used for NULL keys*/
-class NullHash : public Object
+struct NullHash : public Object
 {
-public:
 	unsigned int hashCode();
 	NullHash();
 };
 
-
 NullHash::NullHash()
 {
-
+	DbgLine("Null-hash for hashing enabled.");
 }
 
 unsigned int NullHash::hashCode()
@@ -245,8 +243,6 @@ void HashMap::init()
 
 		tHashMap = KiCreateType(nmHashMap, sizeof(HashMap), sizeof(unsigned long),
 									NULL, NULL);
-
-		new(&nullHash) NullHash();
 	}
 }
 
@@ -357,8 +353,7 @@ HashMap::Entry* HashMap::removeEntryForKey(Object& key)
 	unsigned long hash = key.hashCode();
 	unsigned long slotIndex = indexFor(key.hashCode());
 	Entry **slot = bucketTable + slotIndex;
-	Entry *ent = *slot;
-	Entry *tcache;
+	Entry *tcache, *ent = *slot;
 	while(ent)
 	{
 		if(ent->hashCode() == hash &&

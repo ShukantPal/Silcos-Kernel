@@ -62,7 +62,10 @@ public:
 	//! children can use them.
 	//!
 	const SymbolLookup isoResolvableBuffer;
+
 	void (*initFunctor)(), (*kMain)(), (*finiFunctor)();
+	void (**preInitArray)(), (**initArray)(), (**finiArray)();
+	size_t preInitFunctorCount, initFunctorCount, finiFunctorCount;
 
 	unsigned long getBase(){ return (baseAddress); }
 	DynamicLink *getLinker(){ return (linkerInfo); }

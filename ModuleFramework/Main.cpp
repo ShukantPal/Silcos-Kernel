@@ -30,12 +30,7 @@ ObjectInfo *tRBNode;
 char nmRBNode[] = "@com.silcos.circuit.mdfrwk.RBTree::RBNode";
 extern String *defaultString;
 
-extern "C" void stupid()
-{
-	DbgLine("stupid() function called, so host is a bit stupid");
-}
-
-extern "C" void __init()
+extern "C" __attribute__((constructor(100))) void initModule()
 {
 	tString = KiCreateType(nmString, sizeof(String), NO_ALIGN, NULL, NULL);
 	tRBTree = KiCreateType(nmRBTree, sizeof(RBTree), NO_ALIGN, NULL, NULL);

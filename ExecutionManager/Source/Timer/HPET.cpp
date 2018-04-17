@@ -28,6 +28,9 @@
 using namespace Executable;
 using namespace Executable::Timer;
 
+HPET *HPET::kernelTimer = null;
+ArrayList HPET::knownHPETs;
+
 ///
 /// Brings the resources of the HPET into system memory by mapping its
 /// registers to a non-cacheable page.
@@ -35,7 +38,7 @@ using namespace Executable::Timer;
 /// @param[in] eventBlock - base physical-address of HPET's event-block
 /// @author Shukant Pal
 ///
-HPET::HPET(PhysAddr eventBlock)
+HPET::HPET(int acpiUID, PhysAddr eventBlock)
 {
 	this->eventBlock = eventBlock;
 
@@ -64,6 +67,16 @@ HPET::HPET(PhysAddr eventBlock)
 	this->cfg = (Configuration volatile *)(regBase + 0x10);
 	this->intSts = (InterruptStatus volatile *)(regBase + 0x20);
 	this->ctr = (MainCounter volatile *)(regBase + 0xF0);
+
+	this->sequenceIndex = acpiUID;
+	this->clockFrequency = capAndId->clockPeriod / (1000000);
+
+//	knownHPETs.set(static_cast<void*>(this), sequenceIndex);
+
+	if(kernelTimer == null)
+		kernelTimer = this;
+
+	Dbg(" My frequency (HPET): "); DbgInt(clockFrequency);
 }
 
 Executable::Timer::HPET::~HPET()

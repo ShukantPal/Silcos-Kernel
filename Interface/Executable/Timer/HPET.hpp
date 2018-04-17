@@ -53,7 +53,7 @@ namespace Timer
 class HPET : public IRQHandler, public LinkedListNode, public Lockable
 {
 public:
-	HPET(PhysAddr eventBlock);
+	HPET(int acpiUID, PhysAddr eventBlock);
 	~HPET();
 
 	void clearIntrStatus(unsigned char n)
@@ -94,6 +94,8 @@ public:
 	void setMainCounter(unsigned long val);
 private:
 	PhysAddr eventBlock;
+	int sequenceIndex;
+	long clockFrequency;
 	unsigned long regBase;
 
 	///
@@ -235,6 +237,11 @@ private:
 	Configuration volatile *cfg;
 	InterruptStatus volatile *intSts;
 	MainCounter volatile *ctr;
+
+	static HPET *kernelTimer;//!< This HPET device object is for use only
+	 	 	 	 //! by the kernel. It is not used by any
+	 	 	 	 //! user-mode software.
+	static ArrayList knownHPETs;
 };
 
 }

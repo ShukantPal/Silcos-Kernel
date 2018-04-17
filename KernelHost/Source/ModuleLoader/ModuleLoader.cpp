@@ -31,6 +31,7 @@
 #include <Module/Elf/ElfManager.hpp>
 #include <Module/Elf/ElfAnalyzer.hpp>
 #include <Module/Elf/ElfLinker.hpp>
+#include <Utils/Arrays.hpp>
 #include <KERNEL.h>
 
 using namespace Module;
@@ -87,6 +88,45 @@ void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 	return (memoryArena);
 }
 
+static inline void holdPreinitArray(ElfManager *em, ModuleContainer *mc)
+{
+	DynamicEntry *pinitAddr = em->getDynamicEntry(DT_PREINIT_ARRAY);
+	DynamicEntry *pinitCount = em->getDynamicEntry(DT_PREINIT_ARRAYSZ);
+
+	if(pinitAddr && pinitCount)
+	{
+		mc->preInitArray = (void (**)())(pinitAddr->ptr +
+				mc->getBase());
+		mc->preInitFunctorCount = pinitCount->val / sizeof(void(**)());
+	}
+}
+
+static inline void holdInitArray(ElfManager *em, ModuleContainer *mc)
+{
+	DynamicEntry *initArrayAddr = em->getDynamicEntry(DT_INIT_ARRAY);
+	DynamicEntry *initArraySize = em->getDynamicEntry(DT_INIT_ARRAYSZ);
+
+	if(initArrayAddr && initArraySize)
+	{
+		mc->initArray = (void (**)())(initArrayAddr->ptr +
+				mc->getBase());
+		mc->initFunctorCount = initArraySize->val / sizeof(void(**)());
+	}
+}
+
+static inline void holdFiniArray(ElfManager *em, ModuleContainer *mc)
+{
+	DynamicEntry *finiArrayAddr = em->getDynamicEntry(DT_FINI_ARRAY);
+	DynamicEntry *finiArraySize = em->getDynamicEntry(DT_FINI_ARRAYSZ);
+
+	if(finiArrayAddr && finiArraySize)
+	{
+		mc->finiArray = (void (**)())(finiArrayAddr->ptr +
+				mc->getBase());
+		mc->finiFunctorCount = finiArraySize->val / sizeof(void(**)());
+	}
+}
+
 ///
 /// Exports all dynamic-linking information gathered from the elf-abi
 /// handling objects, notes down init, main, fini functors, and then exports
@@ -138,6 +178,10 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, BlobRegister &blob)
 		mc->initFunctor = reinterpret_cast<void (*)()>(mc->getBase() +
 				dynamicFinier->ptr);
 	}
+
+	holdPreinitArray(obfHdlr, mc);
+	holdInitArray(obfHdlr, mc);
+	holdFiniArray(obfHdlr, mc);
 
 	blob.manager = obfHdlr;
 	mc->ptpResolvableLinks->addAll(linkHandle->dynamicSymbols, mc);
@@ -240,13 +284,54 @@ void ModuleLoader::loadBundle(LinkedList &blobList)
 	}
 }
 
+///
+/// Calls the initialization functions of the kernel module, according to
+/// the specific ABI.
+///
+/// By default, the ELF ABI defines the __preinit array, _init() function and
+/// the __init array to be called in the given sequence. It is done so here,
+/// except that they are stored in the ModuleContainer while linking, and
+/// hence, the symbol lookup is not required.
+///
+/// ---------------------------------------------------------------------------
+///
+/// Note on declaring C initialization functions to allocate new object types
+/// for the slab allocator:
+///
+/// Declaring functions in the __preinit array is not supported by GCC, as of
+/// my knowlegde in code, therefore, function which just allocate primitive
+/// types in the slab allocator must be declared as constructors with higher
+/// priority. By kernel-standard, this priority value is 100.
+///
+/// Note on stability of this sequence:
+///
+/// It is seen that this part of the kernel crashes quite a bit on adding new
+/// features and all. This may be because of some ELF-support leftover. You
+/// could try to add a __while_true at the end to check whether the crash
+/// occurs here.
+///
+/// @param bl - Reference to the BlobRegister of the module given, to access
+/// 		its module container and its ABi.
+/// @version - 5.1
+/// @author Shukant Pal
+///
 void ModuleLoader::init(BlobRegister &bl)
 {
+	ModuleContainer *mc = bl.fileBox;
+
 	switch(bl.abiFound)
 	{
 	case ELF:
-		if(bl.fileBox->initFunctor != null)
-			bl.fileBox->initFunctor();
+		if(mc->preInitFunctorCount != 0)
+			Arrays::invokeAll(mc->preInitArray,
+					mc->preInitFunctorCount);
+
+		if(mc->initFunctor != null)
+			mc->initFunctor();
+
+		if(mc->initFunctorCount != 0 && mc->initFunctorCount != 0)
+			Arrays::invokeAll(mc->initArray,
+					mc->initFunctorCount);
 		break;
 	}
 }

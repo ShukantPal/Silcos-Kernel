@@ -25,6 +25,9 @@
 #ifndef KERNHOST_MODULE_SYMBOLLOOKUP_HPP_
 #define KERNHOST_MODULE_SYMBOLLOOKUP_HPP_
 
+#include "Elf/ELF.h"
+#include <Synch/ReadWriteSerializer.h>
+
 namespace Module
 {
 

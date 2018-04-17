@@ -39,10 +39,6 @@ extern "C" void (*__init_array_end [])() __attribute__((visibility("hidden"), we
 
 decl_c void ArchMain()
 {
-	size_t ias = __init_array_end - __init_array_start;
-	for(size_t j=0; j<ias; j++)
-		__init_array_start[j]();
-
 	ScanRsdp();
 	SetupRSDTHolder();
 	MapAPIC();

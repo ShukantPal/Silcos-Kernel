@@ -44,8 +44,16 @@ ModuleContainer::ModuleContainer(const char *buildName,
 
 	this->buildVersion = buildVersion;
 	this->physicalAddress = this->baseAddress = 0;
+	this->linkerInfo = static_cast<DynamicLink *>(null);
+
 	this->initFunctor = this->kMain = this->finiFunctor =
 			static_cast<void (*)()>(null);
-	this->linkerInfo = static_cast<DynamicLink *>(null);
+
+	this->preInitArray = this->initArray = this->finiArray =
+			static_cast<void (**)()>(null);
+
+	this->preInitFunctorCount = this->initFunctorCount =
+			this->finiFunctorCount = 0;
+
 	addToParent();
 }

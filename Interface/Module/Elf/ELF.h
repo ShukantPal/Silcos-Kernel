@@ -420,6 +420,22 @@ enum DynamicTag
 	DT_DEBUG	= 21,//! absence signifies that no relocation entry causes no change to a non-writable segment
 	DT_TEXTREL	= 22,//!< DT_TEXTREL
 	DT_JMPREL	= 23,//! pointer to relocation entries for PLT
+	DT_INIT_ARRAY	= 25,//!< The address of an array of pointers to
+	 	 	     //! initialization functions; requires that a
+	 	 	     //! DT_INIT_ARRAYSZ element also be present.
+	DT_FINI_ARRAY	= 26,//!< The address of an array of pointers to
+			     //! terminatation functions; requires that a
+			     //! DT_FINI_ARRAYSZ element also be present.
+	DT_INIT_ARRAYSZ	= 27,//!< The total size, in bytes, of the
+			     //! DT_INIT_ARRAY array.
+	DT_FINI_ARRAYSZ	= 28,//!< The total size, in bytes, of the
+			     //!< DT_FINI_ARRAY array.
+	DT_RUNPATH	= 29,
+	DT_FLAGS	= 30,
+	DT_ENCODING	= 32,
+	DT_PREINIT_ARRAY= 32,
+	DT_PREINIT_ARRAYSZ= 33,
+	DT_MAXPOSTAGS	= 34,
 	DT_LOPROC	= 0x70000000,//! lower-bound for arch-dependent entries
 	DT_HIPROC	= 0x7FFFFFFF//! upper-bound for arch-dependent entries
 };

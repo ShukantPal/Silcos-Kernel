@@ -37,6 +37,7 @@ Executable::Timer::HPET *tm_;
 
 unsigned int fd = 0;
 
+#include <ACPI/RSDT.h>
 #include <IA32/IO.h>
 #include <HardwareAbstraction/Processor.h>
 #include <Heap.hpp>
@@ -56,10 +57,26 @@ decl_c void do_action(Executable::IRQHandler *h)
 	h->intrAction();
 }
 
+decl_c void InitKernelHPET()
+{
+//	ACPI::HPET *ahdt = (ACPI::HPET *) SearchACPITableByName("HPET", null);
+
+//	HPET *kernelTimer = new HPET(ahdt->timerNumber,
+//			ahdt->baseAddress.addressValue);
+
+
+}
+
+#include <Module/SymbolLookup.hpp>
+
+using namespace Module;
+
 decl_c void testhpet()
 {
 	DbgLine("test-hpet !!!!");
 
+
+//	InitKernelHPET();
 	pit = new PIT();
 
 	// try setting up io/apic

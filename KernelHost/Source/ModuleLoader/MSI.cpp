@@ -199,8 +199,7 @@ void KernelElf::loadBootModules()
 	blob = (BlobRegister*) bmRecordList->head;
 	while(blob != NULL)
 	{
-		if(blob->fileBox->initFunctor != null)
-			blob->fileBox->initFunctor();
+		ModuleLoader::init(*blob);
 		blob = (BlobRegister*) blob->liLinker.next;
 	}
 
@@ -215,4 +214,5 @@ void KernelElf::loadBootModules()
 	}
 
 	KiDestroyType(tBlobRegister);
+	while(true);
 }

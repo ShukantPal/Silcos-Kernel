@@ -19,6 +19,8 @@
 #ifndef MDFRWK_ARRAYS_HPP__
 #define MDFRWK_ARRAYS_HPP__
 
+#include <KERNEL.h>
+
 class Arrays
 {
 public:
@@ -78,6 +80,23 @@ public:
 
 		while(copySize--)
 			*(dstl--) = *(orgl--);
+	}
+
+	///
+	/// Invokes all functors present in the given array, serially, passing
+	/// no arguments.
+	///
+	/// @param functorArray - pointer to the table of functors, to be
+	/// 		called in relative order of indices.
+	/// @param count - the number of functors to invoke from the starting
+	///
+	static void invokeAll(void (**functorArray)(), size_t count)
+	{
+		for(unsigned int funcIdx = 0; funcIdx < count; funcIdx++)
+		{
+			(*functorArray)();
+			++(functorArray);
+		}
 	}
 private:
 	Arrays();
