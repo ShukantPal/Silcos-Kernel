@@ -34,8 +34,15 @@ PageFault:
 	call HandlePF
 	iret
 
+align 8
 extern DbgErro
-	Spurious:
+extern try_spur_int__
+global Spurious
+Spurious:
+	pushad
+	xchg bx, bx
+	call try_spur_int__
+	popad
 	iret
 
 extern EOI

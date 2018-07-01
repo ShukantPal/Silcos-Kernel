@@ -72,6 +72,10 @@ extern MemoryContext kernelPager;//< Primary context for the system. Used for ke
 class Pager
 {
 public:
+	static void init(unsigned long retAddr, unsigned long envBase,
+			U64 *globalTable, U64 *globalDirectory, U64 *bootPDPT);
+	static void init2(U64 *globalDirectory, U64 *globalTable,
+			unsigned long pdptPhys);
 	static void switchSpace(MemoryContext *cxt);
 
 	static void dispose(VirtAddr vadr);
@@ -80,7 +84,11 @@ public:
 
 	static void map(VirtAddr vadr, PhysAddr padr,
 			unsigned allocFlags, PageAttributes attr);
+	static void mapHuge(VirtAddr vadr, PhysAddr padr,
+			unsigned allocFlags, PageAttributes attr);
 	static void mapAll(VirtAddr base, PhysAddr pbase, unsigned size,
+			unsigned allocFlags, PageAttributes attr);
+	static void mapAllHuge(VirtAddr base, PhysAddr pbase, unsigned size,
 			unsigned allocFlags, PageAttributes attr);
 	static void useAllSmall(VirtAddr base, VirtAddr limit,
 			unsigned allocFlags, PageAttributes attr);
@@ -90,8 +98,11 @@ public:
 			PageAttributes attr);
 	static void useAll(VirtAddr base, VirtAddr limit,
 			unsigned allocFlags, PageAttributes attr);
+
+	static U64 *globalDirectory;
+	static U64 *globalTable;
 private:
-	Pager()
+	Pager() // @suppress("Class members should be properly initialized")
 	{
 
 	}

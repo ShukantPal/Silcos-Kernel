@@ -1,5 +1,5 @@
 /**
- * File: Time.hpp
+ * @file Time.hpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -8,7 +8,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theAft
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -24,14 +24,18 @@ namespace Executable
 namespace Timer
 {
 
-enum TimeAlign
+enum class TimeAlign : U64
 {
-	Recent = 10,
-	Moderate = 100,
-	Second = 1000,
-	Minute = 60000,
-	Hour = 3600000
+	Nanosecond = 1,
+	Microsecond = 1000 * Nanosecond,
+	Millisecond = 1000 * Microsecond,
+	Second = 1000 * Millisecond,
+	Minute = 60 * Second,
+	Hour = 60 * Second,
+	Day = 24 * Hour
 };
+
+typedef U64 TimeInstance;
 
 }
 }

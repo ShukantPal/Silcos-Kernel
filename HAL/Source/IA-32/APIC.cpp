@@ -23,6 +23,10 @@ import_asm void TimerUpdate();
 
 import_asm void TimerWait(U32 t);
 
+extern "C" void try_spur_int__() {
+	WriteLine("Hello");
+}
+
 /**
  * Function: KiClockRespond
  *

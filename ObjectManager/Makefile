@@ -4,5 +4,5 @@ Compile/Main.o: Main.cxx
 	$(CC) $(CFLAGS) Main.cxx -o Compile/Main.o
 
 ObMake: Compile/Main.o
-	$(CC) Compile/Main.o $(LFLAGS) -o Build/silcos.obmgr
+	$(CC) Compile/Main.o $(LFLAGS) -o Build/silcos.obmgr -T../DefaultModuleLinkage.ld
 	cp Build/silcos.obmgr ../Modules/Builtin/

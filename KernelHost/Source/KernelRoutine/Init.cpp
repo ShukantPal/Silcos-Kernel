@@ -23,7 +23,7 @@ import_asm void BSPGrantPermit();
 
 void Init() {
 	DbgLine("Hello\nThis is a newline. ");
-	BSPGrantPermit();
+	//BSPGrantPermit();
 
 	while(TRUE) { asm volatile("nop"); }
 }

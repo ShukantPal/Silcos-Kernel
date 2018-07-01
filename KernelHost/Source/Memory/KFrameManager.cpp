@@ -1,22 +1,24 @@
 /**
- * File: KFrameManager.c
+ * @file PageFrame.cpp
  *
- * Summary: This file contains the code to implement the PMA, and interfaces with the zone allocator
- * to abstract its algorithm.
+ * Implements an buddy-based zone-allocator for page-frame
+ * management. It assigns the following zonal attributes on physical
+ * page-frames: DMA-zone, driver-zone, code-zone, data-zone, and
+ * the kernel-zone.
  *
- * Each NUMA domain is divided into four zones - DMA, KERNEL32, KERNELn, CODEn, and DATAn. There are three
- * zonal preferences - DMA, KERNEL32 (32-bit platform) and NORMAL. DMA always extends till the 16th
- * megabyte. KERNEL32 is used for 32-bit devices and extends till the 4th GB (when RAM > 4-GB) and then
- * CODEn, DATAn cover the rest. On UMA systems, the kernel "may" divide the zones into seperate virtual
- * memory-nodes from which allocation is seperately done.
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Functions:
- * KeFrameAllocate() - This function interfaces with the zone allocator for pageframe allocation.
- * KeFrameFree() - This function interfaces with the zone allocator for pageframe deallocation.
- * TypifyMRegion() - Used for declaring pageframe types with a region
- * SetupKFrameManager() - This function is in NS_MAIN, and reads the multiboot memory map and
- * modules, for typifying each pageframe. Then, all type 1 (free) pageframes are released into the
- * zone allocator, freeing all available memory
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  * Copyright (C) 2017 - Shukant Pal
  */
@@ -33,7 +35,9 @@
 #include "../../../Interface/Utils/CtPrim.h"
 #include <Multiboot2.h>
 #include <Synch/Spinlock.h>
+#include <Environment.h>
 #include <KERNEL.h>
+#include <Debugging.h>
 
 using namespace Memory;
 using namespace Memory::Internal;
@@ -43,7 +47,6 @@ using namespace Memory::Internal;
 
 #define KFRAME_ZONE_COUNT	5
 
-PhysAddr KiMapTables(void);
 PhysAddr mmLow;
 PhysAddr mmHigh;
 PhysAddr mmUsable;
@@ -81,24 +84,13 @@ char msgMemoryTooLow[] = "At least 128MB of memory is required to run the kernel
 extern bool oballocNormaleUse;
 
 /**
- * Function: KeFrameAllocate()
+ * Allocates blocks of physical-memory to the caller, in the form of
+ * multiple adjacent page-frames, in powers of two.
  *
- * Summary:  This function is used for allocating a physical pageframe from the system, for
- * a specific set of flags. Clients must also specify the zone from which the pageframe should
- * belong to.
- *
- * Args:
- * fOrder - Frame order needed
- * prefZone - Preferred zone's number
- * fFlags - Allocation-controlling flags
- *
- * Returns: Physical address of the pageframe, which can be mapped to any virtual address.
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See ZNSYS, ZNINFO, ZnAllocateBlock() - "ZoneManager.h"
- * // TODO:@Deprecated - Use System::getMemoryFrame()
+ * @param fOrder
+ * @param prefZone
+ * @param znFlags
+ * @return
  */
 PhysAddr KeFrameAllocate(unsigned long fOrder, unsigned long prefZone, unsigned long znFlags)
 {
@@ -128,7 +120,18 @@ unsigned long KeFrameFree(PhysAddr pAddress)
 	return (1);
 }
 
-void TypifyMRegion(unsigned long typeValue, unsigned long regionStartKFrame, unsigned long regionEndKFrame)
+/**
+ * Fills the 'BdType' field of the page-frame entries, and is used before
+ * freeing all available physical memory. This prevents dedicated kernel
+ * memory from being allocated later on. Currently, only the customly defined
+ * type MULTIBOOT_MEMORY_STRUCT is used for this purpose.
+ *
+ * @param typeValue
+ * @param regionStartKFrame
+ * @param regionEndKFrame
+ */
+void TypifyMRegion(unsigned long typeValue, unsigned long regionStartKFrame,
+		unsigned long regionEndKFrame)
 {
 	if(regionEndKFrame > pgTotal)
 		regionEndKFrame = pgTotal;// BUG: pgTotal is less than memory
@@ -139,27 +142,41 @@ void TypifyMRegion(unsigned long typeValue, unsigned long regionStartKFrame, uns
 	while((unsigned long) pfCurrent < (unsigned long) pfLimit)
 	{
 		pfCurrent->BdType = typeValue;
-		pfCurrent = (BuddyBlock *) ((unsigned long ) pfCurrent + sizeof(MMFRAME));
+		pfCurrent = (BuddyBlock *) ((unsigned long ) pfCurrent +
+				sizeof(MMFRAME));
 	}
 }
 
+/**
+ * Reserves the memory regions that are occupied by the kernel module
+ * files (copied from disk by bootloader). It is now not used, as the
+ * Initor module already copies them into the kernel environment, but
+ * may be used in the future (for advanced features like config files,
+ * console-to-file output, etc.)
+ *
+ * @deprecated
+ * @since Circuit 2.05
+ */
 void KfReserveModules()
 {
-	MULTIBOOT_TAG_MODULE *muModule =
-			(MULTIBOOT_TAG_MODULE*) SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_MODULE);
+	MultibootTagModule *muModule = (MultibootTagModule *)
+			MultibootChannel::getFirstModule();
 
 	while(muModule != NULL)
 	{
-		#ifdef ADM_MULTIBOOT_MODULE_DEBUGGER/* Debug *::Multiboot::Module Support */
-			Dbg("Module ::ModuleStart "); DbgInt(muModule->ModuleStart); DbgLine(";"); 
-		#endif
-		TypifyMRegion(MULTIBOOT_MEMORY_MODULE, muModule->ModuleStart >> KPGOFFSET, muModule->ModuleEnd >> KPGOFFSET);
-		muModule = (MULTIBOOT_TAG_MODULE*)
-				SearchMultibootTagFrom(muModule, MULTIBOOT_TAG_TYPE_MODULE);
+		TypifyMRegion(MULTIBOOT_MEMORY_MODULE,
+				muModule->moduleStart >> KPGOFFSET,
+				muModule->moduleEnd >> KPGOFFSET);
+		muModule = (MultibootTagModule *)
+				MultibootChannel::getNextModule(muModule);
 	}
 }
 
-/* Free all memory available by parsing the BdType field for every kfpage */
+/**
+ * Serially frees all available page-frames by checking whether their
+ * BdType signals that they are usable memory. This is a long loop
+ * which takes significant time (for the CPU, user won't notice it)
+ */
 void KfParseMemory()
 {
 	BuddyBlock *kfPointer = (BuddyBlock *) FROPAGE(0);
@@ -182,52 +199,58 @@ void KfParseMemory()
 }
 
 /**
- * Function: SetupKFrameManager()
+ * Initializes the page-frame allocator subsystem, setting free all
+ * available system memory. This excludes the kernel-environment, ACPI
+ * used memory, and bootloader data.
  *
- * Summary:
- * This function is used for initializing the KFrameManager and parses the Multiboot2 structure
- * for getting basic meminfo and mmap (memory-map). It marks all reserved & module & other 'to-be-used'
- * regions as not-free. All other regions (marked free) are then released into the system and allow
- * the KFrameManager to allocate & deallocate kframes.
+ * It uses the multiboot-channel, which must be setup before page-frame
+ * allocation initializes. Note that, before the permanent per-CPU structs
+ * are placed in memory, page-frame allocation must be done with
+ * special flags like (@code FLG_NOCACHE) and (@code KF_NOINTR) to prevent
+ * any sort of access to the undefined pointers.
  *
- * @Version 1
- * @Since Circuit 2.03
+ * All initialization parameters are build time - other than zonal sizes
+ * and boundaries. Other than that, this function is **fragile** and any
+ * modification must be done carefully.
+ *
+ * @version 7.05
+ * @since Circuit 2.03
+ * @author Shukant Pal
  */
 void SetupKFrameManager()
 {
 	DbgLine(msgSetupKFrameManager);
 
-	MULTIBOOT_TAG_BASIC_MEMINFO *mInfo =
-			(MULTIBOOT_TAG_BASIC_MEMINFO*)
-			SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
-
-	MULTIBOOT_TAG_MMAP *mmMap =
-			(MULTIBOOT_TAG_MMAP*)
-			SearchMultibootTagFrom(NULL, MULTIBOOT_TAG_TYPE_MMAP);
+	MultibootTagBasicMemInfo *mInfo =
+			MultibootChannel::getBasicMemInfo();
+	MultibootTagMMap *mmMap =
+			MultibootChannel::getMMap();
 
 	mmLow = mInfo->MmLower;
 	mmHigh = mInfo->MmUpper;
 
-	MULTIBOOT_MMAP_ENTRY *regionEntry  = (MULTIBOOT_MMAP_ENTRY*) ((U32) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
-	unsigned long regionLimit = (U32) mmMap + mmMap->Size - mmMap->EntrySize;
+	MultibootMMapEntry *regionEntry  = mmMap->getEntries();
+	unsigned long regionLimit = (U32) mmMap + mmMap->size - mmMap->entrySize;
 
 { // Setup Memory Statistics:
-	PhysAddr mRegionSize;
 	PhysAddr usableMemory = 0;
-	PhysAddr totalMemory = 0;
+	PhysAddr foundMemory = 0;
 
-	while((unsigned long) regionEntry < regionLimit)
+	while(mmMap->inBounds(regionEntry))
 	{
-		mRegionSize = (PhysAddr) regionEntry->Length;
-		totalMemory += mRegionSize;
-		if(regionEntry->Type == MULTIBOOT_MEMORY_AVAILABLE)
-			usableMemory += mRegionSize & ~((1 << FRSIZE_ORDER) - 1);
+		foundMemory += regionEntry->length;
 
-		regionEntry = (MULTIBOOT_MMAP_ENTRY*) ((U32) regionEntry + mmMap->EntrySize);
+		if(regionEntry->type == MULTIBOOT_MEMORY_AVAILABLE) {
+			usableMemory +=	// only whole page-frames are usable
+					regionEntry->length & ~((1 << FRSIZE_ORDER) - 1);
+		}
+
+		regionEntry = regionEntry->next(mmMap->entrySize);
 	}
 
 	mmUsable = usableMemory;
-	mmTotal = totalMemory & ~((1 << (FRSIZE_ORDER + MAX_FRAME_ORDER)) - 1);
+	mmTotal = foundMemory & // only whole maximum sized blocks count!
+			~((1 << (FRSIZE_ORDER + MAX_FRAME_ORDER)) - 1);
 
 	if(mmTotal < MB(128))
 	{
@@ -238,16 +261,20 @@ void SetupKFrameManager()
 	pgUsable = usableMemory >> KPGOFFSET;
 	pgTotal =  mmTotal >> KPGOFFSET;
 
-	KiMapTables();
+	Pager::mapAllHuge(KFRAMEMAP, kernelParams.pageframeEntries,
+			(mmTotal >> 12) * sizeof(MMFRAME), null, KernelData);
 }
 
 	// INIT coreEngine
 
 	coreEngine.resetAllocator((BuddyBlock *) KFRAMEMAP, framePreferences, 3, frameZones, 5);
-	ZoneAllocator::configureZones(sizeof(MMFRAME), MAX_FRAME_ORDER, allocatorVectors, allocatorLists, frameZones, 5);
+	ZoneAllocator::configureZones(sizeof(MMFRAME), MAX_FRAME_ORDER,
+			allocatorVectors, allocatorLists, frameZones, 5);
 	ZoneAllocator::configurePreference(frameZones, framePreferences, 1);
-	ZoneAllocator::configurePreference(frameZones + 1, framePreferences + 1, 1);
-	ZoneAllocator::configurePreference(frameZones + 2, framePreferences + 2, 3);
+	ZoneAllocator::configurePreference(frameZones + 1,
+			framePreferences + 1, 1);
+	ZoneAllocator::configurePreference(frameZones + 2,
+			framePreferences + 2, 3);
 	memsetf((Void *) KFRAMEMAP, 0, pgTotal * sizeof(MMFRAME));
 
 	// MAP ZONE BOUNDARIES
@@ -258,7 +285,7 @@ void SetupKFrameManager()
 	unsigned char *entTable = (unsigned char *) KFRAMEMAP;
 	frameZones[ZONE_DMA].memoryAllocator.setEntryTable(entTable);
 	frameZones[ZONE_DMA].memorySize = MB(16) >> KPGOFFSET;
-	frameZones[ZONE_DRIVER].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FRAME_AT(MB(16))));
+	frameZones[ZONE_DRIVER].memoryAllocator.setEntryTable((unsigned char *) FRAME_AT(MB(16)));
 
 	if(pgTotal < MB(3584) >> KPGOFFSET)
 	{
@@ -268,13 +295,16 @@ void SetupKFrameManager()
 
 		frameZones[ZONE_DRIVER].memorySize = pgDomSize - (MB(16) >> KPGOFFSET);
 
-		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(pgDomSize)));
+		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(
+				(unsigned char *) FROPAGE(pgDomSize));
 		frameZones[ZONE_CODE].memorySize = pgDomSize;
 
-		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(2 * pgDomSize)));
+		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(
+				(unsigned char *) FROPAGE(2 * pgDomSize));
 		frameZones[ZONE_DATA].memorySize = pgDomSize;
 
-		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(3 * pgDomSize)));
+		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(
+				(unsigned char*) FROPAGE(3 * pgDomSize));
 		frameZones[ZONE_KERNEL].memorySize = pgTotal - 3 * pgDomSize;
 	}
 	else
@@ -285,21 +315,23 @@ void SetupKFrameManager()
 		unsigned long pgRemaining = pgTotal - (MB(896) >> KPGOFFSET);
 		unsigned long pgDomSize = pgRemaining / 3;
 
-		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(896)));
+		frameZones[ZONE_CODE].memoryAllocator.setEntryTable(
+				(unsigned char*) FROPAGE(896));
 		frameZones[ZONE_CODE].memorySize = pgDomSize;
 
-		frameZones[ZONE_DATA].memoryAllocator.setEntryTable(reinterpret_cast<unsigned char *>(FROPAGE(MB(896) + pgDomSize)));
+		frameZones[ZONE_DATA].memoryAllocator.setEntryTable((unsigned char*)
+				FROPAGE(MB(896) + pgDomSize));
 		frameZones[ZONE_DATA].memorySize = pgDomSize;
 
 		frameZones[ZONE_KERNEL].memoryAllocator.setEntryTable(
-						reinterpret_cast<unsigned char *>(FROPAGE(MB(896) + 2 * pgDomSize)));
+						(unsigned char*) FROPAGE(MB(896) + 2 * pgDomSize));
 		frameZones[ZONE_KERNEL].memorySize = pgRemaining - 2 * pgDomSize;
 	}
 
 	// All buddy-block's zone-index field should be mapped to the right zone.
 	ZoneAllocator::configureZoneMappings(frameZones, 5);
 
-	regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((unsigned long) mmMap + sizeof(MULTIBOOT_TAG_MMAP));
+	regionEntry = mmMap->getEntries();
 {
 	PhysAddr pRegionStart;
 	PhysAddr pRegionEnd;
@@ -309,35 +341,45 @@ void SetupKFrameManager()
 
 	while((unsigned long) regionEntry < regionLimit)
 	{
-		pRegionStart = regionEntry->Address;
-		pRegionEnd = pRegionStart + regionEntry->Length;
+		pRegionStart = regionEntry->address;
+		pRegionEnd = pRegionStart + regionEntry->length;
 	
 		regionStartKFrame = pRegionStart >> 12;
 		regionEndKFrame = pRegionEnd >> 12;
 
 		#ifdef ADM_MULTIBOOT_MMAP_DEBUGGER
-			Dbg("pRegion: "); DbgInt(regionStartKFrame); Dbg(", "); DbgInt(regionEndKFrame); Dbg(" $"); DbgInt(regionEntry->Type); DbgLine(";");
+			Dbg("pRegion: "); DbgInt(regionStartKFrame); Dbg(", "); DbgInt(regionEndKFrame); Dbg(" $"); DbgInt(regionEntry->type); DbgLine(";");
 		#endif
 
-		if(regionEntry->Type != MULTIBOOT_MEMORY_AVAILABLE){
+		if(regionEntry->type != MULTIBOOT_MEMORY_AVAILABLE){
 			if(((U32) pRegionEnd) & (KPGSIZE -  1))
 				++regionEndKFrame;
 		} else if(((U32) pRegionStart) & (KPGSIZE - 1))
 				++regionStartKFrame;
 
-		TypifyMRegion(regionEntry->Type, regionStartKFrame, regionEndKFrame);
-		regionEntry = (MULTIBOOT_MMAP_ENTRY *) ((unsigned long) regionEntry + mmMap->EntrySize);
+		TypifyMRegion(regionEntry->type, regionStartKFrame, regionEndKFrame);
+		regionEntry = regionEntry->next(mmMap->entrySize);
 	}
 }
-	unsigned long admMultibootTableStartKFrame = admMultibootTableStart >> KPGOFFSET;
-	unsigned long admMultibootTableEndKFrame = ((admMultibootTableEnd % KPGSIZE) ?
-							admMultibootTableEnd + KPGSIZE - admMultibootTableEnd % KPGSIZE :
-							admMultibootTableEnd) >> KPGOFFSET;
 
-	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, admMultibootTableStartKFrame, admMultibootTableEndKFrame);// Reserved multiboot struct
-	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, MB(16), memFrameTableSize);
+	/*
+	 * Prevent allocation of dedicated kernel memory in the physical
+	 * address space. This includes the multiboot-information table, the
+	 * kernel environment and the adjacent page-frame entries.
+	 *
+	 * Since the Initor module has come into use, the need for reserving
+	 * modules is nil. But, in the future, when configuration files,
+	 * kernel-based scripts, etc. advanced features come into use, it may
+	 * become a requirement to again reserved their files. Therefore the
+	 * KfReserveModules() call, is commented out only!
+	 */
+	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, kernelParams.multibootTable,
+			MultibootChannel::getMultibootTableSize());// Reserved multiboot struct
+	TypifyMRegion(MULTIBOOT_MEMORY_STRUCT, kernelParams.loadAddress,
+			kernelParams.pageframeEntries - kernelParams.loadAddress
+			+ pgTotal * sizeof(MMFRAME));
 
-	KfReserveModules();// Reserve modules, as they are not in mmap
+//	KfReserveModules();// Reserve modules, as they are not in mmap
 	KfParseMemory();// Free all available memory!!!
 
 	coreEngine.resetStatistics();

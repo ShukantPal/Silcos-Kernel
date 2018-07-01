@@ -11,12 +11,16 @@ RSDP2 *SystemRsdp2 = NULL;
 
 RSDP *ScanRsdp()
 {
-	unsigned char *scanAddress = (unsigned char *) 0xc0000000;
+	Pager::mapHuge(stcConfigBlock << 12, 0,
+			KF_NOINTR | FLG_NOCACHE, KernelData);
+
+	unsigned char *scanAddress = (unsigned char *)(stcConfigBlock << 12);
+	unsigned char *endSearch = scanAddress + MB(2);
 	char *RsdpString = RsdpSignature;
 
 	DbgLine("Scanning Configuration...");
 
-	while((U32) scanAddress < RsdpThreshold)
+	while(scanAddress < endSearch)
 	{
 		if(memcmp(scanAddress, RsdpString, 8))
 		{
@@ -33,10 +37,12 @@ RSDP *ScanRsdp()
 	if(!SystemRsdp)
 	{
 		DbgLine("System Hardware Failure : ");
-		DbgLine("Details : Root System Description not found. ");
+		DbgLine("Details : Root System Description Pointer not found. ");
 		DbgLine("Warning - Severe.");
 		asm volatile("hlt;");
 	}
+
+	stcConfigBlock += 512;
 
 	return (SystemRsdp);
 }

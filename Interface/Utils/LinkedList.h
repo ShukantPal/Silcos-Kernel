@@ -26,52 +26,40 @@
 #ifndef UTIL_LINKED_LIST_H__
 #define UTIL_LINKED_LIST_H__
 
-/**
- * Struct: LinkedListNode
- *
- * Summary:
- * This is the node used by the linked-list for connecting each element in the
- * list. For other data structures, this should be put at the very beginning
- * so that a mere (LinkedListNode*) cast can be passed to functions operating
- * on the data in lists.
- *
- * Author: Shukant Pal
- */
 struct LinkedListNode
 {
-	LinkedListNode *next;
-	LinkedListNode *prev;
+	struct LinkedListNode *next;
+	struct LinkedListNode *prev;
 };
 
-/**
- * Struct: LinkedList
- *
- * Summary:
- * This is the descriptor for linked-lists which terminate at both ends with
- * null pointers.
- *
- * Author: Shukant Pal
- */
 struct LinkedList
 {
 	unsigned long count;
-	LinkedListNode *head;
-	LinkedListNode *tail;
+	struct LinkedListNode *head;
+	struct LinkedListNode *tail;
 };
 
+#ifndef _CBUILD
 extern "C"
 {
-	void AddElement(LinkedListNode *newNode, LinkedList *List);
-	void RemoveElement(LinkedListNode *newNode, LinkedList *list);
-	void InsertElementAfter(LinkedListNode *oldElement, LinkedListNode *newElement,
-					LinkedList *list);
-	void InsertElementBefore(LinkedListNode *oldElement, LinkedListNode *newElement,
-					LinkedList *list);
-	void PushHead(LinkedListNode *newHead, LinkedList *list);
-	LinkedListNode *PullTail(LinkedList *fromList);
-}
+#endif
 
-static inline void ShiftElement(LinkedListNode *elem, LinkedList *old, LinkedList *newList)
+	void AddElement(struct LinkedListNode *newNode, struct LinkedList *List);
+	void RemoveElement(struct LinkedListNode *newNode,
+			struct LinkedList *list);
+	void InsertElementAfter(struct LinkedListNode *oldElement,
+			struct LinkedListNode *newElement, struct LinkedList *list);
+	void InsertElementBefore(struct LinkedListNode *oldElement,
+			struct LinkedListNode *newElement, struct LinkedList *list);
+	void PushHead(struct LinkedListNode *newHead, struct LinkedList *list);
+	struct LinkedListNode *PullTail(struct LinkedList *fromList);
+
+#ifndef _CBUILD
+}
+#endif
+
+static inline void ShiftElement(struct LinkedListNode *elem,
+		struct LinkedList *old, struct LinkedList *newList)
 {
 	RemoveElement(elem, old);
 	AddElement(elem, newList);

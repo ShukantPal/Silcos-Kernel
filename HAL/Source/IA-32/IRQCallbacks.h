@@ -117,6 +117,8 @@ extern "C" void __irqCallback(114);
 extern "C" void __irqCallback(115);
 extern "C" void __irqCallback(116);
 extern "C" void __irqCallback(117);
+extern "C" void __irqCallback(118);
+extern "C" void __irqCallback(119);
 extern "C" void __irqCallback(120);
 extern "C" void __irqCallback(121);
 extern "C" void __irqCallback(122);
@@ -186,6 +188,7 @@ extern "C" void __irqCallback(185);
 extern "C" void __irqCallback(186);
 extern "C" void __irqCallback(187);
 extern "C" void __irqCallback(188);
+extern "C" void __irqCallback(189);
 extern "C" void __irqCallback(190);
 extern "C" void __irqCallback(191);
 

@@ -1,21 +1,21 @@
-///
-/// @file IDT.cpp
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
+/**
+ * @file IDT.cpp
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #define NAMESPACE_IA32_IDT
 
 #include "IRQCallbacks.h"
@@ -32,7 +32,7 @@ import_asm void RR_BalanceRunqueue(void);
 import_asm void Executable_ProcessorBinding_IPIRequest_Invoker();
 import_asm void hpetTimer();
 
-IDTEntry defaultIDT[256] __attribute__((aligned(32)));
+IDTEntry defaultIDT[256] __attribute__((aligned(8)));
 IDTPointer defaultIDTPointer;
 
 ///
@@ -94,12 +94,6 @@ decl_c void DisablePIC(void)
 	WritePort(0x21, 0xFF);
 }
 
-void Spurious()
-{
-	while(TRUE);
-	asm volatile("pop %ebp; iret;");
-}
-
 ///
 /// Maps all the irq-handlers to the IDT before kernel initialization. This
 /// includes the exception handlers, device IRQs, syscall entries, traps, etc.
@@ -113,7 +107,6 @@ decl_c void MapIDT()
 {
 	IDTEntry *pIDT = defaultIDT;
 	IDTPointer *pIDTPointer = &(defaultIDTPointer);
-	memsetf(pIDT, 0, sizeof(IDTEntry) * 256);
 
 	MapHandler(0x8, (unsigned int) &DoubleFault, pIDT);
 	MapHandler(0xA, (unsigned int) &InvalidTSS, pIDT);
@@ -123,13 +116,16 @@ decl_c void MapIDT()
 	MapHandler(0xFD, (unsigned int) &Executable_ProcessorBinding_IPIRequest_Invoker, pIDT);
 	MapHandler(0xFE, (unsigned int) &Spurious, pIDT);
 	MapHandler(0x20, (unsigned int) &KiClockRespond, pIDT);
+	MapHandler(0x21, (unsigned int) &Spurious, pIDT);
+
+	DbgInt(*(unsigned short*)&pIDT[0x21]); Dbg(" ");
 
 	// Here, we are mapping the 160 device-IRQs in the range 32-191
 	// inclusive. As there was "no" other way to map them, we have just
 	// call MapHandler 160 times (using a pointer array was wasteful)
 #define map_irqClbk(vt) MapHandler(vt, (unsigned int) &__irqCallback##vt, pIDT);
 {
-	map_irqClbk(32); map_irqClbk(33); map_irqClbk(34); map_irqClbk(35);
+	//map_irqClbk(32); map_irqClbk(33); map_irqClbk(34); map_irqClbk(35);
 	map_irqClbk(36); map_irqClbk(37); map_irqClbk(38); map_irqClbk(39);
 	map_irqClbk(40); map_irqClbk(41); map_irqClbk(42); map_irqClbk(43);
 	map_irqClbk(44); map_irqClbk(45); map_irqClbk(46); map_irqClbk(47);
@@ -152,6 +148,7 @@ decl_c void MapIDT()
 	map_irqClbk(109); map_irqClbk(110); map_irqClbk(111);
 	map_irqClbk(112); map_irqClbk(113); map_irqClbk(114);
 	map_irqClbk(115); map_irqClbk(116); map_irqClbk(117);
+	map_irqClbk(118); map_irqClbk(119);
 	map_irqClbk(120); map_irqClbk(121); map_irqClbk(122);
 	map_irqClbk(123); map_irqClbk(124); map_irqClbk(125);
 	map_irqClbk(126); map_irqClbk(127); map_irqClbk(128);
@@ -175,6 +172,7 @@ decl_c void MapIDT()
 	map_irqClbk(180); map_irqClbk(181); map_irqClbk(182);
 	map_irqClbk(183); map_irqClbk(184); map_irqClbk(185);
 	map_irqClbk(186); map_irqClbk(187); map_irqClbk(188);
+	map_irqClbk(189);
 	map_irqClbk(190); map_irqClbk(191);
 }
 	pIDTPointer->Limit = (sizeof(IDTEntry) * 256) - 1;

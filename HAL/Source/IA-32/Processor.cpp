@@ -50,6 +50,8 @@
 #include <Synch/Spinlock.h>
 #include <KERNEL.h>
 
+#include <Environment.h>
+
 using namespace HAL;
 using namespace HAL::CpuId;
 using namespace Executable;
@@ -294,7 +296,7 @@ const char *nmPROCESSOR_TOPOLOGY = "@SMP::ProcessorTopology";
 ObjectInfo *tPROCESSOR_TOPOLOGY;
 
 extern bool oballocNormaleUse;
-
+extern "C" void Spurious();
 ///
 /// Executes the roles of the boot-strap processor relevant to the system
 /// startup. It checks if all features are available and enables interrupts,
@@ -333,7 +335,7 @@ decl_c void SetupBSP()
 	Pager::use((ADDRESS) irt + 4096, FLG_NOCACHE, KernelData);
 	LocalIRQ::init(PROCESSOR_ID);
 
-	memset(cpu, 0, sizeof(Processor));
+	memsetf(cpu, 0, sizeof(Processor));
 
 	ConstructProcessor(cpu);
 	DisablePIC();
@@ -342,8 +344,7 @@ decl_c void SetupBSP()
 	oballocNormaleUse = true;
 
 	APIC::setupEarlyTimer();
-	FlushTLB(0);
-	
+
 	ModuleContainer *halCtr = reinterpret_cast<ModuleContainer*>(
 			Namespace::search("::kernel.silcos.hal", false));
 
@@ -360,16 +361,12 @@ decl_c void SetupBSP()
 	}
 
 	WriteCMOSRegister(0xF, 0xA);
-	unsigned long startEIP = APBootSequenceBuffer * KB(4);
-	*((volatile unsigned short *) PADDR_TO_VADDR(TRAMPOLINE_HIGH))
-			= (startEIP >> 4);
-	*((volatile unsigned short *) PADDR_TO_VADDR(TRAMPOLINE_LOW))
-			= (startEIP & 0xF);
 
 	cpu->hw.init();
 
 	ProcessorTopology::init();
 	ProcessorTopology::plug();
+
 }
 
 ///
@@ -378,6 +375,10 @@ decl_c void SetupBSP()
 decl_c void SetupAPs()
 {
 	EnumerateMADT(&AddProcessorInfo, &IOAPIC::registerIOAPIC, null);
+
+	// testing - phase
+
+	DbgInt(GetProcessorById(0)->hw.tscFreq);
 	testhpet();
 }
 
@@ -394,8 +395,9 @@ decl_c ArchCpu *SetupProcessor()
 	ArchCpu *pInfo = &(pCPU->hw);
 
 	SetupGDT(pInfo);
-	SetupIDT();
 	SetupTSS(pInfo);
+	SetupIDT();
+
 	return (pInfo);
 }
 

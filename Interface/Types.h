@@ -15,7 +15,7 @@
 	typedef unsigned int size_t;
 #endif
 
-#ifndef FBUILD_C
+#ifndef _CBUILD
 	#define import_asm extern "C" // compile-time specifier
 	#define export_asm extern "C"
 	#define decl_c extern "C"
@@ -43,6 +43,10 @@
 	#define import_asm extern
 	#define export_asm extern
 	#define decl_c extern
+
+	#define bool int
+	#define true 1
+	#define false 0
 #endif
 
 #define returnv_if(boolCondition) if(boolCondition) return;
@@ -113,6 +117,8 @@
 
 	#define sysc void 
 
+#define getAddress(localReference)((unsigned long)(&localReference))
+
 typedef unsigned long SIZE;
 typedef void Void;
 typedef SIZE Size;
@@ -120,6 +126,21 @@ typedef SIZE Size;
 typedef char byte;
 
 #define null 0
+
+//!
+//! @code strong_null macro is used at places where null can be confused with
+//! another object that behave like null, with explicit properties (like the
+//! rb-tree's nil node). This tells the reader that the programmer intended to
+//! pass null and not the placebo null-object.
+//!
+#define strong_null 0
+
+//!
+//! @code weak_null means that the object at address 0 is being passed. It
+//! doesn't mean no object exists. Rarely used, like in shared-memory
+//! addressing where relative offset addresses are used.
+//!
+#define weak_null 0
 
 extern unsigned int KernelStart;
 extern unsigned int KernelEnd;
@@ -133,11 +154,6 @@ extern unsigned int KernelPDatStart;
 extern unsigned int KernelPDatEnd;
 extern unsigned long StackAddress;
 extern char *HALData;
-
-extern "C" const char *__space;// " "
-extern "C" const char *__leftparen;// "("
-extern "C" const char *__rightparen;// ") "
-extern "C" const char *__comma;// ", "
 
 extern void ImmatureHang(const char*);
 

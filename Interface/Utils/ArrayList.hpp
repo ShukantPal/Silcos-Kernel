@@ -41,12 +41,14 @@ public:
 	ArrayList();
 	ArrayList(unsigned long initialCapacity);
 	ArrayList(LinkedList& elems);
+	~ArrayList();
 	unsigned long add(void *elem);
 	unsigned long add(void *elem, unsigned long index);
 	unsigned long addAll(LinkedList& elems);
 	unsigned long count(){ return (size); }
 	inline void ensureBuffer(unsigned long newCapacity);
 	void *fastGet(unsigned long idx){ return (elemData[idx]); }
+	void *&fastRef(unsigned long idx){ return (elemData[idx]); }
 	void *get(unsigned long ix){ return (ix < size ? elemData[ix] : 0); }
 	bool isEmpty(){ return (!size); }
 	unsigned long firstIndexOf(void *);

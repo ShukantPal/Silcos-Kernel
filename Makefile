@@ -15,7 +15,7 @@
 # development phase.
 #
 #
-TargetArchitecture = IA32
+export TargetArchitecture = IA32
 
 ifeq ($(TargetArchitecture), IA32)
 	export TARGET = i386-elf
@@ -63,10 +63,13 @@ ifeq ($(TargetArchitecture), IA32)
 	export DEF_LD_SCRIPT = $(shell $(LD) --verbose)
 	
 	#
-	# See the last line -Xassembler. It is because the assembler needs to
-	# know that its building for --32 (x86) platform. If your system does
-	# not use the GNU ASSEMBLER than it will be problematic.
+	# C language flags for initializor-< ONLY. Not for kernel modules
+	# using C.
 	#
+	export OFLAGS = -I"." -I"../Interface" -I"../Interface/Arch" -c \
+		-fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall \
+		-O2 -fno-exceptions -fno-strict-aliasing
+	
 	export CFLAGS = -I"." -I"../Interface" -I"../Interface/Arch" -c \
 		-fvisibility=default -ffreestanding -nostdlib -nostdinc -Wall \
 		-O2 -fPIC -fno-rtti -fno-exceptions -fno-strict-aliasing
@@ -74,6 +77,11 @@ ifeq ($(TargetArchitecture), IA32)
 	export LFLAGS = -lgcc -shared -ffreestanding \
 		-nostdlib -nostdinc -fno-exceptions -fno-rtti \
 		-Wl,--warn-unresolved-symbols,-shared
+		
+	export LH_FLAGS = -lgcc -pie -ffreestanding \
+		-nostdlib -nostdinc -fno-exceptions -fno-rtti \
+		-export-dynamic \
+		-Wl,--warn-unresolved-symbols,-pie
 		
 	#
 	# DefaultCppRuntime is used when the current-directory is just below
@@ -114,7 +122,8 @@ BuildCppRuntime: Modules/crti.S Modules/crtn.S Modules/crt0.S
 # allowing it to be burnt on a CD/DVD or run under an emulator.
 #
 Build: BuildCppRuntime
-	$(info WELCOME TO Silcos Kernel BUILD INFRASTRUCTURE!)
+	$(info Welcome to the build infrastructure!)
+	$(MAKE) IA32_INITOR -C ./Initializer
 	$(MAKE) BuildChain -C ./KernelHost
 	$(MAKE) IA32_HAL -C ./HAL
 	$(MAKE) ExMake -C ./ExecutionManager
@@ -134,3 +143,8 @@ q: Build
 b: Build
 	grub-mkrescue -o os.iso ../circuit-iso --modules="iso9660 part_msdos multiboot"
 	bochs
+	
+Run:
+	grub-mkrescue -o os.iso ../circuit-iso --modules="iso9660 part_msdos multiboot"
+	qemu-system-i386 -cdrom os.iso -boot d -m 512 -smp cpus=1,cores=1,sockets=1 -display sdl -cpu core2duo
+	

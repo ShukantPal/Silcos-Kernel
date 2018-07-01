@@ -68,25 +68,18 @@ static AVLLinker *AVLRotateLeft(AVLLinker *newNode)
  */
 static AVLNode *InsertNodeInBranch(AVLNode *newNode, unsigned long *insertionStatus, AVLNode *rootNode)
 {
-	if(rootNode == NULL)
-	{
+	if(rootNode == NULL){
 		*insertionStatus = NODE_INSERTED;
 		return (newNode);
 	}
 
 	if(newNode->sortValue < rootNode->sortValue)
-	{
 		rootNode->leftChild = InsertNodeInBranch(newNode, insertionStatus, rootNode->leftChild);
-	}
 	else if(newNode->sortValue > rootNode->sortValue)
-	{
 		rootNode->rightChild = InsertNodeInBranch(newNode, insertionStatus, rootNode->rightChild);
-	}
 	else
-	{
 		*insertionStatus = NODE_FOUND;
 		return (rootNode); // Indicate that matching root is found.
-	}
 
 	AVLNode *leftChild = rootNode->leftChild;
 	AVLNode *rightChild = rootNode->rightChild;

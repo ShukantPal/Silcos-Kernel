@@ -26,13 +26,17 @@
 #include <TYPE.h>
 #include <Utils/LinkedList.h>
 
+#ifndef _CBUILD
 namespace Module
 {
+#endif
 
 struct ModuleRecord;
 
+#ifndef _CBUILD
 namespace Elf
 {
+#endif
 
 #define EI_NIDENT 16
 
@@ -101,15 +105,6 @@ enum ElfVersion {
 	EV_CURRENT = 1 // Current Version
 };
 
-///
-/// Holds the summarized information regarding an elf-object file. It
-/// is present at the very beginning of the blob/file and should be
-/// first attested by @code ElfAnalyzer::validateBinary().
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 struct ElfHeader
 {
 	#define EI_MAG0		0
@@ -217,10 +212,9 @@ struct SectionHeader
 
 enum SymbolBind
 {
-	STB_LOCAL  = 0,//!< STB_LOCAL - not visible outside object-file
-	STB_GLOBAL = 1,//!< STB_GLOBAL - visible globally
-	STB_WEAK   = 2,//!< STB_WEAK - visible globally but with lower
-		       //! precedence than STB_GLOBAL types
+	STB_LOCAL  = 0,
+	STB_GLOBAL = 1,
+	STB_WEAK   = 2,
 	STB_LOPROC = 13,
 	STB_HIPROC = 15
 };
@@ -229,260 +223,148 @@ enum SymbolBind
 
 enum SymbolType
 {
-	STT_NOTYPE	= 0,//!< STT_NOTYPE - Type not specified
-	STT_OBJECT	= 1,//!< STT_OBJECT - Associated with a data object
-	STT_FUNC	= 2,//!< STT_FUNC - Associated with a function or other
-			    //! executable code
-	STT_SECTION	= 3,//!< STT_SECTION - Associated with a section
-	STT_FILE	= 4,//!< STT_FILE - Specifies name of a source-file
+	STT_NOTYPE	= 0,
+	STT_OBJECT	= 1,
+	STT_FUNC	= 2,
+	STT_SECTION	= 3,
+	STT_FILE	= 4,
 	STT_LOPROC	= 13,
 	STT_HIPROC	= 15
 };
 
 #define ELF32_ST_INFO(b, t) (((b) << 4) + ((t)&0xF))
 
-///
-/// An entry in the symbol-table of an elf-object file. It holds
-/// the information needed to locate and relocate a module's
-/// symbolic definition/reference.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 struct Symbol
 {
-	ELF32_WORD name;//!< Holds an index into the object file's symbol
-			//! string table having its string-name. If it is
-			//! zero, then the symbol has no name.
-	ELF32_ADDR value;//!< Gives the value of the associated symbol
-	ELF32_WORD size;//!< Holds the associated size of the symbol
-	unsigned char info;//!< Specifies the symbol's type and binding attr
-	unsigned char other;//!< Reserved by specification, currently
-	ELF32_HALF sectionIndex;//!< Holds the relevant section-header index
+	ELF32_WORD name;
+	ELF32_ADDR value;
+	ELF32_WORD size;
+	unsigned char info;
+	unsigned char other;
+	ELF32_HALF sectionIndex;
 };
 
-///
-/// Describes the type of relocation entry and how to alter the
-/// relevant instruction and data fields. The descriptions use
-/// the following notation -
-/// A - This means the addend used to compute the value of the field
-/// B - This means the base-address at which module has been loaded in
-///     kernel memory.
-/// G - This means the offset into the GOT at which the address of the entry's
-///     symbol will reside during execution.
-/// GOT - This means the address of the GOT
-/// L - This means the address of the PLT entry for a symbol
-/// P - This means the address of the storage unit being replaced
-/// S - This means the value of the symbol whose index resides the entry
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 enum RelocationType
 {
-	R_386_NONE	= 0,//!< R_386_NONE - none
-	R_386_32	= 1,//!< R_386_32 - S + A
-	R_386_PC32	= 2,//!< R_386_PC32 - S + A - P
-	R_386_GOT32	= 3,//!< R_386_GOT32 - G + A - P
-	R_386_PLT32	= 4,//!< R_386_PLT32 - L + A - P
-	R_386_COPY	= 5,//!< R_386_COPY - none
-	R_386_GLOB_DAT	= 6,//!< R_386_GLOB_DAT - S
-	R_386_JMP_SLOT	= 7,//!< R_386_JMP_SLOT - S
-	R_386_RELATIVE	= 8,//!< R_386_RELATIVE - B + A
-	R_386_GOTOFF	= 9,//!< R_386_GOTOFF - S + A - GOT
-	R_386_GOTPC	= 10//!< R_386_GOTPC - GOT + A - P
+	R_386_NONE	= 0,
+	R_386_32	= 1,
+	R_386_PC32	= 2,
+	R_386_GOT32	= 3,
+	R_386_PLT32	= 4,
+	R_386_COPY	= 5,
+	R_386_GLOB_DAT	= 6,
+	R_386_JMP_SLOT	= 7,
+	R_386_RELATIVE	= 8,
+	R_386_GOTOFF	= 9,
+	R_386_GOTPC	= 10
 };
 
 #define ELF32_R_SYM(i) ((i) >> 8)
 #define ELF32_R_TYPE(i) ((unsigned char) (i))
 #define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char) (t))
 
-///
-/// Relocation entry which has an **implicit addend** located at the
-/// field to be relocated.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 struct RelEntry
 {
-	ELF32_ADDR offset;//!< Relative-address of relocatable field
-	ELF32_WORD info;//!< Gives symbol-table index and type of relocation
+	ELF32_ADDR offset;
+	ELF32_WORD info;
 };
 
-///
-/// Relocation entry which has an **explicit addend** located in the
-/// entry itself.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 struct RelaEntry
 {
-	ELF32_ADDR offset;//!< Relative-address of relocatable-field
-	ELF32_WORD info;//!< Gives symbol-table index & type of relocation
-	ELF32_SWORD addend;//!< Constant addend used while relocation
+	ELF32_ADDR offset;
+	ELF32_WORD info;
+	ELF32_SWORD addend;
 };
 
-///
-/// Describes the values by which segments/program-header can be
-/// described by the ProgramHeader::entryType field.
-///
 enum PhdrType
 {
-	PT_NULL		= 0,//!< PT_NULL - unused entry
-
-	PT_LOAD		= 1,//!< PT_LOAD - specifies loadable segment
-
-	PT_DYNAMIC	= 2,//!< PT_DYNAMIC - specifies dynamic linking info
-
-	PT_INTERP	= 3,//!< PT_INTERP - specifies location and size of
-			    //! null terminated path to invoke interpreter. Not
-			    //! used by this kernel as ModuleLoader is used.
-			    
-	PT_NOTE		= 4,//!< PT_NOTE - specifies location and size of any
-			    //! auxiliary information. ElfAnalyzer may be used
-			    //! to access such kind of notes.
-
-	PT_SHLTB	= 5,//!< PT_SHLTB - reserved as of now
-
-	PT_PHDR		= 6,//!< PT_PHDR - specifies location and size of the
-			    //! program-header table in file & memory. It is
-			    //! optional but only exists singly.
-
-	PT_LOPROC	= 0x70000000,//!< PT_LOPROC - beginning of CPU-reserved
-					//! values
-
-	PT_HIPROC	= 0x7FFFFFFF //!< PT_HIPROC - end of CPU-reserved vals
+	PT_NULL		= 0,
+	PT_LOAD		= 1,
+	PT_DYNAMIC	= 2,
+	PT_INTERP	= 3,
+	PT_NOTE		= 4,
+	PT_SHLTB	= 5,
+	PT_PHDR		= 6,
+	PT_LOPROC	= 0x70000000,
+	PT_HIPROC	= 0x7FFFFFFF
 };
 
-///
-/// A kernel module's program-headers describe a segment or other
-/// information the kernel-host needs to prepare it for
-/// running.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 struct ProgramHeader
 {
-	ELF32_WORD entryType;//!< Tells what kind of infomation it gives
-	ELF32_OFF fileOffset;//!< Gives the offset in the file at which first
-			     //!< byte of segment resides
-	ELF32_ADDR virtualAddress;//!< Gives the virtual address at which the
-				  //! first byte in the segment resides
-	ELF32_ADDR physicalAddress;//!< Not relevant in the kernel-context
-	ELF32_WORD fileSize;//!< Size of the segment in the file, may be zero
-	ELF32_WORD memorySize;//!< Size of the segment in virtual memory, it
-			      //! can be zero
-	ELF32_WORD flagSet;//!< Contains the flags relevant to this entry
-	ELF32_WORD alignBoundary;//!< Values to which segment are aligned in
-				 //! memory and the file
+	ELF32_WORD entryType;
+	ELF32_OFF fileOffset;
+	ELF32_ADDR virtualAddress;
+	ELF32_ADDR physicalAddress;
+	ELF32_WORD fileSize;
+	ELF32_WORD memorySize;
+	ELF32_WORD flagSet;
+	ELF32_WORD alignBoundary;
 };
 
-///
-/// These are the types of **dynamic entries** present in the _DYNAMIC
-/// array.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 enum DynamicTag
 {
-	DT_NULL 	= 0, //! marks end of dynamic array
-	DT_NEEDED 	= 1, //! offset of required library's name
-	DT_PLTRELSZ	= 2, //! the total size
-	DT_PLTGOT	= 3, //! address of GOT
-	DT_HASH		= 4, //! address of the symbol hash table
-	DT_STRTAB	= 5, //! address of the string table
-	DT_SYMTAB	= 6, //! address of the symbol table
-	DT_RELA		= 7, //! address of a relocation table
-	DT_RELASZ	= 8, //! total size of the DT_RELA relocation table
-	DT_RELAENT	= 9, //! size of the DT_RELA relocation entry
-	DT_STRSZ	= 10,//! size of the string table
-	DT_SYMENT	= 11,//! size of the symbol table entry
-	DT_INIT		= 12,//! address of the initialization function
-	DT_FINI		= 13,//! address of the termination function
-	DT_SONAME	= 14,//! build name of module
-	DT_RPATH	= 15,//! presence in .so file resolution algorithm for
-			     //! references within the library
-	DT_SYMBOLIC	= 16,//! similar to DT_RELA, has implicit addends
-	DT_REL		= 17,//! total size, in bytes, of the DT_REL table
-	DT_RELSZ	= 18,//! Element holds the size, in bytes, of the DT_REL relocation entry
-	DT_RELENT	= 19,//! Memory specifies the type of relocation entry referred by procedure linkage table
-	DT_PLTREL	= 20,//! Member is used for debugging, contents not specified for the ABI, used KAF software only
-	DT_DEBUG	= 21,//! absence signifies that no relocation entry causes no change to a non-writable segment
-	DT_TEXTREL	= 22,//!< DT_TEXTREL
-	DT_JMPREL	= 23,//! pointer to relocation entries for PLT
-	DT_INIT_ARRAY	= 25,//!< The address of an array of pointers to
-	 	 	     //! initialization functions; requires that a
-	 	 	     //! DT_INIT_ARRAYSZ element also be present.
-	DT_FINI_ARRAY	= 26,//!< The address of an array of pointers to
-			     //! terminatation functions; requires that a
-			     //! DT_FINI_ARRAYSZ element also be present.
-	DT_INIT_ARRAYSZ	= 27,//!< The total size, in bytes, of the
-			     //! DT_INIT_ARRAY array.
-	DT_FINI_ARRAYSZ	= 28,//!< The total size, in bytes, of the
-			     //!< DT_FINI_ARRAY array.
+	DT_NULL 	= 0,
+	DT_NEEDED 	= 1,
+	DT_PLTRELSZ	= 2,
+	DT_PLTGOT	= 3,
+	DT_HASH		= 4,
+	DT_STRTAB	= 5,
+	DT_SYMTAB	= 6,
+	DT_RELA		= 7,
+	DT_RELASZ	= 8,
+	DT_RELAENT	= 9,
+	DT_STRSZ	= 10,
+	DT_SYMENT	= 11,
+	DT_INIT		= 12,
+	DT_FINI		= 13,
+	DT_SONAME	= 14,
+	DT_RPATH	= 15,
+	DT_SYMBOLIC	= 16,
+	DT_REL		= 17,
+	DT_RELSZ	= 18,
+	DT_RELENT	= 19,
+	DT_PLTREL	= 20,
+	DT_DEBUG	= 21,
+	DT_TEXTREL	= 22,
+	DT_JMPREL	= 23,
+	DT_INIT_ARRAY	= 25,
+	DT_FINI_ARRAY	= 26,
+	DT_INIT_ARRAYSZ	= 27,
+	DT_FINI_ARRAYSZ	= 28,
 	DT_RUNPATH	= 29,
 	DT_FLAGS	= 30,
 	DT_ENCODING	= 32,
 	DT_PREINIT_ARRAY= 32,
 	DT_PREINIT_ARRAYSZ= 33,
 	DT_MAXPOSTAGS	= 34,
-	DT_LOPROC	= 0x70000000,//! lower-bound for arch-dependent entries
-	DT_HIPROC	= 0x7FFFFFFF//! upper-bound for arch-dependent entries
+	DT_LOPROC	= 0x70000000,
+	DT_HIPROC	= 0x7FFFFFFF
 };
 
-///
-/// As module participate in dynamic-linking, its PHDRs will have an element
-/// of type PT_DYNAMIC which points to the array of these entries containing
-/// various dynamic-linking related information.
-///
-/// @version 1.0
-/// @since Circuit 2.3
-///
 struct DynamicEntry
 {
-	ELF32_SWORD tag;//!< Controls interpretation of union below
+	ELF32_SWORD tag;
 	union
 	{
-		ELF32_WORD val;//!< Integer value, depending on tag
-		ELF32_ADDR ptr;//!< Virtual-address, depending on tag
+		ELF32_WORD val;
+		ELF32_ADDR ptr;
 	};
 };
-
-// -- KMod-ELF-Loader CACHE ---
 
 struct SymbolTable
 {
 	char *nameTable;
-	Symbol *entryTable;
+	struct Symbol *entryTable;
 	unsigned long entryCount;
 };
 
-/*
- * Struct: HashTable
- *
- * Summary:
- * Default-hashTable for storing elf-symbols and getting low lookup-delays
- * while querying symbols.
- *
- * Author: Shukant Pal
- */
 struct HashTable
 {
-	SectionHeader *hashSectionHdr;/* Section-header, optional (@Deprecated) */
-	unsigned long bucketEntries;/* No. of bucket entries */
-	unsigned long chainEntries;/* No. of chain entries */
-	unsigned long *bucketTable;/* Pointer to bucket table */
-	unsigned long *chainTable;/* Pointer to chain table */
+	struct SectionHeader *hashSectionHdr;
+	unsigned long bucketEntries;
+	unsigned long chainEntries;
+	unsigned long *bucketTable;
+	unsigned long *chainTable;
 };
 
 struct RelaTable
@@ -523,7 +405,12 @@ struct ProgramCache {
 	struct DynamicTable DynamicTable;
 };
 
+#ifndef _CBUILD
 }// namespace Elf
+#endif
+
+#ifndef _CBUILD
 }// namespace Module
+#endif
 
 #endif/* Module/ELF.h */

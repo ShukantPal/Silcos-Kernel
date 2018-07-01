@@ -24,6 +24,40 @@
 #define PgUserLdBTI 2
 #define PgCheDisableBTI 3
 
+/*
+ * Aligns the given memory address/size by trimming it page-aligned.
+ */
+static inline unsigned long getPageAligned(unsigned long bytes) {
+	return (bytes & ~0xFFF);
+}
+
+/*
+ * Aligns the given memory address/size by trimming it huge-page aligned.
+ */
+static inline unsigned long getHugePageAligned(unsigned long bytes) {
+	return (bytes & ~0xFFFFF);
+}
+
+/*
+ * Returns the size, in bytes, to the total number of pages
+ * covered with the given address/amount of memory, assuming that it
+ * starts on a page-aligned address.
+ */
+static inline unsigned long getPagesSize(unsigned long bytes) {
+	return ((bytes % 0x1000) ?
+			((bytes & ~0xFFF) + 0x1000) : bytes);
+}
+
+/*
+ * Returns the size, in bytes, of the total number of huge pages
+ * covered with the given address/amount of memory, assuming that it
+ * starts on a huge-page aligned address.
+ */
+static inline unsigned long getHugePagesSize(unsigned long bytes) {
+	return ((bytes % 0x1000000) ?
+			((bytes & ~0xFFFFFF) + 0x1000000) : bytes);
+}
+
 typedef unsigned long ADDRESS;
 typedef U64 PHYSICAL_T;
 typedef U64 PhysAddr;
@@ -38,9 +72,20 @@ typedef unsigned long ADDRESS;
 typedef
 struct PageTrans
 {
-	unsigned int Padding[6]; /* Provide 32-byte padding for PDPT. */
+	unsigned int Padding[5]; /* Provide 32-byte padding for PDPT. */
+	unsigned long physPDPTAddr;
 	unsigned long long PDPT[4];
+
+	U64 *getPDPT() {
+		return (PDPT);
+	}
+
 } PAGE_TRANSALATOR;
+
+static inline unsigned long getAddressFor(unsigned long pdptIndex,
+		unsigned long dirIndex, unsigned long tableIndex) {
+	return ((pdptIndex << 30) + (dirIndex << 21) + (tableIndex << 12));
+}
 
 extern "C" void EraseIdentityPage(Void);
 

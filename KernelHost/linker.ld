@@ -1,12 +1,22 @@
 /* @file linker.ld
- *
- * This is the linker script for the KernelHost position-independent
- * executable.
- *
+ 
+ This is the linker script for the KernelHost, which is the only position
+ independent executable in the kernel-environment. It can be located anywhere
+ in physical memory, depending where the initializer decides to put it.
+ 
+ Most likely, the kernel will be located exactly at MARK_16M (16-MB address),
+ just after DMA memory.
+ 
+ No relocations are performed while copying the segments of the
+ executable. The ModuleLoader logic is present in the KernelHost itself, and
+ therefore some bootstrapping mechansim is done in it. The initializer only
+ and only moves the segments of the executable.
+ 
+ ------------------------------------------------------------------------------
  */
 
 OUTPUT_FORMAT("elf32-i386")
-ENTRY(InitRuntime)
+ENTRY(HostEntry)
 
 KERNEL_OFFSET = 0xC0000000;
 KERNEL_START = 0xC0100000;
@@ -17,30 +27,24 @@ PHDRS {
 }
 
 SECTIONS {
-	. = KERNEL_START + SIZEOF_HEADERS;
+	. = SIZEOF_HEADERS;
 	KernelStart = .;
-	
-	.BsTransferCtl : AT(ADDR(.BsTransferCtl) - KERNEL_OFFSET)
-	{
-	kernelSeg = .;
-		*(.BsTransferCtl)
-	} :kernel
 
 	KernelCodeStart = .;
-	.text : AT(ADDR(.text) - KERNEL_OFFSET)
+	.text :
 	{		
 		ctorsStart = .;
 		*(SORT(.ctors*))
 		ctorsEnd = .;
 				
+		*(.init)
+		*(.fini)
 		*(.text)
 		*(.text.*)
-		*(.gnu.linkonce.t.*)
-		*(.gnu.linkonce.r.*)
 	} 
 	KernelCodeEnd = .;
 
-	.data ALIGN (0x1000) : AT(ADDR(.data) - KERNEL_OFFSET)
+	.data ALIGN (0x1000) :
 	{
 	KernelDataStart = .;
 		*(COMMON)
@@ -48,16 +52,17 @@ SECTIONS {
 		*(.rdata)
 		*(.rodata*)
 	KernelDataEnd = .;
+	
 	KernelBSSStart = .;
 		*(.bss)
 	KernelBSSEnd = .;
+	
 	KernelPDatStart = .;
 	*(.KernelPermData)
 	KernelPDatEnd = .;
-		/**(.gnu.linkonce.d.*)*/
 	}	
 	
-	.dynamic : AT(ADDR(.dynamic) - KERNEL_OFFSET)
+	.dynamic :
 	{
 				msiKernelDynamicTableStart = .;
 		*(.dynamic)

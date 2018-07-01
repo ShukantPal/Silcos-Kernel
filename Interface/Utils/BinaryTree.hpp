@@ -230,11 +230,6 @@ public:
 		return (false);
 	}
 
-	static inline void printInorder(BinaryTree *tree)
-	{
-		printInorder(tree->treeRoot, tree->nil);
-	}
-
 	void* getLowerBoundFor(unsigned long key);
 	void* getUpperBoundFor(unsigned long key);
 	void* getClosestOf(unsigned long key);
@@ -298,56 +293,6 @@ protected:
 		}
 
 		return (nNode);
-	}
-
-	static inline void printPair(BinaryNode *atNode)
-	{
-		Dbg(__leftparen);
-		DbgInt(atNode->key());
-		Dbg(__comma);
-		DbgInt((unsigned long) atNode->val());
-		Dbg(__rightparen);
-	}
-
-	static inline void printInorder(BinaryNode *node, BinaryNode *nil)
-	{
-		unsigned long dir = DOWNWARD_LEFT;
-
-		while(TRUE){
-			switch(dir)
-			{
-			case DOWNWARD_LEFT:
-				if(node->getLeftChild() != nil)
-					node = node->getLeftChild();
-				else {
-					printPair(node);
-					if(node->isLeftChild())
-						dir = LEFT_UPWARD;
-					else
-						dir = RIGHT_UPWARD;
-				}
-				break;
-			case DOWNWARD_RIGHT:
-				if(node->getRightChild() != nil)
-					node = node->getRightChild();
-				dir = DOWNWARD_LEFT;
-				break;
-			case LEFT_UPWARD:
-				node = node->getParent();
-				if(node == nil)
-					return;
-				printPair(node);
-				dir = DOWNWARD_RIGHT;
-				break;
-			case RIGHT_UPWARD:
-				node = node->getParent();
-				if(node == nil)
-					return;
-				if(node->isLeftChild())
-					dir = LEFT_UPWARD;
-				break;
-			}
-		}
 	}
 
 	BinaryTree();

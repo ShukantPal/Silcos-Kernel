@@ -84,8 +84,8 @@ $(COMPILE)/IOAPIC.o: $(SOURCE)/IOAPIC.cpp
 $(COMPILE)/IRQCallbacks.o: $(SOURCE)/IRQCallbacks.asm
 	$(AS) $(ASFLAGS) $(SOURCE)/IRQCallbacks.asm -o $(COMPILE)/IRQCallbacks.o
 
-$(COMPILE)/Load.o: $(SOURCE)/Load.asm
-	$(AS) $(ASFLAGS) $(SOURCE)/Load.asm -o $(COMPILE)/Load.o
+$(COMPILE)/Load.o: $(SOURCE)/Load.S
+	$(GNU_AS) $(GNU_ASFLAGS) $(SOURCE)/Load.S -o $(COMPILE)/Load.o
 
 $(COMPILE)/Processor.o: $(SOURCE)/Processor.cpp
 	$(CC) $(CFLAGS) $(SOURCE)/Processor.cpp -o $(COMPILE)/Processor.o
@@ -107,7 +107,7 @@ $(COMPILE)/TSS.o: $(SOURCE)/TSS.cpp
 #
 
 IA32_HAL: $(ACPI_Build) $(IA32_Build)
-	 $(LD) ../Modules/crti.o $(Cpp.crtbegin.o) $(ACPI_Build) $(IA32_Build) $(Cpp.crtend.o) ../Modules/crtn.o \
-	 -o Build/kernel.silcos.hal -shared --warn-unresolved-symbols -T ../DefaultModuleLinkage.ld
+	 $(CC) $(LFLAGS) $(ACPI_Build) $(IA32_Build) \
+	 -o Build/kernel.silcos.hal
 	cp Build/kernel.silcos.hal ../Modules/Builtin/
 	

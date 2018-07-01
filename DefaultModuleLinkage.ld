@@ -18,8 +18,7 @@ SECTIONS
 	/* Read-only sections, merged into text segment: */
 	PROVIDE (__executable_start = SEGMENT_START("text-segment", 0));
 	. = SEGMENT_START("text-segment", 0) + SIZEOF_HEADERS;
-	
-	.interp : { *(.interp) }
+
 	.note.gnu.build-id : { *(.note.gnu.build-id) }
 	.hash : { *(.hash) }
 	.gnu.hash : { *(.gnu.hash) }
@@ -236,5 +235,5 @@ SECTIONS
 	.debug_macro0 : { *(.debug_macro) }
 	.debug_addr 0 : { *(.debug_addr) }
 	.gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
-	/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }
+	/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) *(.interp) }
 }

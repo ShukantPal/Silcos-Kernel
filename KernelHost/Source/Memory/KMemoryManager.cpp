@@ -119,8 +119,7 @@ void SetupKMemoryManager(void)
 		kmapfence += 4096 - (kmapfence%4096);
 
 	Pager::useAll(kptTable, kmapfence, FLG_ATOMIC | FLG_NOCACHE | KF_NOINTR,KernelData);
-
-	memsetf((void *) KDYNAMIC, 0, kptSize);
+	memsetf((void *) KDYNAMIC, 0, kptSize - 1);
 	kptTable = KDYNAMIC;
 
 	// SETUP coreEngine & ZONES

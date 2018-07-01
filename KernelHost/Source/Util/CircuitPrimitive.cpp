@@ -28,49 +28,6 @@ Void memset(Void *bPointer, UBYTE btValue, SIZE bSize)
 	}
 }
 
-Void memsetf(Void *bPointer, SIZE lgsValue, SIZE bSize)
-{
-	unsigned long *lgBuffer = (unsigned long*) bPointer;
-	bSize &= ~(3);
-	unsigned long *lgPointer = (unsigned long *) ((UBYTE *) bPointer + bSize);
-	
-	while((unsigned long) lgPointer > (unsigned long) lgBuffer)
-	{
-		--(lgPointer);
-		*lgPointer = lgsValue;
-	}
-}
-
-Void memcpy(const Void *Obj1, Void *Obj2, SIZE ObjSize)
-{
-	char *O1 = (char *) Obj1;
-	char *O2 = (char *) Obj2;
-	
-	while(ObjSize)
-	{
-		--ObjSize;
-		O2[ObjSize] = O1[ObjSize];
-	}
-}
-
-Void memcpyf(const Void *bPointerI, Void *bPointerII, SIZE bufferSize)
-{
-	if(bufferSize)
-	{
-		unsigned long *cPointerSource = (unsigned long *) ((UBYTE *) bPointerI + bufferSize);
-		unsigned long *cPointerDest = (unsigned long *) ((UBYTE *) bPointerII + bufferSize);
-		bufferSize /= sizeof(SIZE);
-		
-		while(bufferSize)
-		{
-			--(bufferSize);
-			--(cPointerSource);
-			--(cPointerDest);
-			*cPointerDest = *cPointerSource;
-		}
-	}
-}
-
 bool memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize)
 {
 	unsigned char *bCounterI  = (unsigned char*) bPointerI;
@@ -89,44 +46,6 @@ bool memcmp(const Void *bPointerI, const Void *bPointerII, SIZE bSize)
 	}
 	return (true);
 }
-
-bool strcmp(const char *s1, const char *s2)
-{
-	while(TRUE) 
-	{
-		if(*s1 != *s2) 
-		{
-			return (false);
-		}
-		else if(*s1 == '\0')
-			return (true);
-		++s1;
-		++s2;
-	}
-}
-
-bool strcmpn(const char *str0, const char *str1, const long n)
-{
-	long idx = 0;
-	while(idx < n)
-	{
-		if(*str0 != *str1)
-		{
-			return (false);
-		}
-		else if(*str1 == '\0')
-		{
-			break;
-		}
-
-		++(str0);
-		++(str1);
-		++(idx);
-	}
-
-	return (true);
-}
-
 ///
 /// Copies all the characters in the string-buffer `str0` to the buffer
 /// located at `str1` till the null-terminating character arrives.

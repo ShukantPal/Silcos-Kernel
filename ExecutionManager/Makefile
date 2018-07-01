@@ -47,13 +47,24 @@ Tsk_Build = $(COM_TSK)/AVLTree.o $(COM_TSK)/Thread.o
 #
 # T i m e r   M a n a g e m e n t   S u b s y s t e m
 #
+
+$(COM_TIME)/EventNode.o: $(SRC_TIME)/EventNode.cpp
+	$(CC) $(CFLAGS) $(SRC_TIME)/EventNode.cpp -o $(COM_TIME)/EventNode.o
+
+$(COM_TIME)/EventQueue.o: $(SRC_TIME)/EventQueue.cpp
+	$(CC) $(CFLAGS) $(SRC_TIME)/EventQueue.cpp -o $(COM_TIME)/EventQueue.o
+
+$(COM_TIME)/NodeSorter.o: $(SRC_TIME)/NodeSorter.cpp
+	$(CC) $(CFLAGS) $(SRC_TIME)/NodeSorter.cpp -o $(COM_TIME)/NodeSorter.o
+	
 $(COM_TIME)/HPET.o: $(SRC_TIME)/HPET.cpp
 	$(CC) $(CFLAGS) $(SRC_TIME)/HPET.cpp -o $(COM_TIME)/HPET.o
 
 $(COM_TIME)/PIT.o: $(SRC_TIME)/PIT.cpp
 	$(CC) $(CFLAGS) $(SRC_TIME)/PIT.cpp -o $(COM_TIME)/PIT.o
 
-Time_Build = $(COM_TIME)/HPET.o $(COM_TIME)/PIT.o
+Time_Build = $(COM_TIME)/EventNode.o $(COM_TIME)/EventQueue.o $(COM_TIME)/NodeSorter.o \
+$(COM_TIME)/HPET.o $(COM_TIME)/PIT.o
 
 #
 # S c h e d u l e r   C o m p i l e   R u l e s

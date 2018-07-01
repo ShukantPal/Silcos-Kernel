@@ -46,22 +46,22 @@ union cRegs
 	};
 };
 
-#define CV_OLD_AMD		"AMDisbetter!"
-#define CV_AMD			"AuthenticAMD"
-#define CV_INTEL		"GenuineIntel"
-#define CV_CENTAUR		"CentaurHauls"
+#define CV_OLD_AMD			"AMDisbetter!"
+#define CV_AMD				"AuthenticAMD"
+#define CV_INTEL			"GenuineIntel"
+#define CV_CENTAUR			"CentaurHauls"
 #define CV_OLD_TRANSMETA	"TransmetaCPU"
 #define CV_TRANSMETA		"GenuineTMx86"
-#define CV_CYRIX		"CyrixInstead"
-#define CV_NEXGEN		"NexGenDriven"
-#define CV_UMC			"UMC UMC UMC "
-#define CV_SIS			"SiS SiS SiS "
-#define CV_NSC			"Geode by NSC"
-#define CV_RISE			"RiseRiseRise"
-#define CV_VORTEX		"Vortex64 SoC"
-#define CV_VIA			"VIA VIA VIA "
-#define CV_VMWARE		"VMWareVMWare"
-#define CV_XEN			"XenVMMXenWMM"
+#define CV_CYRIX			"CyrixInstead"
+#define CV_NEXGEN			"NexGenDriven"
+#define CV_UMC				"UMC UMC UMC "
+#define CV_SIS				"SiS SiS SiS "
+#define CV_NSC				"Geode by NSC"
+#define CV_RISE				"RiseRiseRise"
+#define CV_VORTEX			"Vortex64 SoC"
+#define CV_VIA				"VIA VIA VIA "
+#define CV_VMWARE			"VMWareVMWare"
+#define CV_XEN				"XenVMMXenWMM"
 #define CV_MICROSOFT_HV		"Microsoft HV"
 #define CV_PARALLELS		" lrpepyh vr"
 
@@ -126,25 +126,25 @@ enum Feature
 
 enum Leaf
 {
-	VendorString		= 0x0,
-	Features		= 0x1,
-	TLBInfo			= 0x2,
-	PSN			= 0x3,
-	ExtendedFeatures	= 0x7,
+	VendorString			= 0x0,
+	Features				= 0x1,
+	TLBInfo					= 0x2,
+	PSN						= 0x3,
+	ExtendedFeatures		= 0x7,
 	DirectCacheAccessInfo	= 0x9,
-	ArchPerfMonitoring	= 0xA,
+	ArchPerfMonitoring		= 0xA,
 	ExtendedTopologyEnum	= 0xB,
-	ExtendedStateEnum	= 0xD,
-	TimeStampCounter	= 0x15,
-	FrequencyInfo		= 0x16,
+	ExtendedStateEnum		= 0xD,
+	TimeStampCounter		= 0x15,
+	FrequencyInfo			= 0x16,
 	SoCVendorAttributeEnum	= 0x17,
 	DetermAddrTransParam	= 0x18,
 	ExtendedFuncCPUIDInfo	= 0x80000000,
-	SignAndFeatureBits	= 0x80000001,
-	BrandStringStart	= 0x80000002,
-	BrandStringMiddle	= 0x80000003,
-	BrandStringEnd		= 0x80000004,
-	InvariantTSC		= 0x80000007,
+	SignAndFeatureBits		= 0x80000001,
+	BrandStringStart		= 0x80000002,
+	BrandStringMiddle		= 0x80000003,
+	BrandStringEnd			= 0x80000004,
+	InvariantTSC			= 0x80000007,
 	LinearAndPhysAddrSize	= 0x80000008
 };
 
@@ -161,13 +161,13 @@ enum ProcessorType
 struct VersionInformation
 {
 	U32 steppingID	: 4;
-	U32 model	: 4;
+	U32 model		: 4;
 	U32 familyID	: 4;
-	U32 cpuType	: 2;
-	U32 rField0	: 2;
+	U32 cpuType		: 2;
+	U32 rField0		: 2;
 	U32 extModelID	: 4;
 	U32 extFamilyID	: 8;
-	U32 rField1	: 4;
+	U32 rField1		: 4;
 };
 
 struct FeatureSet // contains nothing
@@ -189,7 +189,7 @@ struct FeatureSet // contains nothing
 			U32 cnxt_id		: 1;
 			U32 sdbg		: 1;
 			U32 fma			: 1;
-			U32 cmpxchg16b		: 1;
+			U32 cmpxchg16b	: 1;
 			U32 xTPRUpdateControl	: 1;
 			U32 pdcm		: 1;
 			U32 rfield0		: 1;
@@ -200,7 +200,7 @@ struct FeatureSet // contains nothing
 			U32 x2APIC		: 1;
 			U32 movbe		: 1;
 			U32 popCNT		: 1;
-			U32 tscDeadline		: 1;
+			U32 tscDeadline	: 1;
 			U32 aes			: 1;
 			U32 xsave		: 1;
 			U32 osxsave		: 1;
@@ -215,35 +215,35 @@ struct FeatureSet // contains nothing
 	{
 		struct
 		{
-			U32 x87FPU		: 1;
-			U32 vme			: 1;
+			U32 x87FPU			: 1;
+			U32 vme				: 1;
 			U32 debuggingExt	: 1;
 			U32 pageSizeExt		: 1;
-			U32 timeStampCounter	: 1;
+			U32 timeStampCounter: 1;
 			U32 msrSupport		: 1;
 			U32 physAddrEnt		: 1;
 			U32 machineCheckExp	: 1;
-			U32 cx8			: 1;
-			U32 apic		: 1;
-			U32 rField0		: 1;
+			U32 cx8				: 1;
+			U32 apic			: 1;
+			U32 rField0			: 1;
 			U32 sysEnterAndExit	: 1;
-			U32 memTypeRangeRegs	: 1;
+			U32 memTypeRangeRegs: 1;
 			U32 pgeAndPTEGlobalBits	: 1;
 			U32 machineCheckArch	: 1;
-			U32 cmov		: 1;
+			U32 cmov			: 1;
 			U32 pageAttrTable	: 1;
 			U32 pageSizeExt36	: 1;
 			U32 serialNumber	: 1;
 			U32 cflushInt		: 1;
-			U32 rField1		: 1;
+			U32 rField1			: 1;
 			U32 debugStore		: 1;
 			U32 acpiThermAndClkCtl	: 1;
-			U32 mmxTech		: 1;
-			U32 fxsr		: 1;
-			U32 sse			: 1;
-			U32 sse2		: 1;
+			U32 mmxTech			: 1;
+			U32 fxsr			: 1;
+			U32 sse				: 1;
+			U32 sse2			: 1;
 			U32 selfSnoop		: 1;
-			U32 htt			: 1;
+			U32 htt				: 1;
 			U32 thermalMonitor	: 1;
 			U32 pendBrkEN		: 1;
 		};

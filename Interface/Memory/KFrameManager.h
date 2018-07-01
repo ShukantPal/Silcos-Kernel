@@ -18,6 +18,7 @@
 ///
 #ifndef MEMORY_KFRAME_MANAGER_H
 #define MEMORY_KFRAME_MANAGER_H
+#ifndef _CBUILD
 
 #include "Internal/BuddyAllocator.hpp"
 #include "Internal/ZoneAllocator.hpp"
@@ -80,5 +81,11 @@ unsigned long KeFrameFree(PhysAddr frameAddress);
 //! Entraps a page-frame atomically without using the page-frame cache
 #define KiFrameEntrap(frFlags) KeFrameAllocate(0, ZONE_KERNEL, \
 		frFlags | FLG_ATOMIC | FLG_NOCACHE)
+
+#endif/* _CBUILD */
+
+#ifdef _CBUILD
+	#define sizeof_mmframe	12 // be sure to update this!!!!
+#endif
 
 #endif/* Memory/KFrameManager.h */

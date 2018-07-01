@@ -1,4 +1,5 @@
-/* @file IDT.h
+/**
+ * @file IDT.h
  *
  * Copyright (C) 2017 - Shukant Pal
  */
@@ -32,8 +33,8 @@ struct IDTEntry
 	unsigned short sel;
 	unsigned char rfield;
 	unsigned char gateType		: 4;
-	unsigned char storageSegment	: 1;
-	unsigned char dpl		: 2;
+	unsigned char storageSegment: 1;
+	unsigned char dpl			: 2;
 	unsigned char present		: 1;
 	unsigned short offHigh;
 } __attribute__((__packed__));

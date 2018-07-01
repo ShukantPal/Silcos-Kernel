@@ -18,8 +18,7 @@
  * --------------------------------------------------------------------
  * Algorithm was kindof referenced from geeksfromgeeks.org (indian ya)
  */
-#include "../../Interface/Utils/RBTree.hpp"
-
+#include <Utils/RBTree.hpp>
 #include <KERNEL.h>
 
 extern ObjectInfo *tRBNode;

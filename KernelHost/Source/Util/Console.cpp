@@ -6,7 +6,7 @@
 /// debugging. It is assumed that the screen is a grid of 80x25 characters.
 ///
 /// Changes:
-/// a. Fixed line-by-line printing & line-overflows which lead to mixed text
+/// a. Fixed line-by-line printing & line-overflows which led to mixed text
 /// b. Allow reprinting from top of the screen, when screen becomes full
 ///
 /// -------------------------------------------------------------------

@@ -1,24 +1,23 @@
-///
-/// @file ModuleLoader.cpp
-/// @module KernelHost
-///
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
-
+/**
+ * @file ModuleLoader.cpp
+ * @module KernelHost
+ *
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #define NS_PMFLGS // Paging Flags
 
 #include <Memory/Pager.h>
@@ -54,12 +53,12 @@ struct ObjectInfo *tDynamicLink;// struct DynamicLink - Slab-Allocator
 
 LinkedList LoadedModules;
 
-///
-/// Dynamically allocates memory to store the elf-object's file so that
-/// it could be mapped and used.
-///
-/// @param blob - the registration "form" of the module
-///
+/**
+ * Dynamically allocates memory to store the elf-object's file so that
+ * it could be mapped and used.
+ *
+ * @param blob - the registration "form" of the module
+ */
 void *ModuleLoader::moveFileIntoMemory(BlobRegister &blob)
 {
 	blob.blobSize = NextPowerOf2(blob.blobSize);
@@ -127,16 +126,16 @@ static inline void holdFiniArray(ElfManager *em, ModuleContainer *mc)
 	}
 }
 
-///
-/// Exports all dynamic-linking information gathered from the elf-abi
-/// handling objects, notes down init, main, fini functors, and then exports
-/// all symbolic definitions to the ptp pool.
-///
-/// @param moduleMemory
-/// @param kmRecord
-/// @param blob
-/// @return - the ABI of the given module
-///
+/**
+ * Exports all dynamic-linking information gathered from the elf-abi
+ * handling objects, notes down init, main, fini functors, and then exports
+ * all symbolic definitions to the ptp pool.
+ *
+ * @param moduleMemory
+ * @param kmRecord
+ * @param blob
+ * @return - the ABI of the given module
+ */
 ABI ModuleLoader::globalizeDynamic(void *moduleMemory, BlobRegister &blob)
 {
 	if(!ElfAnalyzer::validateBinary(moduleMemory))
@@ -189,13 +188,13 @@ ABI ModuleLoader::globalizeDynamic(void *moduleMemory, BlobRegister &blob)
 	return (ABI::ELF);
 }
 
-///
-/// Finishes the linking part of the module by filling in the relocation
-/// entries.
-///
-/// @param binaryIfc - binary-interface of the given module
-/// @param blob - the blob-struct for this module
-///
+/**
+ * Finishes the linking part of the module by filling in the relocation
+ * entries.
+ *
+ * @param binaryIfc - binary-interface of the given module
+ * @param blob - the blob-struct for this module
+ */
 void ModuleLoader::linkFile(ABI binaryIfc, BlobRegister& blob)
 {
 	ElfManager *manager;
@@ -216,23 +215,6 @@ void ModuleLoader::linkFile(ABI binaryIfc, BlobRegister& blob)
 	}
 }
 
-/**
- * Function: ModuleLoader::loadFile
- *
- * Summary:
- * This function loads & links the module-file fully. The module-record is also
- * registered in the end.
- *
- * Args:
- * PhysAddr moduleAddress - Physical address of the loaded module
- * PhysAddr moduleSIze - Size of the module, in bytes
- * char *cmdLine - Command line option loaded for the module
- * struct ModuleRecord *record - Optional, a module record for the binary
- *
- * Version: 1
- * Since: Circuit 2.03
- * Author: Shukant Pal
- */
 void ModuleLoader::loadFile(BlobRegister &blob)
 {
 	Void *modMemory = ModuleLoader::moveFileIntoMemory(blob);
@@ -242,16 +224,16 @@ void ModuleLoader::loadFile(BlobRegister &blob)
 	ModuleLoader::linkFile(blob.abiFound, blob);
 }
 
-///
-///
-/// This function loads & links a bundle of modules. Dynamic-linking is done after
-/// registration of all modules, to avoid any inter-depedencies that would cause
-/// a not-found linkage error.
-///
-/// @param LinkedList& blobList - List of blob-registers
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
+/**
+ *
+ * This function loads & links a bundle of modules. Dynamic-linking is done after
+ * registration of all modules, to avoid any inter-depedencies that would cause
+ * a not-found linkage error.
+ *
+ * @param LinkedList& blobList - List of blob-registers
+ * @since Circuit 2.03
+ * @author Shukant Pal
+ */
 void ModuleLoader::loadBundle(LinkedList &blobList)
 {
 	BlobRegister *blob = (BlobRegister*) blobList.head;
@@ -284,37 +266,37 @@ void ModuleLoader::loadBundle(LinkedList &blobList)
 	}
 }
 
-///
-/// Calls the initialization functions of the kernel module, according to
-/// the specific ABI.
-///
-/// By default, the ELF ABI defines the __preinit array, _init() function and
-/// the __init array to be called in the given sequence. It is done so here,
-/// except that they are stored in the ModuleContainer while linking, and
-/// hence, the symbol lookup is not required.
-///
-/// ---------------------------------------------------------------------------
-///
-/// Note on declaring C initialization functions to allocate new object types
-/// for the slab allocator:
-///
-/// Declaring functions in the __preinit array is not supported by GCC, as of
-/// my knowlegde in code, therefore, function which just allocate primitive
-/// types in the slab allocator must be declared as constructors with higher
-/// priority. By kernel-standard, this priority value is 100.
-///
-/// Note on stability of this sequence:
-///
-/// It is seen that this part of the kernel crashes quite a bit on adding new
-/// features and all. This may be because of some ELF-support leftover. You
-/// could try to add a __while_true at the end to check whether the crash
-/// occurs here.
-///
-/// @param bl - Reference to the BlobRegister of the module given, to access
-/// 		its module container and its ABi.
-/// @version - 5.1
-/// @author Shukant Pal
-///
+/**
+ * Calls the initialization functions of the kernel module, according to
+ * the specific ABI.
+ *
+ * By default, the ELF ABI defines the __preinit array, _init() function and
+ * the __init array to be called in the given sequence. It is done so here,
+ * except that they are stored in the ModuleContainer while linking, and
+ * hence, the symbol lookup is not required.
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * Note on declaring C initialization functions to allocate new object types
+ * for the slab allocator:
+ *
+ * Declaring functions in the __preinit array is not supported by GCC, as of
+ * my knowlegde in code, therefore, function which just allocate primitive
+ * types in the slab allocator must be declared as constructors with higher
+ * priority. By kernel-standard, this priority value is 100.
+ *
+ * Note on stability of this sequence:
+ *
+ * It is seen that this part of the kernel crashes quite a bit on adding new
+ * features and all. This may be because of some ELF-support leftover. You
+ * could try to add a __while_true at the end to check whether the crash
+ * occurs here.
+ *
+ * @param bl - Reference to the BlobRegister of the module given, to access
+ * 		its module container and its ABi.
+ * @version - 5.1
+ * @author Shukant Pal
+ */
 void ModuleLoader::init(BlobRegister &bl)
 {
 	ModuleContainer *mc = bl.fileBox;

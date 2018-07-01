@@ -85,6 +85,11 @@ ArrayList::ArrayList(LinkedList &elems)
 	}
 }
 
+ArrayList::~ArrayList()
+{
+	kfree(this->elemData);
+}
+
 /*
  * Adds the element to the array-list at the very end. This elem can also
  * be a "valid" null-pointer. Try to stay away from dangling pointers, though.

@@ -45,7 +45,8 @@ COM_UTIL = Compile/Util
 SRC_UTIL = Source/Util
 
 #IA32 Boot Service
-InitObjects = $(COM_ARCH)/InitRuntime.o $(COM_ARCH)/86InitPaging.o \
+InitObjects = $(COM_ARCH)/Entry.o \
+$(COM_ARCH)/86InitPaging.o $(COM_ARCH)/PageSettings.o \
 $(COM_ARCH)/BlockPager.o $(COM_ARCH)/Main.o \
 $(COM_ARCH)/Multiboot.o
 
@@ -69,7 +70,7 @@ $(COM_UTIL)/Console.o $(COM_UTIL)/Debugger.o $(COM_UTIL)/LinkedList.o \
 
 moduleLoaderObjects = $(COM_MD)/ElfManager.o $(COM_MD)/ElfAnalyzer.o \
 $(COM_MD)/ModuleContainer.o \
-$(COM_MD)/ModuleLoader.o $(COM_MD)/MSI.o $(COM_MD)/Namespace.o \
+$(COM_MD)/ModuleLoader.o $(COM_MD)/Namespace.o \
 $(COM_MD)/ElfLinker.o $(COM_MD)/SymbolLookup.o
 
 # Header Dependencies
@@ -85,14 +86,17 @@ $(COM_ARCH)/86InitPaging.o: $(SRC_ARCH)/Paging/86InitPaging.asm
 $(COM_ARCH)/BlockPager.o: $(SRC_ARCH)/Paging/BlockPager.cpp
 	$(CC) $(CFLAGS) $(SRC_ARCH)/Paging/BlockPager.cpp -o $(COM_ARCH)/BlockPager.o
 
-$(COM_ARCH)/InitRuntime.o: $(SRC_ARCH)/Boot/InitRuntime.asm
-	$(AS) $(ASFLAGS) $(SRC_ARCH)/Boot/InitRuntime.asm -o $(COM_ARCH)/InitRuntime.o
+$(COM_ARCH)/Entry.o: $(SRC_ARCH)/Boot/Entry.S
+	$(GNU_AS) $(GNU_ASFLAGS) $(SRC_ARCH)/Boot/Entry.S -o $(COM_ARCH)/Entry.o
 
 $(COM_ARCH)/Main.o: $(SRC_ARCH)/Boot/Main.cpp
 	$(CC) $(CFLAGS) $(SRC_ARCH)/Boot/Main.cpp -o $(COM_ARCH)/Main.o
 
 $(COM_ARCH)/Multiboot.o: $(SRC_ARCH)/Boot/Multiboot.cpp
 	$(CC) $(CFLAGS) $(SRC_ARCH)/Boot/Multiboot.cpp -o $(COM_ARCH)/Multiboot.o
+
+$(COM_ARCH)/PageSettings.o: $(SRC_ARCH)/Paging/PageSettings.S
+	$(GNU_AS) $(GNU_ASFLAGS) $(SRC_ARCH)/Paging/PageSettings.S -o $(COM_ARCH)/PageSettings.o
 
 BuildInit : $(InitObjects)
 
@@ -181,9 +185,6 @@ $(COM_MD)/ModuleContainer.o: $(IfcModule)/ModuleContainer.hpp $(SRC_MD)/ModuleCo
 $(COM_MD)/ModuleLoader.o: $(IfcModule)/ModuleLoader.h $(SRC_MD)/ModuleLoader.cpp
 	$(CC) $(CFLAGS) $(SRC_MD)/ModuleLoader.cpp -o $(COM_MD)/ModuleLoader.o
 
-$(COM_MD)/MSI.o: $(IfcModule)/ModuleLoader.h $(SRC_MD)/MSI.cpp
-	$(CC) $(CFLAGS) $(SRC_MD)/MSI.cpp -o $(COM_MD)/MSI.o
-
 $(COM_MD)/Namespace.o: $(IfcModule)/Namespace.hpp $(SRC_MD)/Namespace.cpp
 	$(CC) $(CFLAGS) $(SRC_MD)/Namespace.cpp -o $(COM_MD)/Namespace.o
 
@@ -193,10 +194,10 @@ $(COM_MD)/SymbolLookup.o: $(IfcModule)/SymbolLookup.hpp $(SRC_MD)/SymbolLookup.c
 BuildModuleLoader: $(moduleLoaderObjects)
 
 Link:
-	ld -m elf_i386 -T linker.ld --export-dynamic --strip-all -pie -nostdlib \
+	$(CC) $(LH_FLAGS) --entry "HostEntry" \
 	$(InitObjects) $(ArchObjects) $(KernelRoutineObjects) $(IntrObjects) \
 	$(InterProcessObjects) $(MemoryObjects) $(ImportCppRuntime) \
-	$(UtilObjects) $(moduleLoaderObjects) --warn-unresolved-symbols -o \
+	$(UtilObjects) $(moduleLoaderObjects) -Wl,--warn-unresolved-symbols -o \
 	 Build/circuitk-1.02 
 
 q: BuildChain

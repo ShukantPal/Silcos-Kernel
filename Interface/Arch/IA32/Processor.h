@@ -146,9 +146,9 @@ struct ArchCpu
 		CpuId::cRegs ot;
 		__cpuid(CpuId::FrequencyInfo, 0, &ot.output[0]);
 
-		baseFreq = ot.eax & 0xFFFF0000;
-		busFreq = ot.ecx & 0xFFFF0000;
-		maxFreq = ot.ebx & 0xFFFF0000;
+		baseFreq = ot.eax;
+		busFreq = ot.ecx;
+		maxFreq = ot.ebx;
 
 		return (baseFreq);
 	}

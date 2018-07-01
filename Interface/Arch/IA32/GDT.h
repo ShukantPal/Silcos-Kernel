@@ -1,7 +1,7 @@
 /**
- * File: GDT.h
+ * @file GDT.h
  *
- * Summary: This file contans the interface to manipulate the GDTs, and also handle their entries. The
+ * This file contans the interface to manipulate the GDTs, and also handle their entries. The
  * GDT feature is used to create a flat memory-model for each CPU. The SetupGDT() and
  * SetupDefaultBootGDT() functions are not located here. They are shifted to Processor.h for NS-conflict
  * reasons.

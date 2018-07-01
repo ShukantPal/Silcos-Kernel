@@ -56,6 +56,16 @@ public:
 		return (highestBitSet);
 	}
 
+	static inline bool bitTest(unsigned char n, unsigned long idx)
+	{
+		return ((bool)(n >> idx));
+	}
+
+	static inline bool bitTest(unsigned short n, unsigned long idx)
+	{
+		return ((bool)(n >> idx));
+	}
+
 	static inline bool bitTest(unsigned long n, unsigned long idx)
 	{
 		return ((bool)(n >> idx));

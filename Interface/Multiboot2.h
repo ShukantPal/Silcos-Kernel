@@ -1,12 +1,22 @@
-/*=++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * File: Multiboot2.h
+/**
+ * @file Multiboot2.h
  *
- * Summary:
- * This file provides the interface for loading kernels with the Multiboot2 protocol
- * and parsing the Multiboot structures.
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  * Copyright (C) 2017 - Shukant Pal
- *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=*/
+ */
 #ifndef __MULTIBOOT2_H__
 #define __MULTIBOOT2_H__
 
@@ -105,40 +115,38 @@ struct _MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS {
 	U32 ConsoleFlags;
 } MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS;
 
-typedef
-struct _MULTIBOOT_HEADER_TAG_FRAME_BUFFER {
+struct MultibootHeaderTagFrameBuffer
+{
 	U16 Type;
 	U16 Flags;
 	U32 Size;
 	U32 Width;
 	U32 Height;
 	U32 Depth;
-} MULTIBOOT_HEADER_TAG_FRAME_BUFFER;
+};
 
-typedef
-struct _MULTIBOOT_HEADER_TAG_MODULE_ALIGN {
-	U16 Type;
-	U16 Flags;
-	U32 Size;
-} MULTIBOOT_HEADER_TAG_MODULE_ALIGN;
+struct MultibootHeaderTagModuleAlign {
+	U16 type;
+	U16 flags;
+	U32 size;
+};
 
-typedef
-struct _MULTIBOOT_HEADER_TAG_RELOCATABLE {
-	U16 Type;
-	U16 Flags;
-	U32 Size;
-	U32 MinimumAddress;
-	U32 MaximumAddress;
-	U32 Align;
-	U32 Preference;
-} MULTIBOOT_HEADER_TAG_RELOCATABLE;
+struct MultibootHeaderTagRelocatable
+{
+	U16 type;
+	U16 flags;
+	U32 size;
+	U32 minimumAddress;
+	U32 maximumAddress;
+	U32 align;
+	U32 preference;
+};
 
-typedef
-struct _MULTIBOOT_COLOR {
-	U8 Red;
-	U8 Green;
-	U8 Blue;
-} MULTIBOOT_COLOR;
+struct MultibootColor {
+	U8 red;
+	U8 green;
+	U8 blue;
+};
 
 #define MULTIBOOT_MEMORY_AVAILABLE 1
 #define MULTIBOOT_MEMORY_RESERVED 2
@@ -150,56 +158,49 @@ struct _MULTIBOOT_COLOR {
 #define MULTIBOOT_MEMORY_MODULE 0xDEE100FE
 #define MULTIBOOT_MEMORY_STRUCT 0xDEE200FE
 
-/**
- * Type: MULTIBOOT_MMAP_ENTRY
- *
- * Summary:
- * This represents a physical memory-region entry in the Multiboot2 memory
- * map. Its size is specified in the MULTIBOOT_MMAP.EntrySize field.
- */
-typedef
-struct _MULTIBOOT_MMAP_ENTRY {
-	U64 Address;/* Physical address of the physical-memory region*/
-	U64 Length;/* Length/size of the physical-memory region */
-	U32 Type;/* Type of the memory region */
-	U32 Zero;/* Reserved field, which should have a value of zero */
-} MULTIBOOT_MMAP_ENTRY;
+struct MultibootMMapEntry {
+	U64 address;/* Physical address of the physical-memory region*/
+	U64 length;/* Length/size of the physical-memory region */
+	U32 type;/* Type of the memory region */
+	U32 zero;/* Reserved field, which should have a value of zero */
+
+#ifndef _CBUILD
+	inline MultibootMMapEntry *next(unsigned long entrySize) {
+		return ((MultibootMMapEntry *)((char *) this + entrySize));
+	}
+
+	inline MultibootMMapEntry *prev(unsigned long entrySize) {
+		return ((MultibootMMapEntry *)((char *) this + entrySize));
+	}
+#endif
+};
+
+union MultibootMMapSearch {
+	struct MultibootMMapEntry *ent;
+	unsigned int entPtr;
+};
 
 typedef
-struct _MULTIBOOT_TAG {
-	U32 Type;
-	U32 Size;
+struct MultibootTag {
+	U32 type;
+	U32 size;
 } MULTIBOOT_TAG;
 
 typedef
-struct _MULTIBOOT_TAG_STRING {
+struct MultibootTagString {
 	U32 Type;
 	U32 Size;
 	char String[0];
 } MULTIBOOT_TAG_STRING;
 
-/**
- * MULTIBOOT_TAG_MODULE -
- *
- * Summary:
- * This type is used to referring to multiboot2 'module', loaded by the
- * bootloader. This tag may appear multiple times and the function
- * SearchMultipleMultibootTags() should be used to get the nth module by
- * tag index.
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See Multiboot 1.6
- */
-typedef
-struct MultibootTagModule {
-	U32 Type;/* must equal MULTIBOOT_TAG_TYPE_MODULE */
-	U32 Size;/* Size of the module descriptor, including CMDLine */
-	U32 ModuleStart;/* Physical load-address of the module */
-	U32 ModuleEnd;/* Physical address of the end-of-module */
-	char CMDLine[0];/* Text associated with the module at load-time */
-} MULTIBOOT_TAG_MODULE;
+struct MultibootTagModule
+{
+	U32 type;
+	U32 size;
+	U32 moduleStart;
+	U32 moduleEnd;
+	const char CMD_Line[0];
+};
 
 /**
  * MULTIBOOT_TAG_BASIC_MEMINFO - 
@@ -214,7 +215,7 @@ struct MultibootTagModule {
  * @See Multiboot 1.6
  */
 typedef
-struct _MULTIBOOT_TAG_BASIC_MEMINFO {
+struct MultibootTagBasicMemInfo {
 	U32 Type;/* must equal MULTIBOOT_TAG_TYPE_BASIC_MEMINFO */
 	U32 Size;/* must equal 16 */
 	U32 MmLower;/* Lower-memory present at boot-time */
@@ -222,7 +223,7 @@ struct _MULTIBOOT_TAG_BASIC_MEMINFO {
 } MULTIBOOT_TAG_BASIC_MEMINFO;
 
 typedef
-struct _MULTIBOOT_TAG_BOOTDEV {
+struct MultibootTagBootDev {
 	U32 Type;
 	U32 Size;
 	U32 BIOSDevice;
@@ -230,31 +231,23 @@ struct _MULTIBOOT_TAG_BOOTDEV {
 	U32 Part;
 } MULTIBOOT_TAG_BOOTDEV;
 
-/**
- * MULTIBOOT_TAG_MMAP -
- *
- * Summary:
- * This type contains the initial data for retrieving the memory map
- * from the boot loader, which consists of entries, to load the PMA.
- *
- * Fields:
- * Type - must equal MULTIBOOT_TAG_TYPE_MMAP
- * Size - must equal 16
- * EntrySize - Size of each entries, so that further versions can be made
- * EntryVersion - Version of the entries, but is backward-compatible
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See Multiboot1.6
- */
 typedef
-struct _MULTIBOOT_TAG_MMAP {
-	U32 Type;
-	U32 Size;
-	U32 EntrySize;
-	U32 EntryVersion;
+struct MultibootTagMMap {
+	U32 type;
+	U32 size;
+	U32 entrySize;
+	U32 entryVersion;
 	/* Entries are present just after this */
+
+#ifndef _CBUILD
+	inline MultibootMMapEntry *getEntries() {
+		return ((MultibootMMapEntry*)(this + 1));
+	}
+
+	inline bool inBounds(MultibootMMapEntry *entry) {
+		return ((char *) entry < (char *) this + size);
+	}
+#endif
 } MULTIBOOT_TAG_MMAP;
 
 typedef
@@ -300,7 +293,7 @@ typedef struct _MULTIBOOT_TAG_FRAMEBUFFER {
 	union {
 		struct {
 			U16 PaletteColors;
-			MULTIBOOT_COLOR Palette[0];
+			struct MultibootColor Palette[0];
 		};
 		struct {
 			U8 RedFieldPosition;
@@ -395,39 +388,92 @@ struct _MULTIBOOT_TAG_NETWORK {
 	U8 DHCPack[0];
 } MULTIBOOT_TAG_NETWORK;
 
-/**
- * SearchMultibootTag() - 
- *
- * Summary:
- * This function is used for searching a tag with a given a type, after
- * loading the multiboot tags.
- *
- * Args:
- * tagType - Type field of the tag
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See Multiboot 1.6
- */
-export_asm Void *SearchMultibootTag(U32 tagType);
+union MultibootSearch
+{
+	struct MultibootTag *tag;
+	struct MultibootTagString *str;
+	struct MultibootTagModule *mod;
+	struct MultibootTagBasicMemInfo *memInfo;
+	struct MultibootTagBootDev *bootDevice;
+	struct MultibootTagMMap *mmap;
+	unsigned long loc;
 
-/**
- * Multiboot_Tag_Search_From() -
- *
- * Summary:
- * This function is used for searching the nth occurence of a given tag,
- * after loading the multiboot tags.
- *
- * Args:
- * lastTag - Tag from it should search
- * tagType - Type of the tag
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See Multiboot 1.6
- */
-export_asm Void *SearchMultibootTagFrom(Void *lastTag, U32 tagType);
+#ifndef _CBUILD
+	MultibootSearch() {
 
+	}
+
+	MultibootSearch(MultibootSearch &copyFrom) {
+		this->tag = copyFrom.tag;
+	}
+
+	MultibootSearch(MultibootTag *tag) {
+		this->tag = tag;
+	}
+
+	MultibootSearch(MultibootTagModule *mod) {
+		this->mod = mod;
+	}
+#endif
+};
+
+#ifndef _CBUILD
+
+class MultibootChannel
+{
+public:
+	static inline unsigned long getMultibootTableSize() {
+		return (tagFence - (unsigned long) tagTable + 8);
+	}
+
+	static inline unsigned long getMultibootTableSize(MultibootTag *table) {
+		return (*(unsigned long*) table);
+	}
+
+	static void init(unsigned long physicalAddress);
+	static MultibootSearch getTag(U32 typeToken);
+	static MultibootSearch getNextTagOfType(MultibootSearch from);
+
+	static inline MultibootTagString *getBootloaderName() {
+		return (getTag(MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME).str);
+	}
+
+	static inline MultibootTagBasicMemInfo *getBasicMemInfo() {
+		return (getTag(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO).memInfo);
+	}
+
+	static inline MultibootTagBootDev *getBootDevice() {
+		return (getTag(MULTIBOOT_TAG_TYPE_BOOTDEV).bootDevice);
+	}
+
+	static inline MultibootTagModule *getFirstModule() {
+		return (getTag(MULTIBOOT_TAG_TYPE_MODULE).mod);
+	}
+
+	static inline MultibootTag *getFirstTag() {
+		return (tagTable);
+	}
+
+	static inline MultibootTagMMap *getMMap() {
+		return (getTag(MULTIBOOT_TAG_TYPE_MMAP).mmap);
+	}
+
+	static inline MultibootTagModule *getNextModule(MultibootTagModule *mod) {
+		MultibootSearch mods(mod);
+		return (getNextTagOfType(mods).mod);
+	}
+
+	static inline void getNextTag(MultibootSearch &gptr) {
+		gptr.loc += (gptr.tag->size % 8) ?
+				(gptr.tag->size & ~7) + 8 :
+				(gptr.tag->size);
+	}
+
+private:
+	static MultibootTag *tagTable;
+	static unsigned long tagFence;
+	MultibootChannel();
+};
+
+#endif
 #endif /* Multiboot2.h */

@@ -68,7 +68,7 @@ export_asm void HandlePF(U32 errorCode) {
 
 	if(bitI) Dbg("IFetch ");
 
-	DbgInt(regInfo / 1024);
+	//DbgInt(regInfo / 1024);
 	Dbg(" KB Address, ");
 
 	asm volatile("cli; hlt;");

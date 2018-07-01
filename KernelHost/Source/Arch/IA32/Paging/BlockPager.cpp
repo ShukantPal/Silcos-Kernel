@@ -1,5 +1,21 @@
 /**
- * Copyright(C) 2017 - Shukant Pal
+ * @file BlockPager.cpp
+ *
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
  */
 
 #define NS_KFRAMEMANAGER
@@ -8,40 +24,8 @@
 #include <Memory/Address.h>
 #include <Memory/Pager.h>
 #include <Memory/KMemorySpace.h>
-#include "../../../../../Interface/Utils/Memory.h"
+#include <Utils/Memory.h>
+#include <Environment.h>
 #include <KERNEL.h>
 
-extern PhysAddr mmTotal;
-
-/* x86-specific paging structures */
-extern "C" U64 PDPT[4];
-extern "C" U64 GlobalDirectory[512];
-extern "C" U64 IdentityDirectory[512];
-extern "C" U64 GlobalTable[512];
-extern unsigned long memFrameTableSize;
-
-void MTMap2mb(PhysAddr paddr, ADDRESS vaddr)
-{
-	GlobalDirectory[(vaddr % GB(1)) / MB(2)] = paddr | (1 << 7) | KernelData;
-	FlushTLB(vaddr);
-}
-
-PhysAddr KiMapTables()
-{
-	PhysAddr frameMapper = MB(16);
-	unsigned long framePtr = KFRAMEMAP;
-	unsigned long frameTableEnd = KFRAMEMAP + sizeof(MMFRAME) * (mmTotal >> 12);
-
-	while(framePtr < frameTableEnd)
-	{
-		MTMap2mb(frameMapper, framePtr);
-		frameMapper += MB(2);
-		framePtr += MB(2);
-	}
-
-	memFrameTableSize = frameTableEnd - KFRAMEMAP;
-	memsetf((void*) KFRAMEMAP, 0, memFrameTableSize);
-
-	return (MB(16));
-}
 

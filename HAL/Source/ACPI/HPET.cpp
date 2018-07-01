@@ -37,12 +37,18 @@ Executable::Timer::HPET *tm_;
 
 unsigned int fd = 0;
 
+#include <Module/Elf/ABI/Implementor.h>
+
 #include <ACPI/RSDT.h>
 #include <IA32/IO.h>
 #include <HardwareAbstraction/Processor.h>
 #include <Heap.hpp>
 #include <Executable/Timer/PIT.hpp>
 #include <Utils/ArrayList.hpp>
+
+#include <Executable/Timer/EventQueue.hpp>
+#include <Executable/Timer/EventNode.hpp>
+#include <Executable/Timer/NodeSorter.hpp>
 
 using namespace Executable::Timer;
 
@@ -64,12 +70,16 @@ decl_c void InitKernelHPET()
 //	HPET *kernelTimer = new HPET(ahdt->timerNumber,
 //			ahdt->baseAddress.addressValue);
 
-
 }
 
 #include <Module/SymbolLookup.hpp>
 
 using namespace Module;
+
+void hdlr(void *nilObj)
+{
+	DbgLine("Tested timr");
+}
 
 decl_c void testhpet()
 {
@@ -99,11 +109,10 @@ decl_c void testhpet()
 		GetIRQTableById(0)[190 - 32].addHandler(pit);
 		e->setRedirEnt(2, &f);
 	}
-	else
-	{
-		extern unsigned long ctorsStart, ctorsEnd;
-		DbgLine("something is wrong!!@!!");
 
-		DbgInt((U32)&ctorsEnd -(U32)&ctorsStart);
-	}
+	EventNode::init();
+	NodeSorter ns;
+	ns.put(new EventNode(1200, 1500, 0, 0));
+	ns.put(new EventNode(1600, 1700, 0, 0));
+	ns.put(new EventNode(1900, 2100, 0, 0));
 }

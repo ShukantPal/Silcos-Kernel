@@ -32,11 +32,6 @@
 using namespace HAL;
 using namespace Executable;
 
-//extern "C" void (*__preinit_array_start[])() __attribute__((visibility("hidden"), weak));
-//extern "C" void (*__preinit_array_end[])() __attribute__((visibility("hidden"), weak));
-extern "C" void (*__init_array_start [])() __attribute__((visibility("hidden"), weak));
-extern "C" void (*__init_array_end [])() __attribute__((visibility("hidden"), weak));
-
 decl_c void ArchMain()
 {
 	ScanRsdp();

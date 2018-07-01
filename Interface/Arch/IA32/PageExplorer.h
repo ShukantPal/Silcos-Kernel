@@ -29,11 +29,6 @@
 #include <Memory/Pager.h>
 
 import_asm void SwitchPaging(unsigned int);
-import_asm U64 PDPT[4];
-import_asm U64 GlobalDirectory[512];
-import_asm U64 IdentityDirectory[512];
-import_asm U64 GlobalTable[512];
-
 ///
 /// Provides an abstraction over IA32 page-level organization. It exposes
 /// utilities that allow you to map page-tables, page-directories, and switch
@@ -58,6 +53,14 @@ public:
 #define PGDIR_BASE (GB(3) + HUGE_PAGES(511) + NORM_PAGES(508))
 #define PGDIR_SIZE 512
 
+	static unsigned long getDirectoryIndex(unsigned long virtualAddress) {
+		return ((virtualAddress >> 21) % 512);
+	}
+
+	static unsigned long getTableIndex(unsigned long virtualAddress) {
+		return ((virtualAddress >> 12) % 512);
+	}
+
 	///
 	/// Returns the ptr to the first entry in the page-directory
 	/// at the given offset in the PDPT.
@@ -70,8 +73,7 @@ public:
 	///
 	static inline U64 *getDirectory(
 			unsigned long dirOffset, unsigned long frFlags = 0,
-			MemoryContext *cxt = null)
-	{
+			MemoryContext *cxt = null) {
 		return ((U64*) PGDIR_BASE + (dirOffset << 9));
 	}
 

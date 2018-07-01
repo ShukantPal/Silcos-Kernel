@@ -5,57 +5,75 @@
 #include <Multiboot2.h>
 #include <Debugging.h>
 
-U32 tagTableSize;
-MULTIBOOT_TAG *tagTable;
+MultibootTag *MultibootChannel::tagTable;
+unsigned long MultibootChannel::tagFence;
 
-export_asm void *SearchMultibootTagFrom(Void *lastTag, U32 tagType)
+/**
+ * Maps the multiboot-table in kernel-memory so that it can be
+ * accessed. It doesn't assume that the table will fit in one page.
+ */
+void MultibootChannel::init(unsigned long multibootTable)
 {
-	MULTIBOOT_TAG *curTag;
-	U32 tagOffset;
+	Pager::map(MULTIBOOT_INTERFACE, multibootTable, null, KernelData);
 
-	if(lastTag == NULL)
-		curTag = tagTable + 1;
-	else {
-		curTag = (MULTIBOOT_TAG*) lastTag;
-		tagOffset = curTag->Size;
-		if(tagOffset % 8)
-			tagOffset += 8 - (tagOffset % 8);
-		curTag = (MULTIBOOT_TAG*) ((U32) curTag + tagOffset);
-	}
+	tagTable = (MultibootTag *)(MULTIBOOT_INTERFACE + multibootTable % PAGE);
+	tagFence = (unsigned long) tagTable + *(unsigned long *) tagTable;
 
-	U32 tagLimit = (U32) tagTable + tagTableSize;	
+	if(getMultibootTableSize(tagTable) > PAGE)
+		Pager::mapAll(MULTIBOOT_INTERFACE + PAGE, multibootTable + PAGE,
+				*(unsigned long *) tagTable - PAGE, null, KernelData);
 
-	while((U32) curTag < tagLimit){
-		if(curTag->Type == tagType){
-			return ((void*)(curTag));
-		}
-
-		tagOffset = curTag->Size;
-		if(tagOffset % 8)
-			tagOffset += 8 - (tagOffset % 8);
-
-		curTag = (MULTIBOOT_TAG*) ((U32) curTag + tagOffset);
-	}
-
-	return (NULL);
+	++(tagTable);
 }
 
-/*
- * Initializes the multiboot-parser. It should be called before main because
- * multiboot information passed in the CPU registers will be lost.
+/**
+ * Finds the first entry in the multiboot information table present
+ * with the given tag.
  *
- * @param tagTable - physical address of multiboot-information table
- * @version 1
- * @since Circuit 2.03
- * @author Shukant Pal
+ * @param typeToken - The type of tag required for the entry being
+ * 					searched for.
+ * @return - A generic pointer to the multiboot entry; null, if no
+ * 			entry was found.
  */
-export_asm void LoadMultibootTags(U32 pTagAddress)
+MultibootSearch MultibootChannel::getTag(U32 typeToken)
 {
-	InitConsole((unsigned char *) 0xc00b8000);
-	Pager::switchSpace(KERNEL_CONTEXT);
-	Pager::map(MULTIBOOT_INTERFACE, (PhysAddr) pTagAddress, 0, KernelData);
+	MultibootSearch tPtr(getFirstTag());
 
-	tagTable = (MULTIBOOT_TAG*)(MULTIBOOT_INTERFACE +
-					(pTagAddress % KB(4)));
-	tagTableSize = *((U32*) tagTable);
+	while(tPtr.loc < tagFence) {
+		if(tPtr.tag->type == typeToken) {
+			return (tPtr);
+		}
+
+		getNextTag(tPtr);
+	}
+
+	tPtr.loc = null;
+	return (tPtr);
+}
+
+/**
+ * Forward searches for the next entry, of the same type as passed. If
+ * another entry of the same type is found, it is returned.
+ *
+ * @param from - A generic pointer to an entry, from which the next one
+ * 				is to be searched.
+ * @return - A generic pointer to the next entry of the same type; null,
+ * 				if it is not present.
+ */
+MultibootSearch MultibootChannel::getNextTagOfType(MultibootSearch from)
+{
+	unsigned long typeToken = from.tag->type;
+	MultibootSearch tPtr(from);
+	getNextTag(tPtr);
+
+	while(tPtr.loc < tagFence) {
+		if(tPtr.tag->type == typeToken) {
+			return (tPtr);
+		}
+
+		getNextTag(tPtr);
+	}
+
+	tPtr.loc = null;
+	return (tPtr);
 }
