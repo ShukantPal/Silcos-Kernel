@@ -75,7 +75,7 @@ protected:
 	bool fire(unsigned long& hdlrId);
 	bool fireOnly(unsigned long hdlrId);
 
-	ArrayList lineHdlrs;//!< Array of irq-handler for this line
+	ArrayList lineHdlrs;
 	friend struct Processor;
 };
 

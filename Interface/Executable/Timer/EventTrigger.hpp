@@ -38,10 +38,16 @@ typedef void (*EventCallback)(void *);
 typedef U64 Timestamp;//! Relative timestamp with nanosecond precision
 typedef U64 Delay;//! Nanosecond delay in time
 
-///
-/// Trigger-object for an event will should be executed in a fixed-range
-/// in time.
-///
+/**
+ * The event-triggering object is used in timer queues to hold, in a
+ * modifiable form, pending soft-timers that are to be fired using the
+ * hardware timer device in question.
+ *
+ * It holds critical data like: time-range in which it should be fired,
+ * the handler to called, and a single argument passed to the handler.
+ *
+ *
+ */
 struct EventTrigger final
 {
 	Timestamp triggerRange[2];//!< Range in which the event should be
@@ -79,4 +85,4 @@ struct EventTrigger final
 }// namespace Timer
 }// namespace Executable
 
-#endif /* EVENTTRIGGER_HPP_ */
+#endif/* Executable/Timer/EventTrigger.hpp */

@@ -45,8 +45,8 @@ EventNode::EventNode(Timestamp trigger, Delay shiftAllowed,
 	holeCount = 0;
 	bufferSize = 2;
 
-	leftChild = rightChild = strong_null;
-	parent = strong_null;
+	leftChild = rightChild = weak_null;
+	parent = weak_null;
 	color = kRed;
 
 	new(etrigArray) EventTrigger(trigger,
@@ -71,7 +71,7 @@ EventTrigger* EventNode::add(Timestamp trigger, Delay shiftAllowed,
 		EventCallback handler, void *eventObject)
 {
 	Timestamp newRange[2] = { trigger, trigger + shiftAllowed };
-	if(rematchRange(newRange))
+	if(rematchRange(newRange) == -1)
 		return (null);
 
 	EventTrigger *freeSlot = findFreeSlot();
@@ -83,12 +83,18 @@ EventTrigger* EventNode::add(Timestamp trigger, Delay shiftAllowed,
 }
 
 /**
- * Deletes the given trigger-object, innocently assuming it was
- * constructed in this node.
+ * Invalidates the given trigger, assuming it is held in this node, and
+ * clears its (@code live) state. The new-range of this node is again
+ * calculated, and it is returned (not set as nodal-range), to check
+ * against unwanted expansion of the nodal range, as it could be
+ * participating in a queue.
+ *
+ * The owner queue of this sorter should then set the new range of this
+ * node accordingly.
  *
  * @param trig - trigger object to delete
  */
-void EventNode::del(EventTrigger *trig)
+void EventNode::del(EventTrigger *trig, Timestamp &impendingRange[2])
 {
 	trig->live = 0;
 
@@ -97,7 +103,31 @@ void EventNode::del(EventTrigger *trig)
 	else
 		--(etrigCount);
 
-	cleanCalculateRange();
+	cleanCalculateRange(impendingRange);
+}
+
+/**
+ * Checks whether the given range overlaps with the nodal range with a
+ * 500-ns buffer.
+ *
+ * @param rangeStart
+ * @param rangeEnd
+ * @return
+ */
+bool EventNode::isHoldable(Timestamp rangeStart, Timestamp rangeEnd)
+{
+	if(rangeEnd > overlapRange[0] &&
+			rangeStart < overlapRange[1]) {
+		if(rangeStart < overlapRange[0]) {
+			return (rangeEnd - overlapRange[0] > 500);
+		} else if(rangeEnd < overlapRange[1]){
+			return (rangeEnd - rangeStart > 500);
+		} else {
+			return (overlapRange[1] - rangeStart > 500);
+		}
+	}
+
+	return (false);
 }
 
 /**
@@ -106,19 +136,15 @@ void EventNode::del(EventTrigger *trig)
  * trigger or doing any operation that does not insert more
  * condition's on the node's range.
  */
-void EventNode::cleanCalculateRange()
+void EventNode::cleanCalculateRange(Timestamp &range[2])
 {
-	Timestamp range[2] = {
-			etrigArray->triggerRange[0],
-			etrigArray->triggerRange[1]
-	};
+	range[0] = etrigArray->triggerRange[0];
+	range[1] = etrigArray->triggerRange[1];
 
 	EventTrigger *eobj = etrigArray + 1;
 
-	for(unsigned int index = 1; index < etrigCount; index++)
-	{
-		if(eobj->live)
-		{
+	for(unsigned int index = 1; index < etrigCount; index++) {
+		if(eobj->live) {
 			if(range[0] < eobj->triggerRange[0])
 				range[0] = eobj->triggerRange[0];
 
@@ -128,9 +154,6 @@ void EventNode::cleanCalculateRange()
 
 		++(eobj);
 	}
-
-	overlapRange[0] = range[0];
-	overlapRange[1] = range[1];
 }
 
 /**

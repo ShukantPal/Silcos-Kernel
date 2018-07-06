@@ -59,7 +59,8 @@ public:
 			EventCallback handler, void *eventObject);
 	EventTrigger* add(Timestamp trigger, Delay shiftAllowed,
 			EventCallback handler, void *eventObject);
-	void del(EventTrigger *trig);
+	void del(EventTrigger *trig, Timestamp &impendingRange[2]);
+	bool isHoldable(Timestamp rangeStart, Timestamp rangeEnd);
 
 	static void init() {
 		t_EventNode = KiCreateType("EventNode", sizeof(EventNode), NO_ALIGN,
@@ -74,6 +75,7 @@ public:
 		return (etrigArray + index);
 	}
 private:
+public:
 	EventTrigger *etrigArray;
 	unsigned long etrigCount;
 	unsigned long holeCount;
@@ -100,15 +102,15 @@ private:
 		return (parent->rightChild == this);
 	}
 
-	void setLeftChild(EventNode *newLeftChild) {
+	void setLeftChild(EventNode *newLeftChild, EventNode *urNil) {
 		leftChild = newLeftChild;
-		if(newLeftChild)
+		if(newLeftChild != urNil)
 			newLeftChild->parent = this;
 	}
 
-	void setRightChild(EventNode *newRightChild) {
+	void setRightChild(EventNode *newRightChild, EventNode *urNil) {
 		rightChild = newRightChild;
-		if(newRightChild)
+		if(newRightChild != urNil)
 			newRightChild->parent = this;
 	}
 
@@ -119,7 +121,7 @@ private:
 			return (parent->leftChild);
 	}
 
-	void cleanCalculateRange();
+	void cleanCalculateRange(Timestamp &newRange[2]);
 	int rematchRange(Timestamp newRange[2]);
 	void ensureBuffer(unsigned long requiredCapacity);
 	EventTrigger *findFreeSlot();

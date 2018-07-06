@@ -66,8 +66,7 @@ class LocalIRQ : public Executable::IRQ
 public:
 	static void init(unsigned long tableId);
 
-	void addHandler(IRQHandler *hdlr)
-	{
+	void addHandler(IRQHandler *hdlr) {
 		SpinLock(&lineHdlrs.modl);
 		lineHdlrs.add((void*) hdlr);
 		SpinUnlock(&lineHdlrs.modl);

@@ -53,8 +53,7 @@ bool IRQ::intrAction()
 
 	ArrayList::Iterator hItr(lineHdlrs);
 
-	do
-	{
+	do {
 		if(((IRQHandler*) hItr.get())->intrAction())
 			return (true);
 	} while(hItr.fastNext());

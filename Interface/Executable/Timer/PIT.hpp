@@ -23,6 +23,7 @@
 #define EXEMGR_TIMER_PIT_HPP__
 
 #include <Executable/IRQHandler.hpp>
+#include "HardwareTimer.hpp"
 #include <IA32/IO.h>
 #include <TYPE.h>
 
@@ -31,9 +32,12 @@ namespace Executable
 namespace Timer
 {
 
-static unsigned short getPITChannelPort(unsigned long counter)
-{
+static inline unsigned short getPITChannelPort(unsigned long counter) {
 	return (0x40 + counter);
+}
+
+static inline unsigned short getPITCommandPort() {
+	return (0x43);
 }
 
 union ControlWord
@@ -80,11 +84,11 @@ union CounterLatchCommand
 union ReadBackCommand
 {
 	struct {
-		U8 rfield			: 1;//!< Reserved, should be zero
-		U8 selectCounters	: 3;//!< A bit-mask of counters that are selected
-		U8 latchStatus		: 1;//!< 0 = Latch status of selected counter(s)
-		U8 latchCount		: 1;//!< 0 = Latch count of selected counter(s)
-		U8 cmdSign			: 2;//!< Command sign that should be 0b11
+		U8 rfield			: 1;
+		U8 selectCounters	: 3;
+		U8 latchStatus		: 1;
+		U8 latchCount		: 1;
+		U8 cmdSign			: 2;
 	};
 	U8 dByte;
 
@@ -117,14 +121,7 @@ union StatusByte
 	}
 };
 
-/**
- * The programmable interval timer is used on older system to generate
- * interrupts at varying intervals. It has been replaced by newer technology
- * (i.e. HPET and TSC). Here we control only one PIT in the system.
- *
- * @author Shukant Pal
- */
-class PIT final : public IRQHandler
+class PIT final : public IRQHandler, public HardwareTimer
 {
 public:
 	enum {
@@ -167,19 +164,15 @@ public:
 
 	bool intrAction();
 
-	void armTimer(unsigned short initialCount, unsigned char selectCounter);
-
-	void resetTimer(unsigned short initialCount, unsigned char operation,
-				unsigned char counter);
+	void reset(unsigned short newInitialCount, unsigned char selectounter);
 private:
 	struct Counter {
 		int mode;
-		unsigned short initialCount;
-		unsigned short lastReadCount;
-		unsigned int totalTicks;
+		U16 initialCount;
+		U16 lastReadCount;
+		U64 totalTicks;
 
-		unsigned long getPendingTime()
-		{
+		unsigned long getPendingTime() {
 			switch(mode) {
 			case INTERRUPT_ON_TERMINAL_COUNT:
 				return (lastReadCount);
@@ -198,12 +191,32 @@ private:
 
 	void flush(unsigned long index);
 
+	U16 getCounter(unsigned index) {
+		return (latch(index));
+	}
+
+	U16 getLastReadCounter(unsigned index) {
+		return (progTimers[index].lastReadCount);
+	}
+
+	U64 getTotalTicks(unsigned index) {
+		U16 updatedCounter = getCounter(index);
+		progTimers[index].totalTicks +=
+				getLastReadCounter(index) - updatedCounter;
+		setLastReadCounter(index, updatedCounter);
+		return (progTimers[index].totalTicks);
+	}
+
+	void setLastReadCounter(unsigned index, U16 value) {
+		progTimers[index].lastReadCount = value;
+	}
+
 	unsigned short latch(unsigned long index) {
 		WritePort(getPITChannelPort(index), CounterLatchCommand(index));
 
 		unsigned short latchedCounter;
 		latchedCounter = ReadPort(getPITChannelPort(index));
-		latchedCounter |= ReadPort(getPITChannelPort(index));
+		latchedCounter |= ReadPort(getPITChannelPort(index)) << 8;
 
 		return (latchedCounter);
 	}
@@ -215,9 +228,12 @@ private:
 		return (ReadPort(getPITChannelPort(index)));
 	}
 
+	void arm(unsigned selectCounter);
 	void readAll();
 	void refresh(unsigned int index);
 };
+
+extern PIT pit;
 
 }
 }

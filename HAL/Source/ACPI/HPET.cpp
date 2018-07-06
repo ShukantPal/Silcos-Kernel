@@ -1,26 +1,25 @@
-///
-/// @file HPET.cpp
-/// @module HAL
-///
-/// THIS FILE IS THE "WORKING" FILE. NOTHING HERE IS FINALIZED. HERE
-/// DEBUGGING OF EXISTING KERNEL FEATURES WAS GOING ON.
-///
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
+/**
+ * @file HPET.cpp
+ *
+ * THIS FILE IS THE "WORKING" FILE. NOTHING HERE IS FINALIZED. HERE
+ * DEBUGGING OF EXISTING KERNEL FEATURES WAS GOING ON.
+ *
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #include <Object.hpp>
 #include <ACPI/RSDT.h>
 #include <ACPI/HPET.h>
@@ -50,10 +49,9 @@ unsigned int fd = 0;
 #include <Executable/Timer/EventNode.hpp>
 #include <Executable/Timer/NodeSorter.hpp>
 
+using namespace Executable;
 using namespace Executable::Timer;
 
-PIT *pit;
-ObjectInfo *h;
 
 ArrayList hl(24);
 
@@ -85,10 +83,6 @@ decl_c void testhpet()
 {
 	DbgLine("test-hpet !!!!");
 
-
-//	InitKernelHPET();
-	pit = new PIT();
-
 	// try setting up io/apic
 
 	IOAPIC *e = IOAPIC::getIterable();
@@ -105,14 +99,10 @@ decl_c void testhpet()
 		f.destination = 0;
 		f.triggerMode = 1;
 
-		pit->resetTimer(0xFFFF, PIT::INTERRUPT_ON_TERMINAL_COUNT, 0);
-		GetIRQTableById(0)[190 - 32].addHandler(pit);
+		pit.reset(0xFFFF, 0);
+		GetIRQTableById(0)[190 - 32].addHandler(static_cast<IRQHandler*>(&pit));
 		e->setRedirEnt(2, &f);
 	}
 
 	EventNode::init();
-	NodeSorter ns;
-	ns.put(new EventNode(1200, 1500, 0, 0));
-	ns.put(new EventNode(1600, 1700, 0, 0));
-	ns.put(new EventNode(1900, 2100, 0, 0));
 }

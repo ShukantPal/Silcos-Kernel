@@ -1,5 +1,8 @@
 /**
- * @file EventQueue.hpp
+ * @file HardwareTimer.hpp
+ *
+ * Provides generic interface for hardware timer devices and the soft
+ * event-queue handling mechanism.
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,35 +19,26 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef EVENTQUEUE_HPP_
-#define EVENTQUEUE_HPP_
+#ifndef EXCMGR_TIMER_HWTIMER_HPP
+#define EXCMGR_TIMER_HWTIMER_HPP
 
-#include "Event.hpp"
-#include "EventTrigger.hpp"
-#include "EventNode.hpp"
-#include "NodeSorter.hpp"
-#include <Utils/ArrayList.hpp>
-#include <Utils/RBTree.hpp>
+#include "EventQueue.hpp"
 
 namespace Executable
 {
 namespace Timer
 {
 
-class EventQueue
+class HardwareTimer
 {
 public:
-	EventQueue();
-	EventTrigger *add(Timestamp trigger,
-			Timestamp shiftAllowed, EventCallback handler,
-			void *eventObject);
-	bool rem(EventTrigger *timer);
-	EventNode *get();
-private:
-	NodeSorter ndsEngine;
+	EventQueue trigsLeft;
+protected:
+	HardwareTimer(){}
+	void fireAll();
 };
 
-}// namespace Timer
-}// namespace Executable
+} // namespace Timer
+} // namespace Executable
 
-#endif/* Executable/Timer/EventQueue.hpp */
+#endif/* Executable/Timer/HardwareTimer.hpp */

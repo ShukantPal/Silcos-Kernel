@@ -1,5 +1,5 @@
 /**
- * @file PIT.h
+ * @file PIT.cpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,69 +23,48 @@
 
 using namespace Executable::Timer;
 
-PIT systemPIT;
+PIT Executable::Timer::pit;
 
 bool PIT::intrAction()
 {
-	bool servReq = status(0).outputState;
+	bool wasFired = status(0).outputState;
+	if(!wasFired)
+		return (false);
 
-	if(servReq)
-	{
-		armTimer(0xFFFF, 0);
-		//Dbg("p ");
-	}
 
-	return (servReq);
+
+	return (true);
+}
+
+void PIT::reset(unsigned short newInitialCount, unsigned char selectCounter)
+{
+	Counter *newTimer = progTimers + selectCounter;
+	newTimer->totalTicks = 0;
+	newTimer->initialCount = newInitialCount;
+	newTimer->mode = INTERRUPT_ON_TERMINAL_COUNT;
+	newTimer->lastReadCount = newInitialCount;
+	flush(selectCounter);
 }
 
 /**
- * Arms the timer with the initial count in the mode that it decrements it
- * at a fixed frequency throughout time. An interrupt is generated when the
- * count value drops to zero, and the timer will have to be programmed again.
+ * Arms the given timer again so that it will start decrementing from the
+ * previously used initial count. This is generally done when the PIT sends
+ * an interrupt to a CPU - and it needs to be armed again.
  *
- * @param initialCount - The initial count that should be put into the count
- * 				register. This value is decremented at the fixed frequency
- * 				of the PIT.
  * @param selectCounter - The counter that is to be re-programmed in the PIT.
  * @version 1.0
  * @since Silcos 3.05
  * @author Shukant Pal
  */
-void PIT::armTimer(unsigned short initialCount, unsigned char selectCounter)
+void PIT::arm(unsigned selectCounter)
 {
 	Counter *oldTimer = progTimers + selectCounter;
 
-	oldTimer->totalTicks += oldTimer->getPendingTime();
-	oldTimer->initialCount = initialCount;
+	oldTimer->totalTicks += oldTimer->lastReadCount;
 	oldTimer->mode = INTERRUPT_ON_TERMINAL_COUNT;
-	oldTimer->lastReadCount = initialCount;
+	oldTimer->lastReadCount = oldTimer->initialCount;
 
 	flush(selectCounter);
-}
-
-/**
- * Resets the PIT by writing to the control word and then to the counter, so
- * that the next interrupt occurs at initialCount cycles later. Even if the
- * PIT isn't used as the system wall-timer, it must be reset regularly due to
- * its <foolish> inability to turn itself off.
- *
- * @param initialCount - no. of CLK pulses delay for next interrupt
- * @param operation - operating mode for the timer
- * @param counter - counter no. of the channel being programmed
- * @author Shukant Pal
- */
-void PIT::resetTimer(unsigned short initialCount, unsigned char operation,
-			unsigned char counter)
-{
-	ControlWord ctl;
-	ctl.BCD = 0;
-	ctl.mode = operation;
-	ctl.rwAccess = ReadWrite::BothBytes;
-	ctl.selectCounter = counter;
-	WritePort(CMD_REG, ctl);
-
-	WritePort(getPITChannelPort(counter), (unsigned char) initialCount);
-	WritePort(getPITChannelPort(counter), (unsigned char)(initialCount >> 8));
 }
 
 /**
@@ -102,19 +81,8 @@ void PIT::flush(unsigned long index)
 
 	unsigned short initialCount = progTimers[index].initialCount;
 
-	if(initialCount & 0xFF == 0) {
-		resetCommand.rwAccess = MSB;
-	} else if(initialCount & 0xFF == initialCount) {
-		resetCommand.rwAccess = LSB;
-	} else {
-		resetCommand.rwAccess = BothBytes;
-	}
-
-	WritePort(getPITChannelPort(index), resetCommand);
-
-	if(initialCount & 0xFF)
-		WritePort(getPITChannelPort(index), initialCount);
-
-	if(initialCount >> 8)
-		WritePort(getPITChannelPort(index), initialCount);
+	resetCommand.rwAccess = BothBytes;
+	WritePort(CMD_REG, resetCommand);
+	WritePort(getPITChannelPort(index), initialCount);
+	WritePort(getPITChannelPort(index), initialCount >> 8);
 }
