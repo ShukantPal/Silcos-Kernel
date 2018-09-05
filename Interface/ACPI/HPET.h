@@ -1,21 +1,21 @@
-///
-/// File: HPET.h
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
+/**
+ * @file HPET.h
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #ifndef HAL_ACPI_HPET_H__
 #define HAL_ACPI_HPET_H__
 
@@ -26,15 +26,15 @@
 namespace ACPI
 {
 
-///
-/// Provides information to the OS about the HPET in the system to allow
-/// it to boot-strap. Only the 1st timer-block information is given in the form
-/// of ACPI tables, while others are reported in the ACPI namespace.
-///
-/// @version 2.0
-/// @since Silcos 3.02
-/// @author Shukant Pal
-///
+/**
+ * Provides information to the OS about the HPET in the system to allow
+ * it to boot-strap. Only the 1st timer-block information is given in the form
+ * of ACPI tables, while others are reported in the ACPI namespace.
+ *
+ * @version 2.0
+ * @since Silcos 3.02
+ * @author Shukant Pal
+ */
 struct HPET : public SDTHeader
 {
 	struct EventTimerBlockID

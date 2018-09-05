@@ -117,12 +117,12 @@ struct _MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS {
 
 struct MultibootHeaderTagFrameBuffer
 {
-	U16 Type;
-	U16 Flags;
-	U32 Size;
-	U32 Width;
-	U32 Height;
-	U32 Depth;
+	U16 type;
+	U16 flags;
+	U32 size;
+	U32 width;
+	U32 height;
+	U32 depth;
 };
 
 struct MultibootHeaderTagModuleAlign {
@@ -193,6 +193,13 @@ struct MultibootTagString {
 	char String[0];
 } MULTIBOOT_TAG_STRING;
 
+/**
+ * Holds module-specific data; multiple <tt>MultibootTagModule</tt>
+ * objects can be found in the multiboot table, if multiple modules
+ * have been loaded during boot.
+ *
+ * @since Multiboot 2
+ */
 struct MultibootTagModule
 {
 	U32 type;
@@ -203,35 +210,26 @@ struct MultibootTagModule
 };
 
 /**
- * MULTIBOOT_TAG_BASIC_MEMINFO - 
+ * Holds boot-time data on physical memory present in the running
+ * system, which includes lower & upper memory.
  *
- * Summary:
- * This type is used to get information on physical memory present
- * in the system at boot-time.
- *
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
- * @See Multiboot 1.6
+ * @since Multiboot 1
  */
-typedef
 struct MultibootTagBasicMemInfo {
-	U32 Type;/* must equal MULTIBOOT_TAG_TYPE_BASIC_MEMINFO */
-	U32 Size;/* must equal 16 */
-	U32 MmLower;/* Lower-memory present at boot-time */
-	U32 MmUpper;/* High-memory present at boot-time */
-} MULTIBOOT_TAG_BASIC_MEMINFO;
+	U32 type;
+	U32 size;
+	U32 lowerMem;
+	U32 upperMem;
+};
 
-typedef
 struct MultibootTagBootDev {
-	U32 Type;
-	U32 Size;
-	U32 BIOSDevice;
-	U32 Slice;
-	U32 Part;
-} MULTIBOOT_TAG_BOOTDEV;
+	U32 type;
+	U32 size;
+	U32 biosDevice;
+	U32 slice;
+	U32 part;
+};
 
-typedef
 struct MultibootTagMMap {
 	U32 type;
 	U32 size;
@@ -240,6 +238,7 @@ struct MultibootTagMMap {
 	/* Entries are present just after this */
 
 #ifndef _CBUILD
+
 	inline MultibootMMapEntry *getEntries() {
 		return ((MultibootMMapEntry*)(this + 1));
 	}
@@ -247,87 +246,88 @@ struct MultibootTagMMap {
 	inline bool inBounds(MultibootMMapEntry *entry) {
 		return ((char *) entry < (char *) this + size);
 	}
+
 #endif
-} MULTIBOOT_TAG_MMAP;
 
-typedef
-struct _MULTIBOOT_VBE_INFO_BLOCK {
-	U8 ExternalSpecification[512];
-} MULTIBOOT_VBE_INFO_BLOCK;
+};
 
-typedef
-struct _MULTIBOOT_VBE_MODE_INFO_BLOCK {
-	U8 ExternalSpecification[256];
-} MULTIBOOT_VBE_MODE_INFO_BLOCK;
+struct MultibootVBEInfoBlock {
+	U8 externalSpecification[512];
+};
 
-typedef
-struct _MULTIBOOT_TAG_VBE {
-	U32 Type;
-	U32 Size;
-	U16 VBEMode;
-	U16 VBEInterfaceSegment;
-	U16 VBEInterfaceOffset;
-	U16 VBEInterfaceLength;
-	MULTIBOOT_VBE_INFO_BLOCK ControlInfo;
-	MULTIBOOT_VBE_MODE_INFO_BLOCK ModeInfo;
-} MULTIBOOT_TAG_VBE;
+struct MultibootVBEModeInfoBlock {
+	U8 externalSpecification[256];
+};
+
+struct MultibootTagVBE {
+	U32 type;
+	U32 size;
+	U16 vbeMode;
+	U16 vbeInterfaceSegment;
+	U16 vbeInterfaceOffset;
+	U16 vbeInterfaceLength;
+	struct MultibootVBEInfoBlock controlInfo;
+	struct MultibootVBEModeInfoBlock modeInfo;
+};
 
 #define MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED 0
 #define MULTIBOOT_FRAMEBUFFER_TYPE_RGB 1
 #define MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT 2
 
-typedef struct _MULTIBOOT_TAG_FRAMEBUFFER_COMMON {
-	U32 Type;
-	U32 Size;
-	U64 Address;
-	U32 Pitch;
-	U32 Width;
-	U32 Height;
-	U8 BPP;
-	U8 BufferType;
-	U16 Reserved;
-} MULTIBOOT_TAG_FRAMEBUFFER_COMMON;
+struct MultibootTagFramebufferCommon {
+	U32 type;
+	U32 size;
+	U64 address;
+	U32 pitch;
+	U32 width;
+	U32 height;
+	U8 bpp;
+	U8 bufferType;
+	U16 padding;
+};
 
-typedef struct _MULTIBOOT_TAG_FRAMEBUFFER {
-	MULTIBOOT_TAG_FRAMEBUFFER_COMMON Common;
+struct MultibootTagFramebuffer {
+	struct MultibootTagFramebufferCommon Common;
+
 	union {
+
 		struct {
-			U16 PaletteColors;
-			struct MultibootColor Palette[0];
+			U16 paletteColors;
+			struct MultibootColor palette[0];
 		};
+
 		struct {
-			U8 RedFieldPosition;
-			U8 RedMaskSize;
-			U8 GreenFieldPosition;
-			U8 GreenMaskSize;
-			U8 BlueFieldPosition;
-			U8 BlueMaskSize;
+			U8 redFieldPosition;
+			U8 redMaskSize;
+			U8 greenFieldPosition;
+			U8 greenMaskSize;
+			U8 blueFieldPosition;
+			U8 blueMaskSize;
 		};
+
 	};
-} MULTIBOOT_TAG_FRAMEBUFFER;
+
+};
 
 /**
- * Type: MULTIBOOT_TAG_ELF_SECTIONS
+ * Provides a elf section-header table that is copied by the bootloader
+ * before extracting the kernel modules. This may be required as the
+ * ELF-header ceases to exist once the kernel is loaded.
  *
- * Summary:
- * This type contains the kernel ELF-section table. As the ELF header needn't be
- * present after the bootloader loads the kernel into memory, the multiboot specs
- * have provided a way to get the 'section-header-table'.
+ * Note that the addresses given in these tables are incorrect, as the
+ * kernel-initializer copies and loads the module segments in separate
+ * permanent memory (kernel-environment memory).
  *
- * @See Module/ELF.h - For more information, on section-headers
- * @See Module/MSI.h - This tag is the basis of the 'Multiboot Section Interface'
- * @Version 1
- * @Since Circuit 2.03
- * @Author Shukant Pal
+ * @since Multiboot 2
  */
-typedef struct _MULTIBOOT_TAG_ELF_SECTIONS {
-	U32 Type;/* equ 9 */
-	U32 Size;
-	U32 Number;/* Number of sections present in the kernel */
-	U32 EntrySize;/* Size of each section-header-entry */
-	U32 ShstrIndex;/* Index of the section containing string table for all section names */
-	char Sections[0];/* Section-header-table raw data */
-} MULTIBOOT_TAG_ELF_SECTIONS;
+struct MultibootTagElfSections {
+	U32 type;
+	U32 size;
+	U32 sectionCount;
+	U32 entrySize;
+	U32 shstrIndex;
+	char rawSectionData[0];
+};
 
 typedef struct _MULTIBOOT_TAG_APM {
 	U32 Type;
@@ -388,6 +388,12 @@ struct _MULTIBOOT_TAG_NETWORK {
 	U8 DHCPack[0];
 } MULTIBOOT_TAG_NETWORK;
 
+/**
+ * Generic pointer to multiboot objects; used by <tt>MultibootChanneL
+ * </tt> to communicate multiboot tags. Constructed using an already
+ * existing object pointer or by another <tt>MultibootSearch</tt>
+ * object.
+ */
 union MultibootSearch
 {
 	struct MultibootTag *tag;
@@ -419,6 +425,14 @@ union MultibootSearch
 
 #ifndef _CBUILD
 
+/**
+ * Driver for accessing multiboot protocol functions; encapsulates
+ * the multiboot table provided by the bootloader. Once initialized,
+ * it can be used for parsing & locating tags in the table.
+ *
+ * Enforces other subsystems to treat the multiboot table memory as
+ * read-only.
+ */
 class MultibootChannel
 {
 public:

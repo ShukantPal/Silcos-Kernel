@@ -48,23 +48,11 @@ protected:
 	virtual ~IRQHandler();
 };
 
-///
-/// Carries all interrupt-handlers specific to one "IRQ" line. One can fire
-/// an interrupt in this IRQ object, but that should be only done by the asm
-/// interrupt-handler registered in the IDT.
-///
-/// Child classes may add and remove handlers by directly accessing the
-/// lineHdlrs `ArrayList`.
-///
-/// Note that a IRQ is itself an IRQHandler - local irq (on LAPICs) triggers
-/// and may have IOAPIC handlers too. But those device-interrupt handlers are
-/// specific to IOAPIC so the IOAPIC irq is will behave as an irq-handler and
-/// execute the device irqs. (ToDo: clear this paragraph)
-///
-/// @version 1.0
-/// @since Silcos 3.02
-/// @author Shukant Pal
-///
+/**
+ * Holds different irq-handlers that shared the same hardware line
+ * physically. Whenever an irq is triggered, each handler is called
+ * until the source is found.
+ */
 class IRQ : public IRQHandler
 {
 public:

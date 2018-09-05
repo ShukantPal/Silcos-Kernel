@@ -23,6 +23,8 @@
 #include <Math.hpp>
 #include <KERNEL.h>
 
+include_kobject(tAVL_Node)
+
 static AVLLinker *AVLRotateRight(AVLLinker *node)
 {
 	AVLLinker *x = node->leftChild;
@@ -297,3 +299,35 @@ decl_c AVLNode *AVLSearch(SIZE Indicator, AVLTree *Tree)
 {
 	return AVLSearch_(Indicator, Tree -> treeRoot);
 }
+
+/*
+AVL_Tree::AVL_Tree() : BinaryTree()
+{
+}
+
+AVL_Node &AVL_Tree::leanLeft(AVL_Node &subTree)
+{
+	AVL_Node &newRoot =* (AVL_Node *)subTree.rightChild;
+
+	subTree.assignRight(newRoot.getLeftChild());
+	newRoot.assignLeft(&subTree);
+
+	subTree.setHeight();
+	newRoot.setHeight();
+
+	return (newRoot);
+}
+
+AVL_Node &AVL_Tree::leanRight(AVL_Node &subTree)
+{
+	AVL_Node &newRoot =* (AVL_Node *) subTree.leftChild;
+
+	subTree.assignLeft(newRoot.getRightChild());
+	newRoot.assignRight(&subTree);
+
+	subTree.setHeight();
+	newRoot.setHeight();
+
+	return (newRoot);
+}
+*/

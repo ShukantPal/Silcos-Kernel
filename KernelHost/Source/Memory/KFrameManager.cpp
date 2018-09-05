@@ -226,8 +226,8 @@ void SetupKFrameManager()
 	MultibootTagMMap *mmMap =
 			MultibootChannel::getMMap();
 
-	mmLow = mInfo->MmLower;
-	mmHigh = mInfo->MmUpper;
+	mmLow = mInfo->lowerMem;
+	mmHigh = mInfo->upperMem;
 
 	MultibootMMapEntry *regionEntry  = mmMap->getEntries();
 	unsigned long regionLimit = (U32) mmMap + mmMap->size - mmMap->entrySize;

@@ -9,7 +9,6 @@
 #include <Memory/Pager.h>
 #include <KERNEL.h>
 #include <Multiboot2.h>
-#include <Module/MSI.h>
 
 using namespace Module;
 
@@ -22,7 +21,7 @@ extern "C" void stupid();
 import_asm void BSPGrantPermit();
 
 void Init() {
-	DbgLine("Hello\nThis is a newline. ");
+	DbgLine("This\nThis is a newline. ");
 	//BSPGrantPermit();
 
 	while(TRUE) { asm volatile("nop"); }

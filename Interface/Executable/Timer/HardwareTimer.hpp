@@ -23,19 +23,35 @@
 #define EXCMGR_TIMER_HWTIMER_HPP
 
 #include "EventQueue.hpp"
+#include "../IRQHandler.hpp"
 
 namespace Executable
 {
 namespace Timer
 {
 
+/**
+ * System timers that can serve soft-timers should inherit
+ * from this class. It doesn't provide any public interface
+ * but setups required underlying functionality.
+ *
+ * The add() function here is not public - the device must
+ * actually provide a function to fire a timer "n" ticks
+ * later - and calculate the time stamp using its internal
+ * counter.
+ */
 class HardwareTimer
 {
 public:
-	EventQueue trigsLeft;
+	EventQueue pendingTriggers;
+	EventNode *activeTriggers;
 protected:
-	HardwareTimer(){}
-	void fireAll();
+	HardwareTimer();
+	virtual ~HardwareTimer();
+	virtual bool fireAt(Timestamp nextTrigger) = 0;
+	EventTrigger *add(Timestamp trigger, Timestamp shiftAllowed,
+			EventCallback handler, void *eventObject);
+	void retireActiveEvents();
 };
 
 } // namespace Timer

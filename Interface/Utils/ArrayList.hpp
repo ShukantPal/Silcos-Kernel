@@ -86,7 +86,7 @@ public:
 
 		inline void *fastNext()
 		{
-			if(curIdx < list.size)
+			if(curIdx < list.size - 1)
 			{
 				++(curIdx);
 				++(ref);

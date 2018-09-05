@@ -1,25 +1,24 @@
-///
-/// @file ZoneManager.cpp
-///
-/// ToDo: CHANGE FILENAME TO ZONEALLOCATOR.CPP
-///
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
-
+/**
+ * @file ZoneManager.cpp
+ *
+ * ToDo: CHANGE FILENAME TO ZONEALLOCATOR.CPP
+ *
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #define NAMESPACE_KFRAME_MANAGER
 
 #include <Memory/KFrameManager.h>
@@ -36,8 +35,9 @@ using namespace Memory::Internal;
 #define ZONE_OVERLOAD 101
 #define ZONE_LOADED 102
 
-void ZoneAllocator::resetAllocator(BuddyBlock *entryTable, ZonePreference *prefTable, unsigned long prefCount,
-					Zone *zoneTable, unsigned long zoneCount)
+void ZoneAllocator::resetAllocator(BuddyBlock *entryTable,
+		ZonePreference *prefTable, unsigned long prefCount,
+		Zone *zoneTable, unsigned long zoneCount)
 {
 	this->descriptorTable = entryTable;
 	this->prefTable = prefTable;
@@ -55,20 +55,9 @@ void ZoneAllocator::resetStatistics()
 	}
 }
 
-/**
- * Enum: ZoneState
- * Attributes: file-only, local
- *
- * Summary:
- * This enum contains constants which indicate the status of a zone for
- * a particular allocation w.r.t the required memory-size.
- *
- * Removals:
- * ZONE_OVERLOADED 101 - Present to indicated required-mem> total mem-size for zone
- *
- * Version: 1.1
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
+/*
+ * Indicates the state of an allocation for a zone. Based on these values, the
+ * allocation is done.
  */
 enum ZoneState
 {
@@ -81,41 +70,29 @@ enum ZoneState
 typedef unsigned long ZNALLOC; /* Internal type - Used for testing if zone is allocable from */
 
 /**
- * Function: getStatus
- * Attributes: C-style, internal
+ * Finds the status for a particular allocation scenario for a zone. This
+ * depends on the size of the request memory.
  *
- * Summary:
- * This function will calculate a status (constant) for a particular allocation
- * case with a zone w.r.t the required memory. See ZoneState for more info
- * regarding the values returned.
- *
- * Args:
- * unsigned long requiredMemory - Memory required in this allocation-case
- * Zone *searchZone - Zone in which the allocation (can) occur
- *
- * Version: 1.1.9
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
+ * @param requiredMemory - size of the request memory
+ * @param searchZone - zone in which the allocation is being tested
+ * @version 1.1.9
+ * @since Circuit 2.03,++
+ * @author Shukant Pal
  */
 static enum ZoneState getStatus(unsigned long requiredMemory, Zone *searchZone)
 {
 	unsigned long generalMemoryAvail = searchZone->memorySize - searchZone->memoryAllocated;
 
-	if(requiredMemory > searchZone->memorySize - searchZone->memoryAllocated)
-	{
+	if(requiredMemory > searchZone->memorySize - searchZone->memoryAllocated) {
 		return (LOW_ON_MEMORY);
-	}
-	else
-	{
+	} else {
 		// Memory excluding reserved amount
 		generalMemoryAvail -= searchZone->memoryReserved;
 
-		if(requiredMemory <= generalMemoryAvail)
-		{
+		if(requiredMemory <= generalMemoryAvail) {
 			return (ALLOCABLE);
 		}
-		else
-		{
+		else {
 			// Memory including reserved amount (minus emergency amount)
 			generalMemoryAvail += (7 * searchZone->memoryReserved) >> 3;
 
@@ -132,17 +109,8 @@ static enum ZoneState getStatus(unsigned long requiredMemory, Zone *searchZone)
 #define ZONE_FAILURE 0xFF
 typedef unsigned long ZNACTION;
 
-/**
- * Enum: AllocationAction
- * Attributes: file-only, local
- *
- * Summary:
- * This enum contains constants for evaluating what to do for a
- * specific allocation case, based on the zone-state.
- *
- * Version: 1.01
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
+/*
+ * These values tell what to do to allocate memory in a zone.
  */
 enum AllocationAction
 {
@@ -153,25 +121,16 @@ enum AllocationAction
 };
 
 /**
- * Function: getAction
- * Attributes: static
+ * Tells what to do next to allocate the memory, based on the status of the
+ * allocation.
  *
- * Summary:
- * This function is a zone-allocator helper function for getting a corresponding
- * action for a zone based on its state w.r.t the allocation flags.
- *
- * Args:
- * enum ZoneState allocState - State of the allocating zone
- * ZoneControl allocFlags - Control-flags for the zone-based allocation
- *
- * Version: 1.1
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
+ * @version 1.1
+ * @since Circuit 2.03,++
+ * @author Shukant Pal
  */
 static AllocationAction getAction(ZoneState allocState, ZNFLG allocFlags)
 {
-	switch(allocState)
-	{
+	switch(allocState) {
 	case ALLOCABLE:
 		return (ALLOCATE);
 
@@ -195,25 +154,19 @@ static AllocationAction getAction(ZoneState allocState, ZNFLG allocFlags)
 }
 
 /**
- * Function: ZoneAllocator::getZone
+ * Returns the zone which the allocator should use to gain free memory and
+ * return the requester of memory.
  *
- * Summary:
- * This function is used for choosing a zone during allocation directly by querying
- * zone states & getting the corresponding actions. If a zone gives a ALLOCATE action,
- * then it is returned.
- *
- * Args:
- * unsigned long blockOrder - Order of block being requested for allocation
- * unsigned long basePref - Minimal preference-index of the allocation
- * ZoneControl allocFlags - Flags for allocating the block
- * Zone *zonePref - Preferred zone of allocation
- *
- * Version: 1.1
- * Since: Circuit 2.03,++
- * Author: Shukant Pal
+ * @param blockOrder - Order of block being requested for allocation
+ * @param basePref - Minimal preference-index of the allocation
+ * @param allocFlags - Flags for allocating the block
+ * @param zonePref - Preferred zone of allocation
+ * @version 1.1
+ * @since Circuit 2.03,++
+ * @author Shukant Pal
  */
-Zone *ZoneAllocator::getZone(unsigned long blockOrder, unsigned long basePref, ZNFLG allocFlags,
-				Zone *zonePref)
+Zone *ZoneAllocator::getZone(unsigned long blockOrder,
+		unsigned long basePref, ZNFLG allocFlags, Zone *zonePref)
 {
 	enum ZoneState testState;
 	enum AllocationAction testAction;
@@ -221,10 +174,8 @@ Zone *ZoneAllocator::getZone(unsigned long blockOrder, unsigned long basePref, Z
 	Zone *trialZero = zonePref;// Head of circular-list
 
 	unsigned long testPref = zonePref->preferenceIndex;
-	while(testPref >= basePref)
-	{
-		do
-		{
+	while(testPref >= basePref) {
+		do {
 			SpinLock(&trialZone->controlLock);
 
 			testState =  getStatus(blockOrder, trialZone);
@@ -252,37 +203,31 @@ Zone *ZoneAllocator::getZone(unsigned long blockOrder, unsigned long basePref, Z
 }
 
 /**
- * Function: ZoneAllocator::allocateBlock
+ * Allocates the request amount of memory, by searching in all zones in the
+ * preferential manner - checking the given preferred zone, trying to allocate
+ * from a zone of the same preference, then going down the preference table.
  *
- * Summary:
- * This function is used for allocating a block, trying to cover maximum
- * number of zones as possible. It will allocate a block in the process -
+ * Not implemented yet:
+ * A cache is also implemented on top of each zone to reduce the overall
+ * latency of lower-end allocations.
  *
- * 1. Preferred Zone-Check - It will firstly try allocating directly from
- * the zone preferred most.
- *
- * 2. Uniform Zone-Distribution Search - As all zones in a specific preference
- * are arranged in a circular list, it will try allocating from all zones starting
- * from after preferred zone.
- *
- * 3. Lower Preference Allocations - It will do the circular-search in lower zone
- * preferences till prefBase.
- *
- * Version: 1.1.1
- * Since: Circuit 2.03++
- * Author: Shukant Pal
+ * @param blockOrder - the order of the request memory block
+ * @param basePref - the minimum preference level of the zone from which
+ * 						allocation should be done!
+ * @param zonePref - preferred zone for allocation, for the client
+ * @param allocFlags - the flags given for allocation
+ * @version 1.1.1
+ * @since Circuit 2.03++
+ * @author Shukant Pal
  */
 BuddyBlock *ZoneAllocator::allocateBlock(unsigned long blockOrder, unsigned long basePref, Zone *zonePref,
 						ZNFLG allocFlags)
 {
 	Zone *allocatingZone = getZone(blockOrder, basePref, allocFlags, zonePref);
 
-	if(allocatingZone == NULL)
-	{
+	if(allocatingZone == NULL) {
 		return (NULL);
-	}
-	else
-	{
+	} else {
 		// Try allocating from its cache, for order(0) allocations
 		// TODO: Implement the ZCache extension for alloc-internal
 
@@ -343,17 +288,13 @@ BDINFO *ZnAllocateBlock(unsigned long bOrder, unsigned long znBasePref, ZNINFO *
 }*/
 
 /**
- * Function: ZoneAllocator::freeBlock
+ * Deallocates the memory allocated at the given buddy-block.
  *
- * Summary:
- * This function is used for freeing a unused block, which was allocated by THIS
- * allocator. No searching is done for any zone.
- *
- * Version: 1.1.0
- * Since: Circuit 2.03++
- * Author: Shukant Pal
+ * @version 1.1.0
+ * @since Circuit 2.03++
+ * @author Shukant Pal
  */
-Void ZoneAllocator::freeBlock(BuddyBlock *blockGiven)
+void ZoneAllocator::freeBlock(BuddyBlock *blockGiven)
 {
 	Zone *owner = zoneTable + blockGiven->ZnOffset;
 	owner->memoryAllocated -= SIZEOF_ORDER(blockGiven->Order);
@@ -361,22 +302,23 @@ Void ZoneAllocator::freeBlock(BuddyBlock *blockGiven)
 }
 
 /**
- * Function: ZoneAllocator::configureZones
- * Attributes: static
+ * Calls the constructors for the buddy-systems to configure this
+ * zoning-system uniformly with the given arguments. After this, the
+ * client must also define the zonal boundaries.
  *
- * Summary:
- * This function is used for setting up zone-based allocator configurations. It
- * will take a array of zones & setup (call constructor) their buddy-systems.
- *
- * Note that after calling this, the client MUST manually configure the zones
- * memory boundaries.
- *
- * Version: 1.0
- * Since: Circuit 2.03++
- * Author: Shukant Pal
+ * @param entrySize - the size of the buddy-block descriptors
+ * @param highestOrder - the max. allocation order supported by the allocator
+ * @param listInfo - the array of "short" to store list meta-data
+ * @param listArray - the array of linked-lists to store buddy-block chains
+ * @param zoneTable - the array of zone-descriptors used in the zone-system
+ * @param count - the no. of zones in this system
+ * @version 1.0
+ * @since Circuit 2.03++
+ * @author Shukant Pal
  */
-void ZoneAllocator::configureZones(unsigned long entrySize, unsigned long highestOrder, unsigned short *listInfo,
-					LinkedList *listArray, Zone *zoneTable, unsigned long count)
+void ZoneAllocator::configureZones(unsigned long entrySize,
+		unsigned long highestOrder, unsigned short *listInfo,
+		LinkedList *listArray, Zone *zoneTable, unsigned long count)
 {
 	Zone *zone = zoneTable;
 	class BuddyAllocator *buddySys = &zone->memoryAllocator;
@@ -384,8 +326,9 @@ void ZoneAllocator::configureZones(unsigned long entrySize, unsigned long highes
 	unsigned long liCount = BDSYS_VECTORS(highestOrder);
 	unsigned long liSize = liCount + 1;
 
-	for(unsigned long zoneIndex = 0; zoneIndex < count; zoneIndex++){
-		(void) new (buddySys) BuddyAllocator(entrySize, NULL, highestOrder, listInfo, listArray);
+	for(unsigned long zoneIndex = 0; zoneIndex < count; zoneIndex++) {
+		(void) new (buddySys) BuddyAllocator(entrySize, NULL,
+				highestOrder, listInfo, listArray);
 		listInfo += liSize;
 		listArray += liCount;
 		++(zone);
@@ -393,19 +336,30 @@ void ZoneAllocator::configureZones(unsigned long entrySize, unsigned long highes
 	}
 }
 
-void ZoneAllocator::configurePreference(Zone *zoneArray, ZonePreference *pref, unsigned int count)
+/**
+ * Adds "count" zones from the zonal array given to the preference.
+ * @param zoneArray
+ * @param pref
+ * @param count
+ */
+void ZoneAllocator::configurePreference(Zone *zoneArray,
+		ZonePreference *pref, unsigned int count)
 {
 	unsigned int index = 0;
-	while(index < count)
-	{
-		AddCElement((CircularListNode *) zoneArray, CLAST, &pref->ZoneList);
+	while(index < count) {
+		AddCElement((CircularListNode *) zoneArray,
+				CLAST, &pref->ZoneList);
 		++(index);
 		++(zoneArray);
 	}
 }
 
 /**
- * Function: ZoneAllocator::configureZoneMappings
+ * Configures the buddy-allocators used in the zones to sharply obey the
+ * zonal boundaries presented by the client.
+ *
+ * @param zoneArray - array of zones used in the system
+ * @param count - the no. of zones whose boundaries are to be defined
  */
 void ZoneAllocator::configureZoneMappings(Zone *zoneArray, unsigned long count)
 {

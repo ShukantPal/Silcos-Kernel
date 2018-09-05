@@ -71,19 +71,6 @@ extern unsigned long halLoadPAddr;
 
 using namespace HAL;
 
-unsigned int cntc=0;
-extern "C" __attribute__((constructor)) void hello()
-{
-	++cntc;
-	DbgLine("iamctor");
-}
-
-extern "C" __attribute__((constructor)) void hellod()
-{
-	DbgLine("iamctorddd");
-}
-
-
 ///
 /// Initializes the local-IRQ block for the given table-id. This id is same as
 /// the processor's id for which the IRQ's exist.
@@ -297,6 +284,7 @@ ObjectInfo *tPROCESSOR_TOPOLOGY;
 
 extern bool oballocNormaleUse;
 extern "C" void Spurious();
+
 ///
 /// Executes the roles of the boot-strap processor relevant to the system
 /// startup. It checks if all features are available and enables interrupts,
@@ -377,8 +365,6 @@ decl_c void SetupAPs()
 	EnumerateMADT(&AddProcessorInfo, &IOAPIC::registerIOAPIC, null);
 
 	// testing - phase
-
-	DbgInt(GetProcessorById(0)->hw.tscFreq);
 	testhpet();
 }
 

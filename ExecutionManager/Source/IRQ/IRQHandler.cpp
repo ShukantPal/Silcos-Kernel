@@ -56,7 +56,7 @@ bool IRQ::intrAction()
 	do {
 		if(((IRQHandler*) hItr.get())->intrAction())
 			return (true);
-	} while(hItr.fastNext());
+	} while(hItr.fastNext() != null);
 
 	return (false);
 }
@@ -130,5 +130,6 @@ import_asm void EOI();
 export_asm void HandleDeviceIRQ(unsigned long vector)
 {
 	(GetIRQTableById(PROCESSOR_ID) + (vector - 32))->intrAction();
+
 	EOI();
 }

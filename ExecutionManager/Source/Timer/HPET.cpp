@@ -1,8 +1,10 @@
 /**
  * @file HPET.cpp
  *
- * Implements the driver for the high-precision event timer present in
- * modern-day systems.
+ * Implements the HPET driver, allowing high-precision event
+ * timing, in order of tens of microseconds (and possible even more
+ * precision of hardware supports). This implementation assumes
+ * that the HPET is used <b>only on IA-PC systems</b>.
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +21,25 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-
 #include <Executable/Timer/HPET.hpp>
+#include <HardwareAbstraction/IOAPIC.hpp>
 #include <Memory/KMemoryManager.h>
 #include <Memory/Pager.h>
 
+using namespace HAL;
 using namespace Executable;
 using namespace Executable::Timer;
 
+HPET::Timer *HPET::sysWallTimer = null;
 HPET *HPET::kernelTimer = null;
+
 ArrayList HPET::knownHPETs;
 
 /**
- * Brings the resources of the HPET into system memory by mapping its
- * registers to a non-cacheable page.
- *
- * @param[in] eventBlock - base physical-address of HPET's event-block
- * @author Shukant Pal
+ * Builds a new HPET timer object whose chipset is mapped at the given
+ * physical address. The ACPI-UID is kept cached with this driver.
  */
-HPET::HPET(int acpiUID, PhysAddr eventBlock)
+HPET::HPET(int acpiUID, PhysAddr eventBlock) : timerTable(3)
 {
 	this->eventBlock = eventBlock;
 
@@ -67,35 +69,165 @@ HPET::HPET(int acpiUID, PhysAddr eventBlock)
 	this->intSts = (InterruptStatus volatile *)(regBase + 0x20);
 	this->ctr = (MainCounter volatile *)(regBase + 0xF0);
 
+	blockCapacity = capAndId->timerCount;
+	fsbTimers = 0;/* We'll set this later on! */
+	periodicTimers = 0;/* We'll set this later on! */
+	timerSizes = 0;/* We'll set this later on! */
+	usageTable = 0;/* All comparators are free right now! */
+
 	this->sequenceIndex = acpiUID;
-	this->clockFrequency = capAndId->clockPeriod / (1000000);
+	this->mcPeriod = capAndId->clockPeriod;
 
-//	knownHPETs.set(static_cast<void*>(this), sequenceIndex);
+	ComparatorBlock volatile *cmp;
+	for(unsigned cidx = 0; cidx < blockCapacity; cidx++) {
+		cmp = comparatorBlock(cidx);
 
-	if(kernelTimer == null)
-		kernelTimer = this;
+		if(cmp->cfgAndCap.fsbIntrAllowed)
+			fsbTimers |= (1 << cidx);
 
-	Dbg(" My frequency (HPET): "); DbgInt(clockFrequency);
+		if(cmp->cfgAndCap.periodicAllowed)
+			periodicTimers |= (1 << cidx);
+
+		if(cmp->cfgAndCap.timerSize == 1)
+			timerSizes |= (1 << cidx);
+
+		HPET::Timer *timer_n = new HPET::Timer(this, cmp, cidx);
+		timer_n->disable();
+		timerTable.add(timer_n);
+	}
+
+	sysWallTimer = getTimer(0);
+	knownHPETs.set(static_cast<void*>(this), sequenceIndex);
+
+	cfg->legacyReplacement = 1;
+	enable();
 }
 
 Executable::Timer::HPET::~HPET()
 {
 }
 
-/**
- * Sets the overall-enable bit of the HPET so that the main counter starts
- * incrementing montonically.
- *
- * @author Shukant Pal
- */
+HPET::Timer::Timer(HPET *owner, ComparatorBlock volatile *block,
+		unsigned int index) : HardwareTimer()
+{
+	this->activeTriggers = strong_null;
+	this->owner = owner;
+	this->block = block;
+	this->index = index;
+	this->lastReadCount = getTotalTicks();
+}
+
+HPET::Timer::~Timer()
+{
+	owner->usageTable &= ~(1 << index);
+}
+
+void HPET::Timer::connectTo(unsigned input)
+{
+	disable();
+	block->cfgAndCap.intrType =1;
+	block->cfgAndCap.intrRoute = input;
+
+	IOAPIC::inputAt(input)->addDev(this, false);
+}
+
 bool HPET::enable()
 {
 	cfg->overallEnable = 1;
 	return (true);
 }
 
+
+
 bool HPET::intrAction()
 {
 	DbgLine("ihpet; ");
 	return (true);
+}
+
+bool HPET::Timer::intrAction()
+{
+	if(!isInterruptActive()) {
+		Dbg("_spu");
+		DbgInt(getTotalTicks());
+		DbgLine(";");
+
+		return (false);
+	}
+
+	clearInterruptActive();
+
+	Dbg("hpet_");
+	Timestamp fireMoment = getTotalTicks();
+
+	DbgInt(fireMoment);
+	DbgLine(" _____ SUCCESS");
+
+	this->lastReadCount = fireMoment;
+
+	/* An important implication of the HPET sometimes losing the interrupts
+	   is that it all previously missed events must also be handled. This is
+	   done in this loop. */
+	while(activeTriggers && activeTriggers->overlapRange[0] <= fireMoment) {
+		retireActiveEvents();
+	}
+
+	if(activeTriggers != null) {
+		fireAt(activeTriggers->overlapRange[0]);
+	} else {
+		DbgLine("No active triggers");
+		disable();
+	}
+
+	return (true);
+}
+
+EventTrigger *HPET::Timer::notifyAfter(Timestamp interval, Timestamp delayAllowed,
+		EventCallback hdlr, void *arg)
+{
+	if(delayAllowed < 10) {
+		return (strong_null);
+	}
+
+	EventTrigger *et;
+	block->cfgAndCap.mode32 = 0;
+
+	int tt = getTotalTicks();
+	__cli
+	et = add(interval + tt, delayAllowed, hdlr, arg);
+	__sti
+
+	return (et);
+}
+
+bool HPET::Timer::fireAt(Timestamp fts)
+{
+	Timestamp ttp = getTotalTicks();
+
+	if(fts < ttp + 2) {
+		DbgLine("here");
+		return (false);
+	} else if(isWide()) {
+		owner->comparator(index)->val32 = fts;
+	} else {
+		owner->comparator(index)->val32 = fts;
+	}
+
+	block->cfgAndCap.intrType = 1;
+	enable();
+
+	return (true);
+}
+
+/**
+ * Allows the caller to access the timer whose comparator is at the given
+ * index. If that timer has already been allocated, <code>null</code>
+ * is returned.
+ *
+ * @param tidx - The index of the timer required in this HPET.
+ * @return - An driver object that can be used to operate the given timer.
+ */
+HPET::Timer *HPET::getTimer(unsigned int tidx)
+{
+		return (HPET::Timer*)(timerTable.get(tidx));
 }

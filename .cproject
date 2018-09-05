@@ -55,7 +55,7 @@
                             							
                             <tool id="org.eclipse.cdt.build.core.settings.holder.1995962644" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
                                 								
-                                <option id="org.eclipse.cdt.build.core.settings.holder.symbols.446258456" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="org.eclipse.cdt.build.core.settings.holder.symbols.446258456" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
                                     									
                                     <listOptionValue builtIn="false" value="NAMESPACE_MAIN"/>
                                     									
@@ -71,7 +71,7 @@
                                     								
                                 </option>
                                 								
-                                <option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1948716526" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="org.eclipse.cdt.build.core.settings.holder.incpaths.1948716526" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/Interface}&quot;"/>
                                     									
@@ -85,7 +85,7 @@
                             							
                             <tool id="org.eclipse.cdt.build.core.settings.holder.1832730151" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
                                 								
-                                <option id="org.eclipse.cdt.build.core.settings.holder.incpaths.128797908" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="org.eclipse.cdt.build.core.settings.holder.incpaths.128797908" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Silcos Kernel 3.02/Interface}&quot;"/>
                                     									
@@ -95,7 +95,7 @@
                                     								
                                 </option>
                                 								
-                                <option id="org.eclipse.cdt.build.core.settings.holder.symbols.1278889805" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="org.eclipse.cdt.build.core.settings.holder.symbols.1278889805" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
                                     									
                                     <listOptionValue builtIn="false" value="NS_KFRAMEMANAGER"/>
                                     									
@@ -129,9 +129,7 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="IRQ|ResourceManager/Interface/Process|Modules/ModuleFramework/DataManagement|Interface/Process|ACPI|Modules/ResourceManager/Interface/Process|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/Framework|ExecutionManager/Source/IRQ|Object|Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-                        						
-                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="ExecutionManager/Source/IRQ"/>
+                        <entry excluding="ExecutionManager/IRQ|IRQ|ResourceManager/Interface/Process|Modules/ModuleFramework/DataManagement|Interface/Process|ACPI|Modules/ResourceManager/Interface/Process|Framework|Modules/ProcessManager/Interface/Process|Source|Modules/ModuleFramework/Framework|ExecutionManager/Source/IRQ|Object|Process" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Interface/Process"/>
                         					

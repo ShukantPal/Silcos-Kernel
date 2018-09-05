@@ -59,12 +59,12 @@ public:
 			EventCallback handler, void *eventObject);
 	EventTrigger* add(Timestamp trigger, Delay shiftAllowed,
 			EventCallback handler, void *eventObject);
-	void del(EventTrigger *trig, Timestamp &impendingRange[2]);
+	void del(EventTrigger *trig, Timestamp (&impendingRange)[2]);
 	bool isHoldable(Timestamp rangeStart, Timestamp rangeEnd);
 
 	static void init() {
-		t_EventNode = KiCreateType("EventNode", sizeof(EventNode), NO_ALIGN,
-				null, null);
+		//t_EventNode = KiCreateType("EventNode", sizeof(EventNode), NO_ALIGN,
+			//	null, null);
 	}
 
 	Timestamp *getCurrentRange() {
@@ -121,7 +121,7 @@ public:
 			return (parent->leftChild);
 	}
 
-	void cleanCalculateRange(Timestamp &newRange[2]);
+	void cleanCalculateRange(Timestamp (&newRange)[2]);
 	int rematchRange(Timestamp newRange[2]);
 	void ensureBuffer(unsigned long requiredCapacity);
 	EventTrigger *findFreeSlot();

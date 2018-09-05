@@ -1,9 +1,7 @@
 /**
  * @file EventQueue.cpp
  *
- * The event queue internally uses an engine-object (NodeSorter) to
- * keep nodes sorted and for queries. This flexible model requires it
- * to only do operations directly with timer/trigger objects.
+ * The <code>EventQueue</code> is a versatile BST-based trigger queue
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +27,21 @@ EventQueue::EventQueue()
 
 }
 
+/**
+ * Adds a new <code>EventTrigger</code> object with the given arguments,
+ * placing it in the nearest node. If no nodes overlap with the trigger,
+ * then a new node is created for this trigger.
+ *
+ * @param trigger - The <code>Timestamp</code> at which the callback should
+ *			be invoked.
+ * @param shiftAllowed - The amount in clocksource ticks, which the event
+ *			can be delayed, in order to optimize timer invokation.
+ * @param handler - An <code>EventCallback</code> that will handle the event.
+ * @param eventObject - An optional argument to pass to the callback.
+ * @return - An <code>EventTrigger</code> held in a given node that can be
+ *		passed to other <code>EventQueue</code> methods to change
+ *		timer settings.
+ */
 EventTrigger *EventQueue::add(Timestamp trigger, Timestamp shiftAllowed,
 		EventCallback handler, void *eventObject)
 {
@@ -40,7 +53,7 @@ EventTrigger *EventQueue::add(Timestamp trigger, Timestamp shiftAllowed,
 	} else {
 		open = new EventNode(trigger, shiftAllowed, handler, eventObject);
 		ndsEngine.put(open);
-		return (open->etrigArray[0]);
+		return (open->etrigArray);
 	}
 }
 
@@ -69,11 +82,4 @@ bool EventQueue::rem(EventTrigger *timer)
 	owner->overlapRange[1] = impendingRange[1];
 
 	return (true);
-}
-
-EventNode *EventQueue::get()
-{
-	EventNode *mr = ndsEngine.getMostRecent();
-
-	return (mr != ndsEngine.nil) ? mr : strong_null;
 }

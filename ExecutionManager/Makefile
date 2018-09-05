@@ -63,8 +63,11 @@ $(COM_TIME)/HPET.o: $(SRC_TIME)/HPET.cpp
 $(COM_TIME)/PIT.o: $(SRC_TIME)/PIT.cpp
 	$(CC) $(CFLAGS) $(SRC_TIME)/PIT.cpp -o $(COM_TIME)/PIT.o
 
+$(COM_TIME)/HardwareTimer.o: $(SRC_TIME)/HardwareTimer.cpp
+	$(CC) $(CFLAGS) $(SRC_TIME)/HardwareTimer.cpp -o $(COM_TIME)/HardwareTimer.o
+
 Time_Build = $(COM_TIME)/EventNode.o $(COM_TIME)/EventQueue.o $(COM_TIME)/NodeSorter.o \
-$(COM_TIME)/HPET.o $(COM_TIME)/PIT.o
+$(COM_TIME)/HPET.o $(COM_TIME)/PIT.o $(COM_TIME)/HardwareTimer.o
 
 #
 # S c h e d u l e r   C o m p i l e   R u l e s

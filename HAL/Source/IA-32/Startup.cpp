@@ -43,5 +43,5 @@ decl_c void ArchMain()
 	RunqueueBalancer::init();
 
 	SetupAPs();
-	APIC::setupScheduleTicks();
+	//APIC::setupScheduleTicks();
 }

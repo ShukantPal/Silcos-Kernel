@@ -69,6 +69,9 @@ public:
 	void addHandler(IRQHandler *hdlr) {
 		SpinLock(&lineHdlrs.modl);
 		lineHdlrs.add((void*) hdlr);
+
+		DbgLine("");
+		Dbg(" HANDLERS: "); DbgInt(lineHdlrs.count());
 		SpinUnlock(&lineHdlrs.modl);
 	}
 private:

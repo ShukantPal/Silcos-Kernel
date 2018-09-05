@@ -28,8 +28,6 @@ global APBootSequenceEnd
 global halLoadAddr
 global halLoadPAddr
 
-extern InitPaging
-
 SECTION .text
 
 GDT_ENTRY_SIZE			equ 8
@@ -97,12 +95,7 @@ APRealModeInit:
 [BITS 32]
 ALIGN 4
 APMain32:
-	MOV EDX, APSetupRuntime		; InitPaging code will return to address given in EDX
-
-	MOV ECX, InitPaging		; Load InitPaging symbol (it is in higher-half)
-	SUB ECX, 0xC0000000		; Load physical address of InitPaging
-	JMP ECX				; goto InitPaging
-
+	JMP $
 ALIGN 8
 apSetupInfo:
 

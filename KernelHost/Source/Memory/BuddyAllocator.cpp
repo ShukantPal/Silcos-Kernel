@@ -1,21 +1,20 @@
-///
-/// @file BuddyAllocator.cpp
-///
-/// The buddy-allocator is the back-end for the commonly-used zone allocator
-/// and its core is implemented in this file. It works in a customizable
-/// fashion as -
-///
-/// Buddy-allocation uses a table of block-descriptors. These descriptors
-/// record the status of a memory block. Although the size of these entries
-/// are variable, they always start with the (BuddyBlock) block-header. The
-/// core buddy-allocator only uses the header.
-///
-/// NOTE:
-/// Extensions to buddy-allocator are not supported yet (cv-2.03,++)
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
-
+/**
+ * @file BuddyAllocator.cpp
+ *
+ * The buddy-allocator - usually used as back-end to the zone-allocator -
+ * is generically implemented to use page-frame/page/buddy-block
+ * descriptors allocated by the client. Having a fixed size, they start
+ * with a predefined (@code struct BuddyBlock) header for this object.
+ *
+ * This implementation uses the recommended optimizations to the binary
+ * buddy allocator - using the "superblock" concept, and using multiple
+ * lists each for (lowerOrder, upperOrder) superblocks.
+ *
+ * NOTE:
+ * Extensions to buddy-allocator are not supported yet (cv-2.03,++)
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #include <Memory/Pager.h>
 #include <Memory/Internal/BuddyAllocator.hpp>
 #include <KERNEL.h>
@@ -23,22 +22,22 @@
 using namespace Memory;
 using namespace Memory::Internal;
 
-///
-/// Initializes the buddy-allocator with the given arguments. This doesn't
-/// render the allocator as usable, though, as all blocks have to be freed
-/// after this to allow them to be allocated afterwards.
-///
-/// @param entrySize - size of the block-descriptors passed by the caller
-/// @param entryTable - pointer to a table of block-descriptors
-/// @param highestOrder - highest-order block which can be allocated
-/// @param listInfo - array of U16 bitmaps for each buddy-list
-/// @param buddyLists - array of linked-lists to store the buddy-blocks. The
-/// 			no. of lists required can be calculated by the
-/// 			BDSYS_VECTORS macro.
-/// @version 1.0
-/// @since Circuit 2.03++
-/// @author Shukant Pal
-///
+/**
+ * Initializes the buddy-allocator with the given arguments. This doesn't
+ * render the allocator as usable, though, as all blocks have to be freed
+ * after this to allow them to be allocated afterwards.
+ *
+ * @param entrySize - size of the block-descriptors passed by the caller
+ * @param entryTable - pointer to a table of block-descriptors
+ * @param highestOrder - highest-order block which can be allocated
+ * @param listInfo - array of U16 bitmaps for each buddy-list
+ * @param buddyLists - array of linked-lists to store the buddy-blocks. The
+ * 			no. of lists required can be calculated by the
+ * 			BDSYS_VECTORS macro.
+ * @version 1.0
+ * @since Circuit 2.03++
+ * @author Shukant Pal
+ */
 BuddyAllocator::BuddyAllocator(unsigned long entrySize,
 		unsigned char *entryTable, unsigned long highestOrder,
 		unsigned short *listInfo, LinkedList *buddyLists)
@@ -52,13 +51,13 @@ BuddyAllocator::BuddyAllocator(unsigned long entrySize,
 	this->allocatedBuddies = 0;
 }
 
-///
-/// Used for getting the buddy of the given descriptor.
-///
-/// @param blockOrder - order at which buddy is to be calculated
-/// @param orgBlock - block for which the buddy is required
-/// @return buddy-block of orgBlock
-///
+/**
+ * Used for getting the buddy of the given descriptor.
+ *
+ * @param blockOrder - order at which buddy is to be calculated
+ * @param orgBlock - block for which the buddy is required
+ * @return buddy-block of orgBlock
+ */
 inline BuddyBlock *BuddyAllocator::getBuddyBlock(unsigned long blockOrder,
 		BuddyBlock *orgBlock)
 {
@@ -75,22 +74,20 @@ static char msgNoBuddyBlockAvail[] =
 static char msgListRecordInternalErr[] =
 		"BuddyAllocator - Impl error FIXME (getBuddyList)";
 
-///
-/// This function is used for getting the list containing the superblocks that
-/// best fit the need for getting a buddy-block of optimalOrder. It will try to
-/// get the lists containing a block of this order, then of higher orders. This
-/// is required to reduce fragmentation.
-///
-/// NOTE: This list returned need not contain superblocks containing this order
-/// block.`
-///
-/// Args:
-/// unsigned long optimalOrder - The order of the block which is required.
-///
-/// Version: 1.1
-/// Since: Circuit 2.03++
-/// Author: Shukant Pal
-///
+/**
+ * Finds the superblock-chain having the best-fit for the requested allocation
+ * order. It will try to return the smallest superblocks as feasible - which
+ * in turn reduces the induced fragmentation.
+ *
+ * The superblocks returned need not integrally contain a block of the given
+ * order - slicing may be required (cutting the smallest block in the
+ * superblock) to get the request size.`
+ *
+ * @param optimalOrder - the order of the request memory block size
+ * @version 1.1
+ * @since Circuit 2.03++
+ * @author Shukant Pal
+ */
 LinkedList *BuddyAllocator::getBuddyList(unsigned long optimalOrder)
 {
 	// Find the list containing superblocks having a
@@ -134,10 +131,10 @@ LinkedList *BuddyAllocator::getBuddyList(unsigned long optimalOrder)
 	return (getBuddyList(optimalOrder, sbUpperOrder));
 }
 
-///
-/// Calculates the offset of the list which stores super-block of
-/// [lower-order, upper-order] sizes.
-///
+/**
+ * Calculates the offset of the list which stores super-block of
+ * [lower-order, upper-order] sizes.
+ */
 LinkedList *BuddyAllocator::getBuddyList(unsigned long lowerOrder,
 		unsigned long upperOrder)
 {
@@ -148,22 +145,22 @@ LinkedList *BuddyAllocator::getBuddyList(unsigned long lowerOrder,
 	return (this->blockLists + listOffset);
 }
 
-///
-/// Returns the list in which, if this block were added, was supposed to
-/// be stored.
-///
-/// @param bBlock - the block for which the list is required
-/// @return - the list in which the block, if added, is stored
-///
+/**
+ * Returns the list in which, if this block were added, was supposed to
+ * be stored.
+ *
+ * @param bBlock - the block for which the list is required
+ * @return - the list in which the block, if added, is stored
+ */
 LinkedList *BuddyAllocator::getBuddyList(BuddyBlock *bBlock)
 {
 	return (getBuddyList(bBlock->LowerOrder, bBlock->UpperOrder));
 }
 
-///
-/// Adds the buddy-block to the allocator, into its proper list with the
-/// [lower-order, upper-order] coordinates.
-///
+/**
+ * Adds the buddy-block to the allocator, into its proper list with the
+ * [lower-order, upper-order] coordinates.
+ */
 void BuddyAllocator::addBuddyBlock(BuddyBlock *bBlock)
 {
 	AddElement((LinkedListNode *) bBlock, getBuddyList(bBlock));
@@ -173,11 +170,11 @@ void BuddyAllocator::addBuddyBlock(BuddyBlock *bBlock)
 	listInfo[LV_SUB(bBlock->LowerOrder)] |= (1 << bBlock->UpperOrder);
 }
 
-///
-/// This function will remove the buddy-block from the allocator's list,
-/// and BDUNLINK will be done on the block. Before removal, the block-struct
-/// must have the LINK flag set.
-///
+/**
+ * This function will remove the buddy-block from the allocator's list,
+ * and BDUNLINK will be done on the block. Before removal, the block-struct
+ * must have the LINK flag set.
+ */
 void BuddyAllocator::removeBuddyBlock(BuddyBlock *bBlock)
 {
 	removeBuddyBlock(bBlock, getBuddyList(bBlock));
@@ -200,39 +197,39 @@ void BuddyAllocator::removeBuddyBlock(BuddyBlock *bBlock,
 	}
 }
 
-///
-/// Splits the given super-block such that a block of newOrder is extracted
-/// from it. This may result into two or three fragments of the super-block
-/// which are returned through double-pointers.
-///
-/// NOTE:
-/// 1. lower-superblock and/or upper-superblock may not exist
-/// 2. lower-superblock, required-block & upper-superblock may not
-///  be in order physically
-///
-/// This function assumes that the superblock has a order >= order of the
-/// required block, and will crash on not having so.
-///
-/// @param[in] newOrder - order of the block that is to be carved out of the
-/// 				super-block passed
-///
-/// @param[in] orgSuperBlock - the super-block that is to be split into two or
-/// 				three fragments
-///
-/// @param[out] lowerSuperBlock - double pointer to return the resulting lower
-/// 					super-block
-///
-/// @param[out] upperSuperBlock - double pointer to return the resulting upper
-/// 					super-block
-///
-/// @return - pointer to the block that was carved out due to calling this
-/// 		function. When three fragments form out of the original
-/// 		super-block, then this always is in the middle.
-///
-/// @version 1.1
-/// @since Circuit 2.03,++
-/// @author Shukant Pal
-///
+/**
+ * Splits the given super-block such that a block of newOrder is extracted
+ * from it. This may result into two or three fragments of the super-block
+ * which are returned through double-pointers.
+ *
+ * NOTE:
+ * 1. lower-superblock and/or upper-superblock may not exist
+ * 2. lower-superblock, required-block & upper-superblock may not
+ *  be in order physically
+ *
+ * This function assumes that the superblock has a order >= order of the
+ * required block, and will crash on not having so.
+ *
+ * @param[in] newOrder - order of the block that is to be carved out of the
+ * 				super-block passed
+ *
+ * @param[in] orgSuperBlock - the super-block that is to be split into two or
+ * 				three fragments
+ *
+ * @param[out] lowerSuperBlock - double pointer to return the resulting lower
+ * 					super-block
+ *
+ * @param[out] upperSuperBlock - double pointer to return the resulting upper
+ * 					super-block
+ *
+ * @return - pointer to the block that was carved out due to calling this
+ * 		function. When three fragments form out of the original
+ * 		super-block, then this always is in the middle.
+ *
+ * @version 1.1
+ * @since Circuit 2.03,++
+ * @author Shukant Pal
+ */
 BuddyBlock *BuddyAllocator::splitSuperBlock(unsigned long newOrder,
 		BuddyBlock *orgSuperBlock, BuddyBlock **lowerSuperBlock,
 		BuddyBlock **upperSuperBlock)
@@ -326,22 +323,18 @@ BuddyBlock *BuddyAllocator::splitSuperBlock(unsigned long newOrder,
 	}
 }
 
-///
-/// While a external block is freed, it is combined with other blocks (not
-/// superblocks) to form larger blocks. This function fulfills this functionality
-/// and merges blocks (even superblocks are allowed, but not tested yet).
-///
-/// Assumptions:
-/// The original superblock MUST be off the lists.
-///
-/// Effects:
-/// If the block is merged, its buddies are subsequently removed from the buddy
-/// lists.
-///
-/// Version: 1.1
-/// Since: Circuit 2.03,++
-/// Author: Shukant Pal
-///
+/**
+ * Merges deallocated memory block with its subsequent buddies as
+ * required - assuming that the originally deallocated block has not
+ * been added to the buddy-lists.
+ *
+ * @param orgSuperBlock - the originally deallocated block
+ * @param maxMergeOrder - an upper bound on the resulting block order,
+ * 					after the merge operation
+ * @version 1.1
+ * @since Circuit 2.03,++
+ * @author Shukant Pal
+ */
 BuddyBlock *BuddyAllocator::mergeSuperBlock(BuddyBlock *orgSuperBlock,
 					unsigned long maxMergeOrder)
 {
@@ -402,15 +395,15 @@ BuddyBlock *BuddyAllocator::mergeSuperBlock(BuddyBlock *orgSuperBlock,
 	return (orgSuperBlock);
 }
 
-///
-/// Allocates a block of the given order by possibily splitting a existing
-/// super-block.
-///
-/// @param blockOrder - order of the block to be allocated
-/// @version 1.2
-/// @since Circuit 2.03++
-/// @author Shukant Pal
-///
+/**
+ * Allocates a fresh memory block of the given order, if available in the
+ * buddy lists.
+ *
+ * @param blockOrder - order of the block to be allocated
+ * @version 1.2
+ * @since Circuit 2.03++
+ * @author Shukant Pal
+ */
 BuddyBlock *BuddyAllocator::allocateBlock(unsigned long blockOrder)
 {
 	if(freeBuddies < SIZEOF_ORDER(blockOrder))
@@ -418,12 +411,9 @@ BuddyBlock *BuddyAllocator::allocateBlock(unsigned long blockOrder)
 
 	LinkedList *optimalList = getBuddyList(blockOrder);
 
-	if(optimalList == NULL)
-	{
+	if(optimalList == NULL) {
 		return ((BuddyBlock *)(BD_FRAGMENTATION));
-	}
-	else
-	{
+	} else {
 		BuddyBlock *paSuperBlock = (BuddyBlock*) optimalList->head;
 		removeBuddyBlock(paSuperBlock, optimalList);
 
@@ -446,20 +436,16 @@ BuddyBlock *BuddyAllocator::allocateBlock(unsigned long blockOrder)
 	}
 }
 
-///
-/// This function will free a previously allocated block by first merging it with
-/// other super-blocks to form larger blocks (not super-blocks) and then will add
-/// the merged block to the buddy-lists.
-///
-/// Note that this method assumes that the client wants to fully unuse the
-/// given block. See @code BuddyAllocator::free(BuddyBlock*, unsigned long) to
-/// partially free the block.
-///
-/// @param blockGiven - descriptor of the block which is to be freed
-/// @version 1.1
-/// @since Circuit 2.03++
-/// @author Shukant Pal
-///
+/**
+ * Deallocates the buddy-block given - assuming it was the one returned while
+ * allocating the memory being freed. It fully takes the memory, leaving none
+ * to the caller.
+ *
+ * @param blockGiven - descriptor of the block which is to be freed
+ * @version 1.1
+ * @since Circuit 2.03++
+ * @author Shukant Pal
+ */
 unsigned long BuddyAllocator::freeBlock(BuddyBlock *blockGiven)
 {
 	if(TBDLINKED(blockGiven))
@@ -482,28 +468,28 @@ unsigned long BuddyAllocator::freeBlock(BuddyBlock *blockGiven)
 	}
 }
 
-///
-/// This function is used for expansion of data structures in memory without
-/// the need for allocating a block of order(n + 1) before transferring the
-/// data from the original order(n) block to the larger block. It will check
-/// if the block's parent is free. If yes, then the parent is returned else
-/// a new block is allocated.
-///
-/// Note: The original block is never freed, because it will returned in the
-/// parent block. *status will contain if the block returned is the parent
-/// block or not.
-///
-/// Note: Although the parent block may be free & returned, the client must
-/// check whether the memory address of the order(n+1) block matches the order(n)
-/// block, because it may be the right child of the order(n+1) block. But this
-/// happens less (because superblocks are located at right-side).
-///
-/// @param dataBlock - Block containing the data requiring expansion
-/// @param status - *status contains TRUE/FALSE whether parent block was free/not.
-/// @version 1.1
-/// @since Circuit 2.03++
-/// @author Shukant Pal
-///
+/**
+ * This function is used for expansion of data structures in memory without
+ * the need for allocating a block of order(n + 1) before transferring the
+ * data from the original order(n) block to the larger block. It will check
+ * if the block's parent is free. If yes, then the parent is returned else
+ * a new block is allocated.
+ *
+ * Note: The original block is never freed, because it will returned in the
+ * parent block. *status will contain if the block returned is the parent
+ * block or not.
+ *
+ * Note: Although the parent block may be free & returned, the client must
+ * check whether the memory address of the order(n+1) block matches the order(n)
+ * block, because it may be the right child of the order(n+1) block. But this
+ * happens less (because superblocks are located at right-side).
+ *
+ * @param dataBlock - Block containing the data requiring expansion
+ * @param status - *status contains TRUE/FALSE whether parent block was free/not.
+ * @version 1.1
+ * @since Circuit 2.03++
+ * @author Shukant Pal
+ */
 BuddyBlock *BuddyAllocator::exchangeBlock(BuddyBlock *orgBlock, unsigned long *statusRegister)
 {
 	if(TBDFREE(orgBlock))

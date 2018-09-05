@@ -69,7 +69,10 @@ private:
 	void fixDeletor(EventNode *nOnlyChild);
 
 	EventNode *findNextMostRecent() {
-		return (getMostRecent()->parent);
+		if(getMostRecent() != treeRoot)
+			return (getMostRecent()->parent);
+		else
+			return (getMostRecent()->rightChild);
 	}
 
 	EventNode *findNextMostLate() {

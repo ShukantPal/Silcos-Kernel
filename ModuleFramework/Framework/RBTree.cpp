@@ -1,5 +1,7 @@
 /**
- * File: RBTree.cxx
+ * File: RBTree.cpp
+ *
+ * (Implementation taken from geeksforgeeks.org)
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  * Copyright (C) 2017 - Shukant Pal
- * --------------------------------------------------------------------
- * Algorithm was kindof referenced from geeksfromgeeks.org (indian ya)
  */
 #include <Utils/RBTree.hpp>
 #include <KERNEL.h>
 
 extern ObjectInfo *tRBNode;
-
-//using namespace Util;
 
 RBTree::RBTree() : BinaryTree()
 {
@@ -38,99 +36,74 @@ RBTree::~RBTree()
 }
 
 /**
- * Function: RBTree::insert
+ * Adds the key/value pair in this tree, allocating a new node for the same.
  *
- * Summary:
- * Inserts a node of the given key, value pair and so keeps the rb-tree
- * balanced.
- *
- * Args:
- * unsigned long key - key, by which you can find the value in the tree
- * void *value - a value that client wants to associated with the key
- *
- * Returns:
- * true, if the key was inserted in the tree; false, if it already existed
- * or couldn't be inserted due a internal-error.
- *
- * Author: Shukant Pal
+ * @param key
+ * @param value
+ * @return
  */
 bool RBTree::insert(unsigned long key, void *value)
 {
 	RBNode *newNode = new(tRBNode) RBNode(key, value, (RBNode*) nil);
-	if(!BinaryTree::insert(*newNode, *this))
-	{
-		Dbg("_nul_");
+
+	if(!BinaryTree::insert(*newNode, *this)) {
 		kobj_free((kobj*) newNode, tRBNode);
 		return (false);
 	}
+
 	fixInsert(newNode);
 	return (true);
 }
 
 /**
- * Function: RBTree::remove
+ * Deletes the node identified with the given key, saving and returning its
+ * value. The node is actually first searched in this process - which could
+ * cause more latency than expected. In addition, aftermath balancing is
+ * also done!
  *
- * Summary:
- * Removes the node with the given key, if it was inserted into the tree and
- * is freed.
- *
- * Args:
- * unsigned long key - key with which the node was inserted
- *
- * Returns:
- * true, if the node was inserted before, and was deleted now; false, if the it
- * didn't exist.
- *
- * Author: Shukant Pal
+ * @param key - the node with this key will be removed.
+ * @return - the value of node removed; strong_null, if the node couldn't be
+ * 			found.
  */
-void* RBTree::remove(unsigned long key)
+void *RBTree::remove(unsigned long key)
 {
-	RBNode *tNode = (RBNode*) search(key, *this), *tnChild = NULL;
-	if(isNil(tNode) || !tNode)
-	{
-		return (NULL);
+	RBNode *tNode = (RBNode*) search(key, *this), *tnChild = strong_null;
+
+	if(isNil(tNode) || !tNode) {
+		return (strong_null);
 	}
-	else
-	{
-		void *value_found = tNode->val();
 
-		if(isNil(tNode->getRightChild()))
-		{
-			tnChild = (RBNode*) tNode->getLeftChild();
-		}
-		else if(isNil(tNode->getLeftChild()))
-		{
-			tnChild = (RBNode*) tNode->getRightChild();
-		}
-		else
-		{
-			RBNode *tnr = (RBNode*) tNode->getRightChild();
-			
-			while(!isNil(tnr->getLeftChild()))
-			{
-				tnr = (RBNode*) tnr->getLeftChild();
-			}
-			
-			tNode->searchKey = tnr->searchKey;
-			tNode->associatedValue = tnr->associatedValue;
-			tnChild = (RBNode*) tnr->getRightChild();
-		}
+	void *value_found = tNode->val();
 
-		tnChild = isNil(tnChild) ? tNode : (RBNode*) &replaceChild(*tNode, *tnChild);
+	if(isNil(tNode->getRightChild())) {
+		tnChild = (RBNode*) tNode->getLeftChild();
+	} else if(isNil(tNode->getLeftChild())) {
+		tnChild = (RBNode*) tNode->getRightChild();
+	} else {
+		RBNode *tnr = (RBNode*) tNode->getRightChild();
+			
+		while(!isNil(tnr->getLeftChild())) {
+			tnr = (RBNode*) tnr->getLeftChild();
+		}
+			
+		tNode->searchKey = tnr->searchKey;
+		tNode->associatedValue = tnr->associatedValue;
+		tnChild = (RBNode*) tnr->getRightChild();
+	}
+
+	tnChild = isNil(tnChild) ? tNode :
+			(RBNode*) &replaceChild(*tNode, *tnChild);
 				
-		if(tNode->isBlack())
-		{
-			fixRemoval(tnChild);
-		}
-		
-		if(tNode == tnChild)
-		{
-			replaceChild(*tNode, *nil);
-		}
-
-		kobj_free((kobj*) tNode, tRBNode);
-		return (value_found);
+	if(tNode->isBlack()) {
+		fixRemoval(tnChild);
 	}
+		
+	if(tNode == tnChild) {
+		replaceChild(*tNode, *nil);
+	}
+
+	kobj_free((kobj*) tNode, tRBNode);
+	return (value_found);
 }
 
 /*
@@ -144,6 +117,15 @@ static inline void SwapColour(RBColor *arg0, RBColor *arg1)
 	*arg1 = __cache_of_0;
 }
 
+/**
+ * Rotates the subtree at tNode towards the left - making the right-child the
+ * new root. This also makes tNode the left-child of the new root, whereas the
+ * old left-subtree of the new-root (old right-child of tNode) becomes the
+ * right-child of tNode. Confusing, right?
+ *
+ * @param tNode - the subtree root to be rotated
+ * @return - the new root of the rotated subtree
+ */
 RBNode& RBTree::rotateLeft(RBNode& tNode)
 {
 	RBNode& edgeNode =* (RBNode*) tNode.getRightChild();
@@ -156,6 +138,15 @@ RBNode& RBTree::rotateLeft(RBNode& tNode)
 	return (edgeNode);
 }
 
+/**
+ * Rotates the subtree at tNode towards the right - making the left-child the
+ * new root. This also makes tNode the right-child of the new root, whereas the
+ * old right-subtree of the new-root (old left-child of tNode) becomes the
+ * left-child of tNode. Confusing, right?
+ *
+ * @param tNode - the subtree root to be rotated
+ * @return - the new root of the rotated subtree
+ */
 RBNode& RBTree::rotateRight(RBNode& tNode)
 {
 	RBNode& edgeNode =* (RBNode*) tNode.getLeftChild();
@@ -168,67 +159,70 @@ RBNode& RBTree::rotateRight(RBNode& tNode)
 	return (edgeNode);
 }
 
+/**
+ * Ensures the properties of this red-black tree are not violated after
+ * doing an insertion. It tries re-coloring and then rotations to maintain
+ * those properties, keeping the tree balanced.
+ *
+ * This implementation uses iteration, to save resources.
+ *
+ * @param tNode - the newly inserted node
+ */
 void RBTree::fixInsert(RBNode *tNode)
 {
 	RBNode *tnParent, *tnUncle;
 	
-	while(!tNode->isBlack() && !tNode->isParentBlack())
-	{
+	while(!tNode->isBlack() && !tNode->isParentBlack()) {
 		tnParent = tNode->getColouredParent();
 		tnUncle = (RBNode*) tnParent->getSibling();
 
-		if(tnUncle->isRed())
-		{
+		if(tnUncle->isRed()) {
 			tnUncle->setColour(RB_BLACK);
 			tnParent->setColour(RB_BLACK);
 			tnParent->getColouredParent()->setColour(RB_RED);
 			tNode = tnParent->getColouredParent();
-		}
-		else
-		{ // tnUncle.isBlack()
-			if(tNode->isLeftChild() != tnParent->isLeftChild())
-			{
+		} else {
+			if(tNode->isLeftChild() != tnParent->isLeftChild()) {
 				tnParent = &rotateReverse(*tNode);
 			}
 			tNode = &rotateReverse(*tnParent);
 		}
 	}
 
-	if(isNil(tNode->getParent()))
-	{
+	if(isNil(tNode->getParent())) {
 		tNode->setColour(RB_BLACK);
 	}
 }
 
+/**
+ * Ensures the properties of this red-black tree aren't violated after doing a
+ * deletion operation - it tries re-coloring and then rotations to keep this
+ * tree balanced.
+ *
+ * @param tNode - see remove() for details
+ */
 void RBTree::fixRemoval(RBNode *tNode)
 {
 	RBNode *tnSibling;
-	while(tNode->isBlack() && !isNil(tNode->getParent()))
-	{
+
+	while(tNode->isBlack() && !isNil(tNode->getParent())) {
 		tnSibling = (RBNode*) tNode->getSibling();
 
-		if(tnSibling->isRed())
-		{
+		if(tnSibling->isRed()) {
 			rotateReverse(*tnSibling);
 			tnSibling = (RBNode*) tNode->getSibling();
 		}
 
 		if(((RBNode*) tnSibling->getLeftChild())->isBlack() &&
-				((RBNode*)tnSibling->getRightChild())->isBlack())
-		{
+				((RBNode*)tnSibling->getRightChild())->isBlack()) {
 			tnSibling->setColour(RB_RED);
 			tNode = (RBNode*) tNode->getParent();
-		}
-		else
-		{
+		} else {
 			if(tnSibling->isLeftChild() &&
-					!((RBNode*)tnSibling->getLeftChild())->isRed())
-			{
+					!((RBNode*)tnSibling->getLeftChild())->isRed()) {
 				tnSibling = (RBNode*) &rotateLeft(*tnSibling);
-			}
-			else if(tnSibling->isRightChild() &&
-					!((RBNode*)tnSibling->getRightChild())->isRed())
-			{
+			} else if(tnSibling->isRightChild() &&
+					!((RBNode*)tnSibling->getRightChild())->isRed()) {
 				tnSibling = (RBNode*) &rotateRight(*tnSibling);
 			}
 
@@ -238,17 +232,4 @@ void RBTree::fixRemoval(RBNode *tNode)
 	}
 
 	tNode->setColour(RB_BLACK);
-}
-
-static void show_it(BinaryNode *f, BinaryNode *n)
-{
-	if(f == n) return;
-	show_it(f->leftChild, n);
-	DbgInt(f->key()); Dbg((char*)" ");
-	show_it(f->rightChild, n);
-}
-
-void RBTree::_dub()
-{
-	show_it(treeRoot, nil);
 }

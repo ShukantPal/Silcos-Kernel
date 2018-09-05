@@ -61,13 +61,35 @@ decl_c void do_action(Executable::IRQHandler *h)
 	h->intrAction();
 }
 
+decl_c void hpet_test(void *nulObj)
+{
+	DbgLine("called----------");
+}
+
+/**
+ * Constructs a kernel-only HPET driver object, that can also be used
+ * during the booting process. If the ACPI table "HPET" doesn't exist,
+ * then the HPET cannot be used during boot.
+ */
 decl_c void InitKernelHPET()
 {
-//	ACPI::HPET *ahdt = (ACPI::HPET *) SearchACPITableByName("HPET", null);
+	ACPI::HPET *ahdt = (ACPI::HPET *) SearchACPITableByName("HPET", null);
 
-//	HPET *kernelTimer = new HPET(ahdt->timerNumber,
-//			ahdt->baseAddress.addressValue);
+	if(ahdt == null) {
+		DbgLine("Warning: No HPET found on IA-PC system!");
+		return;
+	}
 
+	HPET::kernelTimer = new HPET(
+			ahdt->timerNumber, ahdt->baseAddress.addressValue);
+
+	HPET::Timer *intern = HPET::wallTimer();
+	int input = Math::bitScanReverse(intern->allRoutes());
+
+	intern->connectTo(input);
+	intern->notifyAfter(1000000, 100, &hpet_test, null);
+
+	DbgLine("Work it");
 }
 
 #include <Module/SymbolLookup.hpp>
@@ -89,20 +111,27 @@ decl_c void testhpet()
 	if(e)// tm_->routingMap(0))
 	{
 		IOAPIC::RedirectionEntry f = e->getRedirEnt(
-					2//HighestBitSet(tm_->routingMap(0))
+					2
 			);
 
 		f.delvMode = 0;
-		f.vector = 190;
+		f.vector = 36;
 		f.destMode = 0;
 		f.mask = 0;
 		f.destination = 0;
 		f.triggerMode = 1;
+		f.pinPolarity = 1;
 
 		pit.reset(0xFFFF, 0);
-		GetIRQTableById(0)[190 - 32].addHandler(static_cast<IRQHandler*>(&pit));
+
 		e->setRedirEnt(2, &f);
+		IOAPIC::inputAt(2)->connectTo(60, 0);
+	//	IOAPIC::inputAt(2)->addDev(&pit);
+		DbgLine("Programmable Interval Timer is online!");
+	} else {
+		DbgLine("Error: No IO/APIC found during testing!");
 	}
 
 	EventNode::init();
+	InitKernelHPET();
 }

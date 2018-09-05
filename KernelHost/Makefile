@@ -47,7 +47,7 @@ SRC_UTIL = Source/Util
 #IA32 Boot Service
 InitObjects = $(COM_ARCH)/Entry.o \
 $(COM_ARCH)/86InitPaging.o $(COM_ARCH)/PageSettings.o \
-$(COM_ARCH)/BlockPager.o $(COM_ARCH)/Main.o \
+$(COM_ARCH)/Main.o \
 $(COM_ARCH)/Multiboot.o
 
 # IA32 Objects 
@@ -82,9 +82,6 @@ $(IfcModule)/Elf/ElfManager.hpp: $(IfcModule)/Elf/ELF.h
 
 $(COM_ARCH)/86InitPaging.o: $(SRC_ARCH)/Paging/86InitPaging.asm
 	$(AS) $(ASFLAGS) $(SRC_ARCH)/Paging/86InitPaging.asm -o $(COM_ARCH)/86InitPaging.o
-
-$(COM_ARCH)/BlockPager.o: $(SRC_ARCH)/Paging/BlockPager.cpp
-	$(CC) $(CFLAGS) $(SRC_ARCH)/Paging/BlockPager.cpp -o $(COM_ARCH)/BlockPager.o
 
 $(COM_ARCH)/Entry.o: $(SRC_ARCH)/Boot/Entry.S
 	$(GNU_AS) $(GNU_ASFLAGS) $(SRC_ARCH)/Boot/Entry.S -o $(COM_ARCH)/Entry.o

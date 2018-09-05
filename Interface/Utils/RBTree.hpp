@@ -1,6 +1,5 @@
 /**
- * File: RBTree.hxx
- * Module: ModuleFramework (@kernel.silcos.mdfrwk)
+ * File: RBTree.hpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,45 +31,28 @@ enum RBColor
 };
 
 /**
- * Struct: RBNode
+ * The red-black node is a variant of binary-search nodes, and has a
+ * defined color (red/black), used for balancing the red-black
+ * tree.
  *
- * Summary:
- * RBNode is a variant of the BinaryNode which is used in all the red-black
- * tree variants and includes a color-attribute (@See RBColor).
- *
- * Version: 1.1
- * Since: MDFRWK 1.0
- * Author: Shukant Pal
+ * This is not exposed to users of the red-black tree, instead it is
+ * confined internally.
  */
 struct RBNode : public BinaryNode
 {
-	RBColor colorMode;/* Red/Black color indicator */
+	RBColor colorMode;
 	friend class RBTree;
 
-	/*
-	 * This constructor is used when parent & children must be equal to
-	 * this node only (for nil).
-	 */
-	RBNode() : BinaryNode()
-	{
+	/* This constructor is used for initializing the "nil" node - whose
+	   children and parent is "this" itself. */
+	RBNode() : BinaryNode() {
 		this->colorMode = RB_RED;
 	}
 
-	/*
-	 * This constructor is used when parent & children must be a null
-	 * pointer (not used for RBTree).
-	 */
-	RBNode(long uniqueKey, void *mappedValue) : BinaryNode(uniqueKey, mappedValue, 0,0,0)
-	{
-		colorMode = RB_RED;
-	}
-
-	/*
-	 * This constructor is used when parent & children must point to a
-	 * sentinel nil node.
-	 */
-	RBNode(long key, void *value, RBNode *nil) : BinaryNode(key, value, nil, nil, nil)
-	{
+	/* This constructor initializes normal leaves - pointing the children
+	   & parent to the "nil" node. */
+	RBNode(long key, void *value, RBNode *nil)
+			: BinaryNode(key, value, nil, nil, nil) {
 		colorMode = RB_RED;
 	}
 
@@ -85,37 +67,22 @@ struct RBNode : public BinaryNode
 };
 
 /**
- * Class: RBTree
+ * The red-black tree is self-balancing binary-search-tree, with each node
+ * having a defined colour, particularly used for deferring rotations. It uses
+ * "nil" nodes instead of null-pointers for leaf-nodes, which have some
+ * pre-defined properties.
  *
- * Summary:
- * Red-black tree is a self-balancing variant of binary-search trees, where
- * each node has a extra attribute - colour (@See RBNode). The leaf-nodes
- * of this don't contain data (@See RBTree::nil) and a sentinel node performs
- * its role. It provides a O(log n) search time and has a least possible tree
- * height.
+ * This tree provides a O(log(n)) search-time and has faster amortized deletion
+ * costs compared to the AVLTree. It in turn has a less-balanced nature than
+ * the AVL tree.
  *
- * The red-black tree satisfies the following constraints -
+ * You should use this, when the tree will be used for insertion/deletion
+ * heavily w.r.t searches.
  *
- * 1. Each node is either red or black
- *
- * 2. The root is always black (omitted before any insertion)
- *
- * 3. All leaves (nil) are black
- *
- * 4. If a node is red, then both its children will be black
- *
- * 5. Every path from a given node to any of its descendant nil nodes contain
- * the same number of black-nodes.
- *
- * No path is more than twice as long as any other path in tree.
- *
- * This tree should be used when insertion/deletion operations are comparable
- * in number to the search operations & the tree is not huge.
- *
- * Version: 1.2
- * Since: MDFRWK 1.0
- * Author: Shukant Pal
- * See: RBNode, BinaryNode, BinaryTree
+ * @version 1.2
+ * @since Silcos 3.02
+ * @author: Shukant Pal
+ * @see RBNode, BinaryNode, BinaryTree
  */
 class RBTree final : public BinaryTree
 {
@@ -124,7 +91,6 @@ public:
 	~RBTree();
 	bool insert(unsigned long key, void * value);
 	void* remove(unsigned long anyKey);
-	void _dub();
 protected:
 	RBNode& rotateLeft(RBNode& tNode);
 	RBNode& rotateRight(RBNode& tNode);
@@ -141,4 +107,4 @@ protected:
 	void fixRemoval(RBNode *tNode);
 };
 
-#endif/* Util/RBTree.hxx*/
+#endif/* Utils/RBTree.hpp */

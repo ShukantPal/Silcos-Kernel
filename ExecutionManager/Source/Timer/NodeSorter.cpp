@@ -49,9 +49,9 @@ NodeSorter::NodeSorter()
 	nil->leftChild = nil;
 	nil->rightChild = nil;
 
-	treeRoot = null;
-	mostRecent = null;
-	mostLate = null;
+	treeRoot = nil;
+	mostRecent = nil;
+	mostLate = nil;
 	nodeCount = 0;
 }
 
@@ -70,13 +70,14 @@ void NodeSorter::del(EventNode *oldNode)
 
 	if(isNil(oldNode->leftChild) &&
 			isNil(oldNode->rightChild)) {
-		if(oldNode->isRightChild())
-			oldNode->parent->rightChild = nil;
-		else
-			oldNode->parent->leftChild = nil;
-
-		if(oldNode == treeRoot)
+		if(oldNode == treeRoot) {
 			treeRoot = nil;
+		} else {
+			if(oldNode->isRightChild())
+				oldNode->parent->rightChild = nil;
+			else
+				oldNode->parent->leftChild = nil;
+		}
 
 		return;
 	} else if(!isNil(oldNode->leftChild) &&
@@ -119,7 +120,7 @@ void NodeSorter::del(EventNode *oldNode)
  */
 void NodeSorter::put(EventNode *newElem)
 {
-	if(treeRoot == null) {
+	if(treeRoot == nil) {
 		treeRoot = newElem;
 		newElem->color = kBlack;
 		newElem->parent = nil;

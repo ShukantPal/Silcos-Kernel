@@ -1,22 +1,21 @@
-///
-/// @file IOAPIC.hpp
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
-
+/**
+ * @file IOAPIC.hpp
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #ifndef HAL_IOAPIC_HPP__
 #define HAL_IOAPIC_HPP__
 
@@ -31,24 +30,11 @@
 namespace HAL
 {
 
-///
-/// @class IOAPIC
-///
-/// Provides multi-processor interrupt management and incorporates
-/// symmtric interrupt distribution across all CPUs in the system. The
-/// interrupt steering and vector information is provided per input-signal,
-/// using an indirect-register accessing scheme.
-///
-/// The IOAPIC provides 24 input-signal redirection entries. When a device
-/// asserts a specific input-signal, the IOAPIC uses the corresponding
-/// redirection entry to format an interrupt message.
-///
-/// For details of the IOAPIC refer to the Intel preliminary document.
-///
-/// @version 1.0
-/// @since Silcos 3.02
-/// @author Shukant Pal
-///
+enum DestinationMode {
+	PHYSICAL,
+	LOGICAL
+};
+
 class IOAPIC final : public Lockable, public LinkedListNode
 {
 public:
@@ -61,24 +47,8 @@ public:
 		ExtINT		= 0b111
 	};
 
-	struct RedirectionEntry
-	{
-		U64 vector	: 8;/// interrupt vector for this input
-		U64 delvMode	: 3;/// sets how LAPICs react to this interrupt
-		U64 destMode	: 1;/// physical/logical destination mode
-		U64 delvStatus	: 1;/// 0=IDLE and 1=Send-Pending
-		U64 pinPolarity	: 1;/// 0=High-active and 1=Low-active
-		U64 remoteIRR	: 1;/// Set (level-trigger), when LAPICs accept
-		U64 triggerMode	: 1;/// 1=Level-sensitive and 0=Edge-sensitive
-		U64 mask	: 1;/// on setting this, signal is masked
-		U64 reserved	: 39;
-		U64 destination : 8;/// Id for the interrupt's destination
-	};
-
-	struct InputSignal : public Executable::IRQ
-	{
-		IOAPIC *intrRouter;
-	};
+	struct RedirectionEntry;
+	class Input;
 
 	unsigned char id(){ return (apicID); }
 	unsigned char version(){ return (hardwareVersion); }
@@ -95,8 +65,15 @@ public:
 
 	static IOAPIC *getIterable()
 	{
-		return ((IOAPIC*) systemIOAPICs.get(0));
+		return ((IOAPIC*) systemIOAPICs.get(lowestID));
 	}
+
+	static inline Input *inputAt(unsigned globalIndex) {
+		return ((Input*) systemIOAPICInputs.get(globalIndex));
+	}
+
+	static Input *getOptimizedInput(Executable::IRQHandler *dev);
+	static Input *getOptimizedInput(Executable::IRQHandler *dev, unsigned mask);
 private:
 	unsigned char apicID;
 	unsigned char hardwareVersion;
@@ -136,9 +113,60 @@ private:
 	static ArrayList systemIOAPICInputs;
 	static ArrayList systemIOAPICs;
 	static unsigned long routesUnderReset;
+
+	/*
+	 * In Bochs, it has been found that the IO/APIC id is
+	 * 1 and not zero.
+	 */
+	static unsigned long lowestID;
 	friend class IRQ;
 
 	IOAPIC(unsigned long physicalBase, unsigned long intrBase);
+};
+
+struct IOAPIC::RedirectionEntry
+{
+	U64 vector	: 8;
+	U64 delvMode	: 3;
+	U64 destMode	: 1;
+	U64 delvStatus	: 1;
+	U64 pinPolarity	: 1;
+	U64 remoteIRR	: 1;
+	U64 triggerMode	: 1;
+	U64 mask	: 1;
+	U64 reserved	: 39;
+	U64 destination : 8;
+};
+
+
+class IOAPIC::Input : public Executable::IRQ
+{
+public:
+	enum {
+		INVALID_INDEX = 0xFF
+	};
+
+	inline unsigned globalIndex() {
+		return (mGlobalIndex);
+	}
+
+	inline bool isLocked() {
+		return (locked);
+	}
+
+	inline IOAPIC *owner() {
+		return (router);
+	}
+
+	Input(unsigned globalIndex, IOAPIC *router);
+
+	void connectTo(unsigned lvector, unsigned lapicID);
+	int addDev(IRQHandler *handler, bool lock = false);
+private:
+	bool locked;
+
+	unsigned mGlobalIndex;
+	IOAPIC *router;
 };
 
 }// namespace HAL

@@ -1,15 +1,8 @@
 /**
- * File: AVLTree.hpp
- * Module: ExecutionManager (@kernel.silcos.excmgr)
+ * @file AVLTree.hpp
  *
- * Summary:
- * Provides a C-style data structure of type - binary search tree. It can be
- * used in asm also (we wanted atleast one to be C-compatible). Note that
- * this is not C-source compatible and requires a separate header for usage
- * with *.c files.
- *
- * The static methods in the structs used need not be put in the C header. They
- * are implementation-required, not for external use.
+ * Provides two interfaces for getting an AVL-tree - C and C++. It does
+ * obey the _CBUILD macro.
  *
  * Changes:
  * # Moved from KernelHost to the ExecutionManager for usage in organizing
@@ -115,5 +108,56 @@ decl_c AVLNode *AVLSearch(SIZE Indicator, AVLTree *Tree);
 decl_c AVLNode *MinValueNode(AVLNode *Node);
 decl_c AVLNode *MaxValueNode(AVLNode *Node);
 decl_c AVLNode *AVLFindGTE(unsigned long nodeValue, AVLTree *tree);
+
+/* Get ready for C++ magic. */
+#ifndef _CBUILD
+
+#include "BinaryTree.hpp"
+#include "../Math.hpp"
+
+struct AVL_Node : public BinaryNode
+{
+public:
+	int balanceFactor() {
+		return (getHeightOf(leftChild) - getHeightOf(rightChild));
+	}
+
+	int getHeight() {
+		return (this->localData);
+	}
+
+	void setHeight() {
+		setHeight(Math::max(getHeightOf(leftChild),
+				getHeightOf(rightChild)) + 1);
+	}
+
+	void setHeight(int newHeight) {
+		localData = newHeight;
+	}
+
+	AVL_Node(unsigned long key, void *initialValue)
+			: BinaryNode(key, initialValue, null, null, null) {
+		setHeight(0);
+	}
+private:
+	static int getHeightOf(BinaryNode *avln) {
+		return (((AVL_Node *) avln)->getHeight());
+	}
+};
+
+class AVL_Tree : public BinaryTree
+{
+public:
+	AVL_Tree();
+	virtual ~AVL_Tree();
+	bool insert(unsigned long key, void *value);
+	void *remove(unsigned long key);
+private:
+	AVL_Node &leanLeft(AVL_Node &tnode);
+	AVL_Node &leanRight(AVL_Node &tnode);
+};
+
+#endif
+
 
 #endif/* Util/AVLTree.hpp */

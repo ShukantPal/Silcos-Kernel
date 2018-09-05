@@ -152,9 +152,8 @@ public:
 		BothBytes				= 0b11
 	};
 
-	PIT() { // @suppress("Class members should be properly initialized")
-
-	}
+	PIT();
+	virtual ~PIT();
 
 	inline StatusByte status(unsigned char ctr)	{
 		WritePort(CMD_REG, ReadBackCommand(true, false, 1 << ctr));
@@ -163,8 +162,14 @@ public:
 	}
 
 	bool intrAction();
+	EventTrigger *notifyAfter(Timestamp npitTicks, Timestamp delayFeasible,
+			EventCallback handler, void *eventObject);
+	EventTrigger *notifyAgain(Timestamp npitTicks, Timestamp delayFeasible,
+			EventCallback handler, void *eventObject);
 
-	void reset(unsigned short newInitialCount, unsigned char selectounter);
+	void reset(unsigned short newInitialCount, unsigned char selectCounter);
+protected:
+	bool fireAt(Timestamp pitTicks);
 private:
 	struct Counter {
 		int mode;
@@ -207,12 +212,16 @@ private:
 		return (progTimers[index].totalTicks);
 	}
 
+	Counter *getTimerBlock(unsigned index) {
+		return (progTimers + index);
+	}
+
 	void setLastReadCounter(unsigned index, U16 value) {
 		progTimers[index].lastReadCount = value;
 	}
 
 	unsigned short latch(unsigned long index) {
-		WritePort(getPITChannelPort(index), CounterLatchCommand(index));
+		WritePort(getPITCommandPort(), CounterLatchCommand(index));
 
 		unsigned short latchedCounter;
 		latchedCounter = ReadPort(getPITChannelPort(index));
@@ -229,6 +238,7 @@ private:
 	}
 
 	void arm(unsigned selectCounter);
+	void armAt(Timestamp nextFire);
 	void readAll();
 	void refresh(unsigned int index);
 };

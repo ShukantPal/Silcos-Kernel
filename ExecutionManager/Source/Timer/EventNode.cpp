@@ -22,7 +22,8 @@
 
 using namespace Executable::Timer;
 
-ObjectInfo *t_EventNode = KiCreateType("Executable::Timer::EventNode",
+ObjectInfo *Executable::Timer::t_EventNode =
+		KiCreateType("Executable::Timer::EventNode",
 		sizeof(EventNode), L1_CACHE_ALIGN, null, null);
 
 /**
@@ -76,6 +77,8 @@ EventTrigger* EventNode::add(Timestamp trigger, Delay shiftAllowed,
 
 	EventTrigger *freeSlot = findFreeSlot();
 
+	DbgInt(freeSlot - etrigArray);
+
 	new(freeSlot) EventTrigger(trigger,
 			shiftAllowed, handler, eventObject);
 
@@ -94,7 +97,7 @@ EventTrigger* EventNode::add(Timestamp trigger, Delay shiftAllowed,
  *
  * @param trig - trigger object to delete
  */
-void EventNode::del(EventTrigger *trig, Timestamp &impendingRange[2])
+void EventNode::del(EventTrigger *trig, Timestamp (&impendingRange)[2])
 {
 	trig->live = 0;
 
@@ -108,7 +111,7 @@ void EventNode::del(EventTrigger *trig, Timestamp &impendingRange[2])
 
 /**
  * Checks whether the given range overlaps with the nodal range with a
- * 500-ns buffer.
+ * 5 tick buffer.
  *
  * @param rangeStart
  * @param rangeEnd
@@ -118,12 +121,12 @@ bool EventNode::isHoldable(Timestamp rangeStart, Timestamp rangeEnd)
 {
 	if(rangeEnd > overlapRange[0] &&
 			rangeStart < overlapRange[1]) {
-		if(rangeStart < overlapRange[0]) {
-			return (rangeEnd - overlapRange[0] > 500);
-		} else if(rangeEnd < overlapRange[1]){
-			return (rangeEnd - rangeStart > 500);
+		if(rangeStart <= overlapRange[0]) {
+			return (rangeEnd - overlapRange[0] > 5);
+		} else if(rangeEnd <= overlapRange[1]){
+			return (rangeEnd - rangeStart > 5);
 		} else {
-			return (overlapRange[1] - rangeStart > 500);
+			return (overlapRange[1] - rangeStart > 5);
 		}
 	}
 
@@ -136,7 +139,7 @@ bool EventNode::isHoldable(Timestamp rangeStart, Timestamp rangeEnd)
  * trigger or doing any operation that does not insert more
  * condition's on the node's range.
  */
-void EventNode::cleanCalculateRange(Timestamp &range[2])
+void EventNode::cleanCalculateRange(Timestamp (&range)[2])
 {
 	range[0] = etrigArray->triggerRange[0];
 	range[1] = etrigArray->triggerRange[1];
@@ -158,7 +161,7 @@ void EventNode::cleanCalculateRange(Timestamp &range[2])
 
 /**
  * Ensures that the range given overlaps with the node's overlapRange such
- * that the delay allowed is atleast 500 nanoseconds.
+ * that the delay allowed is at least 5 ticks.
  *
  * @param newRange - the range of a trigger that may be executed along
  * 		with the other triggers in this node.
@@ -177,7 +180,7 @@ int EventNode::rematchRange(Timestamp newRange[2])
 	if(newRange[1] >= overlapRange[1])
 		newRange[1] = overlapRange[1];
 
-	if(newRange[1] - newRange[0] <= 500)
+	if(newRange[1] - newRange[0] <= 5)
 		return (-1);
 
 	overlapRange[0] = newRange[0];

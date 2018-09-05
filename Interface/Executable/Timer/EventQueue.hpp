@@ -34,12 +34,27 @@ namespace Timer
 class EventQueue
 {
 public:
+	inline void addAll(EventNode *group) {
+		ndsEngine.put(group);
+	}
+
+	inline EventNode *get()
+	{
+		EventNode *mr = ndsEngine.getMostRecent();
+
+		if(ndsEngine.isNil(mr))
+			return (strong_null);
+		else {
+			ndsEngine.del(mr);
+			return (mr);
+		}
+	}
+
 	EventQueue();
 	EventTrigger *add(Timestamp trigger,
 			Timestamp shiftAllowed, EventCallback handler,
 			void *eventObject);
 	bool rem(EventTrigger *timer);
-	EventNode *get();
 private:
 	NodeSorter ndsEngine;
 };

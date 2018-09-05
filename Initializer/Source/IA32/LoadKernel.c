@@ -1,10 +1,11 @@
 /**
  * @file LoadKernel.c
  *
- * This file is the logical entry point of the in-kernel initializer and the
- * startup of the kernel environment. It is responsible for loading multiboot
- * information and extracting available memory for the KernelHost. It also
- * holds the file-to-segment copying logic (@see Module/Elf/ELF.h)
+ * Logical entry point of the kernel initializer, which parses the
+ * multiboot table and loads the kernel environment. If the kernel
+ * is found capable of executing, <tt>HostEntry</tt> is executed,
+ * otherwise an error message is displayed on the screen, if
+ * possible.
  *
  * @version 0.01
  * @since Silcos 3.05
@@ -28,10 +29,24 @@ typedef void (*HostEntry)(unsigned long tags, unsigned long evBase,
 		unsigned long evSize, struct KernelSymbol *evSymbols, char **strtabPtrs,
 		struct KernelSymbol **evHash);
 
+/**
+ * Collects all the arguments required by the main kernel to run, and does
+ * a last-time check for undefined symbols. If the kernel is found ready to
+ * run, <tt>callMain</tt> continues and jumps to <tt>HostEntry</tt> in the
+ * host module.
+ *
+ * If an undefined symbols is found, a error message is displayed and the
+ * kernel is configured to hang indefinitely.
+ *
+ * @param envBase - the base physical address of the kernel environment
+ * @param envSize - the size, in bytes, of the loaded kernel environment,
+ * 			excluding any extra data, like the page-frame table.
+ */
 void CallHost(unsigned long envBase, unsigned long envSize)
 {
 	extern struct KernelModule *linkerCache;/* Relocator.c */
 	extern union MultibootSearch firstTag;/* EarlyMultiboot.c */
+	extern bool __linkError;/* KernelModule.c */
 
 	struct KernelModule *host = linkerCache + FindHostIndex();
 	unsigned (*callMain)(unsigned long, unsigned long, unsigned long,
@@ -39,6 +54,13 @@ void CallHost(unsigned long envBase, unsigned long envSize)
 			char **, struct KernelSymbol **,
 			struct KernelModule *) =
 		(void*)(host->realBase + host->fileHdr->entryAddress);
+
+	/* Comment this out if you don't want me to disturb you
+	 * due to undefined symbols  */
+	if(__linkError) {
+		WriteLine("Undefined symbols found! Stopping..");
+		while(true);
+	}
 
 	WriteLine("Calling entry to host...");
 	unsigned x  = callMain(firstTag.loc - 8, envBase, envSize,
@@ -50,25 +72,22 @@ void CallHost(unsigned long envBase, unsigned long envSize)
 }
 
 /**
- * The "main" function of the initializer, which performs various operations in
- * a fixed order, and ultimately loads, links and then executes the kernel.
+ * Controls the pre-kernel phase of the booting process; initializes
+ * text-output, parses the multiboot-table and scans for all loaded
+ * kernel-modules. Each module is copied and extracted into
+ * permanently allocated physical memory, called the kernel environment
+ * which also holds other metadata.
  *
- * During this process, all kernel modules are pre-scanned to check for memory
- * requirements, which includes symbol-tables, string-tables, segment-sizes,
- * other configuration memory. A fixed memory buffer is located in physical
+ * Finally, the <tt>KernelHost</tt> module is given control, which
+ * in turn follows the kernel boot protocol. If any failure occurs, it
+ * is not handled and the kernel hangs displaying an error.
  * memory to hold the initial kernel environment, after which no extra memory
  * is used in the initializer.
  *
- * All kernel modules are then cached - symbols and their names are stored in
- * a central data structure. On doing so, the modules are then relocated to the
- * higher-half address space.
- *
- * Although the symbols of the KernelHost will have values above
- * KERNEL_OFFSET (in virtual memory), it will be first called in physical
- * memory.
- *
- * @param magic
- * @param tagTable
+ * @param magic - the multiboot magic number passed by the bootloader in
+ * 				the EAX register.
+ * @param tagTable - physical address of the multiboot table passed in
+ * 				the EBX register.
  */
 void LoadKernel(unsigned int magic, unsigned long tagTable)
 {

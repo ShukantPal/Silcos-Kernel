@@ -1,17 +1,14 @@
 /**
- * File: BST.hxx
- * Module: ModuleFramework (@kernel.silcos.mdfrwk)
+ * @file BinaryTree.hpp
  *
- * Summary:
- * Defines how abstract binary-trees are interfaced with and how their nodes are
- * implemented.
+ * The BinaryTree is the root of all binary-search-tree variants. The
+ * unsorted binary trees aren't used in this kernel, though. This file
+ * provides the common interfaces for BST operations allowing code to
+ * reuse this to build a new variant.
  *
- * Struct:
- * BinaryNode - Node of a binary-search tree
- * 
- * Class:
- * BinaryTree - Abstraction of a binary-search tree (with pure-virtual functions)
- *
+ * Note that these objects are non-intrusive. That means you can't use
+ * your own nodes with them. It should improve performance - as the
+ * nodes will be closely packed - especially in static trees.
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +31,10 @@
 #include "../Object.hpp"
 #include "String.hxx"
 
+class BinaryNode;
+class TreeIterator;
+class BinaryTree;
+
 enum RecurseDirection
 {
 	LEFT_UPWARD,
@@ -43,25 +44,9 @@ enum RecurseDirection
 };
 
 /**
- * Struct: BinaryNode
- *
- * Summary:
- * Defines how binary-nodes are organized in a tree with a pointer to the
- * parent of each node. All the members are public as they are not meant
- * to be shared with code external to binary-trees.
- *
- * Functions:
- * isLeftChild - Tells whether is node is the left-child of its parent
- * isRightChild - Tells whether is node is the right-child of its parent
- * getLeftChild - Returns the left-child of this node
- * getRightChild - Returns the right-child of this node
- * getParent - Returns the parent of this node
- * setLeftChild - Links the other node as left-child of this
- * setRightChild - Links the other node as right-child of this
- * getSibling - Returns the other child of the parent
- * replaceWith - Replaces this with another node as the child of its parent
- *
- * Author: Shukant Pal
+ * Back-bone of all binary-tree nodes - having two children and one
+ * parent. Along with these structural components - it has a search key
+ * and an associated value.
  */
 struct BinaryNode
 {
@@ -71,7 +56,12 @@ public:
 
 	BinaryNode *leftChild;/* Left-child of this node */
 	BinaryNode *rightChild;/* Right-child of this node */
-	BinaryNode *directParent;/* Parent of this node */
+
+	union {
+		BinaryNode *directParent;/* Parent of this node */
+		int localData;
+	};
+
 	unsigned long searchKey;/* Key, which is unique for this node (in a subtree) */
 	void* associatedValue;/* Value associated with key, to retrieve data */
 
@@ -79,69 +69,48 @@ public:
 	inline BinaryNode *getRightChild(){ return (rightChild); }
 	inline BinaryNode *getParent(){ return (directParent); }
 
-	inline bool isLeftChild()
-	{
+	inline void assignLeft(BinaryNode *n) {
+		leftChild = n;
+	}
+
+	inline void assignRight(BinaryNode *n) {
+		rightChild = n;
+	}
+
+	inline bool isLeftChild() {
 		return (this == getParent()->getLeftChild());
 	}
 
-	inline bool isRightChild()
-	{
+	inline bool isRightChild() {
 		return (this == getParent()->getRightChild());
 	}
 
-	/*
-	 * This should be used for trees which DON'T USE NIL NODES
-	 */
+	/* Assumes the tree doesn't use "nil" nodes and the child given is not
+	   a null-pointer. @see (BinaryTree::assignLeft()) */
 	inline void setLeftChild(BinaryNode *tnode)
 	{
 		this->leftChild = tnode;
 		tnode->directParent = this;
 	}
 
-	/*
-	 * This should be used for trees which DON'T USE NIL NODES.
-	 */
-	inline void setRightChild(BinaryNode *tnode)
-	{
+	/* Assumes the tree doesn't use "nil" nodes and the child given is not
+	   a null-pointer. @see (BinaryTree::assignRight()) */
+	inline void setRightChild(BinaryNode *tnode) {
 		this->rightChild = tnode;
 		tnode->directParent = this;
 	}
 
-	/**
-	 * Function: BinaryNode::getSibling
-	 *
-	 * Summary:
-	 * Returns the sibling node of this, e.g. if isRightChild() == TRUE then
-	 * getParent()->leftChild() & vice-versa.
-	 *
-	 * Note: Make sure this.getParent() != NULL
-	 *
-	 * Author: Shukant Pal
-	 */
-	inline BinaryNode *getSibling()
-	{
-		if(isLeftChild())
+	/* Returns the sibling node of this, should be obvious. */
+	inline BinaryNode *getSibling() {
+		if(isLeftChild()) {
 			return (directParent->rightChild);
-		else
+		} else {
 			return (directParent->leftChild);
+		}
 	}
 
-	/**
-	 * Function: BinaryNode::replaceWith
-	 *
-	 * Summary:
-	 * Replaces this node, along with its subtree, with the replacer by
-	 * resetting the child of the direct-parent. It is used during rotation
-	 * and care must be taken to ensure that (getParent() != NULL) is
-	 * satisfied. (@See BinaryTree::replace())
-	 *
-	 * For tree that use this, DON'T USE NIL NODES
-	 *
-	 * Args:
-	 * BinaryNode *replacer - node which will replace this in the upper-tree
-	 *
-	 * Author: Shukant Pal
-	 */
+	/* Replaces this whole subtree (.i.e this node along with children) from
+	   the parent's subtree with the replacer. */
 	inline void replaceWith(BinaryNode *replacer)
 	{
 		if(isLeftChild())
@@ -164,7 +133,8 @@ protected:
 		this->associatedValue = 0;
 	}
 
-	BinaryNode(unsigned long searchKey, void *value, BinaryNode *left, BinaryNode *right, BinaryNode *parent)
+	BinaryNode(unsigned long searchKey, void *value, BinaryNode *left,
+			BinaryNode *right, BinaryNode *parent)
 	{
 		this->leftChild = left;
 		this->rightChild = right;
@@ -177,18 +147,8 @@ protected:
 };
 
 /**
- * Class: BinaryTree
- *
- * Summary:
- * Abstracts a binary tree which allows insertion/deletion/searching.
- *
- * Functions:
- * insert - Inserts a key-value pair in the binary-tree
- * remove - Removes a node with a given key (iff found)
- * get - Returns the value of the node with the assigned key
- * set - Sets the value of the node with the assigned key
- *
- * Author: Shukant Pal
+ * This is the root-class of all BST variants. It already provides various search
+ * operations publicly and a few goodies for internal use.
  */
 class BinaryTree : public ::Object
 {
@@ -197,32 +157,25 @@ public:
 	virtual bool insert(unsigned long key, void *value) = 0;
 	virtual void* remove(unsigned long key) = 0;
 
-	/*
-	 * Get the value associated with the key, if it was inserted in the
-	 * tree; otherwise, if it wasn't inserted, NULL
-	 */
-	inline void *get(unsigned long key)
-	{
-		if(treeRoot)
-		{
+	/* Get the value associated with the given key; strong_null, to
+	   indicate that the node doesn't exist. */
+	inline void *get(unsigned long key) {
+		if(treeRoot) {
 			BinaryNode *tNode = search(key, *this);
 			if(tNode != NULL)
 				return tNode->val();
 		}
-		return (NULL);
+		return (strong_null);
 	}
 
 	/*
 	 * Set the value associated with the key, if it was inserted in the
 	 * tree, and return true; otherwise, return false.
 	 */
-	inline bool set(unsigned long key, void *value)
-	{
-		if(treeRoot)
-		{
+	inline bool set(unsigned long key, void *value) {
+		if(treeRoot) {
 			BinaryNode *tNode = search(key, *this);
-			if(tNode != NULL)
-			{
+			if(tNode != NULL) {
 				tNode->associatedValue = value;
 				return (true);
 			}
@@ -243,15 +196,13 @@ protected:
 	inline bool isNil(BinaryNode *node){ return (node == nil); }
 	inline bool isNil(BinaryNode& node){ return (&node == nil); }
 
-	inline void assignLeft(BinaryNode& tNode, BinaryNode& tnChild)
-	{
+	inline void assignLeft(BinaryNode& tNode, BinaryNode& tnChild) {
 		tNode.leftChild = &tnChild;
 		if(!isNil(tnChild))
 			tnChild.directParent = &tNode;
 	}
 
-	inline void assignRight(BinaryNode& tNode, BinaryNode& tnChild)
-	{
+	inline void assignRight(BinaryNode& tNode, BinaryNode& tnChild) {
 		tNode.rightChild = &tnChild;
 		if(!isNil(tnChild))
 			tnChild.directParent = &tNode;
@@ -261,33 +212,14 @@ protected:
 	static void valueOf(long key, BinaryNode& node);
 	static BinaryNode *search(unsigned long key, BinaryTree& _this__);
 
-	/**
-	 * Function: BinaryTree::replace
-	 *
-	 * Summary:
-	 * Replaces tNode with replacer along with its subtree(@See replaceWith)
-	 *
-	 * Args:
-	 * BinaryNode& tNode - original node to replace
-	 * BinaryNode& nNode - node that will replace tNode in the tree
-	 *
-	 * Author: Shukant Pal
-	 */
-	inline BinaryNode& replaceChild(BinaryNode& tNode, BinaryNode& nNode)
-	{
-		if(isNil(tNode.getParent()))
-		{
+	inline BinaryNode& replaceChild(BinaryNode& tNode, BinaryNode& nNode) {
+		if(isNil(tNode.getParent())) {
 			treeRoot = &nNode;
 			nNode.directParent = nil;
-		}
-		else
-		{
-			if(tNode.isLeftChild())
-			{
+		} else {
+			if(tNode.isLeftChild()) {
 				assignLeft(*tNode.getParent(), nNode);
-			}
-			else
-			{
+			} else {
 				assignRight(*tNode.getParent(), nNode);
 			}
 		}
@@ -296,6 +228,67 @@ protected:
 	}
 
 	BinaryTree();
+	friend TreeIterator;
+};
+
+/**
+ * Provides an generic iterator for all binary-search-trees, to view internal
+ * organization. The iterator starts from the treeRoot and can be used to
+ * go left, right, and even up the tree.
+ *
+ * You can get/set the value of each node, and also check its key. Setting the
+ * key is not allowed. Modifications done with or without this iterator won't
+ * stop this object from iterating. The user must know about any external
+ * modifications.
+ */
+class TreeIterator : public Object
+{
+public:
+	TreeIterator(BinaryTree &bst)
+		: bst(bst), node(bst.treeRoot) {
+	}
+
+	unsigned long getKey() {
+		return (node->key());
+	}
+
+	void *getValue() {
+		return (node->associatedValue);
+	}
+
+	bool goBack() {
+		if(!bst.isNil(node->directParent)) {
+			node = node->directParent;
+			return (true);
+		 } else {
+			 return (false);
+		 }
+	}
+
+	bool goLeft() {
+		if(!bst.isNil(node->leftChild)) {
+			node = node->leftChild;
+			return (true);
+		} else {
+			return (false);
+		}
+	}
+
+	bool goRight() {
+		if(!bst.isNil(node->rightChild)) {
+			node = node->rightChild;
+			return (true);
+		} else {
+			return (false);
+		}
+	}
+
+	void setValue(void *newValue) {
+		node->associatedValue = newValue;
+	}
+private:
+	BinaryTree &bst;
+	BinaryNode *node;
 };
 
 #endif /* ModulesFramework/BinaryTree.hxx */

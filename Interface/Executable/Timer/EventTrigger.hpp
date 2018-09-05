@@ -76,6 +76,10 @@ struct EventTrigger final
 		this->live = 1;
 	}
 
+	inline bool isLive() {
+		return (live);
+	}
+
 	void execute()
 	{
 		handler(eventObject);

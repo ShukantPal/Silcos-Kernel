@@ -1,5 +1,9 @@
 /**
  * @file Main.cpp
+ *
+ * Implements the kernel boot protocol by a small set of functions
+ * that initialize each subsystem and then passes control to the
+ * hardware-abstraction module.
  * ------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

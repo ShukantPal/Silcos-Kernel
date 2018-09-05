@@ -1,25 +1,27 @@
-///
-/// @file Processor.hpp
-/// @module HAL (kernel.silcos.hal)
-///
-/// Provides the required data structures to manage all the processors
-/// present in the system in a platform-independent manner.
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
+/**
+ * @file Processor.hpp
+ * @module HAL (kernel.silcos.hal)
+ *
+ * Holds declarations related to <tt>Processor</tt> object related
+ * functions. Provides a driver to access <b>symmetric multiprocessing
+ * </b> function (note that asymmetric functionality will be implemented
+ * as a separate interface).
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #ifndef HAL_PROCESSOR_H__
 #define HAL_PROCESSOR_H__
 
@@ -84,28 +86,34 @@ struct ScheduleInfo
 namespace HAL
 {
 
-///
-/// When a processor recieves an IPI on the 254th vector then the act-on-request
-/// handler executes which takes the following input paramaters (on the
-/// actionRequests list).
-///
-/// @author Shukant Pal
-///
+/**
+ * When a processor recieves an IPI on the 254th vector then the act-on-request
+ * handler executes which takes the following input paramaters (on the
+ * actionRequests list).
+ *
+ * @author Shukant Pal
+ */
 enum RequestType
 {
 	AcceptTasks,
 	RenounceTasks
 };
 
-///
-/// Defines how a processor requests another cpu to perform some action on
-/// its behalf. To create a new type of request, you should create a child
-/// class of IPIRequest.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
+/**
+ * Holds critical data related to an operation that must be performed on
+ * another processor. <tt>CPUDriver</tt> queues up these object on the
+ * per-processor data, which are then handled by the target processor on
+ * sending a IPI by the APIC driver.
+ *
+ * The type of operation required can be hard-coded or sent dynamically
+ * by specifying a callback (which is not supported yet). Other than
+ * that, the caller may also pass an <tt>ObjectInfo</tt> for passing
+ * custom memory buffers.
+ *
+ * @version 1.0
+ * @since Circuit 2.03
+ * @author Shukant Pal
+ */
 struct IPIRequest
 {
 	CircularListNode reqlink;
@@ -114,28 +122,30 @@ struct IPIRequest
 	const ObjectInfo *source;
 
 	IPIRequest(RequestType mtype, unsigned long bsize, ObjectInfo *src)
-			: type(mtype), bufferSize(bsize), source(src)
-	{
+			: type(mtype), bufferSize(bsize), source(src) {
 	}
 };
 
-///
-/// Stores the working state and features of a cpu. It is stored in the
-/// per-CPU array and has a size of 8-KB (but sizeof(Processor) may not be
-/// 8192) on 32-bit systems. Each cpu can easily access its per-cpu struct
-/// by using GetProcessorById(PROCESSOR_ID).
-///
-/// Note thate Processor blocks are aligned at 32-KB boundaries. Use
-/// GetProcessorById(PROCESSOR_ID) to get the current Processor struct.
-///
-/// @version 10.2
-/// @since Circuit 2.01
-/// @author Shukant Pal
-///
+/**
+ * Holds processor-specific entries that are cache-local. Each <tt>Processor
+ * </tt> is accessed only by the owner chip, although this is not enforced
+ * proper in the code. These objects are always aligned on a 32-KB boundary
+ * in alloted permanent memory.
+ *
+ * Each <tt>Processor</tt> object registered in the kernel, can be accessed
+ * by calling <tt>GetProcessorById(PROCESSOR_ID)</tt>.
+ *
+ * <tt>Processor</tt> objects mostly contain subsystem-specific data, which
+ * is not documented as a part of the <tt>Processor</tt> struct.
+ *
+ * @version 10.2
+ * @since Circuit 2.01
+ * @author Shukant Pal
+ */
 struct Processor
 {
-	LinkedListNode LiLinker;//! used for linking in lists (not used yet!)
-	unsigned int ProcessorCluster;//! @deprecated (see ProcessorTopology)
+	LinkedListNode LiLinker;
+	unsigned int ProcessorCluster;//! @deprecated
 	unsigned short PoLoad;//! @deprecated
 	unsigned char ProcessorStatus;//! @deprecated
 	unsigned char PoFreq;//! frequency of the cpu (not used yet!)
@@ -163,14 +173,15 @@ struct Processor
 
 extern Processor *CPUArray;
 
-///
-/// Driver which controls how CPUs interacts with each other and control
-/// their own behaviour.
-///
-/// @version 1.0
-/// @since Silcos 2.05
-/// @author Shukant Pal
-///
+/**
+ * Provides a driver-like interface to access low-level SMP logic. Kernel
+ * subsystems can use this to execute specific, low-latency jobs on another
+ * processor.
+ *
+ * @version 1.0
+ * @since Silcos 2.05
+ * @author Shukant Pal
+ */
 class CPUDriver
 {
 public:

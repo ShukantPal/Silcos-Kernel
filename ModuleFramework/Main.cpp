@@ -30,11 +30,15 @@ ObjectInfo *tRBNode;
 char nmRBNode[] = "@com.silcos.circuit.mdfrwk.RBTree::RBNode";
 extern String *defaultString;
 
+char nmAVL_Node[] = "@ModuleFramework.AVL_Node";
+ObjectInfo *tAVL_Node;
+
 extern "C" __attribute__((constructor(100))) void initModule()
 {
 	tString = KiCreateType(nmString, sizeof(String), NO_ALIGN, NULL, NULL);
 	tRBTree = KiCreateType(nmRBTree, sizeof(RBTree), NO_ALIGN, NULL, NULL);
 	tRBNode = KiCreateType(nmRBNode, sizeof(RBNode), NO_ALIGN, NULL, NULL);
+	tAVL_Node = KiCreateType(nmAVL_Node, sizeof(AVL_Node), NO_ALIGN, NULL, NULL);
 
 	HashMap::init();
 

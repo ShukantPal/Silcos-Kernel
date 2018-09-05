@@ -16,6 +16,8 @@
 #include <Generic/Elf/Relocator.h>
 #include <Utils/CtPrim.h>
 
+bool __linkError = false;
+
 /**
  * Linearly searches for the program-header entry in the given module
  * for the specified type. It returns a pointer to the entry in the file
@@ -90,6 +92,7 @@ void ResolveRel(struct RelEntry *rel, struct KernelModule *ldrObj)
 	if(defSym == null) {
 		Write("Undefined Symbol: ");
 		WriteLine(ldrObj->dynSyms.nameTable + refSym->name);
+		__linkError = true;
 		return;
 	}
 

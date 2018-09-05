@@ -393,7 +393,7 @@ void Pager::use(VirtAddr vadr, unsigned allocFlags,
 
 /**
  * Ensures that the address in the range [vBase, vBase + mapSize) are usable
- * by mapping them. It optimizes TLB usage by using "huge" pages whereever
+ * by mapping them. It optimizes TLB usage by using "huge" pages wherever
  * possible.
  *
  * @version 1.0
