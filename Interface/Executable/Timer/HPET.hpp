@@ -39,133 +39,55 @@ namespace Executable
 namespace Timer
 {
 
-struct CapabilityAndID
-{
-	U64 revisionID		: 8;/* Hardware revision ID */
-	U64 timerCount		: 5;/* Number of comparators in this block */
-	U64 cntSizeCap		: 1;/* Size (32/64-bit) of main-counter */
-	U64 reserved00		: 1;
-	U64 legacyRouting	: 1;/* Bit telling whether interrupts can be
-	 	 	 	 	 	 	   routed through the PIC */
-	U64 vendorID		: 16;/* Vendor ID, as if PCI device */
-	U64 clockPeriod		: 32;/* Period of main-counter incrementing */
-};
+#define CAP_AND_ID	0x00
+#define REV_ID					0
+#define NUM_TIM_CAP			8
+#define COUNT_SIZE_CAP		13
+#define LEG_RT_CAP			15
+#define VENDOR_ID				16
+#define COUNTER_CLK_PERIOD	32
 
-struct Configuration
-{
-	U64 overallEnable	: 1;/* Enables the main-counter & comparators */
-	U64 legacyReplacement: 1;/* Allows interrupts to be sent by PIC */
-	U64 reservedField0	: 62;
-};
+#define CONFIG			0x10
+#define ENABLE_CNF			0
+#define LEG_RT_CNF			1
 
-struct InterruptStatus
-{
-	U32 timerSts;/* Bit-field containing whether a timer is delivering
-	 	 	 	 	an interrupt. */
-	U32 reservedField0;
-};
+#define INT_STS				0x20
+#define Tn_INT_STS(n)			n
 
-union MainCounter
-{
-	struct {
-		U32 l32;
-		U32 u32;
-	};
-	U64 value;
-};
+#define MAIN_COUNT				0xF0
 
-struct ComparatorBlock
-{
-	/* @union HPET::Timer::ConfigAndCapab
-	 *
-	 * Contains configuration & capability data for a timer. Reads
-	 * and writes to this register should not be done directly. To
-	 * read or write this register, store a ConfigAndCapab struct
-	 * on the stack. Then equate the value of its val to the val
-	 * of cfgAndCap(n).
-	 *
-	 * @author Shukant Pal
-	 * @see IA-PC HPET Specifications 1.0A
-	 */
-	union ConfigAndCapab
-	{
-		struct
-		{
-			U32 reservedField0	: 1;
-			U32 intrType		: 1;/* Edge- or level- triggered interrupts */
-			U32 intrEnable		: 1;/* Bit enables/disables interrupts */
-			U32 timerType		: 1;
-			U32 periodicAllowed	: 1;/* Whether timer supports periodic mode */
-			U32 timerSize		: 1;/* Width of timer (32/64-bit) */
-			U32 valueSet		: 1;
-			U32 reservedField1	: 1;
-			U32 mode32		: 1;
-			U32 intrRoute		: 5;/* IO/APIC redirection entry */
-			U32 fsbIntrEnable	: 1;/* Enables/disables FSB interrupt mode */
-			U32 fsbIntrAllowed	: 1;/* Whether FSB routing is supported */
-			U32 reservedField2	: 16;
-			U32 intrRoutingCapable;/* Bit-field containing valid IO/APIC
-			 	 	 	 	 	 	  re-direction entries */
-		};
-		struct
-		{
-			U32 lower32;
-			U32 upper32;
-		};
-		U64 val;
-	} __attribute__((packed)) cfgAndCap;
+#define TIMER_N_CFG(n) (n * 0x20 + 0x100)
+#define TIMER_N_COMPARATOR(n) (n * 0x20 + 0x108)
 
-	union Comparator
-	{
-		U32 val32;
-		U64 val64;
-	} cmp;
-
-	struct FSBInterruptRoute
-	{
-		U32 intrValue;  // written in FSB-intr message
-		U32 intrAddress;/* Address of the FSB-interrupt message */
-	} __attribute__((packed)) fsb;
-};
+#define Tn_INT_TYPE_CNF		1
+#define Tn_INT_ENB_CNF		2
+#define Tn_TYPE_CNF			3
+#define Tn_PER_INT_CAP		4
+#define Tn_SIZE_CAP			5
+#define Tn_VAL_SET_CNF		6
+#define Tn_32MODE_CNF			8
+#define Tn_INT_ROUTE_CNF		9
+#define Tn_FSB_EN_CNF			14
+#define Tn_FSB_INT_DEL_CAP	15
+#define Tn_INT_ROUTE_CAP		32
 
 /**
- * The HPET device can be used through this driver class - which also
- * connects hardware functionality with the HardwareTimer tree. Events of
- * microsecond precision can be fired through this driver.
- *
- * Internally, the HPET maps the register structs above this definition,
- * into physical address space.
- *
- * This driver reveals the following features of HPET devices: no. of
- * comparator blocks present (@code timerCount()), the current main counter
- * (@code mainCounter()), ACPI UID (@code index()), frequency of the HPET
- * main counter (@code frequency()), etc.
+ * Driver for HPET hardware, exposing individual comparators by
+ * allocating <tt>HPET::Timer</tt> objects. IA32 & IA64 kernels both
+ * use 32-bit modes when possible.
  *
  * @author Shukant Pal
  * @see IA-PC HPET Specifications 1.0A
  */
-class HPET final : public IRQHandler, public LinkedListNode, public Lockable
+class HPET final : public LinkedListNode, public Lockable
 {
 public:
 	class Timer;
 
-	/**
-	 * One HPET is reserved during the boot-process and is solely for use by
-	 * the kernel environment. It may be used through syscalls but user-mode
-	 * applications are not given direct access.
-	 */
 	static HPET *kernelTimer;
 
 	HPET(int acpiUID, PhysAddr eventBlock);
 	~HPET();
-
-	void clearIntrStatus(unsigned char n)
-	{ Atomic::oR((unsigned int*) intSts, (1 << n)); }
-
-	U32 routingMap(unsigned char n)
-	{
-		return (cfgAndCap(n)->upper32);
-	}
 
 	inline unsigned clockPeriod() {
 		return (mcPeriod);
@@ -180,15 +102,12 @@ public:
 	}
 
 	inline Timestamp mainCounter() {
-		return ((Timestamp) ctr->value);
+#ifdef IA32
+		return ((Timestamp) read32(MAIN_COUNT));
+#else
+		return ((Timestamp) read64(MAIN_COUNT));
+#endif
 	}
-
-	bool disableLegacyRouting();
-	bool disable();
-	bool enable();
-	bool enableLegacyRouting();
-	bool intrAction();
-	void setMainCounter(unsigned long val);
 
 	HPET::Timer *getTimerObject(bool periodic);
 
@@ -209,30 +128,37 @@ private:
 	long mcPeriod;
 	unsigned long regBase;
 
-	inline ComparatorBlock volatile *comparatorBlock(unsigned n) {
-		return ((ComparatorBlock volatile *)
-				(regBase + 0x100 + 0x20 * n));
+	inline U32 read32(unsigned hpetRegister) {
+		return (*(U32 volatile *)(regBase + hpetRegister));
 	}
 
-	inline ComparatorBlock::ConfigAndCapab volatile *cfgAndCap(unsigned n) {
-		return ((ComparatorBlock::ConfigAndCapab volatile*)
-						(regBase + 0x100 + 0x20 * n));
+	inline U32 read32(unsigned hpetRegister, unsigned bit) {
+		return ((read32(hpetRegister) >> bit) & 1);
 	}
 
-	inline ComparatorBlock::Comparator volatile *comparator(unsigned n) {
-		return ((ComparatorBlock::Comparator volatile*)
-						(regBase + 0x108 + 0x20 * n));
+	inline U64 read64(unsigned hpetRegister) {
+#ifdef IA32
+		U64 hpetValue = 0;
+		hpetValue |= read32(hpetRegister);
+		hpetValue |= ((U64) read32(hpetRegister + 0x04) << 32);
+		return (hpetValue);
+#else
+		return (*(U64 volatile *)(regBase + hpetRegister));
+#endif
 	}
 
-	inline ComparatorBlock::FSBInterruptRoute volatile *fsbIntrRoute(unsigned n) {
-		return ((ComparatorBlock::FSBInterruptRoute volatile*)
-						(regBase + 0x110 + 0x20 * n));
+	inline void write32(U32 value, unsigned targetRegister) {
+		*(U32 volatile *)(regBase + targetRegister) = value;
 	}
 
-	CapabilityAndID volatile *capAndId;
-	Configuration volatile *cfg;
-	InterruptStatus volatile *intSts;
-	MainCounter volatile *ctr;
+	inline void write64(U64 value, unsigned targetRegister) {
+#ifdef IA32
+		*(U32 volatile *)(regBase + targetRegister) = (U32) value;
+		*(U32 volatile *)(regBase + targetRegister + 0x04) = (U32)(value >> 32);
+#else
+		*(U64 volatile *)(regBase + targetRegister) = value;
+#endif
+	}
 
 	HPET::Timer *getTimer(unsigned int tidx);
 
@@ -242,6 +168,9 @@ private:
 	friend Executable::Timer::HPET::Timer;
 };
 
+/**
+ * Exposes a comparator allowing you to schedule events.
+ */
 class HPET::Timer final : public IRQHandler, public HardwareTimer
 {
 public:
@@ -258,23 +187,25 @@ public:
 	}
 
 	bool isEdgeTriggered() {
-		return (block->cfgAndCap.intrType == 0);
-	}
-
-	bool isLevelTriggered() {
-		return (block->cfgAndCap.intrType == 1);
+		return (owner->read32(TIMER_N_CFG(index), Tn_INT_TYPE_CNF) == 0);
 	}
 
 	bool isEnabled() {
-		return (block->cfgAndCap.intrEnable);
+		return (owner->read32(TIMER_N_CFG(index), Tn_INT_ENB_CNF));
+	}
+
+	bool isLevelTriggered() {
+		return (owner->read32(TIMER_N_CFG(index), Tn_INT_TYPE_CNF) == 1	);
 	}
 
 	bool isInterruptActive() {
-		return ((owner->intSts->timerSts >> index) & 1);
+		return (owner->read32(INT_STS, index));
 	}
 
-	void clearInterruptActive() {
-		owner->intSts->timerSts |= (1 << index);
+	void clearStatus() {
+		U32 intStsMap = owner->read32(INT_STS);
+		intStsMap |= (1 << index);
+		owner->write32(intStsMap, INT_STS);
 	}
 
 	Timestamp getTotalTicks() {
@@ -282,33 +213,32 @@ public:
 	}
 
 	inline void enable() {
-		block->cfgAndCap.intrEnable = 1;
+		U32 cfg = owner->read32(TIMER_N_CFG(index));
+		cfg |= (1 << Tn_INT_ENB_CNF);
+		owner->write32(cfg, TIMER_N_CFG(index));
 	}
 
 	inline void disable() {
-		block->cfgAndCap.intrEnable = 0;
+		U32 cfg = owner->read32(TIMER_N_CFG(index));
+		cfg &= ~(1 << Tn_INT_ENB_CNF);
+		owner->write32(cfg, TIMER_N_CFG(index));
 	}
 
 	inline U32 allRoutes() {
-		return (block->cfgAndCap.intrRoutingCapable);
+		return (owner->read32(TIMER_N_CFG(index) + 0x4));
 	}
 
 	~Timer();
 
 	bool intrAction();
-	EventTrigger *notifyAfter(Timestamp interval, Timestamp delayAllowed,
+	Event *notifyAfter(Timestamp interval, Timestamp delayAllowed,
 			EventCallback handler, void *eventObject);
 protected:
 	bool fireAt(Timestamp fts);
 private:
 	HPET *owner;
-	ComparatorBlock volatile *block;
 	unsigned int index;
 	Timestamp lastReadCount;
-
-	inline void setComparator(U32 val32) {
-		block->cmp.val32 = val32;
-	}
 
 #ifdef IA64
 
@@ -318,8 +248,7 @@ private:
 
 #endif
 
-	Timer(HPET *owner, ComparatorBlock volatile *block,
-			unsigned int index);
+	Timer(HPET *owner, unsigned int index);
 public:
 	void routeInterrupts();
 	void connectTo(unsigned input);

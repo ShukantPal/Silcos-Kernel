@@ -20,27 +20,32 @@
 
 using namespace Executable::Timer;
 
+/**
+ * Constructs the <tt>HardwareTimer</tt> with no pending events.
+ */
 HardwareTimer::HardwareTimer()
 {
-	activeTriggers = strong_null;
+	enow = strong_null;
 }
 
+/**
+ * Not implemented: Hot rip for timers whohoho (well, since timers
+ * can't be removed in hardware why worry about destroying this)
+ */
 HardwareTimer::~HardwareTimer()
 {
 	// umm, could you rip out a timer device at runtime
 	// - something nice to implement :)
 }
 
+void HardwareTimer::initPIT()
+{
+}
+
 /**
- * Adds another event to be triggered by this timer into the queue. It may
- * also be added to the cached <code>activeTriggers</code> node. The resulting
- * <code>EventTrigger</code> object is then returned, on success, otherwise if
- * the timer couldn't fire this event, <code>null</code> is returned.
- *
- * This internal method should be exposed by the implementation of the device
- * driver by <code>notifyAfter</code> methods. Take should be taken of
- * preventing the <code>intrAction</code> method to execute while new events
- * are being added to prevent data corruption.
+ * Puts another event in-queue, to be executed. It may be added into
+ * the <tt>activeEvents</tt> group, or to the pending
+ * <tt>Timeline</tt>.
  *
  * @param trigger - Time at which the event should be triggered
  * @param shiftAllowed - Amount of delay possible for this event
@@ -49,40 +54,35 @@ HardwareTimer::~HardwareTimer()
  * @return - An <code>EventTrigger</code> object pointer on success; otherwise,
  * 			<code>null</code> on an internal failure.
  */
-EventTrigger *HardwareTimer::add(Timestamp trigger,
+Event *HardwareTimer::add(Timestamp trigger,
 		Timestamp shiftAllowed, EventCallback handler,
 		void *eventObject)
 {
-	EventTrigger *softTimer;
-
-	if(activeTriggers == null) {
-		activeTriggers = new EventNode(trigger, shiftAllowed,
+	if(enow == null) {
+		enow = new EventGroup(trigger, shiftAllowed,
 				handler, eventObject);
-		softTimer = activeTriggers->etrigArray;
-		fireAt(activeTriggers->overlapRange[0]);
+		fireAt(enow->overlapRange[0]);
 
-		return (softTimer);
-	} else if(activeTriggers->isHoldable(trigger,
+		return (enow->etrigArray);
+	} else if(enow->isHoldable(trigger,
 					trigger + shiftAllowed)) {
-		softTimer = activeTriggers->add(trigger, shiftAllowed,
+		return enow->add(trigger, shiftAllowed,
 				handler, eventObject);
-		return (softTimer);
 	}
 
-	if(trigger < activeTriggers->overlapRange[0]) {
-		pendingTriggers.addAll(activeTriggers);
+	if(trigger < enow->overlapRange[0]) {
+		equeue.addAll(enow);
 
-		activeTriggers = new EventNode(trigger, shiftAllowed,
+		enow = new EventGroup(trigger, shiftAllowed,
 				handler, eventObject);
 
-		if(!fireAt(activeTriggers->overlapRange[0]))
+		if(!fireAt(enow->overlapRange[0]))
 			DbgLine("Serious unhandled error - timer set failure");
 
 		DbgLine("___REPLACING");
-		return (activeTriggers->etrigArray);
+		return (enow->etrigArray);
 	} else {
-		DbgLine(" _____ HERE_____");
-		return (pendingTriggers.add(trigger, shiftAllowed,
+		return (equeue.add(trigger, shiftAllowed,
 				handler, eventObject));
 	}
 }
@@ -96,8 +96,8 @@ EventTrigger *HardwareTimer::add(Timestamp trigger,
  */
 void HardwareTimer::retireActiveEvents()
 {
-	EventTrigger *activeEvent = activeTriggers->etrigArray;
-	int activeEventCount = activeTriggers->etrigCount;
+	Event *activeEvent = enow->etrigArray;
+	int activeEventCount = enow->etrigCount;
 
 	for(int eidx = 0; eidx < activeEventCount; eidx++) {
 		if(activeEvent->isLive()) {
@@ -105,5 +105,6 @@ void HardwareTimer::retireActiveEvents()
 		}
 	}
 
-	activeTriggers = pendingTriggers.get();
+	delete enow;
+	enow = equeue.get();
 }

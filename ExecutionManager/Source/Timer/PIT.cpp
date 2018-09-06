@@ -60,27 +60,27 @@ bool PIT::intrAction()
 	unsigned long updatedTicks = getTimerBlock(0)->totalTicks
 			+ getTimerBlock(0)->lastReadCount;
 
-	if(activeTriggers == null ||
-			activeTriggers->overlapRange[0] - updatedTicks > 65535) {
+	if(enow == null ||
+			enow->overlapRange[0] - updatedTicks > 65535) {
 		arm(0);// Sadly, no soft-timers dependent here
 		return (true);
-	} else if(activeTriggers->overlapRange[0] > updatedTicks + 4) {
+	} else if(enow->overlapRange[0] > updatedTicks + 4) {
 		/*
 		 * If we have more than 4 microseconds left, we'll have to wait,
 		 * but otherwise, the events are unlucky, they'll be called a few
 		 * microseconds earlier - why, because the "ancient" PIT needs
 		 * upto 3-4 microseconds to get its counter read or written.
 		 */
-		armAt(activeTriggers->overlapRange[0]);
+		armAt(enow->overlapRange[0]);
 		return (true);
 	}
 
 	retireActiveEvents();
 
-	if(activeTriggers == null) {
+	if(enow == null) {
 		arm(0);
 	} else {
-		armAt(activeTriggers->overlapRange[0]);
+		armAt(enow->overlapRange[0]);
 	}
 
 	return (true);
@@ -103,14 +103,14 @@ bool PIT::intrAction()
  * @return - object holding data regarding the newly created event;
  * 			null, if the request failed.
  */
-EventTrigger *PIT::notifyAfter(Timestamp npitTicks,
+Event *PIT::notifyAfter(Timestamp npitTicks,
 		Timestamp delayFeasible, EventCallback handler,
 		void *eventObject)
 {
 	if(delayFeasible < 5)
 		return (strong_null);
 
-	EventTrigger *et;
+	Event *et;
 
 	__cli // TODO: Instead of __cli check whether enough time is
 		// available until next "tick". If not, then do __cli
@@ -145,14 +145,14 @@ EventTrigger *PIT::notifyAfter(Timestamp npitTicks,
  * 			created; null, if the event couldn't be created for some unknown
  * 			reason.
  */
-EventTrigger *PIT::notifyAgain(Timestamp npitTicks,
+Event *PIT::notifyAgain(Timestamp npitTicks,
 		Timestamp delayFeasible, EventCallback handler,
 		void *eventObject)
 {
 	if(delayFeasible < 5)
 		return (strong_null);
 
-	return (pendingTriggers.add(npitTicks + getTimerBlock(0)->totalTicks +
+	return (equeue.add(npitTicks + getTimerBlock(0)->totalTicks +
 			getTimerBlock(0)->lastReadCount,
 			delayFeasible, handler, eventObject));
 }

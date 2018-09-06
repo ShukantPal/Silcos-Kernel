@@ -357,6 +357,22 @@ decl_c void SetupBSP()
 
 }
 
+static IOAPIC::RedirectionEntry __init_input_for_timer(
+		IOAPIC::RedirectionEntry re)
+{
+	re.delMod = 0;
+	re.destMod = 0;
+	re.intMask = 0;
+	re.destination = 0;
+	re.triggerMode = 1;
+	re.pinPolarity = 1;
+
+	re.localVector = 36;
+	re.destination = 0;
+
+	return (re);
+}
+
 ///
 /// Setups the application-processors and registers the IOAPICs.
 ///
@@ -364,8 +380,18 @@ decl_c void SetupAPs()
 {
 	EnumerateMADT(&AddProcessorInfo, &IOAPIC::registerIOAPIC, null);
 
+	IOAPIC *pHub = IOAPIC::getIterable();
+
+	if(pHub == null) {
+		DbgLine("Warning: No IOAPIC present, XT-PIC fallback not impl");
+	} else {
+		pHub->writeRedirection(2, &__init_input_for_timer);
+
+		InitKernelHPET();
+	}
+
 	// testing - phase
-	testhpet();
+//	testhpet();
 }
 
 ///

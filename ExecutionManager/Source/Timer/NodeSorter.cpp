@@ -1,18 +1,5 @@
 /**
  * @file NodeSorter.cpp
- *
- * The NodeSorter internally implements red-black tree which caches the
- * left-most and right-most nodes. This optimization vastly improves
- * the efficiency of interval addition and deletion for event-nodes.
- *
- * In addition to the red-black tree properties, this implementation
- * assumes the following:
- *
- * ^ All event nodes in this tree are non-overlapping, and any node
- *   can be shrinked (in range) without modifying the tree.
- *
- * ^ Even if overlapping does occur - it will be less than 500 ticks
- * (unit of hw-timer concerned).
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +24,10 @@ using namespace Executable::Timer;
 /**
  * Initializes the empty-sorted-tree and allocates a "nil" for this
  * newly constructed tree.
- *
- * @author Shukant Pal
  */
 NodeSorter::NodeSorter()
 {
-	nil = new(t_EventNode) EventNode(0, 0, 0, 0);
+	nil = new(t_EventNode) EventGroup(0, 0, 0, 0);
 
 	nil->color = kBlack;
 	nil->parent = nil;
@@ -50,25 +35,27 @@ NodeSorter::NodeSorter()
 	nil->rightChild = nil;
 
 	treeRoot = nil;
-	mostRecent = nil;
-	mostLate = nil;
-	nodeCount = 0;
+	mMostRecent = nil;
+	mMostLate = nil;
+	mNodeCount = 0;
 }
 
 /**
- * Deletes the node from the sorted-tree in the normal red-black tree fashion,
- * updating the most-recent & most-late nodes.
+ * Removes <tt>oldNode</tt> from this tree, <b>without deleting</b>
+ * its memory. If it was the most recent or most late node, the next
+ * most recent or late node is again calculated.
  *
- * @param oldNode
+ * @param oldNode - the node to remove
  */
-void NodeSorter::del(EventNode *oldNode)
+void NodeSorter::del(EventGroup *oldNode)
 {
-	if(isMostRecent(oldNode))
-		setMostRecent(findNextMostRecent());
-	else if(isMostLate(oldNode))
-		setMostLate(findNextMostLate());
+	if (oldNode == mostRecent()) {
+		mMostRecent = findNextMostRecent();
+	} else if (oldNode == mostLate()) {
+		mMostLate = findNextMostLate();
+	}
 
-	if(isNil(oldNode->leftChild) &&
+	if (isNil(oldNode->leftChild) &&
 			isNil(oldNode->rightChild)) {
 		if(oldNode == treeRoot) {
 			treeRoot = nil;
@@ -79,10 +66,11 @@ void NodeSorter::del(EventNode *oldNode)
 				oldNode->parent->leftChild = nil;
 		}
 
+		--(mNodeCount);
 		return;
 	} else if(!isNil(oldNode->leftChild) &&
 			!isNil(oldNode->rightChild)) {
-		EventNode *iop = inorderPredecessor(oldNode);
+		EventGroup *iop = inorderPredecessor(oldNode);
 		del(iop);// This has only one child, okay!
 
 		iop->leftChild = oldNode->leftChild;
@@ -90,13 +78,14 @@ void NodeSorter::del(EventNode *oldNode)
 		replaceRoot(oldNode, iop);
 		iop->color = oldNode->color;
 
+		--(mNodeCount);
 		return;
 	}
 
 	/* Here we can assume that oldNode has only one child, and
 	   hence, simplify the deletion process. */
 
-	EventNode *nOnlyChild = (oldNode->leftChild != nil) ?
+	EventGroup *nOnlyChild = (oldNode->leftChild != nil) ?
 			oldNode->leftChild : oldNode->rightChild;
 
 	replaceRoot(oldNode, nOnlyChild);
@@ -108,17 +97,18 @@ void NodeSorter::del(EventNode *oldNode)
 			fixDeletor(nOnlyChild);
 		}
 	}
+
+	--(mNodeCount);
 }
 
 /**
- * Essentially adds a new event-node in this sorted, updating the left-most
- * and right-most nodes.
+ * Puts <tt>newElem</tt> in this tree, using <tt>overlapRange[0]</tt>
+ * to sort it. It is also checked for being the most recent or most
+ * late node.
  *
- * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
+ * @param newElem - the event-node to insert
  */
-void NodeSorter::put(EventNode *newElem)
+void NodeSorter::put(EventGroup *newElem)
 {
 	if(treeRoot == nil) {
 		treeRoot = newElem;
@@ -126,11 +116,10 @@ void NodeSorter::put(EventNode *newElem)
 		newElem->parent = nil;
 		newElem->rightChild = nil;
 		newElem->leftChild = nil;
-		nodeCount = 1;
+		mNodeCount = 1;
 
-		setMostRecent(newElem);
-		setMostLate(newElem);
-
+		mMostRecent = newElem;
+		mMostLate = newElem;
 		return;
 	}
 
@@ -140,7 +129,7 @@ void NodeSorter::put(EventNode *newElem)
 	if(!checkMostRecent(newElem))
 		checkMostLate(newElem);
 
-	++(nodeCount);
+	++(mNodeCount);
 }
 
 /**
@@ -151,14 +140,11 @@ void NodeSorter::put(EventNode *newElem)
  * @param treeRoot - The tree root of this sorted tree
  * @return - The parent of the "new" node after being inserted as
  * 			a leaf.
- * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
  */
-EventNode *NodeSorter::getInitialLeaf(EventNode *newLeaf, EventNode *treeRoot)
+EventGroup *NodeSorter::getInitialLeaf(EventGroup *newLeaf, EventGroup *treeRoot)
 {
 	Timestamp rangeStart = newLeaf->overlapRange[0];
-	EventNode *iter = treeRoot, *lparent = nil;
+	EventGroup *iter = treeRoot, *lparent = nil;
 
 	do {
 		lparent = iter;
@@ -193,11 +179,11 @@ EventNode *NodeSorter::getInitialLeaf(EventNode *newLeaf, EventNode *treeRoot)
  * @return - Whether this method has set the most-recent node to
  * 			the newLeaf.
  */
-bool NodeSorter::checkMostRecent(EventNode *newLeaf)
+bool NodeSorter::checkMostRecent(EventGroup *newLeaf)
 {
 	if(newLeaf->overlapRange[0] <
-			getMostRecent()->overlapRange[0]) {
-		setMostRecent(newLeaf);
+			mostRecent()->overlapRange[0]) {
+		mMostRecent = newLeaf;
 		return (true);
 	} else {
 		return (false);
@@ -212,11 +198,11 @@ bool NodeSorter::checkMostRecent(EventNode *newLeaf)
  * @return - Whether this method has set the most-late node to
  * 			the newLeaf.
  */
-bool NodeSorter::checkMostLate(EventNode *newLeaf)
+bool NodeSorter::checkMostLate(EventGroup *newLeaf)
 {
 	if(newLeaf->overlapRange[0] >
-			getMostLate()->overlapRange[0]) {
-		setMostLate(newLeaf);
+			mostLate()->overlapRange[0]) {
+		mMostLate = newLeaf;
 		return (true);
 	} else {
 		return (false);
@@ -224,24 +210,17 @@ bool NodeSorter::checkMostLate(EventNode *newLeaf)
 }
 
 /**
- * Finds the node in this sorted-subtree given, so that the given range
- * can be used to constrain that node, e.g. by adding a trigger with this
- * range. It searches conditionally in both child paths of this subtree
- * using recursion.
+ * Finds the node in this sorted-subtree given, so that the given
+ * range can be used to constrain that node, e.g. by adding a
+ * trigger with this range. It searches conditionally in both
+ * child paths of this subtree using recursion.
  *
- * @param subtree - The subtree/node-root in which the required node is to
- * 				be found. This argument is used for recursion, and should be
- * 				usually this->treeRoot.
- * @param rangeStart - The start of the constraining time-range.
- * @param rangeEnd - The end of the constraining time-range.
- * @return - An event node that can be constrained with the given time-range
- * 			if found within this subtree; (@code strong_null) is used to
- * 			indicate that no such node exists.
- * @version 1.0
- * @since Silcos 3.05
- * @author Shukant Pal
+ * @param subtree - node from which search should begin (usually root)
+ * @param rangeStart - minimum interval time for event
+ * @param rangeEnd - maximum interval time for event
+ * @return - an node that overlaps suitably with the given time range
  */
-EventNode *NodeSorter::findFor(EventNode *subtree, Timestamp rangeStart,
+EventGroup *NodeSorter::findFor(EventGroup *subtree, Timestamp rangeStart,
 		Timestamp rangeEnd)
 {
 	if(isNil(subtree))
@@ -253,7 +232,7 @@ EventNode *NodeSorter::findFor(EventNode *subtree, Timestamp rangeStart,
 	if(!isNil(subtree->leftChild) &&
 			rangeStart < subtree->leftChild->overlapRange[1]) {
 
-		EventNode *lfn = findFor(subtree->leftChild, rangeStart, rangeEnd);
+		EventGroup *lfn = findFor(subtree->leftChild, rangeStart, rangeEnd);
 		if(lfn != null)
 			return (lfn);
 	}
@@ -261,7 +240,7 @@ EventNode *NodeSorter::findFor(EventNode *subtree, Timestamp rangeStart,
 	if(!isNil(subtree->rightChild) &&
 			rangeEnd > subtree->rightChild->overlapRange[0]) {
 
-		EventNode *rfn = findFor(subtree->rightChild, rangeStart, rangeEnd);
+		EventGroup *rfn = findFor(subtree->rightChild, rangeStart, rangeEnd);
 		if(rfn != null)
 			return (rfn);
 	}
@@ -276,9 +255,9 @@ EventNode *NodeSorter::findFor(EventNode *subtree, Timestamp rangeStart,
  * @param localRoot - The subtree root being rotated
  * @return - The "new" root of the rotated subtree
  */
-EventNode *NodeSorter::leanLeft(EventNode *localRoot)
+EventGroup *NodeSorter::leanLeft(EventGroup *localRoot)
 {
-	EventNode *newRoot = localRoot->rightChild;
+	EventGroup *newRoot = localRoot->rightChild;
 	replaceRoot(localRoot, newRoot);
 
 	localRoot->setRightChild(newRoot->leftChild, nil);
@@ -294,9 +273,9 @@ EventNode *NodeSorter::leanLeft(EventNode *localRoot)
  * @param localRoot - The subtree root being rotated
  * @return - The "new" root of the rotated subtree
  */
-EventNode *NodeSorter::leanRight(EventNode *localRoot)
+EventGroup *NodeSorter::leanRight(EventGroup *localRoot)
 {
-	EventNode *newRoot = localRoot->leftChild;
+	EventGroup *newRoot = localRoot->leftChild;
 	replaceRoot(localRoot, newRoot);
 
 	localRoot->setLeftChild(newRoot->rightChild, nil);
@@ -312,12 +291,10 @@ EventNode *NodeSorter::leanRight(EventNode *localRoot)
  *
  * @param newLeaf - The "newly" inserted node/leaf in this sorted-tree.
  * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
  */
-void NodeSorter::repairTree(EventNode *newLeaf)
+void NodeSorter::repairTree(EventGroup *newLeaf)
 {
-	EventNode *lParent = newLeaf->parent, *lUncle, *gParent;
+	EventGroup *lParent = newLeaf->parent, *lUncle, *gParent;
 
 	if(isNil(lParent)) {
 		newLeaf->color = kBlack;
@@ -361,14 +338,13 @@ void NodeSorter::repairTree(EventNode *newLeaf)
  *
  * @param nOnlyChild - The child of the node being removed from this
  * 					sorted-tree.
- * @author Shukant Pal
  */
-void NodeSorter::fixDeletor(EventNode *nOnlyChild)
+void NodeSorter::fixDeletor(EventGroup *nOnlyChild)
 {
 	if(isNil(nOnlyChild->parent))
 		return;
 
-	EventNode *ncSibling = nOnlyChild->getSibling();
+	EventGroup *ncSibling = nOnlyChild->getSibling();
 
 	if(ncSibling->color == kRed) {
 		nOnlyChild->parent->color = kRed;

@@ -1,10 +1,5 @@
 /**
  * @file NodeSorter.hpp
- *
- * Provides a container for holding EventNode objects in a sorted
- * data structure - particularly, the red-black tree. This container
- * fulfills the requirement of having cached minimum and maximum nodes
- * so that the EventQueue object can easily push and pull time ranges.
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,103 +19,116 @@
 #ifndef EXECMGR_TIMER_NODESORTER_HPP__
 #define EXECMGR_TIMER_NODESORTER_HPP__
 
-#include "EventNode.hpp"
+#include <Executable/Timer/EventGroup.hpp>
 
 namespace Executable
 {
 namespace Timer
 {
 
+/**
+ * Sorts <tt>EventNode</tt> objects in a red-black tree, caching the
+ * most recent & most late nodes. Nodes are sorted by their starting
+ * overlapRange (<tt>node->overlapRange[0]</tt>), and the user must
+ * prevent putting any overlapping nodes.
+ */
 class NodeSorter
 {
 public:
-	inline EventNode *getMostRecent() {
-		return (mostRecent);
+	inline unsigned nodeCount() {
+		return (mNodeCount);
 	}
 
-	inline EventNode *getMostLate() {
-		return (mostLate);
+	inline EventGroup *mostRecent() {
+		return (mMostRecent);
 	}
 
-	inline EventNode *findFor(Timestamp rangeStart,
+	inline EventGroup *mostLate() {
+		return (mMostLate);
+	}
+
+	inline EventGroup *findFor(Timestamp rangeStart,
 			Timestamp rangeEnd){
 		return findFor(treeRoot, rangeStart, rangeEnd);
 	}
 
+	inline EventGroup *nilo() {
+		return (nil);
+	}
+
+	inline EventGroup *rooto() {
+		return (this->treeRoot);
+	}
+
 	NodeSorter();
-	void del(EventNode *oldNode);
-	void put(EventNode *newNode);
+	void del(EventGroup *oldNode);
+	void put(EventGroup *newNode);
 private:
-	EventNode *treeRoot, *nil;
-	EventNode *mostRecent, *mostLate;
-	unsigned long nodeCount;
+	EventGroup *treeRoot, *nil;
+	EventGroup *mMostRecent, *mMostLate;
+	unsigned long mNodeCount;
 
-	EventNode *getInitialLeaf(EventNode *newLeaf,
-			EventNode *treeRoot);
-	bool checkMostRecent(EventNode *newLeaf);
-	bool checkMostLate(EventNode *newLeaf);
-	EventNode *findFor(EventNode *subtree,
+	EventGroup *getInitialLeaf(EventGroup *newLeaf,
+			EventGroup *treeRoot);
+	bool checkMostRecent(EventGroup *newLeaf);
+	bool checkMostLate(EventGroup *newLeaf);
+	EventGroup *findFor(EventGroup *subtree,
 			Timestamp rangeStart, Timestamp rangeEnd);
-	EventNode *findMostRecent();
-	EventNode *findMostLate();
-	EventNode *leanLeft(EventNode *localRoot);
-	EventNode *leanRight(EventNode *localRoot);
-	void repairTree(EventNode *newLeaf);
-	void fixDeletor(EventNode *nOnlyChild);
+	EventGroup *findMostRecent();
+	EventGroup *findMostLate();
+	EventGroup *leanLeft(EventGroup *localRoot);
+	EventGroup *leanRight(EventGroup *localRoot);
+	void repairTree(EventGroup *newLeaf);
+	void fixDeletor(EventGroup *nOnlyChild);
 
-	EventNode *findNextMostRecent() {
-		if(getMostRecent() != treeRoot)
-			return (getMostRecent()->parent);
-		else
-			return (getMostRecent()->rightChild);
+	EventGroup *findNextMostRecent() {
+		if(isNil(mostRecent()->rightChild)) {
+			if(mostRecent() != treeRoot) {
+				return (mostRecent()->parent);
+			} else {
+				return (nil);
+			}
+		} else {
+			 return (inorderSuccessor(mostRecent()));
+		}
 	}
 
-	EventNode *findNextMostLate() {
-		return (getMostLate()->parent);
+	EventGroup *findNextMostLate() {
+		if(isNil(mostLate()->leftChild)) {
+			if(mostLate() != treeRoot) {
+				return (mostLate()->parent);
+			} else {
+				return (nil);
+			}
+		} else {
+			return (inorderPredecessor(mostLate()));
+		}
 	}
 
-	bool isNil(EventNode *en) {
+	bool isNil(EventGroup *en) {
 		return (en == nil);
 	}
 
-	bool isMostRecent(EventNode *en) {
-		return (en == getMostRecent());
-	}
-
-	bool isMostLate(EventNode *en) {
-		return (en == getMostLate());
-	}
-
-	/* Find the inorder predecessor, assuming left-subtree
-	   exists. */
-	EventNode *inorderPredecessor(EventNode *en) {
+	/* Assumes en->leftChild != nil */
+	EventGroup *inorderPredecessor(EventGroup *en) {
 		en = en->leftChild;
 		while(en->rightChild != nil)
 			en = en->rightChild;
 		return (en);
 	}
 
-	/* Find the inorder successor, assuming right-subtree
-	   exists. */
-	EventNode *inorderSuccessor(EventNode *en) {
+	/* Assumes en->rightChild != nil */
+	EventGroup *inorderSuccessor(EventGroup *en) {
 		en = en->rightChild;
 		while(en->leftChild != nil)
 			en = en->leftChild;
 		return (en);
 	}
 
-	void setMostRecent(EventNode *newExtreme) {
-		mostRecent = newExtreme;
-	}
-
-	void setMostLate(EventNode *newExtreme) {
-		mostLate = newExtreme;
-	}
-
-	void replaceRoot(EventNode *old, EventNode *with) {
+	void replaceRoot(EventGroup *old, EventGroup *with) {
 		with->parent = old->parent;
 
-		EventNode *nParent = old->parent;
+		EventGroup *nParent = old->parent;
 		if(nParent != nil) {
 			if(old->isLeftChild())
 				nParent->leftChild = with;
@@ -131,7 +139,7 @@ private:
 		}
 	}
 
-	friend class EventQueue;
+	friend class Timeline;
 };
 
 } // namespace Timer

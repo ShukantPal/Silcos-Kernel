@@ -63,26 +63,20 @@ IOAPIC::IOAPIC(unsigned long regBase, unsigned long intrBase)
 }
 
 /**
- * Copies the redirection-entry locally for the given input-signal. Care should
- * be taken to avoid requesting entries that don't exist using - <tt>
- * inputSignal < redirectionEntries()</tt>
+ * Returns the redirection entry for the given input in this
+ * IOAPIC, so that the user can modify-write it later.
  *
- * @param inputSignal - signal for which the redirection entry is requested
- * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
+ * @param input - index of the redirection entry; must be less than
+ * 				<tt>redirectionEntries()</tt>
  */
-IOAPIC::RedirectionEntry IOAPIC::getRedirEnt(unsigned char inputSignal)
+IOAPIC::RedirectionEntry IOAPIC::readRedirection(unsigned char input)
 {
 	union { U32 rout[2]; RedirectionEntry re; };
 
-	if(inputSignal < redirectionEntries())
-	{
-		rout[0] = read(IOREDTBL(inputSignal));
-		rout[1] = read(IOREDTBL(inputSignal) + 1);
-	}
-	else
-	{
+	if(input < redirectionEntries()) {
+		rout[0] = read(IOREDTBL(input));
+		rout[1] = read(IOREDTBL(input) + 1);
+	} else {
 		rout[0] = rout[1] = 0;
 	}
 
@@ -90,38 +84,46 @@ IOAPIC::RedirectionEntry IOAPIC::getRedirEnt(unsigned char inputSignal)
 }
 
 /**
- * Writes the redirection-entry given for the given input signal. It should be
- * done after copying the redirection entry - performing a read-modify-write
- * operation. Care should be taken to avoid requesting writes for entries that
- * don't exist by using -
+ * Finalizes the redirection entry for the given input, making it
+ * effectively implemented. The target local-irq is automatically
+ * updated on changing it.
  *
- * 			inputSignal < redirectionEntries()
- *
- * @param inputSignal - signal for which entry is being modified
+ * @param input - signal for which entry is being modified
  * @param ent - modified redirection entry to write
- * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
  */
-void IOAPIC::setRedirEnt(unsigned char inputSignal,
+void IOAPIC::writeRedirection(unsigned inputSignal,
 				IOAPIC::RedirectionEntry *ent)
 {
-	if(inputSignal < redirectionEntries())
-	{
+	if(inputSignal < redirectionEntries()) {
 		write(IOREDTBL(inputSignal), *(unsigned int*) ent);
 		write(IOREDTBL(inputSignal) + 1, *((unsigned int*) ent + 1));
 	}
+
+	inputAt(inputSignal)->connectTo(ent->localVector, ent->destination);
 }
 
 /**
- * Registers the I/O APIC into a system-chain from an I/O apic entry in the
- * APIC 2.0 multiple apic descriptor table. It will link it into a system-wide
- * chain in a sorted order.
+ * Convenience method that allows the user to do a read-modify-write
+ * operation using his callback method, which inputs & then outputs
+ * a <tt>IOAPIC::RedirectionEntry</tt>.
  *
- * @param ioaEnt - i/o apic entry of acpi 2.0 MADT
- * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
+ * @param input - local index of the IOAPIC input pin
+ * @param callback - read-modify-write functor
+ */
+void IOAPIC::writeRedirection(unsigned input,
+		RedirectionEntry (*callback)(RedirectionEntry))
+{
+	RedirectionEntry target = readRedirection(input);
+	target = callback(target);
+	writeRedirection(input, &target);
+}
+
+/**
+ * Constructs a new <tt>IOAPIC</tt> driver, for the given IOAPIC
+ * found in ACPI tables; initializes the <tt>IOAPIC::Input</tt>
+ * drivers as well.
+ *
+ * @param ioaEnt - IOAPIC entry in the ACPI MADT table
  */
 void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)
 {
@@ -145,21 +147,6 @@ void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)
 	}
 }
 
-/**
- * Maps all the IOAPIC inputs to the local device-interrupts of all
- * existent CPUs uniformly, in an circular fashion. It results in an
- * complete reset of mappings.
- *
- * @version 1.0
- * @since Silcos 3.02
- * @author Shukant Pal
- */
-void IOAPIC::mapAllRoutesUniformly()
-{
-	//ProcessorTopology::Iterator::forAll(
-	//		ProcessorTopology::systemDomain, &__mapRoute);
-}
-
 IOAPIC::Input *IOAPIC::getOptimizedInput(Executable::IRQHandler *dev)
 {
 	return (null);// not implemented yet!
@@ -173,23 +160,7 @@ IOAPIC::Input::Input(unsigned globalIndex, IOAPIC *router)
 {
 	this->mGlobalIndex = globalIndex;
 	this->locked = false;
-	this->router = router;
-}
-
-void IOAPIC::Input::connectTo(unsigned lvector, unsigned lapicId)
-{
-	// TODO: Remove already registered handler
-
-	RedirectionEntry re = router->getRedirEnt(globalIndex());
-
-	re.destMode = PHYSICAL;
-	re.destination = lapicId;
-	re.vector = lvector;
-
-	router->setRedirEnt(globalIndex(), &re);
-
-	LocalIRQ *lirq = GetIRQTableById(lapicId) + lvector - 32;
-	lirq->addHandler(this);
+	this->hub = router;
 }
 
 /**
@@ -214,4 +185,21 @@ int IOAPIC::Input::addDev(IRQHandler *handler, bool lock)
 	}
 
 	return (lineHdlrs.add(handler));
+}
+
+/**
+ * Connects this IOAPIC input to the local-irq, at the given vector
+ * & local APIC.
+ *
+ * @param lvector - the IDT vector at which the IOAPIC handler should
+ * 					execute, when an interrupt is recieved
+ * @param lapicId - the id of the local APIC of the CPU which should
+ * 					handle interrupts from this IOAPIC input
+ */
+void IOAPIC::Input::connectTo(unsigned lvector, unsigned lapicId)
+{
+	// TODO: Remove already registered handler
+
+	LocalIRQ *lirq = GetIRQTableById(lapicId) + lvector - 32;
+	lirq->addHandler(this);
 }

@@ -67,6 +67,7 @@ struct HPET : public SDTHeader
 
 }
 
+decl_c void InitKernelHPET();
 decl_c void testhpet();
 
 #endif/* ACPI/HPET.h */

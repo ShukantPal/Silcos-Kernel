@@ -1,5 +1,5 @@
 /**
- * @file EventQueue.hpp
+ * @file Timeline.hpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,11 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef EVENTQUEUE_HPP_
-#define EVENTQUEUE_HPP_
+#ifndef EXECMGR_TIMER_TIMELINE_HPP_
+#define EXECMGR_TIMER_TIMELINE_HPP_
 
-#include "Event.hpp"
-#include "EventTrigger.hpp"
-#include "EventNode.hpp"
+#include <Executable/Timer/Event.hpp>
+#include <Executable/Timer/EventGroup.hpp>
 #include "NodeSorter.hpp"
 #include <Utils/ArrayList.hpp>
 #include <Utils/RBTree.hpp>
@@ -31,16 +30,27 @@ namespace Executable
 namespace Timer
 {
 
-class EventQueue
+class Timeline
 {
 public:
-	inline void addAll(EventNode *group) {
+	inline void addAll(EventGroup *group) {
 		ndsEngine.put(group);
 	}
 
-	inline EventNode *get()
-	{
-		EventNode *mr = ndsEngine.getMostRecent();
+	inline unsigned nodalCount() {
+		return (ndsEngine.nodeCount());
+	}
+
+	inline bool isEmpty() {
+		return (nodalCount() == 0);
+	}
+
+	inline EventGroup *firstGroup() {
+		return (ndsEngine.mostRecent());
+	}
+
+	inline EventGroup *get() {
+		EventGroup *mr = ndsEngine.mostRecent();
 
 		if(ndsEngine.isNil(mr))
 			return (strong_null);
@@ -50,11 +60,19 @@ public:
 		}
 	}
 
-	EventQueue();
-	EventTrigger *add(Timestamp trigger,
+	inline NodeSorter *ns() {
+		return (&ndsEngine);
+	}
+
+	inline void add(EventGroup *newGroup) {
+		ndsEngine.put(newGroup);
+	}
+
+	Timeline();
+	Event *add(Timestamp trigger,
 			Timestamp shiftAllowed, EventCallback handler,
 			void *eventObject);
-	bool rem(EventTrigger *timer);
+	bool rem(Event *timer);
 private:
 	NodeSorter ndsEngine;
 };

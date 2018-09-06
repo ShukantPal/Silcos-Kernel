@@ -48,15 +48,12 @@ HPET::HPET(int acpiUID, PhysAddr eventBlock) : timerTable(3)
 
 // page-size depends on the arch, but event-block remains 1KB only
 #ifdef IA32
-	if(eventBlock%4096 < 3072)
-	{
+	if(eventBlock % 4096 < 3072) {
 		this->regBase = KiPagesAllocate(0, ZONE_KMODULE, ATOMIC) +
 				eventBlock % 4096;
 		Pager::map(regBase, eventBlock, 0,
 				KernelData | PageCacheDisable);
-	}
-	else
-	{
+	} else {
 		this->regBase = KiPagesAllocate(1, ZONE_KMODULE, ATOMIC) +
 				eventBlock % 4096;
 		Pager::mapAll(regBase, eventBlock, KB(8), FLG_ATOMIC,
@@ -64,34 +61,29 @@ HPET::HPET(int acpiUID, PhysAddr eventBlock) : timerTable(3)
 	}
 #endif
 
-	this->capAndId = (CapabilityAndID volatile *)(regBase + 0x00);
-	this->cfg = (Configuration volatile *)(regBase + 0x10);
-	this->intSts = (InterruptStatus volatile *)(regBase + 0x20);
-	this->ctr = (MainCounter volatile *)(regBase + 0xF0);
-
-	blockCapacity = capAndId->timerCount;
-	fsbTimers = 0;/* We'll set this later on! */
-	periodicTimers = 0;/* We'll set this later on! */
-	timerSizes = 0;/* We'll set this later on! */
-	usageTable = 0;/* All comparators are free right now! */
+	blockCapacity = (read32(CAP_AND_ID) >> NUM_TIM_CAP) & 0b11111;
+	fsbTimers = 0;
+	periodicTimers = 0;
+	timerSizes = 0;
+	usageTable = 0;
 
 	this->sequenceIndex = acpiUID;
-	this->mcPeriod = capAndId->clockPeriod;
+	this->mcPeriod = read32(CAP_AND_ID + 0x4);
 
-	ComparatorBlock volatile *cmp;
 	for(unsigned cidx = 0; cidx < blockCapacity; cidx++) {
-		cmp = comparatorBlock(cidx);
 
-		if(cmp->cfgAndCap.fsbIntrAllowed)
+		unsigned tnCfg = TIMER_N_CFG(cidx);
+
+		if(read32(tnCfg, Tn_FSB_INT_DEL_CAP))
 			fsbTimers |= (1 << cidx);
 
-		if(cmp->cfgAndCap.periodicAllowed)
+		if(read32(tnCfg, Tn_PER_INT_CAP))
 			periodicTimers |= (1 << cidx);
 
-		if(cmp->cfgAndCap.timerSize == 1)
+		if(read32(tnCfg, Tn_SIZE_CAP))
 			timerSizes |= (1 << cidx);
 
-		HPET::Timer *timer_n = new HPET::Timer(this, cmp, cidx);
+		HPET::Timer *timer_n = new HPET::Timer(this, cidx);
 		timer_n->disable();
 		timerTable.add(timer_n);
 	}
@@ -99,20 +91,40 @@ HPET::HPET(int acpiUID, PhysAddr eventBlock) : timerTable(3)
 	sysWallTimer = getTimer(0);
 	knownHPETs.set(static_cast<void*>(this), sequenceIndex);
 
-	cfg->legacyReplacement = 1;
-	enable();
+	U32 cfg = read32(CONFIG);
+	cfg |= (1 << LEG_RT_CNF);
+	cfg |= (1 << ENABLE_CNF);
+	write32(cfg, CONFIG);
 }
 
 Executable::Timer::HPET::~HPET()
 {
 }
 
-HPET::Timer::Timer(HPET *owner, ComparatorBlock volatile *block,
-		unsigned int index) : HardwareTimer()
+/**
+ * Allows the caller to access the timer whose comparator is at the given
+ * index. If that timer has already been allocated, <code>null</code>
+ * is returned.
+ *
+ * @param tidx - The index of the timer required in this HPET.
+ * @return - An driver object that can be used to operate the given timer.
+ */
+HPET::Timer *HPET::getTimer(unsigned int tidx)
 {
-	this->activeTriggers = strong_null;
+		return (HPET::Timer*)(timerTable.get(tidx));
+}
+
+/**
+ * Constructs a <tt>HPET::Timer</tt> object for the comparator installed
+ * in the given HPET block; it is kept in an disabled state.
+ *
+ * @param owner - owner HPET block
+ * @param index - timer index
+ */
+HPET::Timer::Timer(HPET *owner, unsigned int index) : HardwareTimer()
+{
+	this->enow = strong_null;
 	this->owner = owner;
-	this->block = block;
 	this->index = index;
 	this->lastReadCount = getTotalTicks();
 }
@@ -124,25 +136,7 @@ HPET::Timer::~Timer()
 
 void HPET::Timer::connectTo(unsigned input)
 {
-	disable();
-	block->cfgAndCap.intrType =1;
-	block->cfgAndCap.intrRoute = input;
-
 	IOAPIC::inputAt(input)->addDev(this, false);
-}
-
-bool HPET::enable()
-{
-	cfg->overallEnable = 1;
-	return (true);
-}
-
-
-
-bool HPET::intrAction()
-{
-	DbgLine("ihpet; ");
-	return (true);
 }
 
 bool HPET::Timer::intrAction()
@@ -155,10 +149,16 @@ bool HPET::Timer::intrAction()
 		return (false);
 	}
 
-	clearInterruptActive();
+	clearStatus();
 
-	Dbg("hpet_");
+	if(isInterruptActive())
+		DbgLine("STILL ACTIVE");
+
+	Dbg("hpet_ ");
 	Timestamp fireMoment = getTotalTicks();
+
+	DbgInt(enow[0].overlapRange[0]);
+	Dbg(", but ");
 
 	DbgInt(fireMoment);
 	DbgLine(" _____ SUCCESS");
@@ -168,12 +168,13 @@ bool HPET::Timer::intrAction()
 	/* An important implication of the HPET sometimes losing the interrupts
 	   is that it all previously missed events must also be handled. This is
 	   done in this loop. */
-	while(activeTriggers && activeTriggers->overlapRange[0] <= fireMoment) {
+	while(enow && enow->overlapRange[0] <= fireMoment) {
 		retireActiveEvents();
 	}
 
-	if(activeTriggers != null) {
-		fireAt(activeTriggers->overlapRange[0]);
+	if(enow != null) {
+		Dbg("pending: "); DbgInt(equeue.nodalCount() + 1); DbgLine(" nodes");
+		fireAt(enow->overlapRange[0]);
 	} else {
 		DbgLine("No active triggers");
 		disable();
@@ -182,15 +183,14 @@ bool HPET::Timer::intrAction()
 	return (true);
 }
 
-EventTrigger *HPET::Timer::notifyAfter(Timestamp interval, Timestamp delayAllowed,
+Event *HPET::Timer::notifyAfter(Timestamp interval, Timestamp delayAllowed,
 		EventCallback hdlr, void *arg)
 {
 	if(delayAllowed < 10) {
 		return (strong_null);
 	}
 
-	EventTrigger *et;
-	block->cfgAndCap.mode32 = 0;
+	Event *et;
 
 	int tt = getTotalTicks();
 	__cli
@@ -208,26 +208,17 @@ bool HPET::Timer::fireAt(Timestamp fts)
 		DbgLine("here");
 		return (false);
 	} else if(isWide()) {
-		owner->comparator(index)->val32 = fts;
+		owner->write32(fts, TIMER_N_COMPARATOR(index));
 	} else {
-		owner->comparator(index)->val32 = fts;
+		owner->write32(fts, TIMER_N_COMPARATOR(index));
 	}
 
-	block->cfgAndCap.intrType = 1;
-	enable();
+	U32 cfg = owner->read32(TIMER_N_CFG(index));
+	cfg |= (1 << Tn_32MODE_CNF);
+	cfg &= ~(1 << Tn_TYPE_CNF);
+	cfg |= (1 << Tn_INT_TYPE_CNF);
+	cfg |= (1 << Tn_INT_ENB_CNF);
+	owner->write32(cfg, TIMER_N_CFG(index));
 
 	return (true);
-}
-
-/**
- * Allows the caller to access the timer whose comparator is at the given
- * index. If that timer has already been allocated, <code>null</code>
- * is returned.
- *
- * @param tidx - The index of the timer required in this HPET.
- * @return - An driver object that can be used to operate the given timer.
- */
-HPET::Timer *HPET::getTimer(unsigned int tidx)
-{
-		return (HPET::Timer*)(timerTable.get(tidx));
 }

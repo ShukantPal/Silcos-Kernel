@@ -162,9 +162,9 @@ public:
 	}
 
 	bool intrAction();
-	EventTrigger *notifyAfter(Timestamp npitTicks, Timestamp delayFeasible,
+	Event *notifyAfter(Timestamp npitTicks, Timestamp delayFeasible,
 			EventCallback handler, void *eventObject);
-	EventTrigger *notifyAgain(Timestamp npitTicks, Timestamp delayFeasible,
+	Event *notifyAgain(Timestamp npitTicks, Timestamp delayFeasible,
 			EventCallback handler, void *eventObject);
 
 	void reset(unsigned short newInitialCount, unsigned char selectCounter);

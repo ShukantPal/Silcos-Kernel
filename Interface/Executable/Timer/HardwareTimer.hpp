@@ -22,7 +22,7 @@
 #ifndef EXCMGR_TIMER_HWTIMER_HPP
 #define EXCMGR_TIMER_HWTIMER_HPP
 
-#include "EventQueue.hpp"
+#include <Executable/Timer/Timeline.hpp>
 #include "../IRQHandler.hpp"
 
 namespace Executable
@@ -43,13 +43,16 @@ namespace Timer
 class HardwareTimer
 {
 public:
-	EventQueue pendingTriggers;
-	EventNode *activeTriggers;
+	Timeline equeue;
+	EventGroup *enow;
+
+	static void initPIT();
+	static void initHPET();
 protected:
 	HardwareTimer();
 	virtual ~HardwareTimer();
 	virtual bool fireAt(Timestamp nextTrigger) = 0;
-	EventTrigger *add(Timestamp trigger, Timestamp shiftAllowed,
+	Event *add(Timestamp trigger, Timestamp shiftAllowed,
 			EventCallback handler, void *eventObject);
 	void retireActiveEvents();
 };

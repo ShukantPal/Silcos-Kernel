@@ -16,15 +16,15 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Executable/Timer/EventTrigger.hpp>
-#include <Executable/Timer/EventNode.hpp>
+#include <Executable/Timer/Event.hpp>
+#include <Executable/Timer/EventGroup.hpp>
 #include <Memory/KObjectManager.h>
 
 using namespace Executable::Timer;
 
 ObjectInfo *Executable::Timer::t_EventNode =
 		KiCreateType("Executable::Timer::EventNode",
-		sizeof(EventNode), L1_CACHE_ALIGN, null, null);
+		sizeof(EventGroup), L1_CACHE_ALIGN, null, null);
 
 /**
  * Initializes the event node with one trigger object, which can
@@ -38,10 +38,10 @@ ObjectInfo *Executable::Timer::t_EventNode =
  * 		event
  * @param eventObject - optional parameter to pass to the callback
  */
-EventNode::EventNode(Timestamp trigger, Delay shiftAllowed,
+EventGroup::EventGroup(Timestamp trigger, Delay shiftAllowed,
 		EventCallback handler, void *eventObject)
 {
-	etrigArray = static_cast<EventTrigger*>(kmalloc(sizeof(EventTrigger) * 2));
+	etrigArray = static_cast<Event*>(kmalloc(sizeof(Event) * 2));
 	etrigCount = 1;
 	holeCount = 0;
 	bufferSize = 2;
@@ -50,7 +50,7 @@ EventNode::EventNode(Timestamp trigger, Delay shiftAllowed,
 	parent = weak_null;
 	color = kRed;
 
-	new(etrigArray) EventTrigger(trigger,
+	new(etrigArray) Event(trigger,
 			shiftAllowed, handler, eventObject);
 
 	overlapRange[0] = trigger;
@@ -68,18 +68,18 @@ EventNode::EventNode(Timestamp trigger, Delay shiftAllowed,
  * @param eventObject - optional parameter to the callback
  * @return - the construct EventTrigger object, shouldn't be modified
  */
-EventTrigger* EventNode::add(Timestamp trigger, Delay shiftAllowed,
+Event* EventGroup::add(Timestamp trigger, Delay shiftAllowed,
 		EventCallback handler, void *eventObject)
 {
 	Timestamp newRange[2] = { trigger, trigger + shiftAllowed };
 	if(rematchRange(newRange) == -1)
 		return (null);
 
-	EventTrigger *freeSlot = findFreeSlot();
+	Event *freeSlot = findFreeSlot();
 
 	DbgInt(freeSlot - etrigArray);
 
-	new(freeSlot) EventTrigger(trigger,
+	new(freeSlot) Event(trigger,
 			shiftAllowed, handler, eventObject);
 
 	return (freeSlot);
@@ -97,7 +97,7 @@ EventTrigger* EventNode::add(Timestamp trigger, Delay shiftAllowed,
  *
  * @param trig - trigger object to delete
  */
-void EventNode::del(EventTrigger *trig, Timestamp (&impendingRange)[2])
+void EventGroup::del(Event *trig, Timestamp (&impendingRange)[2])
 {
 	trig->live = 0;
 
@@ -117,7 +117,7 @@ void EventNode::del(EventTrigger *trig, Timestamp (&impendingRange)[2])
  * @param rangeEnd
  * @return
  */
-bool EventNode::isHoldable(Timestamp rangeStart, Timestamp rangeEnd)
+bool EventGroup::isHoldable(Timestamp rangeStart, Timestamp rangeEnd)
 {
 	if(rangeEnd > overlapRange[0] &&
 			rangeStart < overlapRange[1]) {
@@ -139,12 +139,12 @@ bool EventNode::isHoldable(Timestamp rangeStart, Timestamp rangeEnd)
  * trigger or doing any operation that does not insert more
  * condition's on the node's range.
  */
-void EventNode::cleanCalculateRange(Timestamp (&range)[2])
+void EventGroup::cleanCalculateRange(Timestamp (&range)[2])
 {
 	range[0] = etrigArray->triggerRange[0];
 	range[1] = etrigArray->triggerRange[1];
 
-	EventTrigger *eobj = etrigArray + 1;
+	Event *eobj = etrigArray + 1;
 
 	for(unsigned int index = 1; index < etrigCount; index++) {
 		if(eobj->live) {
@@ -168,7 +168,7 @@ void EventNode::cleanCalculateRange(Timestamp (&range)[2])
  * @return - 0 - if the range given was merged into the node's range;
  * 		-1 - if the range doesn't overlap with the nodes' range
  */
-int EventNode::rematchRange(Timestamp newRange[2])
+int EventGroup::rematchRange(Timestamp newRange[2])
 {
 	if(newRange[0] >= overlapRange[1] ||
 			newRange[1] <= overlapRange[0])
@@ -189,19 +189,19 @@ int EventNode::rematchRange(Timestamp newRange[2])
 	return (0);
 }
 
-void EventNode::ensureBuffer(unsigned long requiredCapacity)
+void EventGroup::ensureBuffer(unsigned long requiredCapacity)
 {
 	if(requiredCapacity <= bufferSize)
 		return;
 
-	EventTrigger *oldArray = etrigArray;
-	EventTrigger *newArray = (EventTrigger*)
-			kralloc(etrigArray, requiredCapacity * sizeof(EventTrigger));
+	Event *oldArray = etrigArray;
+	Event *newArray = (Event*)
+			kralloc(etrigArray, requiredCapacity * sizeof(Event));
 
 	if(oldArray == newArray)
 		goto WriteChanges;
 
-	Arrays::copyFast(oldArray, newArray, etrigCount * sizeof(EventTrigger));
+	Arrays::copyFast(oldArray, newArray, etrigCount * sizeof(Event));
 
 	WriteChanges:
 	etrigArray = newArray;
@@ -214,12 +214,12 @@ void EventNode::ensureBuffer(unsigned long requiredCapacity)
  *
  * @return - the slot which is free
  */
-EventTrigger *EventNode::findFreeSlot()
+Event *EventGroup::findFreeSlot()
 {
 	if(holeCount > 0)
 	{
 		unsigned int index = 0;
-		EventTrigger *possibleHole = etrigArray;
+		Event *possibleHole = etrigArray;
 
 		while(index < etrigCount)
 		{

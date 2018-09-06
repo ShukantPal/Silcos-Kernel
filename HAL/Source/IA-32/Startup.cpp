@@ -29,6 +29,11 @@
 #include <KERNEL.h>
 #include <Math.hpp>
 
+/*
+ * The HAL must conform to the ABI so...
+ */
+#include <Module/Elf/ABI/Implementor.h>
+
 using namespace HAL;
 using namespace Executable;
 
@@ -43,5 +48,5 @@ decl_c void ArchMain()
 	RunqueueBalancer::init();
 
 	SetupAPs();
-	//APIC::setupScheduleTicks();
+	APIC::setupScheduleTicks();
 }

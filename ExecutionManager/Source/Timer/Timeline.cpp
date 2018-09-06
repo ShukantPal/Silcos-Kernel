@@ -18,11 +18,11 @@
  *
  * Copyright (C) 2017, 2018 - Shukant Pal
  */
-#include <Executable/Timer/EventQueue.hpp>
+#include <Executable/Timer/Timeline.hpp>
 
 using namespace Executable::Timer;
 
-EventQueue::EventQueue()
+Timeline::Timeline()
 {
 
 }
@@ -42,24 +42,24 @@ EventQueue::EventQueue()
  *		passed to other <code>EventQueue</code> methods to change
  *		timer settings.
  */
-EventTrigger *EventQueue::add(Timestamp trigger, Timestamp shiftAllowed,
+Event *Timeline::add(Timestamp trigger, Timestamp shiftAllowed,
 		EventCallback handler, void *eventObject)
 {
-	EventNode *open = ndsEngine.findFor(trigger, trigger + shiftAllowed);
+	EventGroup *open = ndsEngine.findFor(trigger, trigger + shiftAllowed);
 
 	if(open != null) {
 		return (open->add(trigger, shiftAllowed,
 				handler, eventObject));
 	} else {
-		open = new EventNode(trigger, shiftAllowed, handler, eventObject);
+		open = new EventGroup(trigger, shiftAllowed, handler, eventObject);
 		ndsEngine.put(open);
 		return (open->etrigArray);
 	}
 }
 
-bool EventQueue::rem(EventTrigger *timer)
+bool Timeline::rem(Event *timer)
 {
-	EventNode *owner = ndsEngine.findFor(timer->triggerRange[0],
+	EventGroup *owner = ndsEngine.findFor(timer->triggerRange[0],
 			timer->triggerRange[1]);
 
 	if(owner == strong_null)
@@ -68,7 +68,7 @@ bool EventQueue::rem(EventTrigger *timer)
 	Timestamp impendingRange[2];
 	owner->del(timer, impendingRange);
 
-	EventNode *iop, *ins;
+	EventGroup *iop, *ins;
 	iop = ndsEngine.inorderPredecessor(owner);
 	ins = ndsEngine.inorderSuccessor(owner);
 

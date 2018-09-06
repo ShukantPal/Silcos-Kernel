@@ -30,22 +30,29 @@
 namespace HAL
 {
 
+enum DeliveryMode
+{
+	Fixed		= 0b000,
+	LowestPriority	= 0b001,
+	SMI		= 0b010,
+	INIT		= 0b101,
+	ExtINT		= 0b111
+};
+
 enum DestinationMode {
 	PHYSICAL,
 	LOGICAL
 };
 
+/**
+ * Driver for IOAPIC hardware, which controls how peripheral device
+ * interrupts are handled. Each <tt>IOAPIC</tt> exposes up to 24
+ * redirection entries for different hardware input pins, which can
+ * be individually modified.
+ */
 class IOAPIC final : public Lockable, public LinkedListNode
 {
 public:
-	enum DeliveryMode
-	{
-		Fixed		= 0b000,
-		LowestPriority	= 0b001,
-		SMI		= 0b010,
-		INIT		= 0b101,
-		ExtINT		= 0b111
-	};
 
 	struct RedirectionEntry;
 	class Input;
@@ -54,17 +61,19 @@ public:
 	unsigned char version(){ return (hardwareVersion); }
 	unsigned char redirectionEntries(){ return (redirEntries); }
 	unsigned char arbitrationId(){ return (arbId); }
-	unsigned long intrBase(){ return (globalSystemInterruptBase); }
+	unsigned long gsib(){ return (globalSystemInterruptBase); }
 	unsigned long intrCount(){ return (redirEntries); }
 
-	RedirectionEntry getRedirEnt(unsigned char inputSignal);
-	void setRedirEnt(unsigned char inputSignal, RedirectionEntry *data);
+	RedirectionEntry readRedirection(unsigned char inputSignal);
+	void writeRedirection(unsigned inputSignal,
+			RedirectionEntry *data);
+	void writeRedirection(unsigned input,
+			RedirectionEntry (*callback)(RedirectionEntry));
 
 	static void registerIOAPIC(MADTEntryIOAPIC *ioaEnt);
 	static void mapAllRoutesUniformly();
 
-	static IOAPIC *getIterable()
-	{
+	static IOAPIC *getIterable() {
 		return ((IOAPIC*) systemIOAPICs.get(lowestID));
 	}
 
@@ -83,68 +92,80 @@ private:
 	unsigned long virtAddr;
 	unsigned long globalSystemInterruptBase;
 
-	inline U32 read()
-	{
-		return (*(U32 volatile*)(virtAddr + 0x10));
-	}
-
-	inline U32 read(U8 regOff)
-	{
-		*(U32 volatile*) virtAddr = regOff;
-		return (*(U32 volatile*)(virtAddr + 0x10));
-	}
-
-	inline void write(U32 val)
-	{
-		*(U32 volatile *)(virtAddr + 0x10) = val;
-	}
-
-	inline void write(U8 regOff, U32 val)
-	{
-		*(U32 volatile*) virtAddr = regOff;
-		*(U32 volatile*)(virtAddr + 0x10) = val;
-	}
-
 #define IOAPICID	0x00
 #define IOAPICVER	0x01
 #define IOAPICARB	0x02
 #define IOREDTBL(n)	0x10 + 2*n
 
+	inline U32 read(U8 regOff) {
+		*(U32 volatile*) virtAddr = regOff;
+		return (*(U32 volatile*)(virtAddr + 0x10));
+	}
+
+	inline void write(U8 regOff, U32 val) {
+		*(U32 volatile*) virtAddr = regOff;
+		*(U32 volatile*)(virtAddr + 0x10) = val;
+	}
+
 	static ArrayList systemIOAPICInputs;
 	static ArrayList systemIOAPICs;
 	static unsigned long routesUnderReset;
 
-	/*
-	 * In Bochs, it has been found that the IO/APIC id is
-	 * 1 and not zero.
-	 */
+	/* In Bochs, it has been found that the IO/APIC id is
+	  1 and not zero, just a "jugaad (@Hindi)" */
 	static unsigned long lowestID;
 	friend class IRQ;
 
 	IOAPIC(unsigned long physicalBase, unsigned long intrBase);
 };
 
+/**
+ * The IOAPIC uses <tt>RedirectionEntry</tt> objects to configure
+ * how the hardware handles interrupts asserted by peripheral devices.
+ * Each <tt>RedirectionEntry</tt> can be access given the <tt>IOAPIC
+ * </tt> driver by <tt>driver->readRedirection(input)</tt>.
+ *
+ * These objects are memory-mapped IO registers, and hence should be
+ * modified using the read-modify-write process.
+ *
+ * @see 82093AA I/O Advanced Programmable Interrupt Controller datasheet
+ */
 struct IOAPIC::RedirectionEntry
 {
-	U64 vector	: 8;
-	U64 delvMode	: 3;
-	U64 destMode	: 1;
-	U64 delvStatus	: 1;
+	U64 localVector	: 8;
+	U64 delMod	: 3;
+	U64 destMod	: 1;
+	U64 delvSts	: 1;
 	U64 pinPolarity	: 1;
 	U64 remoteIRR	: 1;
 	U64 triggerMode	: 1;
-	U64 mask	: 1;
+	U64 intMask	: 1;
 	U64 reserved	: 39;
 	U64 destination : 8;
 };
 
-
+/**
+ * Driver for IOAPIC input hardware, allowing it to be used in
+ * harmony with the systems put in place. It can be accessed
+ * using <tt>IOAPIC::inputAt(globalIndex)</tt>.
+ *
+ * Each IOAPIC input is indexed using two indices - its local
+ * & global indices. The local index is just the input pin
+ * number on the IOAPIC. The global index is unique and is
+ * calculated as <tt>IOAPIC->globalSystemInterruptBase +
+ * localIndex</tt>
+ *
+ * <tt>IRQHandler</tt> drivers can lock IOAPIC input pins, to
+ * prevent IRQ sharing. That is not enforced in code (yet!)
+ */
 class IOAPIC::Input : public Executable::IRQ
 {
 public:
-	enum {
-		INVALID_INDEX = 0xFF
-	};
+#define INVALID_INDEX	0xFF
+
+	inline unsigned localIndex() {
+		return (mGlobalIndex - hub->globalSystemInterruptBase);
+	}
 
 	inline unsigned globalIndex() {
 		return (mGlobalIndex);
@@ -155,18 +176,21 @@ public:
 	}
 
 	inline IOAPIC *owner() {
-		return (router);
+		return (hub);
+	}
+
+	inline RedirectionEntry redirection() {
+		return (hub->readRedirection(localIndex()));
 	}
 
 	Input(unsigned globalIndex, IOAPIC *router);
-
-	void connectTo(unsigned lvector, unsigned lapicID);
 	int addDev(IRQHandler *handler, bool lock = false);
 private:
 	bool locked;
-
 	unsigned mGlobalIndex;
-	IOAPIC *router;
+	IOAPIC *hub;
+
+	void connectTo(unsigned lvector, unsigned lapicID);
 };
 
 }// namespace HAL

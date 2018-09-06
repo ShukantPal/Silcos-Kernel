@@ -16,11 +16,10 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef EVENTNODE_HPP_
-#define EVENTNODE_HPP_
+#ifndef EXECMGR_TIMER_EVENTGROUP_HPP_
+#define EXECMGR_TIMER_EVENTGROUP_HPP_
 
-#include "Event.hpp"
-#include "EventTrigger.hpp"
+#include <Executable/Timer/Event.hpp>
 #include <Memory/KObjectManager.h>
 
 namespace Executable
@@ -28,62 +27,56 @@ namespace Executable
 namespace Timer
 {
 
+/**
+ * Slab allocator for <tt>Executable::Timer::EventNode</tt>
+ */
 extern struct ObjectInfo *t_EventNode;
 
+/**
+ * Possible colors assigned to <tt>EventGroup</tt> objects while
+ * stored sorted in a <tt>Timeline</tt> container.
+ */
 enum NodeColor
 {
-	kRed,
-	kBlack
+	kRed, //!< kRed
+	kBlack//!< kBlack
 };
 
 /**
- * Holds an dynamic array of EventTrigger objects that can be executed
- * at the same time (.i.e. in one interrupt), grouping them together so
- * that interrupt overhead can be reduced.
+ * Groups overlapping events, so that they can be executed together
+ * in a timer. <tt>Event</tt> objects are stored together in an
+ * array, allowing events to be added, removed, and paused.
  *
- * Cancellation of EventTrigger objects can cause complexity in insertion,
- * deletion, and merge operations in the node. A holed-array model is used
- * where cancelled EventTrigger's are kept in place until their memory can
- * be used to hold another EventTrigger. During merging, filling of holes is
- * done as far as possible.
- *
- * Whenever the trigger-object array is modified, the time-range for the
- * execution of the node is re-calculated. To prevent overhead of multiple
- * memory accesses, the recommended limit for trigger-objects in one node is
- * currently set to 10.
+ * TODO:
+ * Form a model for merging two <tt>EventGroup</tt> objects.
  */
-class EventNode final
+class EventGroup final
 {
 public:
-	EventNode(Timestamp trigger, Delay shiftAllowed,
+	EventGroup(Timestamp trigger, Delay shiftAllowed,
 			EventCallback handler, void *eventObject);
-	EventTrigger* add(Timestamp trigger, Delay shiftAllowed,
+	Event* add(Timestamp trigger, Delay shiftAllowed,
 			EventCallback handler, void *eventObject);
-	void del(EventTrigger *trig, Timestamp (&impendingRange)[2]);
+	void del(Event *trig, Timestamp (&impendingRange)[2]);
 	bool isHoldable(Timestamp rangeStart, Timestamp rangeEnd);
-
-	static void init() {
-		//t_EventNode = KiCreateType("EventNode", sizeof(EventNode), NO_ALIGN,
-			//	null, null);
-	}
 
 	Timestamp *getCurrentRange() {
 		return (overlapRange);
 	}
 
-	EventTrigger *getTriggerByIndex(unsigned int index) {
+	Event *getTriggerByIndex(unsigned int index) {
 		return (etrigArray + index);
 	}
 private:
 public:
-	EventTrigger *etrigArray;
+	Event *etrigArray;
 	unsigned long etrigCount;
 	unsigned long holeCount;
 	unsigned long bufferSize;
 	Timestamp overlapRange[2];
 
-	EventNode *parent;
-	EventNode *leftChild, *rightChild;
+	EventGroup *parent;
+	EventGroup *leftChild, *rightChild;
 	NodeColor color;
 
 	bool isRed() {
@@ -102,19 +95,19 @@ public:
 		return (parent->rightChild == this);
 	}
 
-	void setLeftChild(EventNode *newLeftChild, EventNode *urNil) {
+	void setLeftChild(EventGroup *newLeftChild, EventGroup *urNil) {
 		leftChild = newLeftChild;
 		if(newLeftChild != urNil)
 			newLeftChild->parent = this;
 	}
 
-	void setRightChild(EventNode *newRightChild, EventNode *urNil) {
+	void setRightChild(EventGroup *newRightChild, EventGroup *urNil) {
 		rightChild = newRightChild;
 		if(newRightChild != urNil)
 			newRightChild->parent = this;
 	}
 
-	EventNode *getSibling() {
+	EventGroup *getSibling() {
 		if(isLeftChild())
 			return (parent->rightChild);
 		else
@@ -124,19 +117,19 @@ public:
 	void cleanCalculateRange(Timestamp (&newRange)[2]);
 	int rematchRange(Timestamp newRange[2]);
 	void ensureBuffer(unsigned long requiredCapacity);
-	EventTrigger *findFreeSlot();
+	Event *findFreeSlot();
 
-	unsigned int getIndexOf(EventTrigger *telem)
+	unsigned int getIndexOf(Event *telem)
 	{
 		return (telem - etrigArray);
 	}
 
-	friend class EventQueue;
+	friend class Timeline;
 	friend class NodeSorter;
 };
 
 }
+
 }
 
-
-#endif /* EVENTNODE_HPP_ */
+#endif/* Executable/Timer/EventGroup.hpp */

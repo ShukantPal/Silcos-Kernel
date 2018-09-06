@@ -1,9 +1,5 @@
 /**
  * @file HPET.cpp
- *
- * THIS FILE IS THE "WORKING" FILE. NOTHING HERE IS FINALIZED. HERE
- * DEBUGGING OF EXISTING KERNEL FEATURES WAS GOING ON.
- *
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,51 +16,12 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include <Object.hpp>
 #include <ACPI/RSDT.h>
 #include <ACPI/HPET.h>
-#include <Executable/IRQHandler.hpp>
-#include <Memory/KObjectManager.h>
-#include <KERNEL.h>
-
 #include <Executable/Timer/HPET.hpp>
-#include <HardwareAbstraction/IOAPIC.hpp>
-
-using namespace HAL;
-
-Executable::Timer::HPET *tm_;
-
-unsigned int fd = 0;
-
-#include <Module/Elf/ABI/Implementor.h>
-
-#include <ACPI/RSDT.h>
-#include <IA32/IO.h>
-#include <HardwareAbstraction/Processor.h>
-#include <Heap.hpp>
-#include <Executable/Timer/PIT.hpp>
-#include <Utils/ArrayList.hpp>
-
-#include <Executable/Timer/EventQueue.hpp>
-#include <Executable/Timer/EventNode.hpp>
-#include <Executable/Timer/NodeSorter.hpp>
 
 using namespace Executable;
 using namespace Executable::Timer;
-
-
-ArrayList hl(24);
-
-decl_c void do_action(Executable::IRQHandler *h)
-{
-	DbgInt((unsigned long)h ); Dbg(" ");
-	h->intrAction();
-}
-
-decl_c void hpet_test(void *nulObj)
-{
-	DbgLine("called----------");
-}
 
 /**
  * Constructs a kernel-only HPET driver object, that can also be used
@@ -87,51 +44,4 @@ decl_c void InitKernelHPET()
 	int input = Math::bitScanReverse(intern->allRoutes());
 
 	intern->connectTo(input);
-	intern->notifyAfter(1000000, 100, &hpet_test, null);
-
-	DbgLine("Work it");
-}
-
-#include <Module/SymbolLookup.hpp>
-
-using namespace Module;
-
-void hdlr(void *nilObj)
-{
-	DbgLine("Tested timr");
-}
-
-decl_c void testhpet()
-{
-	DbgLine("test-hpet !!!!");
-
-	// try setting up io/apic
-
-	IOAPIC *e = IOAPIC::getIterable();
-	if(e)// tm_->routingMap(0))
-	{
-		IOAPIC::RedirectionEntry f = e->getRedirEnt(
-					2
-			);
-
-		f.delvMode = 0;
-		f.vector = 36;
-		f.destMode = 0;
-		f.mask = 0;
-		f.destination = 0;
-		f.triggerMode = 1;
-		f.pinPolarity = 1;
-
-		pit.reset(0xFFFF, 0);
-
-		e->setRedirEnt(2, &f);
-		IOAPIC::inputAt(2)->connectTo(60, 0);
-	//	IOAPIC::inputAt(2)->addDev(&pit);
-		DbgLine("Programmable Interval Timer is online!");
-	} else {
-		DbgLine("Error: No IO/APIC found during testing!");
-	}
-
-	EventNode::init();
-	InitKernelHPET();
 }

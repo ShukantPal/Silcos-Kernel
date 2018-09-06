@@ -1,45 +1,9 @@
 # IOAPIC
 
-The `HardwareAbstraction/IOAPIC.hpp` header defines the methods by which software can control an **I/O APIC**. As there may be multiple I/O APICs present in the system, the kernel stores in sequentially in an permanent `ArrayList` in the `IOAPIC::systemIOAPICs` field which is loaded during boot-up only.
+IO Advanced Programmable Interrupt Controller, or IOAPIC, is a device that is used to route PCI & ISA interrupts from peripheral devices to individual processors. This devices helps SMP systems to distribute interrupts amongst all the processors in the system. It is the central component in lieu of programming basic hardware.
 
-# HAL::IOAPIC
+The IOAPIC has an array of input signals, defined by 24 redirection entries for each input. IO devices trigger interrupts in the system by asserting an input pin the IOAPIC. The IOAPIC finds the corresponding entry in the redirection table, and uses that to format a interrupt message to the local APIC of a processor. This table is programmable in the kernel.
 
-The `IOAPIC` class is the driver class for IOAPIC class interrupt controllers.
+To access IOAPIC functionality, add the following code:
 
-## IOAPIC::IOAPIC
-
-**Prototype:** `IOAPIC::IOAPIC(unsigned long regBase, unsigned long intrBase)`
-
-**Description:**
-
-This is the constructor for the IOAPIC driver which initializes internal variables. It maps the memory-mapped registers of the given I/O APIC at regBase to an exclusively allocated kernel-memory page.
-
-**Parameters:**
-
-`unsigned long regBase` - This is base-address of the I/O APIC in physical memory. It is mapped to kernel-memory.
-
-`unsigned long intrBase` - This is the global system interrupt base for this I/O APIC. The first interrupt routed to this I/O APIC will be at this offset in the `IOAPIC::systemIOAPICInputs` array-list.
-
-## IOAPIC::registerIOAPIC()
-
-**Prototype:** `void IOAPIC::registerIOAPIC(MADTEntryIOAPIC *ioaEnt)`
-
-**Description:**
-
-Adds the IOAPIC into the set of recognized interrupt-controllers and initializes it. It is added to the `systemIOAPICs` array-list in the process.
-
-The interrupt-inputs of this IOAPIC will also be assigned to each processor serially. Once all processors have been assigned interrupt-inputs from IOAPICs then the next vector is used and so one. For example, if there are three CPUs and one IOAPIC with 24 inputs then the mappings will be done as follows
-
-    CPU                  Input               Vector
-    0                    0                   32
-    1                    1                   32
-    2                    2                   32
-    0                    3                   33
-    1                    4                   33
-    2                    5                   33
-
-and so on.
-
-**Parameters:**
-
-`MADTEntryIOAPIC *ioaEnt` - This is the IOAPIC entry in the multiple APIC description table parsed by the ACPI subsystem. It holds the IOAPIC's register-base and global system interrupt base.
+    #include <HAL/IOAPIC.hpp>
