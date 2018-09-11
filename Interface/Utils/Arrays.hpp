@@ -1,5 +1,5 @@
-/* @file: Arrays.hpp
- * @module: ModuleFramework (@kernel.silcos.mdfrwk)
+/**
+ * @file Arrays.hpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,80 +24,17 @@
 class Arrays
 {
 public:
-	static void* copyOf(const void *original, unsigned int newLength);
-	static void copy(const void *org, void *dst, unsigned int copySize);
-
-	/*
-	 * Copies data from org to dst in the form of unsigned longs.
-	 *
-	 * @param org - original array
-	 * @param dst - destination array
-	 * @param copySize - bytes to copy from org to dst
-	 * @author Shukant Pal
-	 */
+	static void* copyOf(const void *original,
+			unsigned int newLength);
+	static void copy(const void *org, void *dst,
+			unsigned int copySize);
 	static void copyFast(const void *org, void *dst,
-					unsigned int copySize)
-	{
-		copySize /= sizeof(unsigned long);
-		unsigned long *orgl = (unsigned long*) org;
-		unsigned long *dstl = (unsigned long*) dst;
-		while(copySize--)
-			*(dstl++) = *(orgl++);
-	}
-
-	/*
-	 * Copies data from org to dst going down the array.
-	 *
-	 * @param org - end of original array
-	 * @param dst - end of destination array
-	 * @param copySize - bytes to copy from org to dst
-	 * @author Shukant Pal
-	 */
+			unsigned int copySize);
 	static void copyFromBack(const void *org, void *dst,
-					unsigned int copySize)
-	{
-		const char *orgb = (const char*) org;
-		char *dstb = (char *) dst;
-		while(copySize--)
-			*(dstb--) = *(orgb--);
-	}
-
-	/*
-	 * Copies data from org to dst going down the array in the form of
-	 * unsigned longs.
-	 *
-	 * @param org - end of original array
-	 * @param dst - end of destination array
-	 * @param copySize - bytes to copy from org to dst
-	 * @author Shukant Pal
-	 */
+			unsigned int copySize);
 	static void copyFastFromBack(const void *org, void *dst,
-					unsigned int copySize)
-	{
-		copySize /= sizeof(unsigned long);
-		unsigned long *orgl = (unsigned long *) org;
-		unsigned long *dstl = (unsigned long *) dst;
-
-		while(copySize--)
-			*(dstl--) = *(orgl--);
-	}
-
-	///
-	/// Invokes all functors present in the given array, serially, passing
-	/// no arguments.
-	///
-	/// @param functorArray - pointer to the table of functors, to be
-	/// 		called in relative order of indices.
-	/// @param count - the number of functors to invoke from the starting
-	///
-	static void invokeAll(void (**functorArray)(), size_t count)
-	{
-		for(unsigned int funcIdx = 0; funcIdx < count; funcIdx++)
-		{
-			(*functorArray)();
-			++(functorArray);
-		}
-	}
+					unsigned int copySize);
+	static void invokeAll(void (**functorArray)(), size_t count);
 private:
 	Arrays();
 };

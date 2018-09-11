@@ -44,7 +44,9 @@ enum CInsertMode
 	CFIRST = 1
 };
 
-extern "C" void AddCElement(CircularListNode *node, unsigned long pos, CircularList *clist);
-extern "C" void RemoveCElement(CircularListNode *node, CircularList *clist);
+extern "C" void AddCElement(CircularListNode *node,
+		unsigned long pos, CircularList *clist);
+extern "C" void RemoveCElement(CircularListNode *node,
+		CircularList *clist);
 
 #endif/* Util/CircularList.h */

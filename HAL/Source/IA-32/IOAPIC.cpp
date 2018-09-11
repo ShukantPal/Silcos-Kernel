@@ -16,7 +16,6 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-
 #include <HardwareAbstraction/IOAPIC.hpp>
 #include <HardwareAbstraction/ProcessorTopology.hpp>
 #include <Memory/KMemoryManager.h>

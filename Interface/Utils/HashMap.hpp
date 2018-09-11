@@ -1,14 +1,5 @@
 /**
- * File: HashMap.hxx
- *
- * Summary:
- * A general use hash-map is provided here which uses linked-lists and normal
- * hashing techniques to store key-value pairs
- *
- * Classes:
- * HashMap - the generalized hash-map implementation
- * HashMap::Entry - a entry in the hash-map
- *
+ * @file HashMap.hpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,20 +29,10 @@ extern ObjectInfo *tHashMap_Entry;
 extern ObjectInfo *tHashMap;
 
 /**
- * Class: HashMap
- *
- * Summary:
- * Re-sizable hash-map with uses a general Object as a key and any void*
- * value. It internally uses a RBTree to maintain entries within each bucket
- * and the Object.hashCode() for hashing keys.
- *
- * Changes:
- * # Re-sizing when size exceeds the threshold
- * # Allow 'NULL' keys
- *
- * Version: 1.2
- * Since: MDFRWK 1.0
- * Author: Shukant Pal
+ * Flexible hash-map that uses <tt>Object</tt> keys and <tt>void *
+ * </tt> values. Hash-codes are calculated using <tt>Object.hashCode
+ * </tt>. Supports null keys by placing its own internal null-based
+ * hash entry.
  */
 class HashMap
 {
@@ -60,8 +41,7 @@ public:
 	HashMap(unsigned long loadFactor);
 	HashMap(unsigned long loadFactor, unsigned long initialCapacity);
 
-	bool containsKey(Object& key)
-	{
+	bool containsKey(Object& key) {
 		return (getEntry(key) == NULL);
 	}
 
@@ -72,79 +52,13 @@ public:
 	void* removeForNullKey();
 	static void init();
 protected:
+	struct Entry;
 
-/**
- * Struct: HashMap::Entry
- *
- * Summary:
- * Represents a entry into a hash-table which is held by a bucket.
- *
- * Functions:
- * getKey() - get the key for the entry
- * getValue() - get the value associated with the key
- * setValue() - modify the value of the entry
- *
- * Version: 1.1
- * Since: HashMap 1.0
- * Author: Shukant Pal
- */
-struct Entry
-{
-private:
-	Object& key;
-	void *value;
-	unsigned int hash;
-	Entry *next;
-	Entry *previous;
-public:
-	Entry(
-			Object& key_,
-			void *val
-	) : key(key_) {
-		this->hash = key.hashCode();
-		this->value = val;
-		this->next = NULL;
-		this->previous = NULL;
-	}
-
-	Entry(
-			Object& key_,
-			void *val,
-			Entry *next
-	) : key(key_){
-		this->hash = key.hashCode();
-		this->value = val;
-		this->next = next;
-		this->previous = NULL;
-
-		next->previous = this;
-	}
-
-	inline unsigned int hashCode(){ return (hash); }
-	inline Object& getKey(){ return (this->key); }
-	inline void* getValue(){ return (this->value); }
-	inline void setValue(void *newv){ value = newv; }
-
-	inline Entry* iterate(){ return (next); }
-
-	inline void link(Entry* slot)
-	{
-		this->next = slot;
-		if(slot)
-			slot->previous = this;
-	}
-
-	void unlink(Entry **slot);
-	bool equals(Entry *other);
-};// struct HashMap::Entry
-
-	inline unsigned long calculateThreshold()
-	{
+	inline unsigned long calculateThreshold() {
 		return (capacity * loadFactor / 100);
 	}
 
-	inline unsigned long indexFor(unsigned long hashv)
-	{
+	inline unsigned long indexFor(unsigned long hashv) {
 		return (hashv % capacity);
 	}
 
@@ -164,4 +78,65 @@ private:
 	void transferAll(Entry **newTable, unsigned long newSize);
 };
 
-#endif/* Util/HashMap.hxx */
+/**
+ * Used by <tt>HashMap</tt> and its subclasses internally to hold
+ * key-value pair entries. The <tt>key</tt> property is read-only
+ * for an <tt>Entry</tt> object, but the <tt>value</tt> property
+ * can be modified.
+ */
+struct HashMap::Entry
+{
+private:
+	Object& key;
+	void *value;
+	unsigned int hash;
+	Entry *next;
+	Entry *previous;
+public:
+	Entry(Object& key_, void *val) : key(key_) {
+		this->hash = key.hashCode();
+		this->value = val;
+		this->next = NULL;
+		this->previous = NULL;
+	}
+
+	Entry(Object& key_, void *val, Entry *next) : key(key_) {
+		this->hash = key.hashCode();
+		this->value = val;
+		this->next = next;
+		this->previous = NULL;
+
+		next->previous = this;
+	}
+
+	inline unsigned int hashCode() {
+		return (hash);
+	}
+
+	inline Object& getKey() {
+		return (this->key);
+	}
+
+	inline void* getValue() {
+		return (this->value);
+	}
+
+	inline void setValue(void *newv) {
+		value = newv;
+	}
+
+	inline Entry* iterate() {
+		return (next);
+	}
+
+	inline void link(Entry* slot) {
+		this->next = slot;
+		if(slot)
+			slot->previous = this;
+	}
+
+	void unlink(Entry **slot);
+	bool equals(Entry *other);
+};
+
+#endif/* Utils/HashMap.hpp */

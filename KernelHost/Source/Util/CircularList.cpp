@@ -1,12 +1,5 @@
 /**
- * File: CircularList.cpp
- *
- * Summary:
- * Implements the add/remove operations on the circular list.
- *
- * Functions:
- * AddCElement, RemoveCElement which operate on CircularList
- *
+ * @file CircularList.cpp
  *  -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,52 +16,40 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-
-#include "../../../Interface/Utils/CircularList.h"
-
+#include <Utils/CircularList.h>
 #include <TYPE.h>
 
 /**
- * Function: AddCElement
+ * Adds the given node into the given circular list, at the
+ * specified position.
  *
- * Summary:
- * Inserts the element into the circular list. There are two positions in which
- * the node could be inserted - after or before the clnMain node (CLAST or CFIRST)
- * and this function takes the pos argument from client.
- *
- * Args:
- * CircularListNode *clnNode - the node to add to the list
- * unsigned long pos - CFIRST or CLAST for adding the element before/after main
- * CircularList *clList - the list to add in
- *
- * Since: Circuit 2.03
- * Author: Shukant Pal
+ * @param clnNode - the node to add to the list
+ * @param pos - <tt>CFIRST</tt> to add the element at the beginning
+ * 		or <tt>CLAST</tt> to add it at the very end
+ * @param clList - the circular list to hold the node
  */
-extern "C" void AddCElement(CircularListNode *clnNode, unsigned long clnPosition,
-						CircularList *clList)
+decl_c void AddCElement(CircularListNode *clnNode,
+		unsigned long clnPosition, CircularList *clList)
 {
 	CircularListNode *clnMain = clList->lMain;
-	if(clnMain != NULL)
-	{
-		if(clnPosition == CFIRST)
-		{
+
+	if(clnMain != NULL) {
+		if(clnPosition == CFIRST) {
 			clnNode->next = clnMain->next;
-			clnNode->next->last = clnNode;// Make sure back-linkage is correct!!! (ERR: Fixed)
+			clnNode->next->last = clnNode;
+			// Make sure back-linkage is correct!!! (ERR: Fixed)
 
 			clnNode->last = clnMain;
 			clnMain->next = clnNode;
-		}
-		else
-		{
+		} else {
 			clnNode->next = clnMain;
 			clnMain->last = clnNode;
 			
 			clnNode->last = clnMain->last;
-			clnNode->last->next = clnNode;// Make sure forward-linkage is correct!!! (ERR: Fixed)
+			clnNode->last->next = clnNode;
+			// Make sure forward-linkage is correct!!! (ERR: Fixed)
 		}
-	}
-	else
-	{
+	} else {
 		clnNode->next = clnNode;
 		clnNode->last = clnNode;
 		clList->lMain = clnNode;
@@ -78,39 +59,28 @@ extern "C" void AddCElement(CircularListNode *clnNode, unsigned long clnPosition
 }
 
 /**
- * Function: RemoveCElement
+ * Removes the node given, from the circular-list (also given). If
+ * the node wasn't added before, then the list will become corrupted.
  *
- * Summary:
- * Remove the element from the circular list assuming it was added before.
- *
- * Args:
- * CircularListNode *clnNode - node to remove
- * CircularList *clList - list from which node is to be removed
- *
- * Since: Circuit 2.03
- * Author: Shukant Pal
+ * @param clnNode - the node to remove from the circular list
+ * @param clList - the list holding the node
  */
-extern "C" void RemoveCElement(CircularListNode *clnNode, CircularList *clList)
+decl_c void RemoveCElement(CircularListNode *clnNode, CircularList *clList)
 {
 	unsigned long clnCount = clList->count;
 	
-	if(clnCount > 0)
-	{/* Eliminate blind-removals */
-		if(clnCount > 1)
-		{
+	if(clnCount > 0) {/* Eliminate blind-removals */
+		if(clnCount > 1) {
 			CircularListNode *clnNext = clnNode->next;
 			CircularListNode *clnLast = clnNode->last;
 
 			clnNext->last = clnLast;
 			clnLast->next = clnNext;
 
-			if(clnNode == clList->lMain)
-			{
+			if(clnNode == clList->lMain) {
 				clList->lMain = clnNext;
 			}
-		}
-		else
-		{
+		} else {
 			clList->lMain = NULL;
 		}
 

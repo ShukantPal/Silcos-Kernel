@@ -174,7 +174,7 @@ void RBTree::fixInsert(RBNode *tNode)
 	
 	while(!tNode->isBlack() && !tNode->isParentBlack()) {
 		tnParent = tNode->getColouredParent();
-		tnUncle = (RBNode*) tnParent->getSibling();
+		tnUncle = (RBNode*) tnParent->sibling();
 
 		if(tnUncle->isRed()) {
 			tnUncle->setColour(RB_BLACK);
@@ -206,11 +206,11 @@ void RBTree::fixRemoval(RBNode *tNode)
 	RBNode *tnSibling;
 
 	while(tNode->isBlack() && !isNil(tNode->getParent())) {
-		tnSibling = (RBNode*) tNode->getSibling();
+		tnSibling = (RBNode*) tNode->sibling();
 
 		if(tnSibling->isRed()) {
 			rotateReverse(*tnSibling);
-			tnSibling = (RBNode*) tNode->getSibling();
+			tnSibling = (RBNode*) tNode->sibling();
 		}
 
 		if(((RBNode*) tnSibling->getLeftChild())->isBlack() &&
@@ -227,7 +227,7 @@ void RBTree::fixRemoval(RBNode *tNode)
 			}
 
 			rotateReverse(*tnSibling);
-			tNode = (RBNode*) tnSibling->getParent()->getSibling();
+			tNode = (RBNode*) tnSibling->getParent()->sibling();
 		}
 	}
 

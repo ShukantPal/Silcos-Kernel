@@ -191,6 +191,8 @@ private:
 	IOAPIC *hub;
 
 	void connectTo(unsigned lvector, unsigned lapicID);
+
+	friend class IOAPIC;
 };
 
 }// namespace HAL

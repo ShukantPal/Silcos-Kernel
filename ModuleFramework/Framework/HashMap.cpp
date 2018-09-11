@@ -1,12 +1,5 @@
 /**
- * File: HashMap.cxx
- *
- * Summary:
- * 
- * Functions:
- *
- * Origin:
- *
+ * @file HashMap.cpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,8 +38,7 @@ const char *nmHashMap = "HashMap";
 ObjectInfo *tHashMap;
 
 /* Used for NULL keys*/
-struct NullHash : public Object
-{
+struct NullHash : public Object {
 	unsigned int hashCode();
 	NullHash();
 };
@@ -64,13 +56,8 @@ unsigned int NullHash::hashCode()
 static NullHash nullHash;
 
 /**
- * Function: HashMap::HashMap
- *
- * Summary:
- * Initializes the hash-map with all default values for the initial capacity
- * and the load-factor.
- *
- * Author: Shukant Pal
+ * Constructs a <tt>HashMap</tt> with the default initial capacity
+ * and load factor.
  */
 HashMap::HashMap()
 {
@@ -82,16 +69,10 @@ HashMap::HashMap()
 }
 
 /**
- * Function: HashMap::HashMap
+ * Constructs a <tt>HashMap</tt> with the given initial capacity and
+ * the default load factor.
  *
- * Summary:
- * Initializes the hash-map with the initial capacity given and the default
- * load factor (75).
- *
- * Args:
- * unsigned long initialCapacity - the initial capacity for the hash-map
- *
- * Author: Shukant Pal
+ * @param initialCapacity - the initial capacity for the hash-map
  */
 HashMap::HashMap(unsigned long initialCapacity)
 {
@@ -108,18 +89,12 @@ HashMap::HashMap(unsigned long initialCapacity)
 }
 
 /**
- * Function: HashMap::HashMap
+ * Constructs a <tt>HashMap</tt> with the given custom initial
+ * capacity and load factor.
  *
- * Summary:
- * Initializes the hash-map with the given initial capacity and load factor,
- * fully customizing the mappings.
- *
- * Args:
- * unsigned long initialCapacity - the initial bucket-size for the map
- * unsigned long loadFactor - fraction by which threshold for expansion is
+ * @param initialCapacity - the initial bucket-size for the map
+ * @param loadFactor - fraction by which threshold for expansion is
  * 				calculated
- *
- * Author: Shukant Pal
  */
 HashMap::HashMap(unsigned long initialCapacity, unsigned long loadFactor)
 {
@@ -141,14 +116,12 @@ HashMap::HashMap(unsigned long initialCapacity, unsigned long loadFactor)
 }
 
 /**
- * Function: HashMap::get
+ * Returns the value linked with the given <tt>key</tt> object. null
+ * is returned if node such key-value pair exists, or the value
+ * itself is null.
  *
- * Summary:
- * Returns the value associated with key. If NULL is returned, it
- * means either the pair's value is NULL or the pair doesn't exist. To get the
- * difference use containsKey();
- *
- * Author: Shukant Pal
+ * @param key - the key for which the value is required
+ * @see containsKey
  */
 void* HashMap::get(Object& key)
 {

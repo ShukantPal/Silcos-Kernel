@@ -62,7 +62,7 @@ KernelRoutineObjects = $(COM_KR)/Init.o
 MemoryObjects = $(COM_MM)/BuddyAllocator.o \
 $(COM_MM)/KFrameManager.o $(COM_MM)/Heap.o \
 $(COM_MM)/KMemoryManager.o  $(COM_MM)/KObjectManager.o \
-$(COM_MM)/Structure.o $(COM_MM)/ZoneManager.o
+$(COM_MM)/Structure.o $(COM_MM)/ZoneAllocator.o
 
 UtilObjects = $(COM_UTIL)/CircuitPrimitive.o $(COM_UTIL)/CircularList.o \
 $(COM_UTIL)/Console.o $(COM_UTIL)/Debugger.o $(COM_UTIL)/LinkedList.o \
@@ -141,9 +141,9 @@ $(COM_MM)/KObjectManager.o: $(IfcMemory)/KObjectManager.h $(IfcMemory)/MemoryTra
 $(COM_MM)/Structure.o: $(SRC_MM)/Structure.cpp
 	$(CC) $(CFLAGS) $(SRC_MM)/Structure.cpp -o $(COM_MM)/Structure.o
 
-$(COM_MM)/ZoneManager.o: $(IfcMemory)/Internal/ZoneAllocator.hpp \
-				 $(SRC_MM)/ZoneManager.cpp
-	$(CC) $(CFLAGS) $(SRC_MM)/ZoneManager.cpp -o $(COM_MM)/ZoneManager.o
+$(COM_MM)/ZoneAllocator.o: $(IfcMemory)/Internal/ZoneAllocator.hpp \
+				 $(SRC_MM)/ZoneAllocator.cpp
+	$(CC) $(CFLAGS) $(SRC_MM)/ZoneAllocator.cpp -o $(COM_MM)/ZoneAllocator.o
 
 BuildMemory: $(MemoryObjects)
 

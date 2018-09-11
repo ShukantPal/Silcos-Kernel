@@ -25,11 +25,10 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef MDFRWK_BINARYTREE_HXX_
-#define MDFRWK_BINARYTREE_HXX_
+#ifndef MDFRWK_BINARYTREE_HPP_
+#define MDFRWK_BINARYTREE_HPP_
 
 #include "../Object.hpp"
-#include "String.hxx"
 
 class BinaryNode;
 class TreeIterator;
@@ -54,20 +53,28 @@ public:
 	inline unsigned long key(){ return (searchKey); }
 	inline void* val(){ return (associatedValue); }
 
-	BinaryNode *leftChild;/* Left-child of this node */
-	BinaryNode *rightChild;/* Right-child of this node */
+	BinaryNode *leftChild;
+	BinaryNode *rightChild;
 
 	union {
-		BinaryNode *directParent;/* Parent of this node */
-		int localData;
+		BinaryNode *directParent;
+		int localData;// for trees that don't use parent pointers
 	};
 
-	unsigned long searchKey;/* Key, which is unique for this node (in a subtree) */
-	void* associatedValue;/* Value associated with key, to retrieve data */
+	unsigned long searchKey;
+	void* associatedValue;
 
-	inline BinaryNode *getLeftChild(){ return (leftChild); }
-	inline BinaryNode *getRightChild(){ return (rightChild); }
-	inline BinaryNode *getParent(){ return (directParent); }
+	inline BinaryNode *getLeftChild() {
+		return (leftChild);
+	}
+
+	inline BinaryNode *getRightChild() {
+		return (rightChild);
+	}
+
+	inline BinaryNode *getParent() {
+		return (directParent);
+	}
 
 	inline void assignLeft(BinaryNode *n) {
 		leftChild = n;
@@ -101,7 +108,7 @@ public:
 	}
 
 	/* Returns the sibling node of this, should be obvious. */
-	inline BinaryNode *getSibling() {
+	inline BinaryNode *sibling() {
 		if(isLeftChild()) {
 			return (directParent->rightChild);
 		} else {
@@ -212,7 +219,8 @@ protected:
 	static void valueOf(long key, BinaryNode& node);
 	static BinaryNode *search(unsigned long key, BinaryTree& _this__);
 
-	inline BinaryNode& replaceChild(BinaryNode& tNode, BinaryNode& nNode) {
+	inline BinaryNode& replaceChild(BinaryNode& tNode,
+			BinaryNode& nNode) {
 		if(isNil(tNode.getParent())) {
 			treeRoot = &nNode;
 			nNode.directParent = nil;

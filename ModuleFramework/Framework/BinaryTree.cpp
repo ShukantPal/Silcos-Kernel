@@ -1,6 +1,5 @@
 /**
- * File: BST.cxx
- *
+ * @file BinaryTree.cpp
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,125 +16,96 @@
  *
  * Copyright (C) 2017 - Shukant Pal
  */
-#include "../../Interface/Utils/BinaryTree.hpp"
-
+#include <Utils/BinaryTree.hpp>
 #include <KERNEL.h>
-//using namespace Util;
 
-enum ChildSide
-{
+// Obsolete - used for looped iteration over a tree
+enum ChildSide {
 	BST_LEFT,
 	BST_RIGHT
 };
 
+/**
+ * Constructs an empty <tt>BinaryTree</tt> without any <tt>nil</tt>
+ * object.
+ */
 BinaryTree::BinaryTree()
 {
 	treeRoot = NULL;
 	nil = NULL;
 }
 
+/**
+ * TODO: Create destructors for binary trees.
+ */
 BinaryTree::~BinaryTree()
 {
 
 }
 
 /**
- * Function: BinaryTree::insert
+ * Performs a BST-insert operation, placing the node at a leaf
+ * position, unless another node holds the same key.
  *
- * Summary:
- * BST-insert operation; inserts the given node into the root's data tree, unless
- * another node of the same key is found.
- *
- * Args:
- * BinaryNode& node - Node to be inserted
- *
- * Returns:
- * true, if the node was inserted; false, if another node of the same key was found
- * & this node couldn't be inserted.
- *
- * Since: MDFRWK 1.0
- * Author: Shukant Pal
+ * @param node - Reference to allocated node object to insert
+ * @param bst - <tt>BinaryTree</tt> container to hold the node
+ * @return whether the node was inserted
  */
 bool BinaryTree::insert(BinaryNode& node, BinaryTree& bst)
 {
-	if(bst.isNil(bst.treeRoot))
-	{
+	if(bst.isNil(bst.treeRoot)) {
 		bst.treeRoot = &node;
+		return (true);
 	}
-	else
-	{
-		unsigned long nkey = node.key();
-		BinaryNode *parent = NULL;
-		BinaryNode *leaf = bst.treeRoot;
-		while(!bst.isNil(leaf))
-		{
-			parent = leaf;
 
-			if(nkey < parent->key())
-			{
-				leaf = parent->getLeftChild();
-			}
-			else if(nkey > parent->key())
-			{
-				leaf = parent->getRightChild();
-			}
-			else
-			{
-				parent->associatedValue = node.val();
-				return (false);
-			}
-		}
+	unsigned long nkey = node.key();
+	BinaryNode *parent = NULL;
+	BinaryNode *leaf = bst.treeRoot;
 
-		if(nkey < parent->key())
-		{
-			parent->leftChild = &node;
-		}
-		else
-		{
-			parent->rightChild = &node;
-		}
+	while(!bst.isNil(leaf)) {
+		parent = leaf;
 
-		node.directParent = parent;
+		if(nkey < parent->key()) {
+			leaf = parent->getLeftChild();
+		} else if(nkey > parent->key()) {
+			leaf = parent->getRightChild();
+		} else {
+			parent->associatedValue = node.val();
+			return (false);
+		}
 	}
+
+	if(nkey < parent->key()) {
+		parent->leftChild = &node;
+	} else {
+		parent->rightChild = &node;
+	}
+
+	node.directParent = parent;
+
 	return (true);
 }
 
 /**
- * Function: BinaryTree::getLowerBoundFor
+ * Returns the value of the node holding a key (less than or equal to
+ * <tt>key</tt>) closest to the given key. null is returned
+ * on finding no valid node, or if the nodal value is null.
  *
- * Summary:
- * Returns the value of the node containing the closest key less than or equal
- * to the key given. This is particularly useful while searching for data that
- * lies in a range.
- *
- * Args:
- * unsigned long key - the value to which the required key should <,=
- *
- * Returns:
- * the value of the node having a key which is the closest and less than the
- * given, if any or NULL;
- *
- * Author: Shukant Pal
+ * @param key - the reference key to compare with
  */
 void* BinaryTree::getLowerBoundFor(unsigned long key)
 {
 	BinaryNode *tNode = treeRoot;
 	BinaryNode *closestNode = nil;
 
-	while(!isNil(tNode))
-	{
-		if(tNode->key() == key)
-		{
+	while(!isNil(tNode)) {
+		if(tNode->key() == key) {
 			return (tNode->val());
-		}
-		else if(key < tNode->key())
-		{
+		} else if(key < tNode->key()) {
 			tNode = tNode->getLeftChild();
-		}
-		else
-		{
-			if(isNil(closestNode) || key - closestNode->key() > key - tNode->key())
-			{
+		} else {
+			if(isNil(closestNode) || key - closestNode->key()
+					> key - tNode->key()) {
 				closestNode = tNode;
 			}
 			
@@ -147,67 +117,40 @@ void* BinaryTree::getLowerBoundFor(unsigned long key)
 }
 
 /**
- * Function: BinaryTree::getUpperBoundFor
+ * Returns the value of the node holding a key (greater than or equal
+ * to <tt>key</tt>) closest of the given key. null is returned
+ * on finding no valid node, or if the nodal value is null.
  *
- * Summary:
- * Returns the value for the node containing the closest key greater than or
- * equal to the key given. It is particularly useful for searching data in a
- * particular range.
- *
- * Args:
- * unsigned long key - the reference value for which the nodes key is >,=
- *
- * Returns:
- * the value of the node having a key more than and closest to the given, if
- * any, or NULL;
- *
- * Author: Shukant Pal
+ * @param key - the reference key to compare with
  */
 void* BinaryTree::getUpperBoundFor(unsigned long key)
 {
 	BinaryNode* tNode = treeRoot;
 	BinaryNode* closestNode = nil;
 
-	while(!isNil(tNode))
-	{
-		if(tNode->key() == key)
-		{
+	while(!isNil(tNode)) {
+		if(tNode->key() == key) {
 			return (tNode->val());
-		}
-		else if(key < tNode->key())
-		{
-			if(isNil(closestNode) || closestNode->key() - key > tNode->key() - key)
-			{
-				Dbg("/w");
+		} else if(key < tNode->key()) {
+			if(isNil(closestNode) || closestNode->key() - key
+					> tNode->key() - key) {
 				closestNode = tNode;
 			}
 			tNode = tNode->getLeftChild();
-			Dbg("-l");
-		}
-		else
-		{
-			Dbg("-r");
+		} else {
 			tNode = tNode->getRightChild();
 		}
 	}
 
-	if(!isNil(closestNode))
-		DbgLine("nnil");
 	return (!isNil(closestNode)) ? closestNode->val() : NULL;
 }
 
 /**
- * Function: BinaryTree::getClosestOf
+ * Returns the value of the node holding a key closest the given
+ * key. null is returned if only one node is present, or if the
+ * nodal value itself is null.
  *
- * Summary:
- * Returns the value of the nodes whose key is closest to that of the key
- * given.
- *
- * Args:
- * unsigned long key - the reference value to which the node's key should
- * 			be the closest
- *
- * Author: Shukant Pal
+ * @param key - the reference key to compare with
  */
 void* BinaryTree::getClosestOf(unsigned long key)
 {
@@ -215,41 +158,31 @@ void* BinaryTree::getClosestOf(unsigned long key)
 	BinaryNode* closestNode = nil;
 	bool isClosestNodeLower = false;// no meaning when closestNode is NULL
 
-	while(!isNil(tNode))
-	{
-		if(tNode->key() == key)
-		{
+	while(!isNil(tNode)) {
+		if(tNode->key() == key) {
 			return (tNode->val());
-		}
-		else if(key < tNode->key())
-		{
-			if(isNil(closestNode))
-			{
-				if(isClosestNodeLower && tNode->key() - key < key - closestNode->key())
-				{
+		} else if(key < tNode->key()) {
+			if(isNil(closestNode)) {
+				if(isClosestNodeLower && tNode->key() - key
+						< key - closestNode->key()) {
 					closestNode = tNode;
 					isClosestNodeLower = false;
-				}
-				else if(tNode->key() - key < closestNode->key() - key)
-				{
+				} else if(tNode->key() - key
+						< closestNode->key() - key) {
 					closestNode = tNode;
 					isClosestNodeLower = false;
 				}
 			}
 
 			tNode = tNode->getLeftChild();
-		}
-		else
-		{
-			if(isNil(closestNode))
-			{
-				if(isClosestNodeLower && key - tNode->key() < key - closestNode->key())
-				{
+		} else {
+			if(isNil(closestNode)) {
+				if(isClosestNodeLower && key - tNode->key()
+						< key - closestNode->key()) {
 					closestNode = tNode;
 					isClosestNodeLower = true;
-				}
-				else if(key - tNode->key() < closestNode->key() - key)
-				{
+				} else if(key - tNode->key()
+						< closestNode->key() - key) {
 					closestNode = tNode;
 					isClosestNodeLower = true;
 				}
@@ -260,12 +193,15 @@ void* BinaryTree::getClosestOf(unsigned long key)
 	return (!isNil(closestNode)) ? (closestNode->val()) : NULL;
 }
 
+/**
+ * Returns the value of the node in this tree, having the maximum
+ * value compared to all others.
+ */
 void *BinaryTree::getMaximum()
 {
 	BinaryNode *tNode = treeRoot;
 
-	while(!isNil(tNode->getRightChild()))
-	{
+	while(!isNil(tNode->getRightChild())) {
 		tNode = tNode->getRightChild();
 	}
 
@@ -273,42 +209,27 @@ void *BinaryTree::getMaximum()
 }
 
 /**
- * Function: BinaryTree::search
+ * Returns the node holding the given key in the given tree. If no
+ * such node exists, null is returned.
  *
- * Summary:
- * Searches for a node with the given key, and returns its storing node. It
- * assumes the binary-tree under root is sorted.
- *
- * Args:
- * unsigned long key - Key to search in the tree
- * BinaryNode& root - Root node to search from
- *
- * Returns:
- * Pointer to the node containing the key given.
- *
- * Since: MDFRWK 1.0
- * Author: Shukant Pal
+ * @param key - the key of node being searched
+ * @param bst - the tree in which the node is stored
  */
 BinaryNode *BinaryTree::search(unsigned long key, BinaryTree& bst)
 {
 	BinaryNode *tnode = bst.treeRoot;
-	while(!bst.isNil(tnode))
-	{
-		if(key < tnode->key())
-		{
+
+	while(!bst.isNil(tnode)) {
+		if(key < tnode->key()) {
 			tnode = tnode->getLeftChild();
-		}
-		else if(key > tnode->key())
-		{
+		} else if(key > tnode->key()) {
 			tnode = tnode->getRightChild();
-		}
-		else
-		{
+		} else {
 			return (tnode);
 		}
 	}
 
-	return (NULL);
+	return (null);
 }
 /*
 String& BinaryTree::toString()
