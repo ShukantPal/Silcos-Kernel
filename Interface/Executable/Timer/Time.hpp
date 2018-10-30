@@ -1,5 +1,7 @@
 /**
  * @file Time.hpp
+ * 
+ * Unifies the measurement of time and its units in the Silcos kernel.
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +21,53 @@
 #ifndef INTERFACE_EXECUTABLE_TIMER_TIME_HPP_
 #define INTERFACE_EXECUTABLE_TIMER_TIME_HPP_
 
+#include <TYPE.h>
+
 namespace Executable
 {
 namespace Timer
 {
 
-enum class TimeAlign : U64
+typedef unsigned long TimerUnit;
+
+/* Timer units */
+#define TU_SEC		1000000000
+#define TU_MILLISEC	1000000
+#define TU_MICROSEC	1000
+#define TU_TENANOSEC	10
+#define TU_NANOSEC	1
+
+static inline
+Time TransformTime(Time t, TimerUnit oldUnit, TimerUnit newUnit) {
+	return (t * (oldUnit / newUnit));
+}
+
+struct GenericTime
 {
-	Nanosecond = 1,
-	Microsecond = 1000 * Nanosecond,
-	Millisecond = 1000 * Microsecond,
-	Second = 1000 * Millisecond,
-	Minute = 60 * Second,
-	Hour = 60 * Second,
-	Day = 24 * Hour
+	Time value;
+	TimerUnit unit;
+	
+	GenericTime() {
+		value = 0;
+		unit = TU_NANOSEC;
+	}
+	
+	GenericTime(TimerUnit u) {
+		value = 0;
+		unit = u;
+	}
+	
+	GenericTime(Time t, TimerUnit u) {
+		value = t;
+		unit = u;
+	}
+	
+	Time valueFor(TimerUnit u) {
+		return (TransformTime(value, unit, u));
+	}
 };
 
-typedef U64 TimeInstance;
-
-}
-}
+} // Time
+} // Executable
 
 #endif/* Executable/Timer/Time.hpp */

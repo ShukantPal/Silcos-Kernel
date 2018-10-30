@@ -155,6 +155,8 @@ extern unsigned int KernelPDatEnd;
 extern unsigned long StackAddress;
 extern char *HALData;
 
+#ifndef _CBUILD
 extern void ImmatureHang(const char*);
+#endif/* _CBUILD */
 
 #endif /* Types.hpp */

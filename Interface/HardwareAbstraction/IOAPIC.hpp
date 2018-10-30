@@ -22,6 +22,7 @@
 #include <Object.hpp>
 #include <ACPI/MADT.h>
 #include <Executable/IRQHandler.hpp>
+#include <HardwareAbstraction/Processor.h>
 #include <Synch/Spinlock.h>
 #include <Utils/ArrayList.hpp>
 #include <Utils/LinkedList.h>
@@ -83,6 +84,9 @@ public:
 
 	static Input *getOptimizedInput(Executable::IRQHandler *dev);
 	static Input *getOptimizedInput(Executable::IRQHandler *dev, unsigned mask);
+
+	static void carryRequestToCPU(IPIRequest *cpuBasedOperation,
+			IOAPIC::Input *linkedInput);
 private:
 	unsigned char apicID;
 	unsigned char hardwareVersion;
@@ -187,7 +191,10 @@ public:
 	int addDev(IRQHandler *handler, bool lock = false);
 private:
 	bool locked;
+
 	unsigned mGlobalIndex;
+	unsigned linkedLapic;
+
 	IOAPIC *hub;
 
 	void connectTo(unsigned lvector, unsigned lapicID);

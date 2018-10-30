@@ -51,7 +51,7 @@ public:
 		unsigned long load;
 
 		Accept(ScheduleClass cls, HAL::Domain &tsource, HAL::Domain &client)
-		: HAL::IPIRequest(HAL::AcceptTasks, 0, tRunqueueBalancer_Accept),
+		: HAL::IPIRequest(HAL::ACCEPT_TASK_COLLECTION, 0, tRunqueueBalancer_Accept),
 			taskType(cls), donor(tsource), taker(client)
 		{
 			load = 0;
@@ -66,7 +66,7 @@ public:
 
 		Renounce(ScheduleClass cls, HAL::Domain &from, HAL::Domain &to,
 				HAL::Processor &src_, HAL::Processor &dst_)
-		: HAL::IPIRequest(HAL::RenounceTasks, 0, tRunqueueBalancer_Renounce),
+		: HAL::IPIRequest(HAL::RENOUNCE_TASK_COLLECTION, 0, tRunqueueBalancer_Renounce),
 		  	  taskType(cls), donor(from), taker(to), src(src_), dst(dst_)
 		{
 

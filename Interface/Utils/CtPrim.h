@@ -18,8 +18,7 @@ static inline void memsetf(Void *bPointer, SIZE lgsValue, SIZE bSize)
 	bSize &= ~(3);
 	unsigned long *lgPointer = (unsigned long *) ((UBYTE *) bPointer + bSize);
 
-	while((unsigned long) lgPointer > (unsigned long) lgBuffer)
-	{
+	while((unsigned long) lgPointer > (unsigned long) lgBuffer) {
 		--(lgPointer);
 		*lgPointer = lgsValue;
 	}
@@ -29,8 +28,7 @@ static inline void memcpy(const Void *Obj1, Void *Obj2, SIZE ObjSize)
 	char *O1 = (char *) Obj1;
 	char *O2 = (char *) Obj2;
 
-	while(ObjSize)
-	{
+	while(ObjSize) {
 		--ObjSize;
 		O2[ObjSize] = O1[ObjSize];
 	}

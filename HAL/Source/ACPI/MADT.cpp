@@ -1,4 +1,5 @@
-/* @file MADT.cpp
+/**
+ * @file MADT.cpp
  *
  * Copyright (C) 2017 - Shukant Pal
  */
@@ -7,11 +8,14 @@
 #include <ACPI/MADT.h>
 #include <Memory/KMemorySpace.h>
 
-/*
+/**
  * Enumerates the multiple-descriptor APIC table (ACPI 2.0) and calls the
  * handlers for each type of entry. Currently, nominal entries local & IO
  * APIC and Interrupt Service Routine entries are supported here.
  *
+ * @param handleLAPIC - callback for local-apic entries
+ * @param handleIOAPIC - callback for ioapic entries
+ * @param handleISR - callback for isr entries
  * @version 1.0
  * @since Silcos 3.02
  * @author Shukant Pal

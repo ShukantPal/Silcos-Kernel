@@ -32,38 +32,38 @@
 00000000000i[     ]   SB16 support: yes
 00000000000i[     ]   USB support: yes
 00000000000i[     ]   VGA extension support: vbe cirrus
-00000000000i[MEM0 ] allocated memory at 0x7fe0213e4010. after alignment, vector=0x7fe0213e5000
+00000000000i[MEM0 ] allocated memory at 0x7fc1e482a010. after alignment, vector=0x7fc1e482b000
 00000000000i[MEM0 ] 512.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=512
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('/usr/share/bochs/BIOS-bochs-latest')
 00000000000i[VTIME] using 'realtime pit' synchronization method
-00000000000i[     ] lt_dlhandle is 0x55fd7fe35170
+00000000000i[     ] lt_dlhandle is 0x55c5b0e912c0
 00000000000i[PLGIN] loaded plugin libbx_hdimage.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe35a50
+00000000000i[     ] lt_dlhandle is 0x55c5b0e91ba0
 00000000000i[PLGIN] loaded plugin libbx_pci.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe365e0
+00000000000i[     ] lt_dlhandle is 0x55c5b0e92730
 00000000000i[PLGIN] loaded plugin libbx_pci2isa.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe36ff0
+00000000000i[     ] lt_dlhandle is 0x55c5b0e93140
 00000000000i[PLGIN] loaded plugin libbx_acpi.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe37a00
+00000000000i[     ] lt_dlhandle is 0x55c5b0e93b50
 00000000000i[PLGIN] loaded plugin libbx_cmos.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe38340
+00000000000i[     ] lt_dlhandle is 0x55c5b0e94490
 00000000000i[PLGIN] loaded plugin libbx_dma.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe38de0
+00000000000i[     ] lt_dlhandle is 0x55c5b0e94f30
 00000000000i[PLGIN] loaded plugin libbx_pic.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe39690
+00000000000i[     ] lt_dlhandle is 0x55c5b0e957e0
 00000000000i[PLGIN] loaded plugin libbx_pit.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe3a0d0
+00000000000i[     ] lt_dlhandle is 0x55c5b0e96220
 00000000000i[PLGIN] loaded plugin libbx_floppy.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe3acd0
+00000000000i[     ] lt_dlhandle is 0x55c5b0e96e20
 00000000000i[PLGIN] loaded plugin libbx_vga.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe3b540
+00000000000i[     ] lt_dlhandle is 0x55c5b0e97690
 00000000000i[PLGIN] loaded plugin libbx_ioapic.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe3bd90
+00000000000i[     ] lt_dlhandle is 0x55c5b0e97ee0
 00000000000i[PLGIN] loaded plugin libbx_keyboard.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe3c820
+00000000000i[     ] lt_dlhandle is 0x55c5b0e98970
 00000000000i[PLGIN] loaded plugin libbx_harddrv.so
-00000000000i[     ] lt_dlhandle is 0x55fd7fe4e950
+00000000000i[     ] lt_dlhandle is 0x55c5b0eaaaa0
 00000000000i[PLGIN] loaded plugin libbx_pci_ide.so
 00000000000i[PLGIN] init_dev of 'pci' plugin device by virtual method
 00000000000i[PCI  ] 440FX Host bridge present at device 0, function 0
@@ -71,7 +71,7 @@
 00000000000i[PCI  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Wed Sep  5 17:32:10 2018 (time0=1536148930)
+00000000000i[CMOS ] Setting initial clock to: Sun Oct 28 11:23:36 2018 (time0=1540706016)
 00000000000i[PLGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[PLGIN] init_dev of 'pic' plugin device by virtual method
@@ -171,7 +171,6 @@
 00000000000i[PLGIN] reset of 'gameport' plugin device by virtual method
 00000000000i[PLGIN] reset of 'iodebug' plugin device by virtual method
 00000000000i[     ] set SIGINT handler to bx_debug_ctrlc_handler
-00000000000i[     ] dbg: Quit
 00000000000i[CPU0 ] CPU is in real mode (active)
 00000000000i[CPU0 ] CS.mode = 16 bit
 00000000000i[CPU0 ] SS.mode = 16 bit
@@ -189,5 +188,5 @@
 00000000000i[CPU0 ] | EIP=0000fff0 (0000fff0)
 00000000000i[CPU0 ] | CR0=0x60000010 CR2=0x00000000
 00000000000i[CPU0 ] | CR3=0x00000000 CR4=0x00000000
-00000000000i[CMOS ] Last time is 1536148930 (Wed Sep  5 17:32:10 2018)
-00000000000i[CTRL ] quit_sim called with exit code 0
+00000000000i[CMOS ] Last time is 1540706016 (Sun Oct 28 11:23:36 2018)
+00000000000i[CTRL ] quit_sim called with exit code 1

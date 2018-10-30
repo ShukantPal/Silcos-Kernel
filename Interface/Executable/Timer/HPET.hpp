@@ -39,37 +39,37 @@ namespace Executable
 namespace Timer
 {
 
-#define CAP_AND_ID	0x00
-#define REV_ID					0
-#define NUM_TIM_CAP			8
+#define CAP_AND_ID		0x00
+#define REV_ID			0
+#define NUM_TIM_CAP		8
 #define COUNT_SIZE_CAP		13
-#define LEG_RT_CAP			15
-#define VENDOR_ID				16
+#define LEG_RT_CAP		15
+#define VENDOR_ID		16
 #define COUNTER_CLK_PERIOD	32
 
 #define CONFIG			0x10
-#define ENABLE_CNF			0
-#define LEG_RT_CNF			1
+#define ENABLE_CNF		0
+#define LEG_RT_CNF		1
 
-#define INT_STS				0x20
-#define Tn_INT_STS(n)			n
+#define INT_STS			0x20
+#define Tn_INT_STS(n)		n
 
-#define MAIN_COUNT				0xF0
+#define MAIN_COUNT		0xF0
 
 #define TIMER_N_CFG(n) (n * 0x20 + 0x100)
 #define TIMER_N_COMPARATOR(n) (n * 0x20 + 0x108)
 
 #define Tn_INT_TYPE_CNF		1
 #define Tn_INT_ENB_CNF		2
-#define Tn_TYPE_CNF			3
+#define Tn_TYPE_CNF		3
 #define Tn_PER_INT_CAP		4
-#define Tn_SIZE_CAP			5
+#define Tn_SIZE_CAP		5
 #define Tn_VAL_SET_CNF		6
-#define Tn_32MODE_CNF			8
-#define Tn_INT_ROUTE_CNF		9
-#define Tn_FSB_EN_CNF			14
+#define Tn_32MODE_CNF		8
+#define Tn_INT_ROUTE_CNF	9
+#define Tn_FSB_EN_CNF		14
 #define Tn_FSB_INT_DEL_CAP	15
-#define Tn_INT_ROUTE_CAP		32
+#define Tn_INT_ROUTE_CAP	32
 
 /**
  * Driver for HPET hardware, exposing individual comparators by
@@ -121,6 +121,8 @@ private:
 	unsigned int periodicTimers;/* Bit-field for periodic-mode support data */
 	unsigned int timerSizes;/* Bit-fielding containing HPET timer widths */
 	unsigned int usageTable;/* Bit-field containing used/free comparators */
+	U32 enabledComparators;/*  Bit-field containing enabled timers */
+
 	ArrayList timerTable;/* Table of Timer objects to expose */
 
 	PhysAddr eventBlock;
@@ -169,76 +171,51 @@ private:
 };
 
 /**
- * Exposes a comparator allowing you to schedule events.
+ * Each comparator present in the HPET can be used as an constrained
+ * independent timer-device.
  */
 class HPET::Timer final : public IRQHandler, public HardwareTimer
 {
 public:
 	inline bool isFSBCap() {
-		return (Math::bitTest(owner->fsbTimers, index));
+		return (Math::bitTest(owner->fsbTimers, comparatorIndex));
 	}
 
 	bool hasPeriodicSupport() {
-		return (Math::bitTest(owner->periodicTimers, index));
+		return (Math::bitTest(owner->periodicTimers, comparatorIndex));
 	}
 
 	bool isWide() {
-		return (Math::bitTest(owner->timerSizes, index));
-	}
-
-	bool isEdgeTriggered() {
-		return (owner->read32(TIMER_N_CFG(index), Tn_INT_TYPE_CNF) == 0);
-	}
-
-	bool isEnabled() {
-		return (owner->read32(TIMER_N_CFG(index), Tn_INT_ENB_CNF));
-	}
-
-	bool isLevelTriggered() {
-		return (owner->read32(TIMER_N_CFG(index), Tn_INT_TYPE_CNF) == 1	);
-	}
-
-	bool isInterruptActive() {
-		return (owner->read32(INT_STS, index));
-	}
-
-	void clearStatus() {
-		U32 intStsMap = owner->read32(INT_STS);
-		intStsMap |= (1 << index);
-		owner->write32(intStsMap, INT_STS);
+		return (Math::bitTest(owner->timerSizes, comparatorIndex));
 	}
 
 	Timestamp getTotalTicks() {
 		return ((owner->mainCounter() * owner->clockPeriod()) / 10000000);
 	}
 
-	inline void enable() {
-		U32 cfg = owner->read32(TIMER_N_CFG(index));
-		cfg |= (1 << Tn_INT_ENB_CNF);
-		owner->write32(cfg, TIMER_N_CFG(index));
-	}
-
-	inline void disable() {
-		U32 cfg = owner->read32(TIMER_N_CFG(index));
-		cfg &= ~(1 << Tn_INT_ENB_CNF);
-		owner->write32(cfg, TIMER_N_CFG(index));
-	}
-
 	inline U32 allRoutes() {
-		return (owner->read32(TIMER_N_CFG(index) + 0x4));
+		return (owner->read32(TIMER_N_CFG(comparatorIndex) + 0x4));
 	}
 
 	~Timer();
 
+	void updateCounter();	
+	bool resetCounter();
+	bool setCounter(Time newCounter);
+	bool stopCounter();
+	
 	bool intrAction();
-	Event *notifyAfter(Timestamp interval, Timestamp delayAllowed,
+	Event *notifyAfter(Time interval, Time delayAllowed,
 			EventCallback handler, void *eventObject);
 protected:
 	bool fireAt(Timestamp fts);
 private:
 	HPET *owner;
-	unsigned int index;
+	unsigned int comparatorIndex;
 	Timestamp lastReadCount;
+
+	void enableComparator();
+	void disableComparator();
 
 #ifdef IA64
 
@@ -252,6 +229,7 @@ private:
 public:
 	void routeInterrupts();
 	void connectTo(unsigned input);
+	void connectToDefault();
 
 	friend HPET;
 };

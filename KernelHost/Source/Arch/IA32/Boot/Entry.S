@@ -112,5 +112,3 @@ admMultibootTableStart: 	.long 0	# void *admMultibootTable
 admMultibootTableEnd: 		.long 0	# U32 admMultibootTableSize
 admBoundaryStart:		.quad 0	# U32 admBoundaryStart (PADDR)
 admBoundaryEnd:			.quad 0	# U32 admBoundaryEnd (PADDR)
-
-

@@ -22,7 +22,9 @@
 #ifndef EXCMGR_TIMER_HWTIMER_HPP
 #define EXCMGR_TIMER_HWTIMER_HPP
 
+#include "TimerDevice.hpp"
 #include <Executable/Timer/Timeline.hpp>
+#include <HardwareAbstraction/Processor.h>
 #include "../IRQHandler.hpp"
 
 namespace Executable
@@ -31,16 +33,13 @@ namespace Timer
 {
 
 /**
- * System timers that can serve soft-timers should inherit
- * from this class. It doesn't provide any public interface
- * but setups required underlying functionality.
- *
- * The add() function here is not public - the device must
- * actually provide a function to fire a timer "n" ticks
- * later - and calculate the time stamp using its internal
- * counter.
+ * Adds hardware-based functionality to <tt>TimerDevice</tt> allowing
+ * in-built timer drivers to share code.
+ * 
+ * An init[hw-timer-name]() API is also provided to initialize known
+ * timers.
  */
-class HardwareTimer
+class HardwareTimer : public TimerDevice
 {
 public:
 	Timeline equeue;
@@ -48,13 +47,22 @@ public:
 
 	static void initPIT();
 	static void initHPET();
+	
+	virtual void updateCounter() = 0;
+	virtual bool resetCounter() = 0;
+	virtual bool setCounter(Time newCounter) = 0;
+	virtual bool stopCounter() = 0;
+	virtual Event *notifyAfter(Time interval, Time delayLimit,
+			EventCallback client, void *object) = 0;
 protected:
-	HardwareTimer();
+	HardwareTimer(TimerProperties& props, TimerUnit unit);
 	virtual ~HardwareTimer();
 	virtual bool fireAt(Timestamp nextTrigger) = 0;
 	Event *add(Timestamp trigger, Timestamp shiftAllowed,
 			EventCallback handler, void *eventObject);
 	void retireActiveEvents();
+
+	
 };
 
 } // namespace Timer

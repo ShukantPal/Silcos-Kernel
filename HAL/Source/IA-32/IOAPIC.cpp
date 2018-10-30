@@ -152,6 +152,20 @@ IOAPIC::Input *IOAPIC::getOptimizedInput(Executable::IRQHandler *dev)
 }
 
 /**
+ * Safely carries the given request to the CPU attached to the given IOAPIC
+ * pin.
+ *
+ * @param cpuBasedOperation - CPU-specific kernel-request to be sent
+ * @param linkedInput - IOAPIC pin linked to that CPU's local APIC
+ */
+void IOAPIC::carryRequestToCPU(IPIRequest *cpuBasedOperation,
+		IOAPIC::Input *linkedInput)
+{
+	CPUDriver::writeRequest(*cpuBasedOperation,
+			GetProcessorById(linkedInput->linkedLapic));
+}
+
+/**
  * Constructs a new IOAPIC input with no device linked for
  * interrupts.
  */
@@ -199,6 +213,7 @@ void IOAPIC::Input::connectTo(unsigned lvector, unsigned lapicId)
 {
 	// TODO: Remove already registered handler
 
+	linkedLapic = lapicId;
 	LocalIRQ *lirq = GetIRQTableById(lapicId) + lvector - 32;
 	lirq->addHandler(this);
 }

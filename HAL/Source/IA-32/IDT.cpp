@@ -35,14 +35,6 @@ import_asm void hpetTimer();
 IDTEntry defaultIDT[256] __attribute__((aligned(8)));
 IDTPointer defaultIDTPointer;
 
-///
-/// Maps the given handler to the system IDT using the default flags and
-/// parameters.
-///
-/// @version 1.0
-/// @since Circuit 2.03
-/// @author Shukant Pal
-///
 decl_c void MapHandler(unsigned short handlerNo, unsigned int handlerAddress,
 				IDTEntry *pIDT)
 {
@@ -56,22 +48,17 @@ decl_c void MapHandler(unsigned short handlerNo, unsigned int handlerAddress,
 	pIDT[handlerNo].offHigh = (unsigned short)(handlerAddress >> 16);
 }
 
-static inline void waitIO(void)
-{
+static inline void waitIO(void) {
 	/* Taken from OSDev Wiki. */
 	asm volatile("jmp 1f\n\t"
 			"1:jmp 2f\n\t"
 			"2:");
 }
 
-///
-/// Disables the programmable interrupt controller so that the APIC subsystem
-/// could be enabled and used without any side-effects.
-///
-/// @version 1.0
-/// @since Circuit 2.01
-/// @author Shukant Pal
-///
+/**
+ * Disables the XT-PIC controller to prevent conflicts during initialization
+ * of the APIC.
+ */
 decl_c void DisablePIC(void)
 {
 	WritePort(0xA0, 0x11);

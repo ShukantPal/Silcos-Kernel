@@ -27,13 +27,15 @@ static inline bool TestLock(volatile Spinlock *sl)
 class Lockable
 {
 public:
-	inline void lock()
-	{
+	Lockable() {
+		SpinUnlock(&__lockstatus);
+	}
+
+	inline void lock() {
 		SpinLock(&__lockstatus);
 	}
 
-	inline void unlock()
-	{
+	inline void unlock() {
 		SpinUnlock(&__lockstatus);
 	}
 private:

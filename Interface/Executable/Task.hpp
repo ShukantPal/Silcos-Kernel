@@ -21,7 +21,6 @@ typedef unsigned long ID;
 typedef unsigned long TYPE;
 typedef unsigned short GID;
 typedef unsigned short UID;
-typedef unsigned long Time;
 
 /* Types for the Exec resources. */
 enum

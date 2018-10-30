@@ -4,7 +4,6 @@
  * Allows kernel subsystem to know about the kernel environment
  * parameters. This is in a developmental state, and only the
  * minimal features have been included.
- *
  * -------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

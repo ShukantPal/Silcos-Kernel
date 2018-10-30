@@ -23,9 +23,6 @@
 #include "__cxa_atexit.h"
 
 /**
- * Function: __cxa_finalize
- *
- * Summary:
  * Finalizes freeing operation during the unloading of shared kernel modules &
  * is internal to the module. It calls all the registered unloading handlers
  * as specified by ABI.
@@ -34,10 +31,10 @@
  * void *callFunc - the only function that should be called (NULL, if all
  * 			handlers should be called in each record).
  *
- * Version: 1.0
- * Author: Shukant Pal
+ * @version 1.0
+ * @author Shukant Pal
  */
-void __cxa_finalize(void *callFunc)
+extern "C" void __cxa_finalize(void *callFunc)
 {
 	Elf::ABI::ExitorFunction *record =
 			(Elf::ABI::ExitorFunction*) __atExitEntries.head;

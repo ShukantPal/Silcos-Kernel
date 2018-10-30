@@ -1,13 +1,16 @@
 /**
  * Copyright (C) 2017 - Shukant Pal
  */
-#ifndef UTIL_MEMORY_H
-#define UTIL_MEMORY_H
+#ifndef __UTIL_MEMORY_H
+#define __UTIL_MEMORY_H
 
 #include "../Utils/CtPrim.h"
 
+#ifndef _CBUILD
+
+/*
 template<class SwapClient>
-void swapObjects(SwapClient *swc0, SwapClient *swc1)
+static inline void swapObjects(SwapClient *swc0, SwapClient *swc1)
 {
 	union
 	{
@@ -23,6 +26,7 @@ void swapObjects(SwapClient *swc0, SwapClient *swc1)
 
 	memcpyf(reinterpret_cast<void*>(&localCopy),
 			reinterpret_cast<void*>(swc1), sizeof(SwapClient));
-}
+}*/
+#endif/* _CBUILD */
 
-#endif
+#endif/* Utils/Memory.h */

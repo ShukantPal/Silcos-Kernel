@@ -32,135 +32,84 @@ namespace Executable
 namespace Timer
 {
 
-static inline unsigned short getPITChannelPort(unsigned long counter) {
+/* PIT data & control port addresses */
+#define CHANNEL_0_DATA	0x40
+#define CHANNEL_1_DATA	0x41
+#define CHANNEL_2_DATA	0x42
+#define CMD_REG		0x43
+
+static inline
+unsigned short getPITChannelPort(unsigned long counter) {
 	return (0x40 + counter);
 }
 
-static inline unsigned short getPITCommandPort() {
-	return (0x43);
+/* PIT modes */
+#define BINARY_MODE	0
+#define BCD_MODE	1
+
+/* PIT operating modes */
+#define INT_ON_TERM_CNT		0b000
+#define HW_RETRIG_ONESHOT	0b001
+#define RATE_GEN		0b010
+#define SQUAREWAVE_GEN		0b100
+#define SW_TRIG_STROBE		0b100
+#define HW_TRIG_STROBE		0b101
+
+/* Access modes */
+#define CNTR_LATCH_CMD		0b00
+#define LSB_MODE		0b01
+#define MSB_MODE		0b10
+#define BOTH_MODE		0b11
+
+#define LATCH_STATUS		0
+#define LATCH_COUNT		0
+#define NO_LATCH		1
+
+/* Creates a CONTROL WORD */
+#define CTRL_WORD(numMode, opMode, accessMode, counterSelect) \
+((numMode) | ((opMode) << 0x01) | \
+	((accessMode) << 0x04) | ((1 << counterSelect) << 0x06))
+
+#define LATCH_CMD(selectCounter) ((selectCounter) << 0x06)
+
+/* Creates a READBACK COMMAND */
+#define READBACK_CMD(selectCounter, latchStatus, latchCount) \
+(((1 << selectCounter) << 0x01) | (latchStatus << 0x04) | \
+	(latchCount << 0x05) | (0b11 << 0x06))
+
+#define IS_READBACK_CMD(readBackCommand) ((readBackCommand) >> 0x06 == 0b11)
+
+/* Access fields in the STATUS BYTE */
+#define BCD_MODE_(statusByte) ((statusByte) & 1)
+#define OP_MODE(statusByte) ((statusByte) >> 0x01 && 0b111)
+#define ACCESS_MODE(statusByte) ((statusByte) >> 0x04 & 0b11)
+#define NULL_COUNT(statusByte) ((statusByte) >> 0x06 & 1)
+#define OUT_PIN(statusByte) ((statusByte) >> 0x07 & 1)
+
+/**
+ * Performs a read-back command and then read the PIT's status for
+ * the given channel/counter.
+ * 
+ * @param selectCounter - Counter whose status is returned
+ */
+static inline U8 readStatusByte(int selectCounter) {
+	WritePort(CMD_REG, READBACK_CMD(selectCounter,
+		LATCH_STATUS, NO_LATCH));
+	
+	return (ReadPort(getPITChannelPort(selectCounter)));
 }
-
-union ControlWord
-{
-	struct
-	{
-		U8 BCD			: 1;
-		U8 mode			: 3;
-		U8 rwAccess		: 2;
-		U8 selectCounter: 2;
-	};
-	U8 dByte;
-
-	ControlWord() {
-		dByte = 0;
-	}
-
-	operator U8() const {
-		return (dByte);
-	}
-};
-
-union CounterLatchCommand
-{
-	struct
-	{
-		U8 noBits			: 4;
-		U8 latchCommand		: 2;
-		U8 selectCounter	: 2;
-	};
-	U8 dByte;
-
-	CounterLatchCommand(U8 counter) {
-		noBits = 0;
-		latchCommand = 0;
-		selectCounter = counter;
-	}
-
-	operator U8() const {
-		return (dByte);
-	}
-};
-
-union ReadBackCommand
-{
-	struct {
-		U8 rfield			: 1;
-		U8 selectCounters	: 3;
-		U8 latchStatus		: 1;
-		U8 latchCount		: 1;
-		U8 cmdSign			: 2;
-	};
-	U8 dByte;
-
-	ReadBackCommand(bool doStatus, bool doCount, U8 counterMask) {
-		rfield = 0;
-		selectCounters = counterMask;
-		latchStatus = !doStatus;
-		latchCount = !doCount;
-		cmdSign = 0b11;
-	}
-
-	operator U8() const {
-		return (dByte);
-	}
-};
-
-union StatusByte
-{
-	struct {
-		U8 BCD			: 1;
-		U8 counterMode	: 3;
-		U8 rwAccessMode	: 2;
-		U8 nullCount	: 1;
-		U8 outputState	: 1;
-	};
-	U8 status;
-
-	StatusByte(U8 byteRead) {
-		status = byteRead;
-	}
-};
 
 class PIT final : public IRQHandler, public HardwareTimer
 {
 public:
-	enum {
-		CHANNEL_0_DATA	= 0x40,
-		CHANNEL_1_DATA	= 0x41,
-		CHANNEL_2_DATA	= 0x42,
-		CMD_REG		= 0x43
-	};
-
-	enum TimerMode {
-		BINARY_MODE	= 0,
-		BCD_MODE	= 1
-	};
-
-	enum OperatingMode {
-		INTERRUPT_ON_TERMINAL_COUNT		= 0b000,
-		HARDWARE_RETRIGGERABLE_ONE_SHOT	= 0b001,
-		RATE_GENERATOR					= 0b010,
-		SQUARE_WAVE_MODE				= 0b100,
-		SOFTWARE_TRIGGERED_STROBE		= 0b100,
-		HARDWARE_TRIGGERED_STROBE		= 0b101,
-	};
-
-	enum ReadWrite {
-		COUNTER_LATCH_COMMAND	= 0b00,
-		LSB						= 0b01,
-		MSB						= 0b10,
-		BothBytes				= 0b11
-	};
-
 	PIT();
 	virtual ~PIT();
 
-	inline StatusByte status(unsigned char ctr)	{
-		WritePort(CMD_REG, ReadBackCommand(true, false, 1 << ctr));
-
-		return (StatusByte(ReadPort(getPITChannelPort(ctr))));
-	}
-
+	void updateCounter();
+	bool resetCounter();
+	bool setCounter(Time newCounter);
+	bool stopCounter();
+	
 	bool intrAction();
 	Event *notifyAfter(Timestamp npitTicks, Timestamp delayFeasible,
 			EventCallback handler, void *eventObject);
@@ -168,6 +117,7 @@ public:
 			EventCallback handler, void *eventObject);
 
 	void reset(unsigned short newInitialCount, unsigned char selectCounter);
+	
 protected:
 	bool fireAt(Timestamp pitTicks);
 private:
@@ -179,7 +129,7 @@ private:
 
 		unsigned long getPendingTime() {
 			switch(mode) {
-			case INTERRUPT_ON_TERMINAL_COUNT:
+			case INT_ON_TERM_CNT:
 				return (lastReadCount);
 			default:
 				return (0);// not implemented
@@ -189,10 +139,6 @@ private:
 
 	Counter progTimers[3];
 	U64 lastSoftwareCounter;
-
-	unsigned long calculateJiffies(unsigned short totalCount) {
-//		return (totalCount * (838095 / 1000000))
-	}
 
 	void flush(unsigned long index);
 
@@ -221,20 +167,13 @@ private:
 	}
 
 	unsigned short latch(unsigned long index) {
-		WritePort(getPITCommandPort(), CounterLatchCommand(index));
+		WritePort(CMD_REG, LATCH_CMD(index));
 
 		unsigned short latchedCounter;
 		latchedCounter = ReadPort(getPITChannelPort(index));
 		latchedCounter |= ReadPort(getPITChannelPort(index)) << 8;
 
 		return (latchedCounter);
-	}
-
-	inline StatusByte readStatus(unsigned long index) {
-		WritePort(getPITChannelPort(index),
-				ReadBackCommand(true, false, (1 << index)));
-
-		return (ReadPort(getPITChannelPort(index)));
 	}
 
 	void arm(unsigned selectCounter);

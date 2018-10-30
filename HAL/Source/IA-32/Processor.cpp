@@ -1,28 +1,23 @@
-///
-/// @file Processor.cpp
-///
-/// Implements the management of processor-related hardware and data. These
-/// are broadly categorized as - local-IRQs, per-CPU structs, ArchCpu handling,
-/// and inter-processor request handling.
-///
-/// This file is huge and wants to become larger, pack more features here.
-/// -------------------------------------------------------------------
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
-///
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>
-///
-/// Copyright (C) 2017 - Shukant Pal
-///
-
+/**
+ * @file Processor.cpp
+ *
+ * Handles CPU-management, LIRQs, and IPRs.
+ * -------------------------------------------------------------------
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ * Copyright (C) 2017 - Shukant Pal
+ */
 #define NAMESPACEProcessor
 #define NS_KFRAMEMANAGER
 
@@ -93,34 +88,20 @@ LocalIRQ::LocalIRQ() : IRQ()
 
 }
 
-///
-/// Extracts the processor's base frequency from its brand-string. It should be
-/// used if the frequency-info leaf is not supported. The base-frequency given
-/// should not be used for purposes other than displaying information on the
-/// console, as it is neither accurate nor relevant for software-usage.
-///
-/// The brand-string is scanned in reverse order to match the substring "MHz",
-/// "GHz" or "THz" to get the frequency-unit. On matching "unit" substrings, the
-/// multipler for that unit is calculated and then the decimal value given in
-/// the string is multiplied with the unit/multiplier. This occurs without using
-/// floating-point decimal values, by dividing the multiplier by 10 until a
-/// decimal point is found.
-///
-/// @arg brandString - the brand string detected using __cpuid
-/// @return base-frequency of the cpu, if detected successfully; if not, 0;
-/// @version 1.0
-/// @since Silcos 3.02
-/// @author Shukant Pal
-///
+/**
+ * Extracts the CPU's base frequency from its brand-string (if present) which
+ * can be used for displaying. This provides an alternative to the frequency
+ * leaf.
+ *
+ * @return - CPU's base frequency
+ */
 unsigned long ArchCpu::extractBaseFrequency()
 {
 	char *tc = brandString + 62;
 	char cmul;
 	int ctr = 0;
-	while(ctr < 60)
-	{
-		if(*tc == 'z' && *(tc - 1) == 'H')
-		{
+	while(ctr < 60) {
+		if(*tc == 'z' && *(tc - 1) == 'H') {
 			cmul = *(tc - 2);
 			if(cmul == 'M' || cmul == 'G' || cmul == 'T')
 				break;
@@ -135,8 +116,7 @@ unsigned long ArchCpu::extractBaseFrequency()
 		return (0);
 
 	unsigned long mult;
-	switch(cmul)
-	{
+	switch(cmul) {
 	case 'M':
 		mult = 1000000;
 		break;
@@ -150,14 +130,10 @@ unsigned long ArchCpu::extractBaseFrequency()
 	}
 
 	unsigned long freq = 0, digits = 0, pow10 = 1, pointOffset = 64;
-	while(*tc != ' ')
-	{
-		if(*tc == '.')
-		{
+	while(*tc != ' ') {
+		if(*tc == '.') {
 			pointOffset = digits;
-		}
-		else if(Character::isDigit(*tc))
-		{
+		} else if(Character::isDigit(*tc)) {
 			freq += pow10 * (*tc - 48);
 
 			if(pointOffset == 64)
@@ -165,17 +141,15 @@ unsigned long ArchCpu::extractBaseFrequency()
 
 			pow10 *= 10;
 			++(digits);
-		}
-		else
+		} else {
 			return (0);
+		}
 
 		--(tc);
 	}
 
-	if(pointOffset == 64)
-	{
-		while(digits > 0)
-		{
+	if(pointOffset == 64) {
+		while(digits > 0) {
 			--(digits);
 			mult *= 10;
 		}
@@ -373,9 +347,10 @@ static IOAPIC::RedirectionEntry __init_input_for_timer(
 	return (re);
 }
 
-///
-/// Setups the application-processors and registers the IOAPICs.
-///
+/**
+ * Initializes the application-processor data, IOAPIC chips, and also other
+ * ACPI devices (like the HPET).
+ */
 decl_c void SetupAPs()
 {
 	EnumerateMADT(&AddProcessorInfo, &IOAPIC::registerIOAPIC, null);
@@ -387,11 +362,8 @@ decl_c void SetupAPs()
 	} else {
 		pHub->writeRedirection(2, &__init_input_for_timer);
 
-		InitKernelHPET();
+        	InitKernelHPET();
 	}
-
-	// testing - phase
-//	testhpet();
 }
 
 ///
@@ -466,8 +438,7 @@ decl_c void Executable_ProcessorBinding_IPIRequest_Handler()
 
 	switch(req->type)
 	{
-	case AcceptTasks:
-	{
+	case ACCEPT_TASK_COLLECTION: {
 		RunqueueBalancer::Accept *acc =
 				(RunqueueBalancer::Accept*) req;
 		tcpu->lschedTable[acc->type]->recieve(
@@ -476,8 +447,7 @@ decl_c void Executable_ProcessorBinding_IPIRequest_Handler()
 				acc->taskList.count, acc->load);
 		break;
 	}
-	case RenounceTasks:
-	{
+	case RENOUNCE_TASK_COLLECTION: {
 		RunqueueBalancer::Renounce *ren =
 				(RunqueueBalancer::Renounce*) req;
 		ScheduleClass type = ren->taskType;
@@ -501,6 +471,12 @@ decl_c void Executable_ProcessorBinding_IPIRequest_Handler()
 
 		kobj_free((kobj*) ren, tRunqueueBalancer_Renounce);
 		break;
+	}
+	case INVOKE_OPERATION: {
+		req->callbackDefault();
+	}
+	case INVOKE_OPERATION_THIS: {
+		req->callbackThis(req);
 	}
 	default:
 		Dbg("NODF");

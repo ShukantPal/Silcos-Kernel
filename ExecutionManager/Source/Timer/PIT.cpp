@@ -35,13 +35,37 @@ using namespace Executable::Timer;
 
 PIT Executable::Timer::pit;
 
-PIT::PIT() // @suppress("Class members should be properly initialized")
+TimerProperties pitProps = {
+  .wiredProps = 1 << IS_RESETABLE  
+};
+
+PIT::PIT() : HardwareTimer(pitProps, TU_MICROSEC) // @suppress("Class members should be properly initialized")
 {
 }
 
 PIT::~PIT()
 {
 
+}
+
+void PIT::updateCounter()
+{
+    
+}
+
+bool PIT::resetCounter()
+{
+    return (false);
+}
+
+bool PIT::setCounter(Time newCounter)
+{
+    return (false);
+}
+
+bool PIT::stopCounter()
+{
+    return (false);
 }
 
 /**
@@ -53,8 +77,9 @@ PIT::~PIT()
  */
 bool PIT::intrAction()
 {
-	bool wasFired = status(0).outputState;
-	if(!wasFired)
+	U8 statusByte = readStatusByte(0);
+	
+	if(OUT_PIN(statusByte) == 0)
 		return (false);
 
 	unsigned long updatedTicks = getTimerBlock(0)->totalTicks
@@ -163,7 +188,7 @@ void PIT::reset(unsigned short newInitialCount, unsigned char selectCounter)
 	Counter *newTimer = progTimers + selectCounter;
 	newTimer->totalTicks = 0;
 	newTimer->initialCount = newInitialCount;
-	newTimer->mode = INTERRUPT_ON_TERMINAL_COUNT;
+	newTimer->mode = INT_ON_TERM_CNT;
 	newTimer->lastReadCount = newInitialCount;
 	flush(selectCounter);
 }
@@ -197,7 +222,7 @@ void PIT::arm(unsigned selectCounter)
 	Counter *oldTimer = progTimers + selectCounter;
 
 	oldTimer->totalTicks += oldTimer->lastReadCount;
-	oldTimer->mode = INTERRUPT_ON_TERMINAL_COUNT;
+	oldTimer->mode = INT_ON_TERM_CNT;
 	oldTimer->initialCount = 65535;
 	oldTimer->lastReadCount = oldTimer->initialCount;
 
@@ -216,7 +241,7 @@ void PIT::armAt(Timestamp nextFire)
 {
 	Counter *ch0 = getTimerBlock(0);
 	ch0->totalTicks += ch0->lastReadCount;
-	ch0->mode = INTERRUPT_ON_TERMINAL_COUNT;
+	ch0->mode = INT_ON_TERM_CNT;
 	ch0->initialCount = nextFire - ch0->totalTicks;
 	ch0->lastReadCount = ch0->initialCount;
 	flush(0);
@@ -230,14 +255,10 @@ void PIT::armAt(Timestamp nextFire)
  */
 void PIT::flush(unsigned long index)
 {
-	ControlWord resetCommand;
-	resetCommand.mode = progTimers[index].mode;
-	resetCommand.selectCounter = index;
-
 	unsigned short initialCount = progTimers[index].initialCount;
 
-	resetCommand.rwAccess = BothBytes;
-	WritePort(CMD_REG, resetCommand);
+	WritePort(CMD_REG, CTRL_WORD(BINARY_MODE, progTimers[index].mode,
+		BOTH_MODE, index));
 	WritePort(getPITChannelPort(index), initialCount);
 	WritePort(getPITChannelPort(index), initialCount >> 8);
 }

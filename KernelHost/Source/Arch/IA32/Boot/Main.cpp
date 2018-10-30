@@ -65,7 +65,7 @@ const char *cpuIdNotSupportedError =
 
 Environment kernelParams;
 
-void ImmatureHang(const char *dbgString){
+extern "C++" void ImmatureHang(const char *dbgString){
 	DbgLine(dbgString);
 	while(TRUE){ asm("hlt"); }
 }
@@ -89,7 +89,7 @@ extern "C" void WriteInteger(unsigned);
  * kernel environment gets fully prepared.
  *
  * @param physEntriesAddress - The physical address where the Initor
- * 						has kept the KernelModule objects.
+ * 			has kept the KernelModule objects.
  */
 void ImportLinkerRaw(unsigned long physEntriesAddress)
 {

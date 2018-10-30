@@ -21,9 +21,18 @@
 using namespace Executable::Timer;
 
 /**
+ * Slab allocator for the <tt>TimerOperation</tt> struct.
+ */
+ObjectInfo *ExecMgr_TimerOperation =
+		KiCreateType("Executable::Timer::TimerOperation",
+				sizeof(TimerOperation), L1_CACHE_ALIGN,
+				null, null);
+
+/**
  * Constructs the <tt>HardwareTimer</tt> with no pending events.
  */
-HardwareTimer::HardwareTimer()
+HardwareTimer::HardwareTimer(TimerProperties &props, TimerUnit unit)
+: TimerDevice(props, unit)
 {
 	enow = strong_null;
 }
@@ -107,4 +116,25 @@ void HardwareTimer::retireActiveEvents()
 
 	delete enow;
 	enow = equeue.get();
+}
+
+/**
+ * Handles an packaged timer operation sent to this CPU to be exected. It
+ * expects the given request to actually be an <tt>TimerOperation</tt> object.
+ *
+ * @param sealedPackage - timer operation request (casted as an IPI-request)
+ */
+void TimerOperation::handleOperation(IPIRequest *sealedPackage)
+{
+	TimerOperation *package = (TimerOperation *) sealedPackage;
+
+	switch(package->callGate) {
+	case INVOKE_AFTER:
+		package->targetDevice.notifyAfter(package->absoluteTrigger,
+				package->delayLimit, package->eventClient,
+				package->clientArg);
+		break;
+	default:
+		return;
+	}
 }

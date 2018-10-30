@@ -7,4 +7,6 @@
 
 #include "Types.h"
 
+typedef U64 Time;
+
 #endif /* TYPE.h */

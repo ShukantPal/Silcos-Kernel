@@ -59,8 +59,7 @@ extern bool x2APICModeEnabled;
 class APIC final
 {
 public:
-	enum DeliveryMode
-	{
+	enum DeliveryMode {
 		Fixed = 0b000,
 		LowestPriority = 0b001,
 		SMI = 0b010,
@@ -71,8 +70,7 @@ public:
 		StartUp = 0b110
 	};
 
-	enum DestinationMode
-	{
+	enum DestinationMode {
 		Physical = 0,
 		Logical = 1
 	};
@@ -154,20 +152,17 @@ private:
 	class xAPICDriver
 	{
 	public:
-		static inline U32 read(unsigned long roff)
-		{
+		static inline U32 read(unsigned long roff) {
 			return (*(U32 volatile*)(VAPICBase + roff));
 		}
 
-		static inline void write(unsigned long roff, U32 val)
-		{
+		static inline void write(unsigned long roff, U32 val) {
 			U32 volatile *rptr = (U32 *volatile) (VAPICBase + roff);
 			*rptr = val;
 		}
 
 		/* not for general use guys */
-		static inline void put(unsigned long roff, U32 val)
-		{
+		static inline void put(unsigned long roff, U32 val) {
 			U32 volatile *rptr = (U32 *volatile) VAPICBase + roff;
 			volatile U32 oval = *rptr | val;
 			*rptr = oval;
@@ -177,10 +172,8 @@ private:
 		xAPICDriver();
 	};
 
-	union ICRLow
-	{
-		struct
-		{
+	union ICRLow {
+		struct {
 			U32 vectorNo : 8;// vector
 			U32 delvMode : 3;// delivery mode
 			U32 destMode : 1;// destination mode
@@ -194,8 +187,7 @@ private:
 		};
 		U32 value;
 
-		ICRLow()
-		{
+		ICRLow() {
 			value = 0;
 			this->vectorNo = 0;
 			this->delvMode = Fixed;
@@ -206,8 +198,7 @@ private:
 			this->destShorthand = NoShorthand;
 		}
 
-		ICRLow(DeliveryMode delmode, IntrLevel lev, TriggerMode trm)
-		{
+		ICRLow(DeliveryMode delmode, IntrLevel lev, TriggerMode trm) {
 			value = 0;
 			this->vectorNo = 0;
 			this->delvMode = delmode;
@@ -218,17 +209,14 @@ private:
 		}
 	};
 
-	union ICRHigh
-	{
-		struct
-		{
+	union ICRHigh {
+		struct {
 			U32 reserved : 24;
 			U32 destField : 8;
 		};
 		U32 value;
 
-		ICRHigh(U32 dst)
-		{
+		ICRHigh(U32 dst) {
 			value = 0;
 			this->destField = dst;
 		}

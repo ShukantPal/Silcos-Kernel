@@ -23,6 +23,11 @@
 using namespace Executable;
 using namespace Executable::Timer;
 
+static void initHPET_Test(void *object)
+{
+	DbgLine("This was a bad-ass test.");
+}
+
 /**
  * Constructs a kernel-only HPET driver object, that can also be used
  * during the booting process. If the ACPI table "HPET" doesn't exist,
@@ -44,4 +49,10 @@ decl_c void InitKernelHPET()
 	int input = Math::bitScanReverse(intern->allRoutes());
 
 	intern->connectTo(input);
+	
+	intern->notifyAfter(1000000, 10000, &initHPET_Test, null);
+	intern->notifyAfter(2000000, 10000, &initHPET_Test, null);
+	intern->notifyAfter(3000000, 10000, &initHPET_Test, null);
+	intern->notifyAfter(4000000, 10000, &initHPET_Test, null);
+	intern->notifyAfter(5000000, 10000, &initHPET_Test, null);
 }

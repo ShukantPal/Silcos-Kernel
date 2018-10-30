@@ -95,31 +95,37 @@ namespace HAL
  */
 enum RequestType
 {
-	AcceptTasks,
-	RenounceTasks
+	ACCEPT_TASK_COLLECTION,
+	RENOUNCE_TASK_COLLECTION,
+	INVOKE_OPERATION,
+	INVOKE_OPERATION_THIS
 };
 
 /**
- * Holds critical data related to an operation that must be performed on
- * another processor. <tt>CPUDriver</tt> queues up these object on the
- * per-processor data, which are then handled by the target processor on
- * sending a IPI by the APIC driver.
+ * Holds a packaged request sent between two CPUs, holding the operation type
+ * and (an optional) callback. These object can be used using <tt>CPUDriver</tt>
+ * which handles the sending and receiving of this structures.
  *
- * The type of operation required can be hard-coded or sent dynamically
- * by specifying a callback (which is not supported yet). Other than
- * that, the caller may also pass an <tt>ObjectInfo</tt> for passing
- * custom memory buffers.
- *
+ * <tt>IPIRequest</tt> can be extended, but doing so, the proper <tt>source</tt>
+ * allocator must be specified in-order to clean the object successfully. Use
+ * the <tt>INVOKE_CALLBACK_THIS</tt> action to pass the extended structure
+ * to the callback
+ * 
  * @version 1.0
  * @since Circuit 2.03
  * @author Shukant Pal
  */
 struct IPIRequest
-{
+{	
 	CircularListNode reqlink;
 	const RequestType type;
 	const unsigned long bufferSize;// size of memory-buffer, if any used
 	const ObjectInfo *source;
+	
+	union {
+		void (*callbackDefault)();
+		void (*callbackThis)(IPIRequest *extendedObject);
+	};
 
 	IPIRequest(RequestType mtype, unsigned long bsize, ObjectInfo *src)
 			: type(mtype), bufferSize(bsize), source(src) {

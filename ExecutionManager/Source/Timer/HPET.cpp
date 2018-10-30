@@ -66,6 +66,7 @@ HPET::HPET(int acpiUID, PhysAddr eventBlock) : timerTable(3)
 	periodicTimers = 0;
 	timerSizes = 0;
 	usageTable = 0;
+	enabledComparators = 0;
 
 	this->sequenceIndex = acpiUID;
 	this->mcPeriod = read32(CAP_AND_ID + 0x4);
@@ -84,7 +85,7 @@ HPET::HPET(int acpiUID, PhysAddr eventBlock) : timerTable(3)
 			timerSizes |= (1 << cidx);
 
 		HPET::Timer *timer_n = new HPET::Timer(this, cidx);
-		timer_n->disable();
+		timer_n->disableComparator();
 		timerTable.add(timer_n);
 	}
 
@@ -115,48 +116,74 @@ HPET::Timer *HPET::getTimer(unsigned int tidx)
 }
 
 /**
+ * Holds the properties of the HPET kernel-timer.
+ */
+TimerProperties hpetProps = {
+    .wiredProps = 1 << IS_MONOTONOUS
+};
+
+/**
  * Constructs a <tt>HPET::Timer</tt> object for the comparator installed
  * in the given HPET block; it is kept in an disabled state.
  *
  * @param owner - owner HPET block
  * @param index - timer index
  */
-HPET::Timer::Timer(HPET *owner, unsigned int index) : HardwareTimer()
+HPET::Timer::Timer(HPET *owner, unsigned int index)
+: HardwareTimer(hpetProps, TU_TENANOSEC)
 {
 	this->enow = strong_null;
 	this->owner = owner;
-	this->index = index;
+	this->comparatorIndex = index;
 	this->lastReadCount = getTotalTicks();
+	
+	gCounter.value = lastReadCount;
 }
 
 HPET::Timer::~Timer()
 {
-	owner->usageTable &= ~(1 << index);
+	owner->usageTable &= ~(1 << comparatorIndex);
 }
 
 void HPET::Timer::connectTo(unsigned input)
 {
+	intId = input; // @suppress("Symbol is not resolved")
 	IOAPIC::inputAt(input)->addDev(this, false);
+}
+
+void HPET::Timer::updateCounter()
+{
+    gCounter.value = (owner->mainCounter() * owner->clockPeriod()) / 10000000;
+}
+
+bool HPET::Timer::resetCounter()
+{
+    return (false);
+}
+
+bool HPET::Timer::setCounter(Time newCounter)
+{
+    return (false);
+}
+
+bool HPET::Timer::stopCounter()
+{
+    return (false);
 }
 
 bool HPET::Timer::intrAction()
 {
-	if(!isInterruptActive()) {
-		Dbg("_spu");
-		DbgInt(getTotalTicks());
-		DbgLine(";");
-
+	if(!owner->read32(INT_STS, comparatorIndex)) {
+		DbgLine("false trigger (HPET)");
 		return (false);
 	}
 
-	clearStatus();
-
-	if(isInterruptActive())
-		DbgLine("STILL ACTIVE");
+	owner->write32(owner->read32(INT_STS) | (1 << comparatorIndex),
+		INT_STS);/* Clear the interrupt status bit by writing to it. */
 
 	Dbg("hpet_ ");
-	Timestamp fireMoment = getTotalTicks();
-
+	Timestamp fireMoment = this->getTotalTicks();
+	
 	DbgInt(enow[0].overlapRange[0]);
 	Dbg(", but ");
 
@@ -177,7 +204,7 @@ bool HPET::Timer::intrAction()
 		fireAt(enow->overlapRange[0]);
 	} else {
 		DbgLine("No active triggers");
-		disable();
+		disableComparator();
 	}
 
 	return (true);
@@ -190,12 +217,18 @@ Event *HPET::Timer::notifyAfter(Timestamp interval, Timestamp delayAllowed,
 		return (strong_null);
 	}
 
+
+
+	setInvocationMode(TDIM_LOCKED);
+
 	Event *et;
 
 	int tt = getTotalTicks();
 	__cli
 	et = add(interval + tt, delayAllowed, hdlr, arg);
 	__sti
+
+	setInvocationMode(TDIM_EXTERNAL);
 
 	return (et);
 }
@@ -208,17 +241,40 @@ bool HPET::Timer::fireAt(Timestamp fts)
 		DbgLine("here");
 		return (false);
 	} else if(isWide()) {
-		owner->write32(fts, TIMER_N_COMPARATOR(index));
+		owner->write32(fts, TIMER_N_COMPARATOR(comparatorIndex));
 	} else {
-		owner->write32(fts, TIMER_N_COMPARATOR(index));
+		owner->write32(fts, TIMER_N_COMPARATOR(comparatorIndex));
 	}
 
-	U32 cfg = owner->read32(TIMER_N_CFG(index));
+	U32 cfg = owner->read32(TIMER_N_CFG(comparatorIndex));
 	cfg |= (1 << Tn_32MODE_CNF);
 	cfg &= ~(1 << Tn_TYPE_CNF);
 	cfg |= (1 << Tn_INT_TYPE_CNF);
 	cfg |= (1 << Tn_INT_ENB_CNF);
-	owner->write32(cfg, TIMER_N_CFG(index));
+	owner->write32(cfg, TIMER_N_CFG(comparatorIndex));
 
 	return (true);
+}
+
+/**
+ * Enables this comparator to send interrupt signals to notify the
+ * timer object about any events occuring.
+ */
+void HPET::Timer::enableComparator()
+{
+	U32 cfg = owner->read32(TIMER_N_CFG(comparatorIndex));
+	cfg |= (1 << Tn_INT_ENB_CNF);
+	owner->write32(cfg, TIMER_N_CFG(comparatorIndex));
+}
+
+/**
+ * Disables this comparator, preventing any interrupts signalling an event
+ * that has occured. Calling this will make all pending events go lost, and
+ * even be called in the undefined future.
+ */
+void HPET::Timer::disableComparator()
+{
+	U32 cfg = owner->read32(TIMER_N_CFG(comparatorIndex));
+	cfg &= ~(1 << Tn_INT_ENB_CNF);
+	owner->write32(cfg, TIMER_N_CFG(comparatorIndex));
 }
