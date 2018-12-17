@@ -1,0 +1,605 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name=".metadata">
+        <df name=".plugins">
+          <df name="org.eclipse.cdt.make.core">
+            <in>specs.c</in>
+            <in>specs.cpp</in>
+          </df>
+        </df>
+      </df>
+      <df name="ExecutionManager">
+        <df name="Source">
+          <df name="IRQ">
+            <in>IRQHandler.cpp</in>
+          </df>
+          <df name="Scheduler">
+            <in>RoundRobin.cpp</in>
+            <in>RunqueueBalancer.cpp</in>
+            <in>ScheduleRoller.cpp</in>
+            <in>Scheduler.cpp</in>
+          </df>
+          <df name="Task">
+            <in>AVLTree.cpp</in>
+            <in>Task.cpp</in>
+            <in>Thread.cpp</in>
+          </df>
+          <df name="Timer">
+            <in>EventGroup.cpp</in>
+            <in>HPET.cpp</in>
+            <in>HardwareTimer.cpp</in>
+            <in>NodeSorter.cpp</in>
+            <in>PIT.cpp</in>
+            <in>Timeline.cpp</in>
+          </df>
+        </df>
+      </df>
+      <df name="HAL">
+        <df name="Source">
+          <df name="ACPI">
+            <in>HPET.cpp</in>
+            <in>MADT.cpp</in>
+            <in>RSDP.cpp</in>
+            <in>RSDT.cpp</in>
+          </df>
+          <df name="IA-32">
+            <in>APBoot.asm</in>
+            <in>APIC.cpp</in>
+            <in>CMOS.cpp</in>
+            <in>CPUDriver.cpp</in>
+            <in>CPUID.asm</in>
+            <in>GDT.cpp</in>
+            <in>IDT.cpp</in>
+            <in>IO.asm</in>
+            <in>IOAPIC.cpp</in>
+            <in>IRQCallbacks.asm</in>
+            <in>IntrHook.asm</in>
+            <in>Load.S</in>
+            <in>Processor.cpp</in>
+            <in>ProcessorTopology.cpp</in>
+            <in>Startup.cpp</in>
+            <in>SwitchRunner.asm</in>
+            <in>TSS.cpp</in>
+          </df>
+        </df>
+      </df>
+      <df name="Initializer">
+        <df name="Source">
+          <df name="Generic">
+            <df name="Elf">
+              <in>BinaryAnalyzer.c</in>
+              <in>KernelModule.c</in>
+              <in>Relocator.c</in>
+            </df>
+            <in>EarlyConsole.c</in>
+            <in>EarlyMultiboot.c</in>
+          </df>
+          <df name="IA32">
+            <in>LoadKernel.c</in>
+            <in>Startup.S</in>
+          </df>
+        </df>
+      </df>
+      <df name="Interface">
+        <df name="Executable">
+          <df name="Timer">
+            <in>TimerDevice.hpp</in>
+          </df>
+        </df>
+      </df>
+      <df name="KernelHost">
+        <df name="Source">
+          <df name="Arch">
+            <df name="IA32">
+              <df name="Boot">
+                <in>Entry.S</in>
+                <in>Main.cpp</in>
+                <in>Multiboot.cpp</in>
+              </df>
+              <df name="Paging">
+                <in>86InitPaging.asm</in>
+                <in>FrameExtractor.cpp</in>
+                <in>PageSettings.S</in>
+                <in>Pager.cpp</in>
+                <in>TableManipulator.cpp</in>
+              </df>
+            </df>
+          </df>
+          <df name="Intr">
+            <in>ExHandler.cpp</in>
+          </df>
+          <df name="KernelRoutine">
+            <in>Init.cpp</in>
+          </df>
+          <df name="Memory">
+            <in>BuddyAllocator.cpp</in>
+            <in>CacheRegister.cpp</in>
+            <in>Heap.cpp</in>
+            <in>KFrameManager.cpp</in>
+            <in>KMemoryManager.cpp</in>
+            <in>KObjectManager.cpp</in>
+            <in>Structure.cpp</in>
+            <in>ZoneAllocator.cpp</in>
+          </df>
+          <df name="ModuleLoader">
+            <in>ElfAnalyzer.cpp</in>
+            <in>ElfLinker.cpp</in>
+            <in>ElfManager.cpp</in>
+            <in>ModuleContainer.cpp</in>
+            <in>ModuleLoader.cpp</in>
+            <in>Namespace.cpp</in>
+            <in>SymbolLookup.cpp</in>
+          </df>
+          <df name="Util">
+            <in>CircuitPrimitive.cpp</in>
+            <in>CircularList.cpp</in>
+            <in>Console.cpp</in>
+            <in>Debugger.cpp</in>
+            <in>LinkedList.cpp</in>
+            <in>Stack.cpp</in>
+          </df>
+        </df>
+      </df>
+      <df name="ModuleFramework">
+        <df name="Framework">
+          <in>ArrayList.cpp</in>
+          <in>Arrays.cpp</in>
+          <in>BinaryTree.cpp</in>
+          <in>HashMap.cpp</in>
+          <in>Object.cpp</in>
+          <in>RBTree.cpp</in>
+          <in>String.cpp</in>
+          <in>StringPool.cpp</in>
+        </df>
+        <in>Main.cpp</in>
+      </df>
+      <df name="Modules">
+        <df name="ADM">
+          <in>MemoryMap.asm</in>
+        </df>
+        <in>crt0.S</in>
+        <in>crti.S</in>
+        <in>crtn.S</in>
+      </df>
+      <df name="ObjectManager">
+        <in>Main.cxx</in>
+      </df>
+      <df name="ResourceManager">
+        <df name="Source">
+          <in>ContextManager.cpp</in>
+          <in>Init.cpp</in>
+          <in>MemoryImage.cpp</in>
+        </df>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+      <itemPath>nbproject/private/launcher.properties</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile Build</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <incDir>
+              <pElem>Interface</pElem>
+              <pElem>Initializer/Headers</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>ARCH_32</Elem>
+              <Elem>IA32</Elem>
+            </preprocessorList>
+          </cTool>
+          <ccTool>
+            <incDir>
+              <pElem>Interface</pElem>
+              <pElem>Initializer/Headers</pElem>
+            </incDir>
+            <preprocessorList>
+              <Elem>ARCH_32</Elem>
+              <Elem>IA32</Elem>
+            </preprocessorList>
+          </ccTool>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
+          <preBuildCommand></preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path=".metadata/.plugins/org.eclipse.cdt.make.core/specs.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path=".metadata/.plugins/org.eclipse.cdt.make.core/specs.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/IRQ/IRQHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Scheduler/RoundRobin.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Scheduler/RunqueueBalancer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Scheduler/ScheduleRoller.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Scheduler/Scheduler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Task/AVLTree.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Task/Task.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Task/Thread.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Timer/EventGroup.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Timer/HPET.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Timer/HardwareTimer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Timer/NodeSorter.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Timer/PIT.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ExecutionManager/Source/Timer/Timeline.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="HAL/Source/ACPI/HPET.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/ACPI/MADT.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/ACPI/RSDP.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/ACPI/RSDT.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/APBoot.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/APIC.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/CMOS.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/CPUDriver.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/CPUID.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/GDT.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/IDT.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/IO.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/IOAPIC.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/IRQCallbacks.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/IntrHook.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/Load.S" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/Processor.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/ProcessorTopology.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/Startup.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/SwitchRunner.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="HAL/Source/IA-32/TSS.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Initializer/Source/Generic/EarlyConsole.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="Initializer/Source/Generic/EarlyMultiboot.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="Initializer/Source/Generic/Elf/BinaryAnalyzer.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="Initializer/Source/Generic/Elf/KernelModule.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="Initializer/Source/Generic/Elf/Relocator.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="Initializer/Source/IA32/LoadKernel.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="Initializer/Source/IA32/Startup.S" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="Interface/Executable/Timer/TimerDevice.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Boot/Entry.S"
+            ex="false"
+            tool="4"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Boot/Main.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Boot/Multiboot.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Paging/86InitPaging.asm"
+            ex="false"
+            tool="4"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Paging/FrameExtractor.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Paging/PageSettings.S"
+            ex="false"
+            tool="4"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Paging/Pager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Arch/IA32/Paging/TableManipulator.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Intr/ExHandler.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/KernelRoutine/Init.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/BuddyAllocator.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/CacheRegister.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/Heap.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/KFrameManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/KMemoryManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/KObjectManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/Structure.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Memory/ZoneAllocator.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/ElfAnalyzer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/ElfLinker.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/ElfManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/ModuleContainer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/ModuleLoader.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/Namespace.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/ModuleLoader/SymbolLookup.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Util/CircuitPrimitive.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Util/CircularList.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Util/Console.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Util/Debugger.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Util/LinkedList.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="KernelHost/Source/Util/Stack.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/ArrayList.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/Arrays.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/BinaryTree.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/HashMap.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/Object.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/RBTree.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/String.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Framework/StringPool.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ModuleFramework/Main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Modules/ADM/MemoryMap.asm" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="Modules/crt0.S" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="Modules/crti.S" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="Modules/crtn.S" ex="false" tool="4" flavor2="0">
+      </item>
+      <item path="ObjectManager/Main.cxx" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ResourceManager/Source/ContextManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="ResourceManager/Source/Init.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ResourceManager/Source/MemoryImage.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
