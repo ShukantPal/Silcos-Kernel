@@ -1,6 +1,0 @@
-%ifndef KERNEL_MAC
-%define KERNEL_MAC
-
-;// This is actually a NASM header file. Don't be confused.
-
-%endif
