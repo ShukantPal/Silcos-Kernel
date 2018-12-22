@@ -1,11 +1,5 @@
-# Silcos 3.02
+# Kernel Core
 
-Welcome to Silcos Kernel v3.02!!! This kernel is designed and developed in C++ and assembly. It aims to build a robust and extensible platform to build an OS on top of it. Look into our documentation for details.
+This is the core part of the Silcos kernel infrastructure. It handles the most trusted portion of the kernel functionality, which includes module-handling, memory management and task management. The kernel-core project has been divded into modules (like KernelHost), each of which have a separae bulid process. They are each bundled into a shared library (ELF shared library).
 
-## Programming
-
-Preferences for coding -
-
-1. Coding font - ubuntu mono 11
-
-2. Console font - ubuntu 11
+The Initor module (written in only C), is a special module bundled in a executable, which loads the other modules (with the help of a multiboot bootloader, like GRUB). This is because Silcos kernel (will) supports dynamic symbol formation, and bootloaders cannot support the sophisticated linking requirements of kernel modules. This has the side effect of pushing the warning of missing symbols (when you type the wrong function name) into runtime, when the Initor module fails to locate a symbol.s
