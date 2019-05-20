@@ -9,3 +9,5 @@ Preferences for coding -
 1. Coding font - ubuntu mono 11
 
 2. Console font - ubuntu 11
+
+Please e-mail me at silcostech@outlook.com if you clone this repo. I would be glad to provide assistance.
