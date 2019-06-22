@@ -1,3 +1,5 @@
+OPEN-SOURCE CONTRIBUTION REQUIRED. PLEASE CONTACT ME/CREATE AN ISSUE IF YOU ARE INTERESTED. ALSO, PLEASE NOTIFY ME A silcostech@outlook.com IF YOU'RE CLONING/DOWNLOADING THIS REPO - I WILL BE SO GLAD TO KNOW.
+
 # Silcos 3.02
 
 Welcome to Silcos Kernel v3.02!!! This kernel is designed and developed in C++ and assembly. It aims to build a robust and extensible platform to build an OS on top of it. Look into our documentation for details.
